@@ -9,3 +9,4 @@ logs/
 build.number
 libs/
 .idea/
+run/

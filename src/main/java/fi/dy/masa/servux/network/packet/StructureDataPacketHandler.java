@@ -7,7 +7,9 @@ import fi.dy.masa.servux.network.IPluginChannelHandler;
 
 public class StructureDataPacketHandler implements IPluginChannelHandler
 {
-    public static final Identifier CHANNEL = new Identifier("servux:structures");
+    // Splitting Identifier into two parameters
+    // --> It should result in the same "servux:structures" output
+    public static final Identifier CHANNEL = new Identifier("servux", "structures");
     public static final StructureDataPacketHandler INSTANCE = new StructureDataPacketHandler();
 
     public static final int PROTOCOL_VERSION = 1;
