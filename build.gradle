@@ -21,6 +21,8 @@ dependencies {
 	//modCompile "net.fabricmc.fabric-api:fabric-api:" + project.fabric_version
 	include(modApi(fabricApi.module("fabric-api-base", project.fabric_api_version)))
 	include(modApi(fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)))
+	// For Debug Module
+	include(modApi(fabricApi.module("fabric-command-api-v2", project.fabric_api_version)))
 
 	//modCompileOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 }

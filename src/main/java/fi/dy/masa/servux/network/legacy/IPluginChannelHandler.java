@@ -1,6 +1,6 @@
-package fi.dy.masa.servux.network;
+package fi.dy.masa.servux.network.legacy;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.PlayChannelHandler;
+//import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.PlayChannelHandler;
 
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
@@ -11,6 +11,8 @@ public interface IPluginChannelHandler
 {
     Identifier getChannel();
 
+    /*
+
     default PlayChannelHandler getServerPacketHandler()
     {
         if (this.usePacketSplitter())
@@ -20,7 +22,7 @@ public interface IPluginChannelHandler
 
         return (server, player, net, buf, responder) -> server.execute(() -> this.onPacketReceived(buf, net));
     }
-
+*/
     default void handleViaPacketSplitter(MinecraftServer server, ServerPlayNetworkHandler netHandler, PacketByteBuf buf)
     {
         PacketByteBuf fullBuf = PacketSplitter.receive(this.getChannel(), buf, netHandler);

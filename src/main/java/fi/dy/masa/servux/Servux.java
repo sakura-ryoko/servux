@@ -1,5 +1,6 @@
 package fi.dy.masa.servux;
 
+import fi.dy.masa.servux.network.test.TestSuite;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
@@ -15,6 +16,11 @@ public class Servux implements ModInitializer
     {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
+
+        if (Reference.MOD_DEBUG)
+        {
+            TestSuite.initTestSuite();
+        }
     }
 
     public static String getModVersionString(String modId)
@@ -28,5 +34,12 @@ public class Servux implements ModInitializer
         }
 
         return "?";
+    }
+    public static void printDebug(String key, Object... args)
+    {
+        if (Reference.MOD_DEBUG)
+        {
+            logger.info(key, args);
+        }
     }
 }

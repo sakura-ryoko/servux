@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.util;
+package fi.dy.masa.servux.network.legacy;
 
 import java.util.Objects;
 import net.minecraft.network.PacketByteBuf;

@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network;
+package fi.dy.masa.servux.network.legacy;
 
 import java.util.HashMap;
 import net.fabricmc.fabric.api.networking.v1.S2CPlayChannelEvents;
@@ -40,7 +40,7 @@ public class ServerPacketChannelHandler
                             handler.unsubscribe(net);
                         }
                     });
-                    ServerPlayNetworking.registerGlobalReceiver(channel, handler.getServerPacketHandler());
+                    //ServerPlayNetworking.registerGlobalReceiver(channel, handler.getServerPacketHandler());
                 }
             }
         }

@@ -2,7 +2,7 @@ package fi.dy.masa.servux.dataproviders;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import fi.dy.masa.servux.network.IPluginChannelHandler;
+import fi.dy.masa.servux.network.legacy.IPluginChannelHandler;
 
 public interface IDataProvider
 {
