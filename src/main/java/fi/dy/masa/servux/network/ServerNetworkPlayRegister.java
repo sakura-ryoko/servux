@@ -9,6 +9,7 @@ public class ServerNetworkPlayRegister
 {
     static ServerPlayNetworking.PlayPayloadHandler<StringPayload> C2SStringHandler;
     static ServerPlayNetworking.PlayPayloadHandler<DataPayload> C2SDataHandler;
+    static ServerPlayNetworking.PlayPayloadHandler<ServuxPayload> C2SSevUXHandler;
     
     public static void registerDefaultReceivers()
     {
@@ -22,6 +23,8 @@ public class ServerNetworkPlayRegister
 
             Servux.printDebug("ServerHandlerManager#registerDefaultReceivers(): registerDataHandler()");
             ServerPlayNetworking.registerGlobalReceiver(DataPayload.TYPE, C2SDataHandler);
+            Servux.printDebug("ServerHandlerManager#registerDefaultReceivers(): registerServuxHandler()");
+            ServerPlayNetworking.registerGlobalReceiver(ServuxPayload.TYPE, C2SSevUXHandler);
         }
     }
 
@@ -37,11 +40,14 @@ public class ServerNetworkPlayRegister
 
             Servux.printDebug("ServerHandlerManager#unregisterDefaultReceivers(): registerDataHandler()");
             ServerPlayNetworking.unregisterGlobalReceiver(DataPayload.TYPE.id());
+            Servux.printDebug("ServerHandlerManager#unregisterDefaultReceivers(): registerServuxHandler()");
+            ServerPlayNetworking.unregisterGlobalReceiver(ServuxPayload.TYPE.id());
         }
     }
     static
     {
         C2SStringHandler = ServerNetworkPlayHandler::receiveString;
         C2SDataHandler = ServerNetworkPlayHandler::receiveData;
+        C2SSevUXHandler = ServerNetworkPlayHandler::receiveServUX;
     }
 }

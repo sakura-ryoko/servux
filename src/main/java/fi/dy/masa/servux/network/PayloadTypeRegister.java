@@ -16,8 +16,6 @@ public class PayloadTypeRegister
 {
     // This is how it looks in the static context per a MOD, which must each include its own Custom Payload Records.
     // --> The send/receive handlers can be made into an interface.
-    //public final int MAX_TOTAL_PER_PACKET_S2C = 1048576;
-    //public final int MAX_TOTAL_PER_PACKET_C2S = 32767;
     private static final Map<PayloadType, PayloadCodec> TYPES = new HashMap<>();
 
     public static Identifier getIdentifier(PayloadType type)
@@ -56,8 +54,9 @@ public class PayloadTypeRegister
 
         registerDefaultType(PayloadType.STRING, "string", namespace);
         registerDefaultType(PayloadType.DATA, "data", namespace);
-        //registerDefaultType(PayloadType.CARPET_HELLO, "hello", namespace);
+        //registerType(PayloadType.CARPET_HELLO, "hello", "carpet", "hello");
         // For Carpet "hello" packet (NbtCompound type)
+        registerType(PayloadType.SERVUX, "structure_bounding_boxes", "servux", "structures");
     }
     public static <T extends CustomPayload> void registerDefaultPlayChannel(CustomPayload.Id<T> id, PacketCodec<PacketByteBuf, T> codec)
     {
@@ -70,5 +69,6 @@ public class PayloadTypeRegister
         registerDefaultPlayChannel(DataPayload.TYPE, DataPayload.CODEC);
         registerDefaultPlayChannel(StringPayload.TYPE, StringPayload.CODEC);
         //registerDefaultPlayChannel(CarpetPayload.TYPE, CarpetPayload.CODEC);
+        registerDefaultPlayChannel(ServuxPayload.TYPE, ServuxPayload.CODEC);
     }
 }

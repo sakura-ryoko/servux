@@ -1,17 +1,15 @@
 package fi.dy.masa.servux.dataproviders;
 
-import net.minecraft.util.Identifier;
-
 public abstract class DataProviderBase implements IDataProvider
 {
-    protected final Identifier networkChannel;
+    protected final String networkChannel;
     protected final String name;
     protected final String description;
     protected final int protocolVersion;
     protected boolean enabled;
     private int tickRate = 40;
 
-    protected DataProviderBase(String name, Identifier channel, int protocolVersion, String description)
+    protected DataProviderBase(String name, String channel, int protocolVersion, String description)
     {
         this.name = name;
         this.networkChannel = channel;
@@ -32,7 +30,7 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public Identifier getNetworkChannel()
+    public String getNetworkChannel()
     {
         return this.networkChannel;
     }

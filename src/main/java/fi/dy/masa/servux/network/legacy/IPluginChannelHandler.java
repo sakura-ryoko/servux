@@ -1,39 +1,45 @@
 package fi.dy.masa.servux.network.legacy;
 
-//import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.PlayChannelHandler;
+import fi.dy.masa.servux.network.payload.ServuxPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.*;
 
+import fi.dy.masa.servux.network.packet.ServuxPayloadListener;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
-public interface IPluginChannelHandler
+import java.util.Objects;
+
+public interface IPluginChannelHandler<T extends CustomPayload>
 {
     Identifier getChannel();
 
-    /*
-
-    default PlayChannelHandler getServerPacketHandler()
+    default PlayPayloadHandler<T> getServerPacketHandler()
     {
         if (this.usePacketSplitter())
         {
-            return (server, player, net, buf, responder) -> this.handleViaPacketSplitter(server, net, buf);
+            return (T payload, Context ctx) -> this.handleViaPacketSplitter((ServuxPayload) payload, ctx);
         }
 
-        return (server, player, net, buf, responder) -> server.execute(() -> this.onPacketReceived(buf, net));
+        return (T payload, Context ctx) -> this.onPacketReceived(payload.getId().id(), payload, ctx);
     }
-*/
-    default void handleViaPacketSplitter(MinecraftServer server, ServerPlayNetworkHandler netHandler, PacketByteBuf buf)
+    //@Deprecated
+    default void handleViaPacketSplitter(ServuxPayload payload, ServerPlayNetworking.Context ctx)
     {
-        PacketByteBuf fullBuf = PacketSplitter.receive(this.getChannel(), buf, netHandler);
+        PacketByteBuf fullBuf = ServuxPayloadListener.splitServuxPayload(this.getChannel(), payload, ctx);
 
         if (fullBuf != null)
         {
-            server.execute(() -> this.onPacketReceived(fullBuf, netHandler));
+            Objects.requireNonNull(ctx.player().getServer()).execute(() -> this.onPacketReceived(this.getChannel(), fullBuf, ctx));
         }
     }
 
-    default void onPacketReceived(PacketByteBuf buf, ServerPlayNetworkHandler netHandler)
+    //@Deprecated
+    default void onPacketReceived(Identifier id, T payload, ServerPlayNetworking.Context ctx)
+    {
+    }
+    default void onPacketReceived(Identifier id, PacketByteBuf buf, ServerPlayNetworking.Context ctx)
     {
     }
 
@@ -47,12 +53,12 @@ public interface IPluginChannelHandler
         return false;
     }
 
-    default boolean subscribe(ServerPlayNetworkHandler netHandler)
+    default boolean subscribe(ServerPlayNetworking.Context ctx)
     {
         return false;
     }
 
-    default boolean unsubscribe(ServerPlayNetworkHandler netHandler)
+    default boolean unsubscribe(ServerPlayNetworking.Context ctx)
     {
         return false;
     }

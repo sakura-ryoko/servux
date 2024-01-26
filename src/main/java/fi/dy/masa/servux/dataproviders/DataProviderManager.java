@@ -7,9 +7,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import fi.dy.masa.servux.network.packet.PacketProvider;
 import net.minecraft.server.MinecraftServer;
-import fi.dy.masa.servux.network.legacy.IPluginChannelHandler;
-import fi.dy.masa.servux.network.legacy.ServerPacketChannelHandler;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
@@ -101,15 +100,18 @@ public class DataProviderManager
 
     protected void updatePacketHandlerRegistration(IDataProvider provider)
     {
-        IPluginChannelHandler handler = provider.getPacketHandler();
+        // #FIXME IPluginChannelHandler handler = provider.getPacketHandler();
+        // This seems wrong.
 
         if (provider.isEnabled())
         {
             // #FIXME ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
+            PacketProvider.registerPayloads();
         }
         else
         {
             // #FIXME ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
+            PacketProvider.unregisterPayloads();
         }
     }
 

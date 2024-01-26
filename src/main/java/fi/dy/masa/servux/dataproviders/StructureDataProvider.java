@@ -6,6 +6,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.event.ServuxPayloadHandler;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -22,7 +25,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.structure.Structure;
-import fi.dy.masa.servux.network.legacy.IPluginChannelHandler;
 import fi.dy.masa.servux.network.legacy.StructureDataPacketHandler;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
@@ -41,10 +43,10 @@ public class StructureDataProvider extends DataProviderBase
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
-              StructureDataPacketHandler.CHANNEL, StructureDataPacketHandler.PROTOCOL_VERSION,
+              "", StructureDataPacketHandler.PROTOCOL_VERSION,
               "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
-        this.metadata.putString("id", StructureDataPacketHandler.CHANNEL.toString());
+        this.metadata.putString("id", "<>");
         this.metadata.putInt("timeout", this.timeout);
         this.metadata.putInt("version", StructureDataPacketHandler.PROTOCOL_VERSION);
     }
@@ -55,21 +57,23 @@ public class StructureDataProvider extends DataProviderBase
         return true;
     }
 
+    /*
     @Override
     public IPluginChannelHandler getPacketHandler()
     {
         return StructureDataPacketHandler.INSTANCE;
     }
+     */
 
     @Override
     public void tick(MinecraftServer server, int tickCounter)
     {
         if ((tickCounter % this.updateInterval) == 0)
         {
-            if (this.registeredPlayers.isEmpty() == false)
+            if (!this.registeredPlayers.isEmpty())
             {
-                // System.out.printf("=======================\n");
-                // System.out.printf("tick: %d - %s\n", tickCounter, this.isEnabled());
+                //Servux.printDebug("=======================\n");
+                //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
                 this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
                 Iterator<UUID> uuidIter = this.registeredPlayers.keySet().iterator();
 
@@ -105,13 +109,15 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean register(ServerPlayerEntity player)
     {
-        // System.out.printf("register\n");
+        Servux.printDebug("register");
         boolean registered = false;
         UUID uuid = player.getUuid();
 
-        if (this.registeredPlayers.containsKey(uuid) == false)
+        if (!this.registeredPlayers.containsKey(uuid))
         {
-            // #FIXME PacketSplitter.sendPacketTypeAndCompound(StructureDataPacketHandler.CHANNEL, StructureDataPacketHandler.PACKET_S2C_METADATA, this.metadata, player);
+            // #FIXME ?
+            Servux.printDebug("StructureDataProvider#register(): yeeting packet.");
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(StructureDataPacketHandler.PACKET_S2C_METADATA, this.metadata, player);
 
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             int tickCounter = player.getServer().getTicks();
@@ -125,7 +131,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean unregister(ServerPlayerEntity player)
     {
-        // System.out.printf("unregister\n");
+        Servux.printDebug("unregister");
         return this.registeredPlayers.remove(player.getUuid()) != null;
     }
 
@@ -152,7 +158,7 @@ public class StructureDataProvider extends DataProviderBase
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
             final int timeout = this.timeout;
 
-            //System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
+            Servux.printDebug("addChunkTimeoutIfHasReferences: %s", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
             map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout));
         }
@@ -194,7 +200,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (map != null)
         {
-            // System.out.printf("refreshTrackedChunks: timeouts: %d\n", map.size());
+            Servux.printDebug("refreshTrackedChunks: timeouts: %d", map.size());
             this.sendAndRefreshExpiredStructures(player, map, tickCounter);
         }
     }
@@ -221,7 +227,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        if (positionsToUpdate.isEmpty() == false)
+        if (!positionsToUpdate.isEmpty())
         {
             ServerWorld world = player.getServerWorld();
             ChunkPos center = player.getWatchedSection().toChunkPos();
@@ -246,9 +252,9 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            // System.out.printf("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d\n", positionsToUpdate.size(), references.size(), this.timeout);
+            Servux.printDebug("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d", positionsToUpdate.size(), references.size(), this.timeout);
 
-            if (references.isEmpty() == false)
+            if (!references.isEmpty())
             {
                 this.sendStructures(player, references, tickCounter);
             }
@@ -257,7 +263,7 @@ public class StructureDataProvider extends DataProviderBase
 
     protected void getStructureReferencesFromChunk(int chunkX, int chunkZ, World world, Map<Structure, LongSet> references)
     {
-        if (world.isChunkLoaded(chunkX, chunkZ) == false)
+        if (!world.isChunkLoaded(chunkX, chunkZ))
         {
             return;
         }
@@ -275,7 +281,7 @@ public class StructureDataProvider extends DataProviderBase
             LongSet startChunks = entry.getValue();
 
             // TODO add an option && feature != StructureFeature.MINESHAFT
-            if (startChunks.isEmpty() == false)
+            if (!startChunks.isEmpty())
             {
                 references.merge(feature, startChunks, (oldSet, entrySet) -> {
                     LongOpenHashSet newSet = new LongOpenHashSet(oldSet);
@@ -288,7 +294,7 @@ public class StructureDataProvider extends DataProviderBase
 
     protected boolean chunkHasStructureReferences(int chunkX, int chunkZ, World world)
     {
-        if (world.isChunkLoaded(chunkX, chunkZ) == false)
+        if (!world.isChunkLoaded(chunkX, chunkZ))
         {
             return false;
         }
@@ -303,7 +309,7 @@ public class StructureDataProvider extends DataProviderBase
         for (Map.Entry<Structure, LongSet> entry : chunk.getStructureReferences().entrySet())
         {
             // TODO add an option entry.getKey() != StructureFeature.MINESHAFT && 
-            if (entry.getValue().isEmpty() == false)
+            if (!entry.getValue().isEmpty())
             {
                 return true;
             }
@@ -327,7 +333,7 @@ public class StructureDataProvider extends DataProviderBase
             {
                 ChunkPos pos = new ChunkPos(iter.nextLong());
 
-                if (world.isChunkLoaded(pos.x, pos.z) == false)
+                if (!world.isChunkLoaded(pos.x, pos.z))
                 {
                     continue;
                 }
@@ -348,7 +354,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        // System.out.printf("getStructureStartsFromReferences: references: %d -> starts: %d\n", references.size(), starts.size());
+        Servux.printDebug("getStructureStartsFromReferences: references: %d -> starts: %d", references.size(), starts.size());
         return starts;
     }
 
@@ -365,7 +371,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        // System.out.printf("getStructureReferencesWithinRange: references: %d\n", references.size());
+        Servux.printDebug("getStructureReferencesWithinRange: references: %d", references.size());
         return references;
     }
 
@@ -376,17 +382,19 @@ public class StructureDataProvider extends DataProviderBase
         ServerWorld world = player.getServerWorld();
         Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
 
-        if (starts.isEmpty() == false)
+        if (!starts.isEmpty())
         {
             this.addOrRefreshTimeouts(player.getUuid(), references, tickCounter);
 
             NbtList structureList = this.getStructureList(starts, world);
-            // System.out.printf("sendStructures: starts: %d -> structureList: %d. refs: %s\n", starts.size(), structureList.size(), references.keySet());
+            Servux.printDebug("StructureDataProvider#sendStructures(): starts: %d -> structureList: %d. refs: %s", starts.size(), structureList.size(), references.keySet());
 
             NbtCompound tag = new NbtCompound();
             tag.put("Structures", structureList);
 
-            // #FIXME PacketSplitter.sendPacketTypeAndCompound(StructureDataPacketHandler.CHANNEL, StructureDataPacketHandler.PACKET_S2C_STRUCTURE_DATA, tag, player);
+            // #FIXME ?
+            Servux.printDebug("StructureDataProvider#sendStructures(): yeeting packet.");
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(StructureDataPacketHandler.PACKET_S2C_STRUCTURE_DATA, tag, player);
         }
     }
 

@@ -4,5 +4,6 @@ public enum PayloadType
 {
     STRING,
     DATA,
-    CARPET_HELLO
+    CARPET_HELLO,
+    SERVUX
 }

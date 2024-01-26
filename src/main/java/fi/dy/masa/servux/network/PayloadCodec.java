@@ -33,6 +33,7 @@ public class PayloadCodec implements IPayloadType
             case STRING -> this.path = "string";
             case DATA -> this.path = "data";
             case CARPET_HELLO -> this.path = "hello";
+            case SERVUX -> this.path = "structures";
             default -> this.path = "invalid";
         }
     }
