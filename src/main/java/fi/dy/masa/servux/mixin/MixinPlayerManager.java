@@ -1,6 +1,6 @@
 package fi.dy.masa.servux.mixin;
 
-import fi.dy.masa.servux.events.ServerPlayerEvents;
+import fi.dy.masa.servux.event.PlayerHandler;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ConnectedClientData;
@@ -18,11 +18,11 @@ public abstract class MixinPlayerManager
     @Inject(method = "onPlayerConnect", at = @At("TAIL"))
     private void eventOnPlayerJoin(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci)
     {
-        ServerPlayerEvents.onPlayerJoin(player);
+        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerJoin(player);
     }
     @Inject(method = "remove", at = @At("HEAD"))
     private void eventOnPlayerLeave(ServerPlayerEntity player, CallbackInfo ci)
     {
-        ServerPlayerEvents.onPlayerLeave(player);
+        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerLeave(player);
     }
 }

@@ -4,5 +4,9 @@ import net.minecraft.util.Identifier;
 
 public interface IPayloadType
 {
-    Identifier getIdentifier();
+    PayloadType getType();
+    String getKey();
+    String getNamespace();
+    String getPath();
+    Identifier getId();
 }

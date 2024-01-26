@@ -1,9 +1,8 @@
 package fi.dy.masa.servux.network;
 
-import fi.dy.masa.servux.Reference;
+import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.payload.*;
-import fi.dy.masa.servux.network.handler.ServerNetworkPlayHandler;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 public class ServerNetworkPlayRegister
@@ -14,7 +13,7 @@ public class ServerNetworkPlayRegister
     public static void registerDefaultReceivers()
     {
         // Do when the server starts, not before
-        if (Reference.isServer())
+        if (ServuxReference.isServer())
         {
             Servux.printDebug("ServerHandlerManager#registerDefaultReceivers(): isServer() true.");
             Servux.printDebug("ServerHandlerManager#registerDefaultReceivers(): registerStringHandler()");
@@ -29,7 +28,7 @@ public class ServerNetworkPlayRegister
     public static void unregisterDefaultReceivers()
     {
         // Do when server stops
-        if (Reference.isServer())
+        if (ServuxReference.isServer())
         {
             Servux.printDebug("ServerHandlerManager#unregisterDefaultReceivers(): isServer() true.");
             Servux.printDebug("ServerHandlerManager#unregisterDefaultReceivers(): registerStringHandler()");
@@ -42,7 +41,7 @@ public class ServerNetworkPlayRegister
     }
     static
     {
-        C2SStringHandler = ServerNetworkPlayHandler::receive;
-        C2SDataHandler = ServerNetworkPlayHandler::receive;
+        C2SStringHandler = ServerNetworkPlayHandler::receiveString;
+        C2SDataHandler = ServerNetworkPlayHandler::receiveData;
     }
 }

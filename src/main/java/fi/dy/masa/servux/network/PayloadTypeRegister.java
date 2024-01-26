@@ -1,8 +1,12 @@
 package fi.dy.masa.servux.network;
 
+import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.payload.*;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.minecraft.network.PacketByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
@@ -11,34 +15,60 @@ import java.util.Map;
 public class PayloadTypeRegister
 {
     // This is how it looks in the static context per a MOD, which must each include its own Custom Payload Records.
-    // The send/receive handlers can be made into an interface.
-    public static final int MAX_TOTAL_PER_PACKET_S2C = 1048576;
-    public static final int MAX_TOTAL_PER_PACKET_C2S = 32767;
-    private static final Map<PayloadTypes.PayloadType, PayloadTypes> TYPES = new HashMap<>();
-    public static void registerPlayChannels()
+    // --> The send/receive handlers can be made into an interface.
+    //public final int MAX_TOTAL_PER_PACKET_S2C = 1048576;
+    //public final int MAX_TOTAL_PER_PACKET_C2S = 32767;
+    private static final Map<PayloadType, PayloadCodec> TYPES = new HashMap<>();
+
+    public static Identifier getIdentifier(PayloadType type)
+    {
+        return TYPES.get(type).getId();
+    }
+    public static String getKey(PayloadType type)
+    {
+        return TYPES.get(type).getKey();
+    }
+    public static void registerDefaultType(PayloadType type, String key, String namespace)
+    {
+        if (!TYPES.containsKey(type))
+        {
+            PayloadCodec codec = new PayloadCodec(type, key, namespace);
+            TYPES.put(type, codec);
+            Servux.printDebug("PayloadTypeRegister#registerDefaultType(): Successfully registered new Payload id: {} // {}:{}", codec.getId().hashCode(), codec.getId().getNamespace(), codec.getId().getPath());
+        }
+    }
+    public static void registerType(PayloadType type, String key, String namespace, String path)
+    {
+        if (!TYPES.containsKey(type))
+        {
+            PayloadCodec codec = new PayloadCodec(type, key, namespace, path);
+            TYPES.put(type, codec);
+            Servux.printDebug("PayloadTypeRegister#registerDefaultType(): Successfully registered new Payload id: {} // {}:{}", codec.getId().hashCode(), codec.getId().getNamespace(), codec.getId().getPath());
+        }
+    }
+    public static void registerDefaultTypes(String name)
+    {
+        Servux.printDebug("PayloadTypeRegister#registerDefaultTypes(): executing.");
+
+        String namespace = name;
+        if (namespace.isEmpty())
+            namespace = ServuxReference.COMMON_NAMESPACE;
+
+        registerDefaultType(PayloadType.STRING, "string", namespace);
+        registerDefaultType(PayloadType.DATA, "data", namespace);
+        //registerDefaultType(PayloadType.CARPET_HELLO, "hello", namespace);
+        // For Carpet "hello" packet (NbtCompound type)
+    }
+    public static <T extends CustomPayload> void registerDefaultPlayChannel(CustomPayload.Id<T> id, PacketCodec<PacketByteBuf, T> codec)
+    {
+        PayloadTypeRegistry.playC2S().register(id, codec);
+        PayloadTypeRegistry.playS2C().register(id, codec);
+    }
+    public static void registerDefaultPlayChannels()
     {
         Servux.printDebug("PayloadTypeRegister#registerPlayChannels(): registering play channels.");
-        PayloadTypeRegistry.playC2S().register(DataPayload.TYPE, DataPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(StringPayload.TYPE, StringPayload.CODEC);
-        //PayloadTypeRegistry.playC2S().register(CarpetPayload.TYPE, CarpetPayload.CODEC);
-
-        PayloadTypeRegistry.playS2C().register(DataPayload.TYPE, DataPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(StringPayload.TYPE, StringPayload.CODEC);
-        //PayloadTypeRegistry.playS2C().register(CarpetPayload.TYPE, CarpetPayload.CODEC);
-        // For Carpet "hello" packet (NbtCompound type)
-    }
-    public static Identifier getIdentifier(PayloadTypes.PayloadType type)
-    {
-        Identifier id = TYPES.get(type).getIdentifier();
-        Servux.printDebug("PayloadTypeRegister#getIdentifier(): type: {}, id: {}.", type, id);
-        return id;
-    }
-    public static void initTypes(String namespace)
-    {
-        Servux.printDebug("PayloadTypeRegister#initTypes(): init PayloadTypes for {}.", namespace);
-        TYPES.put(PayloadTypes.PayloadType.STRING, new PayloadTypes(PayloadTypes.PayloadType.STRING, namespace));
-        TYPES.put(PayloadTypes.PayloadType.DATA,   new PayloadTypes(PayloadTypes.PayloadType.DATA,   namespace));
-        TYPES.put(PayloadTypes.PayloadType.CARPET_HELLO,   new PayloadTypes(PayloadTypes.PayloadType.CARPET_HELLO, "carpet"));
-        // For Carpet "hello" packet (NbtCompound type)
+        registerDefaultPlayChannel(DataPayload.TYPE, DataPayload.CODEC);
+        registerDefaultPlayChannel(StringPayload.TYPE, StringPayload.CODEC);
+        //registerDefaultPlayChannel(CarpetPayload.TYPE, CarpetPayload.CODEC);
     }
 }

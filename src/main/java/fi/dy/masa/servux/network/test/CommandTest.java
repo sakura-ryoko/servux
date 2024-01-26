@@ -33,7 +33,7 @@ public class CommandTest
         if (target != null)
         {
             // Run S2C test -> Player
-            TestSuite.testS2C(target, message);
+            ServerDebugSuite.testS2C(target, message);
         }
         else {
             // Run C2S test
