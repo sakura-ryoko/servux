@@ -2,6 +2,7 @@ package fi.dy.masa.servux.dataproviders;
 
 public abstract class DataProviderBase implements IDataProvider
 {
+    // Change Identifier --> String, because it might confuse Minecraft
     protected final String networkChannel;
     protected final String name;
     protected final String description;

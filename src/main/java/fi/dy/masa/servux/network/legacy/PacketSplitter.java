@@ -1,26 +1,28 @@
 package fi.dy.masa.servux.network.legacy;
 
-import java.util.HashMap;
-import java.util.Map;
-import javax.annotation.Nullable;
-import io.netty.buffer.Unpooled;
+//import java.util.HashMap;
+//import java.util.Map;
+//import javax.annotation.Nullable;
+//import io.netty.buffer.Unpooled;
 //import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import org.apache.commons.lang3.tuple.Pair;
+//import org.apache.commons.lang3.tuple.Pair;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.listener.PacketListener;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+//import net.minecraft.nbt.NbtCompound;
+//import net.minecraft.network.PacketByteBuf;
+//import net.minecraft.network.listener.PacketListener;
+//import net.minecraft.server.network.ServerPlayNetworkHandler;
+//import net.minecraft.server.network.ServerPlayerEntity;
+//import net.minecraft.util.Identifier;
 
 /**
  * Network packet splitter code from QuickCarpet by skyrising
  * @author skyrising
  */
+// No longer used
 @Deprecated
 public class PacketSplitter
 {
+    /*
     public static final int MAX_TOTAL_PER_PACKET_S2C = 1048576;
     public static final int MAX_PAYLOAD_PER_PACKET_S2C = MAX_TOTAL_PER_PACKET_S2C - 5;
     public static final int DEFAULT_MAX_RECEIVE_SIZE_C2S = 1048576;
@@ -32,12 +34,15 @@ public class PacketSplitter
         send(channel, packet, MAX_PAYLOAD_PER_PACKET_S2C, player);
     }
 
+    @Deprecated
     private static void send(Identifier channel, PacketByteBuf packet, int payloadLimit, ServerPlayerEntity player)
     {
         int len = packet.writerIndex();
 
         packet.resetReaderIndex();
 
+        // This for loop only iterates once, and would send a packet once
+        // --> Under most conditions.
         for (int offset = 0; offset < len; offset += payloadLimit)
         {
             int thisLen = Math.min(len - offset, payloadLimit);
@@ -57,6 +62,7 @@ public class PacketSplitter
     }
 
     @Nullable
+    @Deprecated
     public static PacketByteBuf receive(Identifier channel,
                                         PacketByteBuf buf,
                                         ServerPlayNetworkHandler networkHandler)
@@ -65,6 +71,7 @@ public class PacketSplitter
     }
 
     @Nullable
+    @Deprecated
     private static PacketByteBuf receive(Identifier channel,
                                          PacketByteBuf data,
                                          int maxLength,
@@ -73,10 +80,12 @@ public class PacketSplitter
         Pair<PacketListener, Identifier> key = Pair.of(networkHandler, channel);
         return READING_SESSIONS.computeIfAbsent(key, ReadingSession::new).receive(data, maxLength);
     }
-
+*/
     /**
      * Sends a packet type ID as a VarInt, and then the given Compound tag.
      */
+    /*
+    @Deprecated
     public static void sendPacketTypeAndCompound(Identifier channel, int packetType, NbtCompound data, ServerPlayerEntity player)
     {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
@@ -86,18 +95,22 @@ public class PacketSplitter
         send(channel, buf, player);
     }
 
+    // This inner-class is never being utilized.
+    @Deprecated
     private static class ReadingSession
     {
         private final Pair<PacketListener, Identifier> key;
         private int expectedSize = -1;
         private PacketByteBuf received;
 
+        @Deprecated
         private ReadingSession(Pair<PacketListener, Identifier> key)
         {
             this.key = key;
         }
 
         @Nullable
+        @Deprecated
         private PacketByteBuf receive(PacketByteBuf data, int maxLength)
         {
             data.readerIndex(0);
@@ -126,4 +139,5 @@ public class PacketSplitter
             return null;
         }
     }
+    */
 }

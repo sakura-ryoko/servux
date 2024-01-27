@@ -7,14 +7,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import fi.dy.masa.servux.network.packet.PacketProvider;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
 {
     public static final DataProviderManager INSTANCE = new DataProviderManager();
-
     protected final HashMap<String, IDataProvider> providers = new HashMap<>();
     protected ImmutableList<IDataProvider> providersImmutable = ImmutableList.of();
     protected ArrayList<IDataProvider> providersTicking = new ArrayList<>();
@@ -33,7 +31,7 @@ public class DataProviderManager
     {
         String name = provider.getName();
 
-        if (this.providers.containsKey(name) == false)
+        if (!this.providers.containsKey(name))
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
@@ -59,9 +57,13 @@ public class DataProviderManager
         {
             //System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
             provider.setEnabled(enabled);
+            /**
+             * Handled via PacketProvider, we don't need to stop listening, just discard the packets.
             this.updatePacketHandlerRegistration(provider);
+             */
 
-            if (enabled && provider.shouldTick() && this.providersTicking.contains(provider) == false)
+
+            if (enabled && provider.shouldTick() && !this.providersTicking.contains(provider))
             {
                 this.providersTicking.add(provider);
             }
@@ -78,7 +80,7 @@ public class DataProviderManager
 
     public void tickProviders(MinecraftServer server, int tickCounter)
     {
-        if (this.providersTicking.isEmpty() == false)
+        if (!this.providersTicking.isEmpty())
         {
             for (IDataProvider provider : this.providersTicking)
             {
@@ -90,29 +92,34 @@ public class DataProviderManager
         }
     }
 
+    @Deprecated
     protected void registerEnabledPacketHandlers()
     {
+        /**
+         * Handled under ServerNetworkPlayRegister
         for (IDataProvider provider : this.providersImmutable)
         {
             this.updatePacketHandlerRegistration(provider);
         }
+        */
     }
 
+    @Deprecated
     protected void updatePacketHandlerRegistration(IDataProvider provider)
     {
-        // #FIXME IPluginChannelHandler handler = provider.getPacketHandler();
-        // This seems wrong.
+        /**
+         * Handled under ServerListener via PacketProvider
+        IPluginChannelHandler handler = provider.getPacketHandler();
 
         if (provider.isEnabled())
         {
-            // #FIXME ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
-            PacketProvider.registerPayloads();
+            ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
         }
         else
         {
-            // #FIXME ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
-            PacketProvider.unregisterPayloads();
+            ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
         }
+         */
     }
 
     public void readFromConfig()

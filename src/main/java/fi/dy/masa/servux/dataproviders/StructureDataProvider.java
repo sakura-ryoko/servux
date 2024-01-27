@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.event.ServuxPayloadHandler;
+import fi.dy.masa.servux.network.packet.ServuxPacketType;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -25,7 +26,6 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.structure.Structure;
-import fi.dy.masa.servux.network.legacy.StructureDataPacketHandler;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -43,12 +43,12 @@ public class StructureDataProvider extends DataProviderBase
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
-              "", StructureDataPacketHandler.PROTOCOL_VERSION,
+              "", ServuxPacketType.PROTOCOL_VERSION,
               "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
-        this.metadata.putString("id", "<>");
+        this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("timeout", this.timeout);
-        this.metadata.putInt("version", StructureDataPacketHandler.PROTOCOL_VERSION);
+        this.metadata.putInt("version", ServuxPacketType.PROTOCOL_VERSION);
     }
 
     @Override
@@ -116,8 +116,8 @@ public class StructureDataProvider extends DataProviderBase
         if (!this.registeredPlayers.containsKey(uuid))
         {
             // #FIXME ?
-            Servux.printDebug("StructureDataProvider#register(): yeeting packet.");
-            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(StructureDataPacketHandler.PACKET_S2C_METADATA, this.metadata, player);
+            Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {}.", player.getName().getLiteralString());
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(ServuxPacketType.PACKET_S2C_METADATA, this.metadata, player);
 
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             int tickCounter = player.getServer().getTicks();
@@ -392,9 +392,8 @@ public class StructureDataProvider extends DataProviderBase
             NbtCompound tag = new NbtCompound();
             tag.put("Structures", structureList);
 
-            // #FIXME ?
-            Servux.printDebug("StructureDataProvider#sendStructures(): yeeting packet.");
-            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(StructureDataPacketHandler.PACKET_S2C_STRUCTURE_DATA, tag, player);
+            Servux.printDebug("StructureDataProvider#sendStructures(): yeet packet to player: {}.", player.getName());
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(ServuxPacketType.PACKET_S2C_STRUCTURE_DATA, tag, player);
         }
     }
 

@@ -4,6 +4,10 @@ import java.util.Objects;
 import net.minecraft.network.PacketByteBuf;
 import io.netty.buffer.ByteBuf;
 
+/**
+ * This was never being used.  PayloadUtils basically is the Utility to put them in, if ever used.
+  */
+
 @Deprecated
 public class PacketUtils
 {
@@ -14,6 +18,7 @@ public class PacketUtils
      * @return a slice of the buffer
      * @see ByteBuf#slice()
      */
+    @Deprecated
     public static PacketByteBuf slice(ByteBuf buf)
     {
         Objects.requireNonNull(buf, "ByteBuf cannot be null");
@@ -27,6 +32,7 @@ public class PacketUtils
      * @return a slice of the buffer
      * @see ByteBuf#retainedSlice()
      */
+    @Deprecated
     public static PacketByteBuf retainedSlice(ByteBuf buf)
     {
         Objects.requireNonNull(buf, "ByteBuf cannot be null");
