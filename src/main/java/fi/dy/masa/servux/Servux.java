@@ -4,6 +4,7 @@ import fi.dy.masa.servux.event.PlayerHandler;
 import fi.dy.masa.servux.event.ServerHandler;
 import fi.dy.masa.servux.listeners.PlayerListener;
 import fi.dy.masa.servux.listeners.ServerListener;
+import fi.dy.masa.servux.network.ServerNetworkPlayInitHandler;
 import fi.dy.masa.servux.network.test.CommandTest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
+        ServerNetworkPlayInitHandler.registerPlayChannels();
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
 

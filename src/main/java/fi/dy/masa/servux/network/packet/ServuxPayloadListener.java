@@ -1,14 +1,12 @@
 package fi.dy.masa.servux.network.packet;
 
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.interfaces.IServuxPayloadListener;
 import fi.dy.masa.servux.network.ServerNetworkPlayHandler;
 import fi.dy.masa.servux.network.payload.ServuxPayload;
-import fi.dy.masa.servux.util.PayloadUtils;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
@@ -34,39 +32,31 @@ public class ServuxPayloadListener implements IServuxPayloadListener
     @Override
     public void receiveServuxPayload(NbtCompound data, ServerPlayNetworking.Context ctx, Identifier id)
     {
-        PacketByteBuf buf = PayloadUtils.fromNbt(data, ServuxPayload.KEY);
-        decodeServuxPayload(buf, ctx.player(), id);
+        decodeServuxPayload(data, ctx.player(), id);
     }
     // *****************************************************************************************************************************************
     @Override
-    public void encodeServuxPayload(PacketByteBuf packet, ServerPlayerEntity player, Identifier id)
+    public void encodeServuxPayload(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         // Encode packet.
         NbtCompound nbt = new NbtCompound();
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-        nbt.putByteArray(ServuxPayload.KEY, packet.readByteArray());
+        nbt.copyFrom(data);
         nbt.putString("id", id.toString());
         Servux.printDebug("ServuxPayloadListener#encodeServuxPayload(): nbt.putByteArray() size in bytes: {}", nbt.getSizeInBytes());
         sendServuxPayload(nbt, player);
     }
 
     @Override
-    public void encodeServuxPayloadWithType(int packetType, NbtCompound data, ServerPlayerEntity player)
+    public void decodeServuxPayload(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
-        // Encode packet.
-        NbtCompound nbt = new NbtCompound();
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-        buf.writeNbt(data);
-        Servux.printDebug("ServuxPayloadListener#encodeServuxPayloadWithType(): buf.writeNbt() size in bytes: {}", buf.readableBytes());
-        nbt.putInt("packetType", packetType);
-        Servux.printDebug("ServuxPayloadListener#encodeServuxPayloadWithType(): nbt.putInt() size in bytes: {}", nbt.getSizeInBytes());
-        nbt.putByteArray(ServuxPayload.KEY, buf.readByteArray());
-        Servux.printDebug("ServuxPayloadListener#encodeServuxPayloadWithType(): nbt.putByteArray() size in bytes: {}", nbt.getSizeInBytes());
-        sendServuxPayload(nbt, player);
-    }
-    @Override
-    public void decodeServuxPayload(PacketByteBuf packet, ServerPlayerEntity player, Identifier id)
-    {
-        Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received unhandled packet from player: {}, of size in bytes: {}.", player.getName(), packet.readableBytes());
+        int packetType = data.getInt("packetType");
+        if (packetType == ServuxPacketType.PACKET_S2C_REFRESH_METADATA)
+        {
+            Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a metadata refresh packet from player: {}.", player.getName().getLiteralString());
+            StructureDataProvider.INSTANCE.unregister(player);
+            StructureDataProvider.INSTANCE.register(player);
+        }
+        else
+            Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received unhandled packet from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
     }
 }

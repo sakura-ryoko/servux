@@ -77,4 +77,9 @@ public interface IDataProvider
      * @return
      */
     //IPluginChannelHandler getPacketHandler();
+    /**
+     * Spawn Chunk Radius
+     */
+    int getSpawnChunkRadius();
+    void setSpawnChunkRadius(int radius);
 }

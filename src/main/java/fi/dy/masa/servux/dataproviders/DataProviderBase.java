@@ -9,6 +9,7 @@ public abstract class DataProviderBase implements IDataProvider
     protected final int protocolVersion;
     protected boolean enabled;
     private int tickRate = 40;
+    private int spawnChunkRadius = -1;
 
     protected DataProviderBase(String name, String channel, int protocolVersion, String description)
     {
@@ -64,4 +65,10 @@ public abstract class DataProviderBase implements IDataProvider
     {
         return this.tickRate;
     }
+
+    @Override
+    public int getSpawnChunkRadius() { return this.spawnChunkRadius; }
+
+    @Override
+    public void setSpawnChunkRadius(int radius) { this.spawnChunkRadius = radius; }
 }

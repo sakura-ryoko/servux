@@ -3,7 +3,6 @@ package fi.dy.masa.servux.event;
 import fi.dy.masa.servux.interfaces.IServuxPayloadListener;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
@@ -43,33 +42,33 @@ public class ServuxPayloadHandler implements IServuxPayloadManager
         }
     }
 
-    public void encodeServuxPayload(PacketByteBuf packet, ServerPlayerEntity player, Identifier id)
+    public void sendServuxPayload(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxPayloadListener handler : this.handlers)
             {
-                handler.encodeServuxPayload(packet, player, id);
+                handler.sendServuxPayload(data, player);
             }
         }
     }
-    public void encodeServuxPayloadWithType(int packetType, NbtCompound tag, ServerPlayerEntity player)
+    public void encodeServuxPayload(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxPayloadListener handler : this.handlers)
             {
-                handler.encodeServuxPayloadWithType(packetType, tag, player);
+                handler.encodeServuxPayload(data, player, id);
             }
         }
     }
-    public void decodeServuxPayload(PacketByteBuf packet, ServerPlayerEntity player, Identifier id)
+    public void decodeServuxPayload(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxPayloadListener handler : this.handlers)
             {
-                handler.decodeServuxPayload(packet, player, id);
+                handler.decodeServuxPayload(data, player, id);
             }
         }
     }

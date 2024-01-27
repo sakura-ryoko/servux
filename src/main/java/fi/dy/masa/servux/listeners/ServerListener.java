@@ -11,7 +11,7 @@ public class ServerListener implements IServerListener
 {
     public void onServerStarting(MinecraftServer minecraftServer)
     {
-        ServerNetworkPlayInitHandler.registerPlayChannels();
+        //ServerNetworkPlayInitHandler.registerPlayChannels();
         PacketProvider.registerPayloads();
         ServerDebugSuite.checkGlobalChannels();
         Servux.printDebug("MinecraftServerEvents#onServerStarting(): invoked.");

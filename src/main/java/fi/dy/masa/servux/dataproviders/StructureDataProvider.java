@@ -10,6 +10,7 @@ import java.util.UUID;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.event.ServuxPayloadHandler;
 import fi.dy.masa.servux.network.packet.ServuxPacketType;
+import fi.dy.masa.servux.network.payload.ServuxPayload;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -21,6 +22,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
@@ -43,12 +45,13 @@ public class StructureDataProvider extends DataProviderBase
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
-              "", ServuxPacketType.PROTOCOL_VERSION,
+                ServuxPayload.TYPE.id().toString(), ServuxPacketType.PROTOCOL_VERSION,
               "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("timeout", this.timeout);
         this.metadata.putInt("version", ServuxPacketType.PROTOCOL_VERSION);
+        this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
     }
 
     @Override
@@ -76,6 +79,12 @@ public class StructureDataProvider extends DataProviderBase
                 //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
                 this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
                 Iterator<UUID> uuidIter = this.registeredPlayers.keySet().iterator();
+
+                // Set Spawn Chunk Radius for Clients --> Should make this into a Mixin
+                int radius = this.getSpawnChunkRadius();
+                int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
+                if (radius != rule)
+                    this.setSpawnChunkRadius(rule);
 
                 while (uuidIter.hasNext())
                 {
@@ -115,9 +124,11 @@ public class StructureDataProvider extends DataProviderBase
 
         if (!this.registeredPlayers.containsKey(uuid))
         {
-            // #FIXME ?
             Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {}.", player.getName().getLiteralString());
-            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(ServuxPacketType.PACKET_S2C_METADATA, this.metadata, player);
+            NbtCompound nbt = new NbtCompound();
+            nbt.copyFrom(this.metadata);
+            nbt.putInt("packetType", ServuxPacketType.PACKET_S2C_METADATA);
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, ServuxPayload.TYPE.id());
 
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             int tickCounter = player.getServer().getTicks();
@@ -391,9 +402,9 @@ public class StructureDataProvider extends DataProviderBase
 
             NbtCompound tag = new NbtCompound();
             tag.put("Structures", structureList);
-
+            tag.putInt("packetType", ServuxPacketType.PACKET_S2C_STRUCTURE_DATA);
             Servux.printDebug("StructureDataProvider#sendStructures(): yeet packet to player: {}.", player.getName());
-            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayloadWithType(ServuxPacketType.PACKET_S2C_STRUCTURE_DATA, tag, player);
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(tag, player, ServuxPayload.TYPE.id());
         }
     }
 
