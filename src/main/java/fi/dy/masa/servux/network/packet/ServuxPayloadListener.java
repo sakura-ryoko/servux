@@ -10,6 +10,8 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
+import java.util.Objects;
+
 public class ServuxPayloadListener implements IServuxPayloadListener
 {
     /**
@@ -49,12 +51,17 @@ public class ServuxPayloadListener implements IServuxPayloadListener
     @Override
     public void decodeServuxPayload(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
-        int packetType = data.getInt("packetType");
-        if (packetType == ServuxPacketType.PACKET_S2C_REFRESH_METADATA)
-        {
-            Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a metadata refresh packet from player: {}.", player.getName().getLiteralString());
-            StructureDataProvider.INSTANCE.unregister(player);
-            StructureDataProvider.INSTANCE.register(player);
+        // For when a Client requests specific data
+        // --> For now, we are only providing the Server Spawn Metadata ... It's "sort of" a structure :P
+        if (Objects.equals(id.toString(), StructureDataProvider.INSTANCE.getNetworkChannel())) {
+            int packetType = data.getInt("packetType");
+            if (packetType == ServuxPacketType.PACKET_S2C_SPAWN_METADATA)
+            {
+                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a Spawn metadata refresh packet from player: {}.", player.getName().getLiteralString());
+                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player);
+            }
+            else
+                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): Invalid packet type from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
         }
         else
             Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received unhandled packet from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());

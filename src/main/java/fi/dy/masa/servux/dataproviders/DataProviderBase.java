@@ -1,20 +1,22 @@
 package fi.dy.masa.servux.dataproviders;
 
+import net.minecraft.util.math.BlockPos;
+
 public abstract class DataProviderBase implements IDataProvider
 {
     // Change Identifier --> String, because it might confuse Minecraft
-    protected final String networkChannel;
     protected final String name;
     protected final String description;
     protected final int protocolVersion;
     protected boolean enabled;
     private int tickRate = 40;
+    private BlockPos spawnPos;
     private int spawnChunkRadius = -1;
+    private boolean refreshSpawnMetadata;
 
-    protected DataProviderBase(String name, String channel, int protocolVersion, String description)
+    protected DataProviderBase(String name, int protocolVersion, String description)
     {
         this.name = name;
-        this.networkChannel = channel;
         this.protocolVersion = protocolVersion;
         this.description = description;
     }
@@ -29,12 +31,6 @@ public abstract class DataProviderBase implements IDataProvider
     public String getDescription()
     {
         return this.description;
-    }
-
-    @Override
-    public String getNetworkChannel()
-    {
-        return this.networkChannel;
     }
 
     @Override
@@ -67,8 +63,38 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public int getSpawnChunkRadius() { return this.spawnChunkRadius; }
+    public BlockPos getSpawnPos()
+    {
+        if (this.spawnPos == null)
+            this.setSpawnPos(new BlockPos(0, 0,0));
+        return this.spawnPos;
+    }
 
     @Override
-    public void setSpawnChunkRadius(int radius) { this.spawnChunkRadius = radius; }
+    public void setSpawnPos(BlockPos spawnPos)
+    {
+        if (this.spawnPos != spawnPos)
+            this.refreshSpawnMetadata = true;
+        this.spawnPos = spawnPos;
+    }
+
+    @Override
+    public int getSpawnChunkRadius()
+    {
+        if (this.spawnChunkRadius < 0)
+            this.spawnChunkRadius = 2;
+        return this.spawnChunkRadius;
+    }
+
+    @Override
+    public void setSpawnChunkRadius(int radius)
+    {
+        if (this.spawnChunkRadius != radius)
+            this.refreshSpawnMetadata = true;
+        this.spawnChunkRadius = radius;
+    }
+    @Override
+    public boolean refreshSpawnMetadata() { return this.refreshSpawnMetadata; }
+    @Override
+    public void setRefreshSpawnMetadataComplete() { this.refreshSpawnMetadata = false; }
 }

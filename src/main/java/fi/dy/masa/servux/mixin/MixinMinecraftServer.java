@@ -2,8 +2,13 @@ package fi.dy.masa.servux.mixin;
 
 import java.util.function.BooleanSupplier;
 
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
+import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.ServerHandler;
+import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,6 +22,8 @@ public abstract class MixinMinecraftServer
 {
     @Shadow private Profiler profiler;
     @Shadow private int ticks;
+    @Shadow public abstract GameRules getGameRules();
+    @Shadow public abstract ServerWorld getOverworld();
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci)
@@ -45,5 +52,12 @@ public abstract class MixinMinecraftServer
     private void servux_onServerStopped(CallbackInfo info)
     {
         ((ServerHandler) ServerHandler.getInstance()).onServerStopped((MinecraftServer) (Object) this);
+    }
+    @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setSpawnPos(Lnet/minecraft/util/math/BlockPos;F)V", shift = At.Shift.AFTER))
+    private void servux_checkSpawnChunkRadius(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci)
+    {
+        Servux.printDebug("MixinMinecraftServer#servux_checkSpawnChunkRadius(): Spawn Position: {}, SPAWN_CHUNK_RADIUS: {}", this.getOverworld().getSpawnPos().toShortString(), this.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS));
+        StructureDataProvider.INSTANCE.setSpawnPos(this.getOverworld().getSpawnPos());
+        StructureDataProvider.INSTANCE.setSpawnChunkRadius(this.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS));
     }
 }
