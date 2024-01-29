@@ -51,17 +51,32 @@ public class ServuxPayloadListener implements IServuxPayloadListener
     @Override
     public void decodeServuxPayload(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
-        // For when a Client requests specific data
-        // --> For now, we are only providing the Server Spawn Metadata ... It's "sort of" a structure :P
-        if (Objects.equals(id.toString(), StructureDataProvider.INSTANCE.getNetworkChannel())) {
+        // Packet handshakes from Client
+        if (Objects.equals(id.toString(), StructureDataProvider.INSTANCE.getNetworkChannel()))
+        {
             int packetType = data.getInt("packetType");
-            if (packetType == ServuxPacketType.PACKET_S2C_SPAWN_METADATA)
+            if (packetType == ServuxPacketType.PACKET_C2S_REQUEST_METADATA)
+            {
+                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a metadata request packet from player: {}.", player.getName().getLiteralString());
+                StructureDataProvider.INSTANCE.refreshMetadata(player);
+            }
+            else if (packetType == ServuxPacketType.PACKET_C2S_REQUEST_SPAWN_METADATA)
             {
                 Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a Spawn metadata refresh packet from player: {}.", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player);
             }
+            else if (packetType == ServuxPacketType.PACKET_C2S_STRUCTURES_ACCEPT)
+            {
+                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a STRUCTURES_ACCEPT request from player: {}.", player.getName().getLiteralString());
+                StructureDataProvider.INSTANCE.acceptStructuresFromPlayer(player);
+            }
+            else if (packetType == ServuxPacketType.PACKET_C2S_STRUCTURES_DECLINED)
+            {
+                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received a STRUCTURES_DECLINED request from player: {}.", player.getName().getLiteralString());
+                StructureDataProvider.INSTANCE.declineStructuresFromPlayer(player);
+            }
             else
-                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): Invalid packet type from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
+                Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): Invalid packetType from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
         }
         else
             Servux.printDebug("ServuxPayloadListener#decodeServuxPayload(): received unhandled packet from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());

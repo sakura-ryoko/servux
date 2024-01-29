@@ -33,6 +33,7 @@ public class StructureDataProvider extends DataProviderBase
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
+    protected final Map<UUID, Boolean> accepted = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
@@ -80,13 +81,14 @@ public class StructureDataProvider extends DataProviderBase
                 //Servux.printDebug("=======================\n");
                 //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
                 this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
-                Iterator<UUID> uuidIter = this.registeredPlayers.keySet().iterator();
 
-                // Set Spawn Chunk Radius for Clients --> Should make this into a Mixin
+                // Set Spawn Chunk Radius for Clients
                 int radius = this.getSpawnChunkRadius();
                 int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
                 if (radius != rule)
                     this.setSpawnChunkRadius(rule);
+
+                Iterator<UUID> uuidIter = this.registeredPlayers.keySet().iterator();
 
                 while (uuidIter.hasNext())
                 {
@@ -95,11 +97,13 @@ public class StructureDataProvider extends DataProviderBase
 
                     if (player != null)
                     {
-                        this.checkForDimensionChange(player);
-                        this.refreshTrackedChunks(player, tickCounter);
-                        // Update players if Spawn metadata has changed
+                        // Only send packets to players who have sent the STRUCTURES_ACCEPT packet
+                        if (this.accepted.getOrDefault(uuid, false)) {
+                            this.checkForDimensionChange(player);
+                            this.refreshTrackedChunks(player, tickCounter);
+                        }
                         if (this.refreshSpawnMetadata())
-                            refreshSpawnMetadata(player);
+                            this.refreshSpawnMetadata(player);
                     }
                     else
                     {
@@ -129,8 +133,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public void register(ServerPlayerEntity player)
     {
-        Servux.printDebug("register");
-        boolean registered = false;
+        Servux.printDebug("StructureDataProvider#register(): register player: {}", player.getName().getLiteralString());
         UUID uuid = player.getUuid();
 
         if (!this.registeredPlayers.containsKey(uuid))
@@ -142,6 +145,8 @@ public class StructureDataProvider extends DataProviderBase
             ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
 
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
+            this.accepted.put(uuid, false);
+            // WAIT FOR CLIENTS TO REQUEST STRUCTURES DATA
             try
             {
                 int tickCounter = Objects.requireNonNull(player.getServer()).getTicks();
@@ -157,16 +162,14 @@ public class StructureDataProvider extends DataProviderBase
                     this.initialSyncStructuresToPlayerWithinRange(player, 10, 0);
                 }
             }
-
-            registered = true;
         }
-
     }
 
     public void unregister(ServerPlayerEntity player)
     {
         Servux.printDebug("unregister");
         this.registeredPlayers.remove(player.getUuid());
+        this.accepted.remove(player.getUuid());
     }
 
     protected void initialSyncStructuresToPlayerWithinRange(ServerPlayerEntity player, int chunkRadius, int tickCounter)
@@ -179,7 +182,7 @@ public class StructureDataProvider extends DataProviderBase
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
-        // System.out.printf("initialSyncStructuresToPlayerWithinRange: references: %d\n", references.size());
+        Servux.printDebug("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
         this.sendStructures(player, references, tickCounter);
     }
 
@@ -192,7 +195,7 @@ public class StructureDataProvider extends DataProviderBase
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
             final int timeout = this.timeout;
 
-            Servux.printDebug("addChunkTimeoutIfHasReferences: {}", pos);
+            Servux.printDebug("StructureDataProvider#addChunkTimeoutIfHasReferences: {}", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
             map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout));
         }
@@ -234,7 +237,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (map != null)
         {
-            Servux.printDebug("refreshTrackedChunks: timeouts: {}", map.size());
+            Servux.printDebug("StructureDataProvider#refreshTrackedChunks: timeouts: {}", map.size());
             this.sendAndRefreshExpiredStructures(player, map, tickCounter);
         }
     }
@@ -286,7 +289,7 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            Servux.printDebug("sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
+            Servux.printDebug("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
 
             if (!references.isEmpty())
             {
@@ -388,7 +391,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        Servux.printDebug("getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
+        Servux.printDebug("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
         return starts;
     }
 
@@ -405,7 +408,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        Servux.printDebug("getStructureReferencesWithinRange: references: {}", references.size());
+        Servux.printDebug("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
         return references;
     }
 
@@ -456,5 +459,77 @@ public class StructureDataProvider extends DataProviderBase
         nbt.putInt("spawnPosZ", spawnPos.getZ());
         nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
         ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
+    }
+
+    /**
+     * Added a simple "OPT-IN" Boolean system for players to "Accept/Decline" receiving structure packets
+     * --> Saving bandwidth, saving kittens, etc.
+     */
+    public void acceptStructuresFromPlayer(ServerPlayerEntity player)
+    {
+        // Player requested for us to either ALLOW or DISALLOW sending them Structures packets
+        UUID uuid = player.getUuid();
+        if (this.accepted.containsKey(uuid))
+        {
+            this.accepted.replace(uuid, true);
+        }
+        else
+        {
+            this.accepted.put(uuid, true);
+        }
+        if (this.registeredPlayers.containsKey(uuid))
+        {
+            this.registeredPlayers.replace(uuid, new PlayerDimensionPosition(player));
+        }
+        else
+        {
+            this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
+        }
+        Servux.printDebug("StructureDataProvider#acceptStructuresFromPlayer(): start initialSyncStructuresToPlayerWithinRange() for player {}", player.getName().getLiteralString());
+        try
+        {
+            int tickCounter = Objects.requireNonNull(player.getServer()).getTicks();
+            this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
+        }
+        catch (Exception ignored)
+        {
+            try {
+                this.initialSyncStructuresToPlayerWithinRange(player, Objects.requireNonNull(player.getServer()).getPlayerManager().getViewDistance(), 0);
+            }
+            catch (Exception ignore)
+            {
+                this.initialSyncStructuresToPlayerWithinRange(player, 10, 0);
+            }
+        }
+    }
+    public void declineStructuresFromPlayer(ServerPlayerEntity player)
+    {
+        // Player requested for us to either ALLOW or DISALLOW sending them Structures packets
+        UUID uuid = player.getUuid();
+        if (this.accepted.containsKey(uuid))
+        {
+            this.accepted.replace(uuid, false);
+        }
+        else
+        {
+            this.accepted.put(uuid, false);
+        }
+        // The Player needs to send a REQUEST_METADATA packet to resume sending Structures.
+        Servux.printDebug("StructureDataProvider#declineStructuresFromPlayer(): player {} is declining to receive structure data packets.", player.getName().getLiteralString());
+    }
+
+    public void refreshMetadata(ServerPlayerEntity player)
+    {
+        UUID uuid = player.getUuid();
+        if (this.registeredPlayers.containsKey(uuid))
+        {
+            NbtCompound nbt = new NbtCompound();
+            nbt.copyFrom(this.metadata);
+            nbt.putInt("packetType", ServuxPacketType.PACKET_S2C_METADATA);
+            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
+        }
+        else {
+            register(player);
+        }
     }
 }
