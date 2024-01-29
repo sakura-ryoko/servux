@@ -5,7 +5,6 @@ import fi.dy.masa.servux.event.ServerHandler;
 import fi.dy.masa.servux.listeners.PlayerListener;
 import fi.dy.masa.servux.listeners.ServerListener;
 import fi.dy.masa.servux.network.ServerNetworkPlayInitHandler;
-import fi.dy.masa.servux.network.test.CommandTest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
@@ -28,8 +27,6 @@ public class Servux implements ModInitializer
         ServerHandler.getInstance().registerServerHandler(serverListener);
         PlayerListener playerListener = new PlayerListener();
         PlayerHandler.getInstance().registerPlayerHandler(playerListener);
-        if (ServuxReference.MOD_DEBUG)
-            CommandTest.registerCommandTest();
     }
 
     public static String getModVersionString(String modId)

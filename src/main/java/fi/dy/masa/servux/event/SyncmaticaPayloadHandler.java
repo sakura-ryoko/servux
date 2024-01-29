@@ -1,8 +1,9 @@
 package fi.dy.masa.servux.event;
 
 import fi.dy.masa.servux.interfaces.ISyncmaticaPayloadListener;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ public class SyncmaticaPayloadHandler implements ISyncmaticaPayloadManager
     /**
      * NOT PUBLIC API - DO NOT CALL
      */
-    public void receiveSyncmaticaPayload(NbtCompound data, ClientPlayNetworking.Context ctx)
+    public void receiveSyncmaticaPayload(NbtCompound data, ServerPlayNetworking.Context ctx)
     {
         if (!this.handlers.isEmpty())
         {
@@ -39,33 +40,33 @@ public class SyncmaticaPayloadHandler implements ISyncmaticaPayloadManager
             }
         }
     }
-    public void sendSyncmaticaPayload(NbtCompound data)
+    public void sendSyncmaticaPayload(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (ISyncmaticaPayloadListener handler : this.handlers)
             {
-                handler.sendSyncmaticaPayload(data);
+                handler.sendSyncmaticaPayload(data, player);
             }
         }
     }
-    public void encodeSyncmaticaPayload(NbtCompound data)
+    public void encodeSyncmaticaPayload(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (ISyncmaticaPayloadListener handler : this.handlers)
             {
-                handler.encodeSyncmaticaPayload(data);
+                handler.encodeSyncmaticaPayload(data, player);
             }
         }
     }
-    public void decodeSyncmaticaPayload(NbtCompound data)
+    public void decodeSyncmaticaPayload(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (ISyncmaticaPayloadListener handler : this.handlers)
             {
-                handler.decodeSyncmaticaPayload(data);
+                handler.decodeSyncmaticaPayload(data, player);
             }
         }
     }

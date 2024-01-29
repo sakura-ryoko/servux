@@ -52,12 +52,12 @@ public class PayloadTypeRegister
         if (namespace.isEmpty())
             namespace = ServuxReference.COMMON_NAMESPACE;
 
-        registerDefaultType(PayloadType.STRING, "string", namespace);
-        registerDefaultType(PayloadType.DATA, "data", namespace);
+        //registerDefaultType(PayloadType.STRING, "string", namespace);
+        //registerDefaultType(PayloadType.DATA, "data", namespace);
         //registerType(PayloadType.CARPET_HELLO, "hello", "carpet", "hello");
         // For Carpet "hello" packet (NbtCompound type)
         registerType(PayloadType.SERVUX, "structure_bounding_boxes", "servux", "structures");
-        registerType(PayloadType.SYNCMATICA, "syncmatic", "syncmatica", "syncmatics");
+        //registerType(PayloadType.SYNCMATICA, "syncmatic", "syncmatica", "syncmatics");
     }
     public static <T extends CustomPayload> void registerDefaultPlayChannel(CustomPayload.Id<T> id, PacketCodec<PacketByteBuf, T> codec)
     {
@@ -67,10 +67,10 @@ public class PayloadTypeRegister
     public static void registerDefaultPlayChannels()
     {
         Servux.printDebug("PayloadTypeRegister#registerPlayChannels(): registering play channels.");
-        registerDefaultPlayChannel(DataPayload.TYPE, DataPayload.CODEC);
-        registerDefaultPlayChannel(StringPayload.TYPE, StringPayload.CODEC);
+        //registerDefaultPlayChannel(DataPayload.TYPE, DataPayload.CODEC);
+        //registerDefaultPlayChannel(StringPayload.TYPE, StringPayload.CODEC);
         //registerDefaultPlayChannel(CarpetPayload.TYPE, CarpetPayload.CODEC);
         registerDefaultPlayChannel(ServuxPayload.TYPE, ServuxPayload.CODEC);
-        registerDefaultPlayChannel(SyncmaticaPayload.TYPE, SyncmaticaPayload.CODEC);
+        //registerDefaultPlayChannel(SyncmaticaPayload.TYPE, SyncmaticaPayload.CODEC);
     }
 }
