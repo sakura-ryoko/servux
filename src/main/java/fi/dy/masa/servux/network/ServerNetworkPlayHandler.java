@@ -67,4 +67,20 @@ public abstract class ServerNetworkPlayHandler
         Servux.printDebug("ServerNetworkPlayHandler#receiveServUX(): id: {} received ServUX Payload (size in bytes): {}", payload.getId(), payload.data().getSizeInBytes());
         ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).receiveServuxPayload(payload.data(), ctx, payload.getId().id());
     }
+
+    public static void sendSyncmaticaUX(SyncmaticaPayload payload, ServerPlayerEntity player)
+    {
+        // Client-bound packet sent from the Server
+        if (ServerPlayNetworking.canSend(player, payload.getId()))
+        {
+            ServerPlayNetworking.send(player, payload);
+            Servux.printDebug("ServerNetworkPlayHandler#sendSyncmaticaUX(): sending payload id: {}", payload.getId());
+        }
+
+    }
+    public static void receiveSyncmaticaUX(SyncmaticaPayload payload, ServerPlayNetworking.Context ctx)
+    {
+        Servux.printDebug("ServerNetworkPlayHandler#receiveSyncmaticaUX(): id: {} received ServUX Payload (size in bytes): {}", payload.getId(), payload.data().getSizeInBytes());
+        //((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).receiveServuxPayload(payload.data(), ctx, payload.getId().id());
+    }
 }
