@@ -17,7 +17,6 @@ public class PayloadTypeRegister
     // This is how it looks in the static context per a MOD, which must each include its own Custom Payload Records.
     // --> The send/receive handlers can be made into an interface.
     private static final Map<PayloadType, PayloadCodec> TYPES = new HashMap<>();
-
     public static Identifier getIdentifier(PayloadType type)
     {
         return TYPES.get(type).getId();
@@ -26,6 +25,9 @@ public class PayloadTypeRegister
     {
         return TYPES.get(type).getKey();
     }
+    private static boolean typesRegistered = false;
+    private static boolean playRegistered = false;
+
     public static void registerDefaultType(PayloadType type, String key, String namespace)
     {
         if (!TYPES.containsKey(type))
@@ -44,8 +46,10 @@ public class PayloadTypeRegister
             Servux.printDebug("PayloadTypeRegister#registerDefaultType(): Successfully registered new Payload id: {} // {}:{}", codec.getId().hashCode(), codec.getId().getNamespace(), codec.getId().getPath());
         }
     }
-    public static void registerDefaultTypes(String name)
+    public static void registerTypes(String name)
     {
+        if (typesRegistered)
+            return;
         Servux.printDebug("PayloadTypeRegister#registerDefaultTypes(): executing.");
 
         String namespace = name;
@@ -57,20 +61,27 @@ public class PayloadTypeRegister
         //registerType(PayloadType.CARPET_HELLO, "hello", "carpet", "hello");
         // For Carpet "hello" packet (NbtCompound type)
         registerType(PayloadType.SERVUX, "structure_bounding_boxes", "servux", "structures");
-        //registerType(PayloadType.SYNCMATICA, "syncmatic", "syncmatica", "syncmatics");
+        registerType(PayloadType.SYNCMATICA, "syncmatic", "syncmatica", "syncmatics");
+
+        typesRegistered = true;
     }
-    public static <T extends CustomPayload> void registerDefaultPlayChannel(CustomPayload.Id<T> id, PacketCodec<PacketByteBuf, T> codec)
+    public static <T extends CustomPayload> void registerPlayChannel(CustomPayload.Id<T> id, PacketCodec<PacketByteBuf, T> codec)
     {
         PayloadTypeRegistry.playC2S().register(id, codec);
         PayloadTypeRegistry.playS2C().register(id, codec);
     }
-    public static void registerDefaultPlayChannels()
+    public static void registerPlayChannels()
     {
+        // Don't invoke more than once
+        if (playRegistered)
+            return;
         Servux.printDebug("PayloadTypeRegister#registerPlayChannels(): registering play channels.");
         //registerDefaultPlayChannel(DataPayload.TYPE, DataPayload.CODEC);
         //registerDefaultPlayChannel(StringPayload.TYPE, StringPayload.CODEC);
         //registerDefaultPlayChannel(CarpetPayload.TYPE, CarpetPayload.CODEC);
-        registerDefaultPlayChannel(ServuxPayload.TYPE, ServuxPayload.CODEC);
-        //registerDefaultPlayChannel(SyncmaticaPayload.TYPE, SyncmaticaPayload.CODEC);
+        registerPlayChannel(ServuxPayload.TYPE, ServuxPayload.CODEC);
+        registerPlayChannel(SyncmaticaPayload.TYPE, SyncmaticaPayload.CODEC);
+
+        playRegistered = true;
     }
 }

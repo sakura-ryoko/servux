@@ -2,7 +2,7 @@ package fi.dy.masa.servux.network;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.event.ServuxPayloadHandler;
-import fi.dy.masa.servux.event.SyncmaticaPayloadHandler;
+import fi.dy.masa.servux.event.SyncmaticaPayloadServerHandler;
 import fi.dy.masa.servux.network.payload.*;
 import fi.dy.masa.servux.util.PayloadUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -69,7 +69,7 @@ public abstract class ServerNetworkPlayHandler
         ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).receiveServuxPayload(payload.data(), ctx, payload.getId().id());
     }
 
-    public static void sendSyncmaticaUX(SyncmaticaPayload payload, ServerPlayerEntity player)
+    public static void sendSyncmaticaServerPayload(SyncmaticaPayload payload, ServerPlayerEntity player)
     {
         // Client-bound packet sent from the Server
         if (ServerPlayNetworking.canSend(player, payload.getId()))
@@ -79,9 +79,9 @@ public abstract class ServerNetworkPlayHandler
         }
 
     }
-    public static void receiveSyncmaticaUX(SyncmaticaPayload payload, ServerPlayNetworking.Context ctx)
+    public static void receiveSyncmaticaServerPayload(SyncmaticaPayload payload, ServerPlayNetworking.Context ctx)
     {
         Servux.printDebug("ServerNetworkPlayHandler#receiveSyncmaticaUX(): id: {} received Syncmatica Payload (size in bytes): {}", payload.getId(), payload.data().getSizeInBytes());
-        ((SyncmaticaPayloadHandler) SyncmaticaPayloadHandler.getInstance()).receiveSyncmaticaPayload(payload.data(), ctx);
+        ((SyncmaticaPayloadServerHandler) SyncmaticaPayloadServerHandler.getInstance()).receiveSyncmaticaServerPayload(payload.data(), ctx, payload.getId().id());
     }
 }

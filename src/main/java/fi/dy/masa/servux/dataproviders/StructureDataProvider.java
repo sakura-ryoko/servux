@@ -138,11 +138,16 @@ public class StructureDataProvider extends DataProviderBase
 
         if (!this.registeredPlayers.containsKey(uuid))
         {
+            // This packet yeet doesn't always work -- too soon for the receivers to register?
+            // --> It works after the client sends a PACKET_C2S_REQUEST_METADATA packet
+
+            /*
             Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {}.", player.getName().getLiteralString());
             NbtCompound nbt = new NbtCompound();
             nbt.copyFrom(this.metadata);
             nbt.putInt("packetType", ServuxPacketType.PACKET_S2C_METADATA);
             ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
+            */
 
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             this.accepted.put(uuid, false);
@@ -182,7 +187,7 @@ public class StructureDataProvider extends DataProviderBase
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
-        Servux.printDebug("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
+        //Servux.printDebug("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
         this.sendStructures(player, references, tickCounter);
     }
 
@@ -195,7 +200,7 @@ public class StructureDataProvider extends DataProviderBase
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
             final int timeout = this.timeout;
 
-            Servux.printDebug("StructureDataProvider#addChunkTimeoutIfHasReferences: {}", pos);
+            //Servux.printDebug("StructureDataProvider#addChunkTimeoutIfHasReferences: {}", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
             map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout));
         }

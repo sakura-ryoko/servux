@@ -16,12 +16,12 @@ public abstract class MixinPlayerManager
     public MixinPlayerManager() { super(); }
 
     @Inject(method = "onPlayerConnect", at = @At("TAIL"))
-    private void eventOnPlayerJoin(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci)
+    private void servux_eventOnPlayerJoin(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerJoin(player);
     }
     @Inject(method = "remove", at = @At("HEAD"))
-    private void eventOnPlayerLeave(ServerPlayerEntity player, CallbackInfo ci)
+    private void servux_eventOnPlayerLeave(ServerPlayerEntity player, CallbackInfo ci)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerLeave(player);
     }

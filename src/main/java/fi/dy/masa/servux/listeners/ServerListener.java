@@ -11,7 +11,8 @@ public class ServerListener implements IServerListener
 {
     public void onServerStarting(MinecraftServer minecraftServer)
     {
-        //ServerNetworkPlayInitHandler.registerPlayChannels();
+        // Register in case for whatever reason they aren't already
+        ServerNetworkPlayInitHandler.registerPlayChannels();
         PacketProvider.registerPayloads();
         ServerDebugSuite.checkGlobalChannels();
         Servux.printDebug("MinecraftServerEvents#onServerStarting(): invoked.");
@@ -30,7 +31,6 @@ public class ServerListener implements IServerListener
     public void onServerStopped(MinecraftServer minecraftServer)
     {
         ServerNetworkPlayInitHandler.unregisterReceivers();
-        PacketProvider.unregisterPayloads();
         ServerDebugSuite.checkGlobalChannels();
         Servux.printDebug("MinecraftServerEvents#onServerStopped(): invoked.");
     }
