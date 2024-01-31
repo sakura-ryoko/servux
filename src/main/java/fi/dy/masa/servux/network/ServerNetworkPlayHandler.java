@@ -2,7 +2,6 @@ package fi.dy.masa.servux.network;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.event.ServuxPayloadHandler;
-import fi.dy.masa.servux.event.SyncmaticaPayloadServerHandler;
 import fi.dy.masa.servux.network.payload.*;
 import fi.dy.masa.servux.util.PayloadUtils;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -82,6 +81,6 @@ public abstract class ServerNetworkPlayHandler
     public static void receiveSyncmaticaServerPayload(SyncmaticaPayload payload, ServerPlayNetworking.Context ctx)
     {
         Servux.printDebug("ServerNetworkPlayHandler#receiveSyncmaticaUX(): id: {} received Syncmatica Payload (size in bytes): {}", payload.getId(), payload.data().getSizeInBytes());
-        ((SyncmaticaPayloadServerHandler) SyncmaticaPayloadServerHandler.getInstance()).receiveSyncmaticaServerPayload(payload.data(), ctx, payload.getId().id());
+        //((SyncmaticaPayloadServerHandler) SyncmaticaPayloadServerHandler.getInstance()).receiveSyncmaticaServerPayload(payload.data(), ctx, payload.getId().id());
     }
 }

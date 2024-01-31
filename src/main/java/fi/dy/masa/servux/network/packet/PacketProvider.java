@@ -2,12 +2,11 @@ package fi.dy.masa.servux.network.packet;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.event.ServuxPayloadHandler;
-import fi.dy.masa.servux.event.SyncmaticaPayloadServerHandler;
 
 public class PacketProvider
 {
     static ServuxPayloadListener servuxListener = new ServuxPayloadListener();
-    static SyncmaticaPayloadServerListener syncmaticaServerListener = new SyncmaticaPayloadServerListener();
+    //static SyncmaticaPayloadServerListener syncmaticaServerListener = new SyncmaticaPayloadServerListener();
     private static boolean payloadsRegistered = false;
 
     public static void registerPayloads()
@@ -16,7 +15,7 @@ public class PacketProvider
             return;
         Servux.printDebug("PacketProvider#registerPayloads(): invoked.");
         ServuxPayloadHandler.getInstance().registerServuxHandler(servuxListener);
-        SyncmaticaPayloadServerHandler.getInstance().registerSyncmaticaServerHandler(syncmaticaServerListener);
+        //SyncmaticaPayloadServerHandler.getInstance().registerSyncmaticaServerHandler(syncmaticaServerListener);
 
         payloadsRegistered = true;
     }
@@ -24,7 +23,7 @@ public class PacketProvider
     {
         Servux.printDebug("PacketProvider#unregisterPayloads(): invoked.");
         ServuxPayloadHandler.getInstance().unregisterServuxHandler(servuxListener);
-        SyncmaticaPayloadServerHandler.getInstance().unregisterSyncmaticaServerHandler(syncmaticaServerListener);
+        //SyncmaticaPayloadServerHandler.getInstance().unregisterSyncmaticaServerHandler(syncmaticaServerListener);
 
         payloadsRegistered = false;
     }
