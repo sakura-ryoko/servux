@@ -8,6 +8,15 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+/**
+ * canSend()
+ * Wraps: canSend(player.networkHandler, payload.getId().id());
+ * --> Wraps Internally as:
+ * `--> ServerNetworkingImpl.getAddon(player.networkHandler).getSendableChannels().contains(payload.getId().id());
+ * send()
+ * Wraps internally as:
+ * --> player.networkHandler.sendPacket(ServerPlayNetworking.createS2CPacket(payload));
+ */
 public abstract class ServerNetworkPlayHandler
 {
     // String Payloads
