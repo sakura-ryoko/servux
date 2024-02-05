@@ -20,12 +20,12 @@ public class ServerListener implements IServerListener
     public void onServerStarted(MinecraftServer minecraftServer)
     {
         ServerNetworkPlayInitHandler.registerReceivers();
-        ServerDebugSuite.checkGlobalChannels();
+        //ServerDebugSuite.checkGlobalChannels();
         Servux.printDebug("MinecraftServerEvents#onServerStarted(): invoked.");
     }
     public void onServerStopping(MinecraftServer minecraftServer)
     {
-        ServerDebugSuite.checkGlobalChannels();
+        //ServerDebugSuite.checkGlobalChannels();
         Servux.printDebug("MinecraftServerEvents#onServerStopping(): invoked.");
     }
     public void onServerStopped(MinecraftServer minecraftServer)

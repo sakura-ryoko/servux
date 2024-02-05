@@ -1,6 +1,5 @@
 package fi.dy.masa.servux.dataproviders;
 
-import fi.dy.masa.servux.network.payload.SyncmaticaPayload;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 
@@ -10,7 +9,7 @@ import net.minecraft.util.Identifier;
 public class SyncmaticDataProvider extends DataProviderBase
 {
     public static final SyncmaticDataProvider INSTANCE = new SyncmaticDataProvider();
-    private static Identifier getChannel() { return SyncmaticaPayload.TYPE.id(); }
+    private static Identifier getChannel() { return null; }
 
     protected final NbtCompound metadata = new NbtCompound();
     protected static String SyncmaticDirectory = "syncmatics";
@@ -24,7 +23,7 @@ public class SyncmaticDataProvider extends DataProviderBase
         this.metadata.putInt("version", 0);
     }
 
-    @Override
+    //@Override
     public String getNetworkChannel() { return getChannel().toString(); }
 
     //@Override
