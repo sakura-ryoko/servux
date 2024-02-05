@@ -59,6 +59,9 @@ public class PayloadTypeRegister
         //registerType(PayloadType.CARPET_HELLO, "hello", "carpet", "hello");
         // For Carpet "hello" packet (NbtCompound type)
         registerType(PayloadType.SERVUX, "structure_bounding_boxes", "servux", "structures");
+        registerType(PayloadType.SERVUX_LITEMATICS, "litematic_shared_storage", "servux", "litematics");
+        registerType(PayloadType.SERVUX_METADATA, "metadata_service", "servux", "metadata");
+        //registerType(PayloadType.SERVUX_STRUCTURES, "structure_bounding_boxes", "servux", "structures");
 
         typesRegistered = true;
     }
@@ -75,6 +78,9 @@ public class PayloadTypeRegister
         Servux.printDebug("PayloadTypeRegister#registerPlayChannels(): registering play channels.");
         //registerDefaultPlayChannel(CarpetPayload.TYPE, CarpetPayload.CODEC);
         registerPlayChannel(ServuxPayload.TYPE, ServuxPayload.CODEC);
+        registerPlayChannel(ServuxLitematicsPayload.TYPE, ServuxLitematicsPayload.CODEC);
+        registerPlayChannel(ServuxMetadataPayload.TYPE, ServuxMetadataPayload.CODEC);
+        //registerPlayChannel(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
 
         playRegistered = true;
     }
