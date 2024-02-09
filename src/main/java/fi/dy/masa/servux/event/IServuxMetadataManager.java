@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.event;
 
-import fi.dy.masa.malilib.interfaces.IServuxMetadataListener;
+
+import fi.dy.masa.servux.interfaces.IServuxMetadataListener;
 
 public interface IServuxMetadataManager
 {

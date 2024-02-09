@@ -1,8 +1,10 @@
 package fi.dy.masa.servux.event;
 
-import fi.dy.masa.malilib.interfaces.IServuxLitematicsListener;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import fi.dy.masa.servux.interfaces.IServuxLitematicsListener;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,44 +41,44 @@ public class ServuxLitematicsHandler implements IServuxLitematicsManager
             }
         }
     }
-    public void receiveServuxLitematics(NbtCompound data, ClientPlayNetworking.Context ctx)
+    public void receiveServuxLitematics(NbtCompound data, ServerPlayNetworking.Context ctx, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxLitematicsListener handler : this.handlers)
             {
-                handler.receiveServuxLitematics(data, ctx);
+                handler.receiveServuxLitematics(data, ctx, id);
             }
         }
     }
 
-    public void sendServuxLitematics(NbtCompound data)
+    public void sendServuxLitematics(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxLitematicsListener handler : this.handlers)
             {
-                handler.sendServuxLitematics(data);
+                handler.sendServuxLitematics(data, player);
             }
         }
     }
-    public void encodeServuxLitematics(NbtCompound data)
+    public void encodeServuxLitematics(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxLitematicsListener handler : this.handlers)
             {
-                handler.encodeServuxLitematics(data);
+                handler.encodeServuxLitematics(data, player, id);
             }
         }
     }
-    public void decodeServuxLitematics(NbtCompound data)
+    public void decodeServuxLitematics(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxLitematicsListener handler : this.handlers)
             {
-                handler.decodeServuxLitematics(data);
+                handler.decodeServuxLitematics(data, player, id);
             }
         }
     }

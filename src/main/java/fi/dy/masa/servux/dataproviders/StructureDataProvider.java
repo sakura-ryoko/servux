@@ -3,9 +3,9 @@ package fi.dy.masa.servux.dataproviders;
 import java.util.*;
 
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.event.ServuxPayloadHandler;
-import fi.dy.masa.servux.network.packet.ServuxPacketType;
-import fi.dy.masa.servux.network.payload.ServuxPayload;
+import fi.dy.masa.servux.event.ServuxStructuresHandler;
+import fi.dy.masa.servux.network.packet.PacketType;
+import fi.dy.masa.servux.network.payload.channel.ServuxStructuresPayload;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -38,16 +38,16 @@ public class StructureDataProvider extends DataProviderBase
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
-    public static Identifier getChannel() { return ServuxPayload.TYPE.id(); }
+    public static Identifier getChannel() { return ServuxStructuresPayload.TYPE.id(); }
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
-              ServuxPacketType.PROTOCOL_VERSION,
+              PacketType.Structures.PROTOCOL_VERSION,
               "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("timeout", this.timeout);
-        this.metadata.putInt("version", ServuxPacketType.PROTOCOL_VERSION);
+        this.metadata.putInt("version", PacketType.Structures.PROTOCOL_VERSION);
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
@@ -145,7 +145,7 @@ public class StructureDataProvider extends DataProviderBase
             Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {}.", player.getName().getLiteralString());
             NbtCompound nbt = new NbtCompound();
             nbt.copyFrom(this.metadata);
-            nbt.putInt("packetType", ServuxPacketType.PACKET_S2C_METADATA);
+            nbt.putInt("packetType", PacketType.PACKET_S2C_METADATA);
             ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
             */
 
@@ -433,9 +433,9 @@ public class StructureDataProvider extends DataProviderBase
 
             NbtCompound tag = new NbtCompound();
             tag.put("Structures", structureList);
-            tag.putInt("packetType", ServuxPacketType.PACKET_S2C_STRUCTURE_DATA);
+            tag.putInt("packetType", PacketType.Structures.PACKET_S2C_STRUCTURE_DATA);
             Servux.printDebug("StructureDataProvider#sendStructures(): yeet packet to player: {}.", player.getName());
-            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(tag, player, getChannel());
+            ((ServuxStructuresHandler) ServuxStructuresHandler.getInstance()).encodeServuxStructures(tag, player, getChannel());
         }
     }
 
@@ -457,13 +457,13 @@ public class StructureDataProvider extends DataProviderBase
         // Only replies to players who request it, or if the values have changed
         NbtCompound nbt = new NbtCompound();
         BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
-        nbt.putInt("packetType", ServuxPacketType.PACKET_S2C_SPAWN_METADATA);
+        nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
         nbt.putString("id", getNetworkChannel());
         nbt.putInt("spawnPosX", spawnPos.getX());
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());
         nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
-        ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
+        ((ServuxStructuresHandler) ServuxStructuresHandler.getInstance()).encodeServuxStructures(nbt, player, getChannel());
     }
 
     /**
@@ -530,8 +530,8 @@ public class StructureDataProvider extends DataProviderBase
         {
             NbtCompound nbt = new NbtCompound();
             nbt.copyFrom(this.metadata);
-            nbt.putInt("packetType", ServuxPacketType.PACKET_S2C_METADATA);
-            ((ServuxPayloadHandler) ServuxPayloadHandler.getInstance()).encodeServuxPayload(nbt, player, getChannel());
+            nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
+            ((ServuxStructuresHandler) ServuxStructuresHandler.getInstance()).encodeServuxStructures(nbt, player, getChannel());
         }
         else {
             register(player);

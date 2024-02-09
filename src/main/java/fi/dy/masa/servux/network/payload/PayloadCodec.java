@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network;
+package fi.dy.masa.servux.network.payload;
 
 import net.minecraft.util.Identifier;
 
@@ -31,7 +31,6 @@ public class PayloadCodec implements IPayloadType
         switch (this.type)
         {
             case CARPET_HELLO -> this.path = "hello";
-            case SERVUX -> this.path = "structures";
             case SERVUX_STRUCTURES -> this.path = "structures";
             case SERVUX_METADATA -> this.path = "metadata";
             case SERVUX_LITEMATICS -> this.path = "litematics";

@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network;
+package fi.dy.masa.servux.network.payload;
 
 import net.minecraft.util.Identifier;
 

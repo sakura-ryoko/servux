@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.network;
 
 import fi.dy.masa.servux.ServuxReference;
+import fi.dy.masa.servux.network.payload.PayloadTypeRegister;
 import fi.dy.masa.servux.network.test.ServerDebugSuite;
 
 public class ServerNetworkPlayInitHandler

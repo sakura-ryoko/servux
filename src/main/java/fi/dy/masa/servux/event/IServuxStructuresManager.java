@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.event;
 
-import fi.dy.masa.malilib.interfaces.IServuxStructuresListener;
+
+import fi.dy.masa.servux.interfaces.IServuxStructuresListener;
 
 public interface IServuxStructuresManager
 {

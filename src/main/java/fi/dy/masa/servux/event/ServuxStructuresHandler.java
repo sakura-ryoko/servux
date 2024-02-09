@@ -1,8 +1,10 @@
 package fi.dy.masa.servux.event;
 
-import fi.dy.masa.malilib.interfaces.IServuxStructuresListener;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import fi.dy.masa.servux.interfaces.IServuxStructuresListener;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,44 +41,44 @@ public class ServuxStructuresHandler implements IServuxStructuresManager
             }
         }
     }
-    public void receiveServuxStructures(NbtCompound data, ClientPlayNetworking.Context ctx)
+    public void receiveServuxStructures(NbtCompound data, ServerPlayNetworking.Context ctx, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxStructuresListener handler : this.handlers)
             {
-                handler.receiveServuxStructures(data, ctx);
+                handler.receiveServuxStructures(data, ctx, id);
             }
         }
     }
 
-    public void sendServuxStructures(NbtCompound data)
+    public void sendServuxStructures(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxStructuresListener handler : this.handlers)
             {
-                handler.sendServuxStructures(data);
+                handler.sendServuxStructures(data, player);
             }
         }
     }
-    public void encodeServuxStructures(NbtCompound data)
+    public void encodeServuxStructures(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxStructuresListener handler : this.handlers)
             {
-                handler.encodeServuxStructures(data);
+                handler.encodeServuxStructures(data, player, id);
             }
         }
     }
-    public void decodeServuxStructures(NbtCompound data)
+    public void decodeServuxStructures(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxStructuresListener handler : this.handlers)
             {
-                handler.decodeServuxStructures(data);
+                handler.decodeServuxStructures(data, player, id);
             }
         }
     }

@@ -1,8 +1,10 @@
 package fi.dy.masa.servux.event;
 
-import fi.dy.masa.malilib.interfaces.IServuxMetadataListener;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import fi.dy.masa.servux.interfaces.IServuxMetadataListener;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,44 +41,44 @@ public class ServuxMetadataHandler implements IServuxMetadataManager
             }
         }
     }
-    public void receiveServuxMetadata(NbtCompound data, ClientPlayNetworking.Context ctx)
+    public void receiveServuxMetadata(NbtCompound data, ServerPlayNetworking.Context ctx, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxMetadataListener handler : this.handlers)
             {
-                handler.receiveServuxMetadata(data, ctx);
+                handler.receiveServuxMetadata(data, ctx, id);
             }
         }
     }
 
-    public void sendServuxMetadata(NbtCompound data)
+    public void sendServuxMetadata(NbtCompound data, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxMetadataListener handler : this.handlers)
             {
-                handler.sendServuxMetadata(data);
+                handler.sendServuxMetadata(data, player);
             }
         }
     }
-    public void encodeServuxMetadata(NbtCompound data)
+    public void encodeServuxMetadata(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxMetadataListener handler : this.handlers)
             {
-                handler.encodeServuxMetadata(data);
+                handler.encodeServuxMetadata(data, player, id);
             }
         }
     }
-    public void decodeServuxMetadata(NbtCompound data)
+    public void decodeServuxMetadata(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         if (!this.handlers.isEmpty())
         {
             for (IServuxMetadataListener handler : this.handlers)
             {
-                handler.decodeServuxMetadata(data);
+                handler.decodeServuxMetadata(data, player, id);
             }
         }
     }

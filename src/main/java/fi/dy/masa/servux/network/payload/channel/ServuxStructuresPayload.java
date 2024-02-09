@@ -1,7 +1,7 @@
-package fi.dy.masa.servux.network.payload;
+package fi.dy.masa.servux.network.payload.channel;
 
-import fi.dy.masa.servux.network.PayloadType;
-import fi.dy.masa.servux.network.PayloadTypeRegister;
+import fi.dy.masa.servux.network.payload.PayloadType;
+import fi.dy.masa.servux.network.payload.PayloadTypeRegister;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;

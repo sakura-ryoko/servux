@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.event;
 
-import fi.dy.masa.malilib.interfaces.IServuxLitematicsListener;
+
+import fi.dy.masa.servux.interfaces.IServuxLitematicsListener;
 
 public interface IServuxLitematicsManager
 {
