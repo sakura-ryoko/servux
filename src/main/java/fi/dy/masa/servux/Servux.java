@@ -20,6 +20,8 @@ public class Servux implements ModInitializer
     {
         ServerNetworkPlayInitHandler.registerPlayChannels();
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
+        //DataProviderManager.INSTANCE.registerDataProvider(MetaDataProvider.INSTANCE);
+        //DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
 
         // Init Handler's
