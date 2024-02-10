@@ -54,7 +54,9 @@ public class LitematicStorage implements ILitematicStorage
             if (file.createNewFile())
             {
                 if (file.exists())
+                {
                     return file;
+                }
             }
         }
         catch (IOException ignored) {}

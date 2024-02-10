@@ -17,6 +17,7 @@ import java.util.UUID;
 
 public class LitematicPlacement
 {
+    public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private final UUID uuid;
     private final String fileName;
     private final UUID hash;
@@ -28,6 +29,7 @@ public class LitematicPlacement
     private BlockMirror mirror;
     private SubRegion subRegion = new SubRegion();
     private Object mats;
+    // Not implemented
 
     public LitematicPlacement(final UUID uuid, final String fileName, final UUID hash, final PlayerIdentity owner)
     {
@@ -75,7 +77,7 @@ public class LitematicPlacement
         {
             obj.add("lastModifiedBy", this.modifiedBy.toJson());
         }
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         String time = timeFormatter.format(this.modifiedTime);
         obj.add("lastModifiedTime", new JsonPrimitive(time));
 
@@ -159,7 +161,7 @@ public class LitematicPlacement
     public LocalDateTime getModifiedTime() { return this.modifiedTime; }
     public String getModifiedTimeAsString()
     {
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         return dateTimeFormatter.format(this.modifiedTime);
     }
     public void setOwner(final PlayerIdentity id) { this.owner = id; }
@@ -168,7 +170,7 @@ public class LitematicPlacement
     public void setModifiedTime(LocalDateTime time) { this.modifiedTime = time; }
     public void setModifiedTime(final String formatted)
     {
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
         this.modifiedTime = LocalDateTime.parse(formatted, dateTimeFormatter);
     }
     public Object getMatList() { return this.mats; }
