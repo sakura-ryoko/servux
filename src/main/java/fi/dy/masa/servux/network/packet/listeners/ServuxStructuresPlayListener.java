@@ -28,9 +28,15 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         @Override
         public void receive(ServuxStructuresPayload payload, ServerPlayNetworking.Context context)
         {
-            ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context);
-            //ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context.player().networkHandler);
-            // TODO --> Servux doesn't need to use the networkHandler interface.
+            ServerPlayNetworkHandler handler = context.player().networkHandler;
+
+            //if (handler != null)
+            //{
+                //ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
+                // TODO --> Servux doesn't need to use the networkHandler interface.
+            //}
+            //else
+                ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context);
         }
     };
     private final Map<PayloadType, Boolean> registered = new HashMap<>();
