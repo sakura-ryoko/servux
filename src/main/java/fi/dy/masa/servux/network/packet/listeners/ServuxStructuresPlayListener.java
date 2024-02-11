@@ -28,7 +28,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         @Override
         public void receive(ServuxStructuresPayload payload, ServerPlayNetworking.Context context)
         {
-            ServerPlayNetworkHandler handler = context.player().networkHandler;
+            //ServerPlayNetworkHandler handler = context.player().networkHandler;
 
             //if (handler != null)
             //{
@@ -48,7 +48,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
     {
         // Don't unregister
         this.register = false;
-        unregisterPlayHandler(type);
+        ServuxStructuresPlayListener.INSTANCE.unregisterPlayHandler(type);
         if (this.registered.containsKey(type))
             this.registered.replace(type, false);
         else
