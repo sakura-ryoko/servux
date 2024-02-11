@@ -6,6 +6,7 @@ import fi.dy.masa.servux.network.payload.ServuxByteBuf;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHandler
@@ -105,6 +106,16 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
            }
        }
    }
+    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler networkHandler)
+    {
+        if (!this.handlers.isEmpty())
+        {
+            for (IPluginServerPlayHandler<T> handler : this.handlers.get(type))
+            {
+                handler.receiveC2SPlayPayload(type, payload, networkHandler);
+            }
+        }
+    }
    public void decodeC2SNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)
    {
        if (!this.handlers.isEmpty())

@@ -6,6 +6,7 @@ import fi.dy.masa.servux.network.payload.ServuxByteBuf;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.server.network.ServerConfigurationNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class ServerConfigHandler<T extends CustomPayload> implements IServerConfigHandler
@@ -100,6 +101,16 @@ public class ServerConfigHandler<T extends CustomPayload> implements IServerConf
             for (IPluginServerConfigHandler<T> handler : this.handlers.get(type))
             {
                 handler.receiveC2SConfigPayload(type, payload, ctx);
+            }
+        }
+    }
+    public <P extends CustomPayload> void receiveC2SConfigPayload(PayloadType type, P payload, ServerConfigurationNetworkHandler networkHandler)
+    {
+        if (!this.handlers.isEmpty())
+        {
+            for (IPluginServerConfigHandler<T> handler : this.handlers.get(type))
+            {
+                handler.receiveC2SConfigPayload(type, payload, networkHandler);
             }
         }
     }
