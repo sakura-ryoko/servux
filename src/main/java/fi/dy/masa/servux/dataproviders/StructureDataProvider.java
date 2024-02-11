@@ -32,13 +32,21 @@ import fi.dy.masa.servux.util.Timeout;
 public class StructureDataProvider extends DataProviderBase
 {
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
+    // TODO We should probably make the Player data into a single class in the future,
+    //  and then register players across all data providers, but this isn't broken either.
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
+    // For mapping players to STRUCTURES_ACCEPT and STRUCTURES_DECLINED state
     protected final Map<UUID, Boolean> accepted = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
+    // FIXME --> Move out of structures channel in the future --> MetaDataProvider?
+    private BlockPos spawnPos;
+    private int spawnChunkRadius = -1;
+    private boolean refreshSpawnMetadata;
+    // TODO
     public static Identifier getChannel() { return ServuxStructuresPayload.TYPE.id(); }
     protected StructureDataProvider()
     {
@@ -49,10 +57,12 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("timeout", this.timeout);
         this.metadata.putInt("version", PacketType.Structures.PROTOCOL_VERSION);
+        // FIXME --> Move out of structures channel in the future
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
+        // TODO
     }
 
     @Override
@@ -63,14 +73,6 @@ public class StructureDataProvider extends DataProviderBase
     {
         return true;
     }
-
-    /*
-    @Override
-    public IPluginChannelHandler getPacketHandler()
-    {
-        return StructureDataPacketHandler.INSTANCE;
-    }
-     */
 
     @Override
     public void tick(MinecraftServer server, int tickCounter)
@@ -453,20 +455,6 @@ public class StructureDataProvider extends DataProviderBase
 
         return list;
     }
-    public void refreshSpawnMetadata(ServerPlayerEntity player)
-    {
-        // Only replies to players who request it, or if the values have changed
-        NbtCompound nbt = new NbtCompound();
-        BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
-        nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
-        //nbt.putString("id", getNetworkChannel());
-        nbt.putInt("spawnPosX", spawnPos.getX());
-        nbt.putInt("spawnPosY", spawnPos.getY());
-        nbt.putInt("spawnPosZ", spawnPos.getZ());
-        nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
-        ServuxStructuresPlayListener.INSTANCE.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, nbt, player);
-    }
-
     /**
      * Added a simple "OPT-IN" Boolean system for players to "Accept/Decline" receiving structure packets
      * --> Saving bandwidth, saving kittens, etc.
@@ -538,4 +526,55 @@ public class StructureDataProvider extends DataProviderBase
             register(player);
         }
     }
+    // FIXME --> Move out of structures channel in the future
+    public void refreshSpawnMetadata(ServerPlayerEntity player)
+    {
+        // Only replies to players who request it, or if the values have changed
+        NbtCompound nbt = new NbtCompound();
+        BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
+        nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
+        nbt.putString("id", getNetworkChannel());
+        nbt.putInt("spawnPosX", spawnPos.getX());
+        nbt.putInt("spawnPosY", spawnPos.getY());
+        nbt.putInt("spawnPosZ", spawnPos.getZ());
+        nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
+        ServuxStructuresPlayListener.INSTANCE.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, nbt, player);
+    }
+
+    @Override
+    public BlockPos getSpawnPos()
+    {
+        if (this.spawnPos == null)
+            this.setSpawnPos(new BlockPos(0, 0,0));
+        return this.spawnPos;
+    }
+
+    @Override
+    public void setSpawnPos(BlockPos spawnPos)
+    {
+        if (this.spawnPos != spawnPos)
+            this.refreshSpawnMetadata = true;
+        this.spawnPos = spawnPos;
+    }
+
+    @Override
+    public int getSpawnChunkRadius()
+    {
+        if (this.spawnChunkRadius < 0)
+            this.spawnChunkRadius = 2;
+        return this.spawnChunkRadius;
+    }
+
+    @Override
+    public void setSpawnChunkRadius(int radius)
+    {
+        if (this.spawnChunkRadius != radius)
+            this.refreshSpawnMetadata = true;
+        this.spawnChunkRadius = radius;
+    }
+    @Override
+    public boolean refreshSpawnMetadata() { return this.refreshSpawnMetadata; }
+    @Override
+    public void setRefreshSpawnMetadataComplete() { this.refreshSpawnMetadata = false; }
+    // TODO
 }

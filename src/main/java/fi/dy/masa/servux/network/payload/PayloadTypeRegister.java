@@ -146,7 +146,8 @@ public class PayloadTypeRegister
         register(PayloadType.SERVUX_METADATA,   "metadata_service",         "servux",   "metadata");
         register(PayloadType.SERVUX_STRUCTURES, "structure_bounding_boxes", "servux",   "structures");
 
-        listTypes();
+        // For debug code only
+        //listTypes();
     }
 
     /**

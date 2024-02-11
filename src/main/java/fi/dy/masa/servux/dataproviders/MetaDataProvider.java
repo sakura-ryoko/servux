@@ -4,9 +4,11 @@ import fi.dy.masa.servux.network.packet.PacketType;
 import fi.dy.masa.servux.network.payload.channel.ServuxMetadataPayload;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 /**
- * This provides the basic foundations for a Metadata Interface for various things that's not structure related
+ * This provides the basic foundations for a Metadata Interface for various things that's not structure related,
+ * such as spawn_chunk_radius and spawn_pos
  */
 public class MetaDataProvider extends DataProviderBase
 {
@@ -26,11 +28,22 @@ public class MetaDataProvider extends DataProviderBase
     //@Override
     public String getNetworkChannel() { return getChannel().toString(); }
 
-    //@Override
-    //public boolean shouldTick() { return true; }
+    // FIXME
+    @Override
+    public BlockPos getSpawnPos() { return null; }
 
-    //@Override
-    //public void tick(MinecraftServer server, int tickCounter)
-    //{
-    //}
+    @Override
+    public void setSpawnPos(BlockPos spawnPos) { }
+
+    @Override
+    public int getSpawnChunkRadius() { return 0; }
+
+    @Override
+    public void setSpawnChunkRadius(int radius) { }
+
+    @Override
+    public boolean refreshSpawnMetadata() { return false; }
+
+    @Override
+    public void setRefreshSpawnMetadataComplete() { }
 }

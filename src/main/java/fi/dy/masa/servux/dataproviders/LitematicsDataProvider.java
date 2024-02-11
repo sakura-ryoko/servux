@@ -7,20 +7,21 @@ import fi.dy.masa.servux.network.packet.PacketType;
 import fi.dy.masa.servux.network.payload.channel.ServuxLitematicsPayload;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 
 import java.io.File;
 
 /**
  * This provides the basic foundations for a future "Syncmatica-like" storage server, and
  * I am trying to make it work nearly exactly the same using a different channel ID, and this
- * might even be directly compatible with Syncmaica or Litematica itself soon.
+ * might even be directly compatible with Syncmaica or Litematica itself in the future.
  */
 public class LitematicsDataProvider extends DataProviderBase
 {
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
     private static Identifier getChannel() { return ServuxLitematicsPayload.TYPE.id(); }
     protected final NbtCompound metadata = new NbtCompound();
-    protected String LitematicDirectory = "litematics";
+    protected final String LitematicDirectory = "litematics";
     protected File worldFolder;
     protected File litematicFolder = new File("."+File.separator+ LitematicDirectory);
     protected PlayerIdentityProvider players = new PlayerIdentityProvider();
@@ -38,6 +39,27 @@ public class LitematicsDataProvider extends DataProviderBase
 
     @Override
     public String getNetworkChannel() { return getChannel().toString(); }
+
+    // FIXME
+    @Override
+    public BlockPos getSpawnPos() { return null; }
+
+    @Override
+    public void setSpawnPos(BlockPos spawnPos) { }
+
+    @Override
+    public int getSpawnChunkRadius() { return 0; }
+
+    @Override
+    public void setSpawnChunkRadius(int radius) { }
+
+    @Override
+    public boolean refreshSpawnMetadata() { return false; }
+
+    @Override
+    public void setRefreshSpawnMetadataComplete() { }
+    // TODO
+
     public File getLitematicFolder()
     {
         if (this.litematicFolder != null)
@@ -54,12 +76,4 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         return false;
     }
-
-    //@Override
-    //public boolean shouldTick() { return true; }
-
-    //@Override
-    //public void tick(MinecraftServer server, int tickCounter)
-    //{
-    //}
 }

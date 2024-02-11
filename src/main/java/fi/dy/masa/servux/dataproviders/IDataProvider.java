@@ -72,13 +72,7 @@ public interface IDataProvider
     default void tick(MinecraftServer server, int tickCounter)
     {
     }
-
-    /**
-     * Returns the network packet handler used for this data provider.
-     * @return
-     */
-    //IPluginChannelHandler getPacketHandler();
-
+    // FIXME --> should move out of here in the future
     /**
      * Overworld Spawn Pos
      */
@@ -97,4 +91,5 @@ public interface IDataProvider
      */
     boolean refreshSpawnMetadata();
     void setRefreshSpawnMetadataComplete();
+    // TODO
 }
