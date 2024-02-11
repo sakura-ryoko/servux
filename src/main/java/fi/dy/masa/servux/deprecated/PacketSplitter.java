@@ -19,7 +19,7 @@ package fi.dy.masa.servux.deprecated;
  * @author skyrising
  */
 // No longer used
-@Deprecated
+@Deprecated(forRemoval = false)
 public class PacketSplitter
 {
     /*

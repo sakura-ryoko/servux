@@ -2,7 +2,10 @@ package fi.dy.masa.servux.deprecated;
 
 import fi.dy.masa.servux.network.test.ServerDebugSuite;
 
-@Deprecated
+/**
+ * Version 1 Network API
+ */
+@Deprecated(forRemoval = true)
 public class ServerNetworkPlayInitHandler
 {
     /**

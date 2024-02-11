@@ -7,6 +7,9 @@ package fi.dy.masa.servux.deprecated;
 
 //import java.util.Objects;
 
+/**
+ * Original Handler interface
+ */
 @Deprecated
 public interface IPluginChannelHandler
 {

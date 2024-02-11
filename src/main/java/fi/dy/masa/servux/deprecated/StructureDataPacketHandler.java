@@ -6,7 +6,9 @@ package fi.dy.masa.servux.deprecated;
 //import net.minecraft.util.Identifier;
 //import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 
-// No longer used
+/**
+ * Original Handler
+ */
 @Deprecated
 public class StructureDataPacketHandler implements IPluginChannelHandler
 {

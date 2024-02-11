@@ -5,10 +5,9 @@ import net.minecraft.network.PacketByteBuf;
 import io.netty.buffer.ByteBuf;
 
 /**
- * This was never being used.  PayloadUtils basically is the Utility to put them in, if ever used.
+ * This was never being used.  PayloadUtils basically is the Utility to put them in, if ever needed.
   */
-
-@Deprecated
+@Deprecated(forRemoval = false)
 public class PacketUtils
 {
     /**

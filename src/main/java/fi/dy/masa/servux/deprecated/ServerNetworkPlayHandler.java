@@ -7,7 +7,9 @@ import fi.dy.masa.servux.network.payload.channel.ServuxStructuresPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+
 /**
+ * Version 1 Network API --> Removed
  * canSend()
  * Wraps: canSend(player.networkHandler, payload.getId().id());
  * --> Wraps Internally as:
@@ -16,7 +18,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
  * Wraps internally as:
  * --> player.networkHandler.sendPacket(ServerPlayNetworking.createS2CPacket(payload));
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public abstract class ServerNetworkPlayHandler
 {
     public static void sendServuxStructures(ServuxStructuresPayload payload, ServerPlayerEntity player)

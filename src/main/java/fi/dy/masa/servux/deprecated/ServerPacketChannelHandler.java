@@ -9,6 +9,9 @@ package fi.dy.masa.servux.deprecated;
 //import net.minecraft.network.packet.CustomPayload;
 //import net.minecraft.util.Identifier;
 
+/**
+ * Original Handler
+ */
 @Deprecated
 public class ServerPacketChannelHandler
 {

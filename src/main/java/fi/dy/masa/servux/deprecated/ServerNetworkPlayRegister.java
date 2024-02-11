@@ -7,7 +7,10 @@ import fi.dy.masa.servux.network.payload.channel.ServuxMetadataPayload;
 import fi.dy.masa.servux.network.payload.channel.ServuxStructuresPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
-@Deprecated
+/**
+ * Version 1 Network API
+ */
+@Deprecated(forRemoval = true)
 public class ServerNetworkPlayRegister
 {
     static ServerPlayNetworking.PlayPayloadHandler<ServuxStructuresPayload> C2SSevuxStructuresHandler;
