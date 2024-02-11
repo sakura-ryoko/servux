@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.litematics.utils;
 
 import java.io.IOException;
 import java.io.InputStream;

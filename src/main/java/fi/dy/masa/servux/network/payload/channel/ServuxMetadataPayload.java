@@ -9,9 +9,9 @@ import net.minecraft.network.packet.CustomPayload;
 
 public record ServuxMetadataPayload(NbtCompound data) implements CustomPayload
 {
-    public static final Id<ServuxMetadataPayload> TYPE = new Id<>(PayloadTypeRegister.getIdentifier(PayloadType.SERVUX_METADATA));
+    public static final Id<ServuxMetadataPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_METADATA));
     public static final PacketCodec<PacketByteBuf, ServuxMetadataPayload> CODEC = CustomPayload.codecOf(ServuxMetadataPayload::write, ServuxMetadataPayload::new);
-    public static final String KEY = PayloadTypeRegister.getKey(PayloadType.SERVUX_METADATA);
+    public static final String KEY = PayloadTypeRegister.INSTANCE.getKey(PayloadType.SERVUX_METADATA);
 
     public ServuxMetadataPayload(PacketByteBuf buf) { this(buf.readNbt()); }
 

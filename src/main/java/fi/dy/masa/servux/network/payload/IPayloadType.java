@@ -9,4 +9,8 @@ public interface IPayloadType
     String getNamespace();
     String getPath();
     Identifier getId();
+    void registerPlayCodec();
+    void registerConfigCodec();
+    boolean isPlayRegistered();
+    boolean isConfigRegistered();
 }

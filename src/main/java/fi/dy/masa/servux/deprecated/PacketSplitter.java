@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.legacy;
+package fi.dy.masa.servux.deprecated;
 
 //import java.util.HashMap;
 //import java.util.Map;

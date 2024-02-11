@@ -1,6 +1,5 @@
-package fi.dy.masa.servux.event;
+package fi.dy.masa.servux.deprecated;
 
-import fi.dy.masa.servux.interfaces.IServuxStructuresListener;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,12 +8,14 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServuxStructuresHandler implements IServuxStructuresManager
+@Deprecated
+public class ServuxStructuresHandler
+        //implements IServuxStructuresManager
 {
     private static final ServuxStructuresHandler INSTANCE = new ServuxStructuresHandler();
     private final List<IServuxStructuresListener> handlers = new ArrayList<>();
-    public static IServuxStructuresManager getInstance() { return INSTANCE; }
-    @Override
+    //public static IServuxStructuresManager getInstance() { return INSTANCE; }
+    //@Override
     public void registerServuxStructuresHandler(IServuxStructuresListener handler)
     {
         if (!this.handlers.contains(handler))
@@ -22,7 +23,7 @@ public class ServuxStructuresHandler implements IServuxStructuresManager
             this.handlers.add(handler);
         }
     }
-    @Override
+    //@Override
     public void unregisterServuxStructuresHandler(IServuxStructuresListener handler)
     {
         this.handlers.remove(handler);

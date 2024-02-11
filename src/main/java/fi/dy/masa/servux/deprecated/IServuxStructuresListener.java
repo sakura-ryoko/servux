@@ -1,10 +1,11 @@
-package fi.dy.masa.servux.interfaces;
+package fi.dy.masa.servux.deprecated;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
+@Deprecated
 public interface IServuxStructuresListener
 {
     default void reset() { }

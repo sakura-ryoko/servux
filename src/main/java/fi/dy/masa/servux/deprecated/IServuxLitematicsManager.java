@@ -1,8 +1,6 @@
-package fi.dy.masa.servux.event;
+package fi.dy.masa.servux.deprecated;
 
-
-import fi.dy.masa.servux.interfaces.IServuxLitematicsListener;
-
+@Deprecated
 public interface IServuxLitematicsManager
 {
     /**

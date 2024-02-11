@@ -1,8 +1,7 @@
-package fi.dy.masa.servux.event;
+package fi.dy.masa.servux.deprecated;
 
 
-import fi.dy.masa.servux.interfaces.IServuxStructuresListener;
-
+@Deprecated
 public interface IServuxStructuresManager
 {
     /**

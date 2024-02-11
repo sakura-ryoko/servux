@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.legacy;
+package fi.dy.masa.servux.deprecated;
 
 import java.util.Objects;
 import net.minecraft.network.PacketByteBuf;
@@ -18,7 +18,6 @@ public class PacketUtils
      * @return a slice of the buffer
      * @see ByteBuf#slice()
      */
-    @Deprecated
     public static PacketByteBuf slice(ByteBuf buf)
     {
         Objects.requireNonNull(buf, "ByteBuf cannot be null");
@@ -32,7 +31,6 @@ public class PacketUtils
      * @return a slice of the buffer
      * @see ByteBuf#retainedSlice()
      */
-    @Deprecated
     public static PacketByteBuf retainedSlice(ByteBuf buf)
     {
         Objects.requireNonNull(buf, "ByteBuf cannot be null");

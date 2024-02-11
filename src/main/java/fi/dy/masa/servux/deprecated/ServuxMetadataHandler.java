@@ -1,6 +1,5 @@
-package fi.dy.masa.servux.event;
+package fi.dy.masa.servux.deprecated;
 
-import fi.dy.masa.servux.interfaces.IServuxMetadataListener;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,12 +8,14 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServuxMetadataHandler implements IServuxMetadataManager
+@Deprecated
+public class ServuxMetadataHandler
+        //implements IServuxMetadataManager
 {
     private static final ServuxMetadataHandler INSTANCE = new ServuxMetadataHandler();
     private final List<IServuxMetadataListener> handlers = new ArrayList<>();
-    public static IServuxMetadataManager getInstance() { return INSTANCE; }
-    @Override
+    //public static IServuxMetadataManager getInstance() { return INSTANCE; }
+    //@Override
     public void registerServuxMetadataHandler(IServuxMetadataListener handler)
     {
         if (!this.handlers.contains(handler))
@@ -22,7 +23,7 @@ public class ServuxMetadataHandler implements IServuxMetadataManager
             this.handlers.add(handler);
         }
     }
-    @Override
+    //@Override
     public void unregisterServuxMetadataHandler(IServuxMetadataListener handler)
     {
         this.handlers.remove(handler);

@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network;
+package fi.dy.masa.servux.deprecated;
 
 import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.Servux;
@@ -7,6 +7,7 @@ import fi.dy.masa.servux.network.payload.channel.ServuxMetadataPayload;
 import fi.dy.masa.servux.network.payload.channel.ServuxStructuresPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
+@Deprecated
 public class ServerNetworkPlayRegister
 {
     static ServerPlayNetworking.PlayPayloadHandler<ServuxStructuresPayload> C2SSevuxStructuresHandler;
@@ -38,8 +39,8 @@ public class ServerNetworkPlayRegister
     }
     static
     {
-        C2SSevuxStructuresHandler = ServerNetworkPlayHandler::receiveServuxStructures;
-        C2SSevuxMetadataHandler = ServerNetworkPlayHandler::receiveServuxMetadata;
-        C2SSevuxLitematicsHandler = ServerNetworkPlayHandler::receiveServuxLitematics;
+        //C2SSevuxStructuresHandler = ServerNetworkPlayHandler::receiveServuxStructures;
+        //C2SSevuxMetadataHandler = ServerNetworkPlayHandler::receiveServuxMetadata;
+        //C2SSevuxLitematicsHandler = ServerNetworkPlayHandler::receiveServuxLitematics;
     }
 }

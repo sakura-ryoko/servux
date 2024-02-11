@@ -1,9 +1,8 @@
-package fi.dy.masa.servux.network.packet;
+package fi.dy.masa.servux.deprecated;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
-import fi.dy.masa.servux.interfaces.IServuxStructuresListener;
-import fi.dy.masa.servux.network.ServerNetworkPlayHandler;
+import fi.dy.masa.servux.network.packet.PacketType;
 import fi.dy.masa.servux.network.payload.channel.ServuxStructuresPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
@@ -12,7 +11,9 @@ import net.minecraft.util.Identifier;
 
 import java.util.Objects;
 
-public class ServuxStructuresListener implements IServuxStructuresListener
+@Deprecated
+public class ServuxStructuresListener
+        //implements IServuxStructuresListener
 {
     /**
      * StructureDataPacketHandler (Replaced), etc. using new networking API, and greatly simplifies the work flow.
@@ -24,25 +25,25 @@ public class ServuxStructuresListener implements IServuxStructuresListener
      * So, let's get this done.
      */
 
-    @Override
+    //@Override
     public void reset()
     {
         // NO-OP
     }
-    @Override
+    //@Override
     public void sendServuxStructures(NbtCompound data, ServerPlayerEntity player)
     {
         ServuxStructuresPayload payload = new ServuxStructuresPayload(data);
         Servux.printDebug("ServuxStructuresListener#sendServuxStructures(): sending payload of size {} bytes to player: {}.", data.getSizeInBytes(), player.getName().getLiteralString());
-        ServerNetworkPlayHandler.sendServuxStructures(payload, player);
+        //ServerNetworkPlayHandler.sendServuxStructures(payload, player);
     }
-    @Override
+    //@Override
     public void receiveServuxStructures(NbtCompound data, ServerPlayNetworking.Context ctx, Identifier id)
     {
         decodeServuxStructures(data, ctx.player(), id);
     }
     // *****************************************************************************************************************************************
-    @Override
+    //@Override
     public void encodeServuxStructures(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         // Encode packet.
@@ -53,7 +54,7 @@ public class ServuxStructuresListener implements IServuxStructuresListener
         sendServuxStructures(nbt, player);
     }
 
-    @Override
+    //@Override
     public void decodeServuxStructures(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         // Packet handshakes from Client

@@ -1,35 +1,35 @@
-package fi.dy.masa.servux.network.packet;
+package fi.dy.masa.servux.deprecated;
 
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.interfaces.IServuxMetadataListener;
-import fi.dy.masa.servux.network.ServerNetworkPlayHandler;
 import fi.dy.masa.servux.network.payload.channel.ServuxMetadataPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
-public class ServuxMetadataListener implements IServuxMetadataListener
+@Deprecated
+public class ServuxMetadataListener
+//implements IServuxMetadataListener
 {
-    @Override
+    //@Override
     public void reset()
     {
         // NO-OP
     }
-    @Override
+    //@Override
     public void sendServuxMetadata(NbtCompound data, ServerPlayerEntity player)
     {
         ServuxMetadataPayload payload = new ServuxMetadataPayload(data);
         Servux.printDebug("ServuxMetadataListener#sendServuxMetadata(): sending payload of size {} bytes to player: {}.", data.getSizeInBytes(), player.getName().getLiteralString());
         ServerNetworkPlayHandler.sendServuxMetadata(payload, player);
     }
-    @Override
+    //@Override
     public void receiveServuxMetadata(NbtCompound data, ServerPlayNetworking.Context ctx, Identifier id)
     {
         decodeServuxMetadata(data, ctx.player(), id);
     }
     // *****************************************************************************************************************************************
-    @Override
+    //@Override
     public void encodeServuxMetadata(NbtCompound data, ServerPlayerEntity player, Identifier id)
     {
         // Encode packet.
@@ -40,7 +40,7 @@ public class ServuxMetadataListener implements IServuxMetadataListener
         sendServuxMetadata(nbt, player);
     }
 
-    @Override
+    //@Override
     public void decodeServuxMetadata(NbtCompound data, ServerPlayerEntity player, Identifier id) {
         // Packet handshakes from Client
 //        if (Objects.equals(id.toString(), StructureDataProvider.INSTANCE.getNetworkChannel())) {

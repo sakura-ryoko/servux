@@ -2,7 +2,7 @@ package fi.dy.masa.servux.litematics.storage;
 
 import fi.dy.masa.servux.litematics.LitematicState;
 import fi.dy.masa.servux.litematics.placement.LitematicPlacement;
-import fi.dy.masa.servux.util.LitematicUtils;
+import fi.dy.masa.servux.litematics.utils.LitematicUtils;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.legacy;
+package fi.dy.masa.servux.deprecated;
 
 //import net.minecraft.network.PacketByteBuf;
 //import net.minecraft.server.MinecraftServer;

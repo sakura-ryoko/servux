@@ -1,6 +1,5 @@
-package fi.dy.masa.servux.event;
+package fi.dy.masa.servux.deprecated;
 
-import fi.dy.masa.servux.interfaces.IServuxLitematicsListener;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,12 +8,14 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServuxLitematicsHandler implements IServuxLitematicsManager
+@Deprecated
+public class ServuxLitematicsHandler
+        //implements IServuxLitematicsManager
 {
     private static final ServuxLitematicsHandler INSTANCE = new ServuxLitematicsHandler();
     private final List<IServuxLitematicsListener> handlers = new ArrayList<>();
-    public static IServuxLitematicsManager getInstance() { return INSTANCE; }
-    @Override
+    //public static IServuxLitematicsManager getInstance() { return INSTANCE; }
+    //@Override
     public void registerServuxLitematicsHandler(IServuxLitematicsListener handler)
     {
         if (!this.handlers.contains(handler))
@@ -22,7 +23,7 @@ public class ServuxLitematicsHandler implements IServuxLitematicsManager
             this.handlers.add(handler);
         }
     }
-    @Override
+    //@Override
     public void unregisterServuxLitematicsHandler(IServuxLitematicsListener handler)
     {
         this.handlers.remove(handler);

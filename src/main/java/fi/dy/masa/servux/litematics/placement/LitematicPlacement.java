@@ -4,7 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.litematics.players.PlayerIdentity;
-import fi.dy.masa.servux.util.LitematicUtils;
+import fi.dy.masa.servux.litematics.utils.LitematicUtils;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;

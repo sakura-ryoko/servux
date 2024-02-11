@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.legacy;
+package fi.dy.masa.servux.deprecated;
 
 //import fi.dy.masa.servux.network.payload.ServuxPayload;
 //import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
