@@ -108,6 +108,11 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
                 Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): received a STRUCTURES_DECLINED request from player: {}.", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.declineStructuresFromPlayer(player);
             }
+            else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURE_TOGGLE)
+            {
+                Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): received a STRUCTURE_TOGGLE list from player: {}.", player.getName().getLiteralString());
+                StructureDataProvider.INSTANCE.updateStructureTogglesFromPlayer(player, data);
+            }
             else
                 Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): Invalid packetType from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
         }

@@ -18,10 +18,10 @@ public class PlayerIdentity
         this.uuid = uuid;
         this.playerName = player;
     }
-    public String getPlayerName() { return this.playerName; }
     public UUID getUUID() { return this.uuid; }
-    public void updatePlayerName(String name) { this.playerName = name; }
+    public String getPlayerName() { return this.playerName; }
     public void updateUUID(UUID uuid) { this.uuid = uuid; }
+    public void updatePlayerName(String name) { this.playerName = name; }
 
     public JsonObject toJson()
     {

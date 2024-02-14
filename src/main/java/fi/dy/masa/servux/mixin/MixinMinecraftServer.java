@@ -8,6 +8,7 @@ import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.ServerHandler;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -56,8 +57,14 @@ public abstract class MixinMinecraftServer
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setSpawnPos(Lnet/minecraft/util/math/BlockPos;F)V", shift = At.Shift.AFTER))
     private void servux_checkSpawnChunkRadius(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci)
     {
-        Servux.printDebug("MixinMinecraftServer#servux_checkSpawnChunkRadius(): Spawn Position: {}, SPAWN_CHUNK_RADIUS: {}", this.getOverworld().getSpawnPos().toShortString(), this.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS));
-        StructureDataProvider.INSTANCE.setSpawnPos(this.getOverworld().getSpawnPos());
-        StructureDataProvider.INSTANCE.setSpawnChunkRadius(this.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS));
+        BlockPos worldSpawn = this.getOverworld().getSpawnPos();
+        int radius = this.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
+        Servux.printDebug("MixinMinecraftServer#servux_checkSpawnChunkRadius(): Spawn Position: {}, SPAWN_CHUNK_RADIUS: {}", this.getOverworld().getSpawnPos().toShortString(), radius);
+        if (StructureDataProvider.INSTANCE.getSpawnPos() != worldSpawn)
+        {
+            // Only set if value changed from stored value
+            StructureDataProvider.INSTANCE.setSpawnPos(worldSpawn);
+        }
+        StructureDataProvider.INSTANCE.setSpawnChunkRadius(radius);
     }
 }
