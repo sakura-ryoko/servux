@@ -16,7 +16,15 @@ public class PacketType
     }
     public record Metadata()
     {
-        public static final int PROTOCOL_VERSION = 1;
+        public static final int PROTOCOL_VERSION = 0;
+    }
+    public record Entities()
+    {
+        public static final int PROTOCOL_VERSION = 0;
+    }
+    public record Blocks()
+    {
+        public static final int PROTOCOL_VERSION = 0;
     }
     public record Litematics()
     {

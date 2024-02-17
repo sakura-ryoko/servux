@@ -1,7 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
 
 public interface IDataProvider
 {
@@ -72,24 +71,4 @@ public interface IDataProvider
     default void tick(MinecraftServer server, int tickCounter)
     {
     }
-    // FIXME --> should move out of here in the future
-    /**
-     * Overworld Spawn Pos
-     */
-    BlockPos getSpawnPos();
-    void setSpawnPos(BlockPos spawnPos);
-
-    /**
-     * Spawn Chunk Radius
-     */
-    int getSpawnChunkRadius();
-    void setSpawnChunkRadius(int radius);
-
-    /**
-     * Logic control to refresh Spawn Metadata
-     * @return
-     */
-    boolean refreshSpawnMetadata();
-    void setRefreshSpawnMetadataComplete();
-    // TODO
 }

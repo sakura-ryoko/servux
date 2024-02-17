@@ -4,7 +4,7 @@ import java.util.function.BooleanSupplier;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
 import fi.dy.masa.servux.event.ServerHandler;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;

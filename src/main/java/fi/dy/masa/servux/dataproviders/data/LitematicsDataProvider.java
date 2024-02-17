@@ -1,7 +1,8 @@
-package fi.dy.masa.servux.dataproviders;
+package fi.dy.masa.servux.dataproviders.data;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.ServuxReference;
+import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.LitematicClient;
 import fi.dy.masa.servux.litematics.placement.LitematicPlacement;
 import fi.dy.masa.servux.litematics.players.PlayerIdentityProvider;
@@ -10,7 +11,6 @@ import fi.dy.masa.servux.network.payload.channel.ServuxLitematicsPayload;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 
 import java.io.File;
 import java.util.HashMap;
@@ -50,26 +50,6 @@ public class LitematicsDataProvider extends DataProviderBase
     @Override
     public String getNetworkChannel() { return getChannel().toString(); }
 
-    // FIXME
-    @Override
-    public BlockPos getSpawnPos() { return null; }
-
-    @Override
-    public void setSpawnPos(BlockPos spawnPos) { }
-
-    @Override
-    public int getSpawnChunkRadius() { return 0; }
-
-    @Override
-    public void setSpawnChunkRadius(int radius) { }
-
-    @Override
-    public boolean refreshSpawnMetadata() { return false; }
-
-    @Override
-    public void setRefreshSpawnMetadataComplete() { }
-    // TODO
-
     // Returns the File object to the Litematics Storage
     public File getLitematicFolder()
     {
@@ -99,6 +79,7 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         UUID uuid = player.getUuid();
         LitematicClient oldClient = CLIENTS.get(uuid);
+        oldClient.litematicsDisableClient();
         oldClient.unregisterClient();
         CLIENTS.remove(uuid);
         Servux.printDebug("LitematicsDataProvider#register(): new LitematicClient unregister() for {}", player.getName().getLiteralString());

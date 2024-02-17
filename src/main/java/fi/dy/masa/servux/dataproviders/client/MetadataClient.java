@@ -1,9 +1,8 @@
 package fi.dy.masa.servux.dataproviders.client;
 
-import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 /**
@@ -11,8 +10,6 @@ import java.util.UUID;
  */
 public class MetadataClient extends ClientBase
 {
-    private boolean registered;
-    private boolean enabled;
     public MetadataClient(String name, UUID uuid, @Nullable String version)
     {
         super(name, uuid, version);
@@ -24,15 +21,13 @@ public class MetadataClient extends ClientBase
         this.updateName(player.getName().getLiteralString());
         UUID id = player.getUuid();
         this.updateUUID(id);
-        this.registered = true;
-        this.enabled = false;
+        this.setClientRegister(true);
     }
-
     @Override
     public void unregisterClient()
     {
-        this.registered = false;
-        this.enabled = false;
+        this.disableClient();
+        this.setClientRegister(false);
     }
 
     @Override
@@ -53,16 +48,13 @@ public class MetadataClient extends ClientBase
         this.updateVersion(version);
     }
 
-    @Override
-    public void metadataEnableClient() { this.enabled = true; }
+    public void metadataEnableClient() { this.enableClient(); }
 
-    @Override
-    public void metadataDisableClient() { this.enabled = false; }
+    public void metadataDisableClient() { this.disableClient(); }
 
+    public boolean isMetadataEnabled() { return this.isEnabled(); }
     @Override
-    public boolean isMetadataEnabled() { return this.enabled; }
-    @Override
-    public boolean isMetadataClient() { return true; }
+    public boolean isMetadataClient() { return this.isClientRegistered(); }
 
     @Override
     public void tickClient()
@@ -71,33 +63,11 @@ public class MetadataClient extends ClientBase
     }
 
     @Override
-    public void litematicsEnableClient() {  }
-
+    public boolean isBlocksClient() { return false; }
     @Override
-    public void litematicsDisableClient() { }
-
-    @Override
-    public boolean isLitematicsEnabled() { return false; }
-
+    public boolean isEntitiesClient() { return false; }
     @Override
     public boolean isLitematicsClient() { return false; }
-
-
-    @Override
-    public void structuresEnableClient() { }
-
-    @Override
-    public void structuresDisableClient() { }
-
-    @Override
-    public boolean isStructuresEnabled() { return false; }
     @Override
     public boolean isStructuresClient() { return false; }
-
-    @Override
-    public void setClientDimension(PlayerDimensionPosition dim) { }
-
-    @Override
-    public PlayerDimensionPosition getClientDimension() { return null; }
-
 }

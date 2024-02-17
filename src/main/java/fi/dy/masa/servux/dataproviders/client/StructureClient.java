@@ -3,8 +3,8 @@ package fi.dy.masa.servux.dataproviders.client;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 /**
@@ -12,8 +12,6 @@ import java.util.UUID;
  */
 public class StructureClient extends ClientBase
 {
-    private boolean registered;
-    private boolean enabled;
     private PlayerDimensionPosition dim;
     public NbtCompound enabledStructures;
     public StructureClient(String name, UUID uuid, @Nullable String version)
@@ -27,19 +25,18 @@ public class StructureClient extends ClientBase
         this.updateName(player.getName().getLiteralString());
         UUID id = player.getUuid();
         this.updateUUID(id);
-        this.registered = true;
-        this.enabled = false;
         this.dim = new PlayerDimensionPosition(player);
         this.enabledStructures = new NbtCompound();
+        this.setClientRegister(true);
     }
 
     @Override
     public void unregisterClient()
     {
-        this.registered = false;
-        this.enabled = false;
         this.dim = null;
         this.enabledStructures.getKeys().clear();
+        this.disableClient();
+        this.setClientRegister(false);
     }
 
     @Override
@@ -76,36 +73,24 @@ public class StructureClient extends ClientBase
         this.enabledStructures.copyFrom(data);
     }
 
-    @Override
-    public void structuresEnableClient()
-    {
-        this.enabled = true;
-    }
+    public void structuresEnableClient() { this.enableClient(); }
 
-    @Override
     public void structuresDisableClient()
     {
-        this.enabled = false;
+        this.disableClient();
     }
 
-    @Override
     public boolean isStructuresEnabled()
     {
-        return this.enabled;
+        return this.isEnabled();
     }
-    @Override
-    public boolean isStructuresClient()
-    {
-        return this.registered;
-    }
+    public boolean isStructuresClient() { return this.isClientRegistered(); }
 
-    @Override
     public void setClientDimension(PlayerDimensionPosition dim)
     {
         this.dim = dim;
     }
 
-    @Override
     public PlayerDimensionPosition getClientDimension()
     {
         return this.dim;
@@ -118,26 +103,11 @@ public class StructureClient extends ClientBase
     }
 
     @Override
-    public void metadataEnableClient() { }
-
-    @Override
-    public void metadataDisableClient() { }
-
-    @Override
-    public boolean isMetadataEnabled() { return false; }
-
-    @Override
     public boolean isMetadataClient() { return false; }
-
     @Override
-    public void litematicsEnableClient() {  }
-
+    public boolean isBlocksClient() { return false; }
     @Override
-    public void litematicsDisableClient() { }
-
-    @Override
-    public boolean isLitematicsEnabled() { return false; }
-
+    public boolean isEntitiesClient() { return false; }
     @Override
     public boolean isLitematicsClient() { return false; }
 }

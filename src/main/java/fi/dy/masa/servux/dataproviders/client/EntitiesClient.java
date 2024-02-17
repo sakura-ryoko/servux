@@ -8,9 +8,9 @@ import java.util.UUID;
 /**
  * I've created a *MUCH* more flexible way to track individual Clients, and in a standard interface to be used across multiple DataProvider's.
  */
-public class LitematicClient extends ClientBase
+public class EntitiesClient extends ClientBase
 {
-    public LitematicClient(String name, UUID uuid, @Nullable String version)
+    public EntitiesClient(String name, UUID uuid, @Nullable String version)
     {
         super(name, uuid, version);
     }
@@ -48,32 +48,26 @@ public class LitematicClient extends ClientBase
         this.updateVersion(version);
     }
 
-    public void litematicsEnableClient() { this.enableClient(); }
+    public void entitiesEnableClient() { this.enableClient(); }
 
-    public void litematicsDisableClient() { this.disableClient(); }
+    public void entitiesDisableClient() { this.disableClient(); }
 
-    public boolean isLitematicsEnabled() {
-        return this.isEnabled();
-    }
+    public boolean isEntitiesEnabled() { return this.isEnabled(); }
 
     @Override
-    public boolean isLitematicsClient() { return this.isClientRegistered(); }
+    public boolean isEntitiesClient() { return this.isClientRegistered(); }
 
     @Override
     public void tickClient()
     {
         // Things to do during a Client Tick
     }
-
     @Override
     public boolean isMetadataClient() { return false; }
-
     @Override
     public boolean isBlocksClient() { return false; }
-
     @Override
-    public boolean isEntitiesClient() { return false; }
-
+    public boolean isLitematicsClient() { return false; }
     @Override
     public boolean isStructuresClient() { return false; }
 }

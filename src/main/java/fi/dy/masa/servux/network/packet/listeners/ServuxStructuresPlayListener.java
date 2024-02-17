@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.network.packet.listeners;
 
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
 import fi.dy.masa.servux.network.handlers.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.handlers.ServerCommonHandlerRegister;
 import fi.dy.masa.servux.network.handlers.ServerPlayHandler;
@@ -28,12 +28,13 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         @Override
         public void receive(ServuxStructuresPayload payload, ServerPlayNetworking.Context context)
         {
+            // Servux doesn't need to use the networkHandler interface, but the code is here to do so.
+
             //ServerPlayNetworkHandler handler = context.player().networkHandler;
 
             //if (handler != null)
             //{
                 //ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
-                // TODO --> Servux doesn't need to use the networkHandler interface.
             //}
             //else
                 ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context);

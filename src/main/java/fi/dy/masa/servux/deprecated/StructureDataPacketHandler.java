@@ -4,7 +4,7 @@ package fi.dy.masa.servux.deprecated;
 //import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 //import net.minecraft.network.packet.CustomPayload;
 //import net.minecraft.util.Identifier;
-//import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+//import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
 
 /**
  * Original Handler

@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.litematics;
 
 import com.google.gson.*;
-import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
+import fi.dy.masa.servux.dataproviders.data.LitematicsDataProvider;
 import fi.dy.masa.servux.litematics.placement.LitematicPlacement;
 
 import java.io.File;

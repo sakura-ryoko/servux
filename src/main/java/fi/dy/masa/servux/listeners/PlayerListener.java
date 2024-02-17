@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.listeners;
 
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
 import net.minecraft.server.network.ServerPlayerEntity;
 

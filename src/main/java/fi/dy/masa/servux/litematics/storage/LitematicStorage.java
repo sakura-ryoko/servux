@@ -1,6 +1,6 @@
 package fi.dy.masa.servux.litematics.storage;
 
-import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
+import fi.dy.masa.servux.dataproviders.data.LitematicsDataProvider;
 import fi.dy.masa.servux.litematics.LitematicState;
 import fi.dy.masa.servux.litematics.placement.LitematicPlacement;
 import fi.dy.masa.servux.litematics.utils.LitematicUtils;

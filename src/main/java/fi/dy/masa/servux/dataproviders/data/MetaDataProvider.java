@@ -1,13 +1,13 @@
-package fi.dy.masa.servux.dataproviders;
+package fi.dy.masa.servux.dataproviders.data;
 
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.MetadataClient;
 import fi.dy.masa.servux.network.packet.PacketType;
 import fi.dy.masa.servux.network.payload.channel.ServuxMetadataPayload;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +49,7 @@ public class MetaDataProvider extends DataProviderBase
     {
         UUID uuid = player.getUuid();
         MetadataClient oldClient = CLIENTS.get(uuid);
+        oldClient.metadataDisableClient();
         oldClient.unregisterClient();
         CLIENTS.remove(uuid);
         Servux.printDebug("MetaDataProvider#register(): new MetadataClient unregister() for {}", player.getName().getLiteralString());
@@ -57,21 +58,4 @@ public class MetaDataProvider extends DataProviderBase
     {
         // NO-OP
     }
-    @Override
-    public BlockPos getSpawnPos() { return null; }
-
-    @Override
-    public void setSpawnPos(BlockPos spawnPos) { }
-
-    @Override
-    public int getSpawnChunkRadius() { return 0; }
-
-    @Override
-    public void setSpawnChunkRadius(int radius) { }
-
-    @Override
-    public boolean refreshSpawnMetadata() { return false; }
-
-    @Override
-    public void setRefreshSpawnMetadataComplete() { }
 }

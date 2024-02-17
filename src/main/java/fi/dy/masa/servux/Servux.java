@@ -7,7 +7,7 @@ import fi.dy.masa.servux.listeners.ServerListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
 import net.fabricmc.api.ModInitializer;
 
 public class Servux implements ModInitializer
