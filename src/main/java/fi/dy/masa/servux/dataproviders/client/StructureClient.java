@@ -15,9 +15,10 @@ public class StructureClient extends ClientBase
     private boolean registered;
     private boolean enabled;
     private PlayerDimensionPosition dim;
-    public StructureClient(String name, UUID uuid, @Nullable String version, @Nullable NbtCompound metadata)
+    public NbtCompound enabledStructures;
+    public StructureClient(String name, UUID uuid, @Nullable String version)
     {
-        super(name, uuid, version, metadata);
+        super(name, uuid, version);
     }
 
     @Override
@@ -29,6 +30,7 @@ public class StructureClient extends ClientBase
         this.registered = true;
         this.enabled = false;
         this.dim = new PlayerDimensionPosition(player);
+        this.enabledStructures = new NbtCompound();
     }
 
     @Override
@@ -37,6 +39,7 @@ public class StructureClient extends ClientBase
         this.registered = false;
         this.enabled = false;
         this.dim = null;
+        this.enabledStructures.getKeys().clear();
     }
 
     @Override
@@ -57,19 +60,20 @@ public class StructureClient extends ClientBase
         this.updateVersion(version);
     }
 
-    @Override
-    public void copyClientMetadata(NbtCompound metadata)
+    public void setEnabledStructures(NbtCompound data)
     {
-        if (!metadata.isEmpty())
-        {
-            this.copyMetadata(metadata);
-        }
+        this.enabledStructures.copyFrom(data);
     }
 
-    @Override
-    public NbtCompound getClientMetadata()
+    public NbtCompound getEnabledStructures()
     {
-        return this.getMetadata();
+        return this.enabledStructures;
+    }
+
+    public void updateEnabledStructures(NbtCompound data)
+    {
+        this.enabledStructures.getKeys().clear();
+        this.enabledStructures.copyFrom(data);
     }
 
     @Override

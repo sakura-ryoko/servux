@@ -1,7 +1,6 @@
 package fi.dy.masa.servux.dataproviders.client;
 
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,9 +13,9 @@ public class MetadataClient extends ClientBase
 {
     private boolean registered;
     private boolean enabled;
-    public MetadataClient(String name, UUID uuid, @Nullable String version, @Nullable NbtCompound metadata)
+    public MetadataClient(String name, UUID uuid, @Nullable String version)
     {
-        super(name, uuid, version, metadata);
+        super(name, uuid, version);
     }
 
     @Override
@@ -52,21 +51,6 @@ public class MetadataClient extends ClientBase
     public void setClientVersion(String version)
     {
         this.updateVersion(version);
-    }
-
-    @Override
-    public void copyClientMetadata(NbtCompound metadata)
-    {
-        if (!metadata.isEmpty())
-        {
-            this.copyMetadata(metadata);
-        }
-    }
-
-    @Override
-    public NbtCompound getClientMetadata()
-    {
-        return this.getMetadata();
     }
 
     @Override

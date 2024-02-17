@@ -3,6 +3,7 @@ package fi.dy.masa.servux.dataproviders;
 import java.util.*;
 
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.client.StructureClient;
 import fi.dy.masa.servux.network.packet.PacketType;
 import fi.dy.masa.servux.network.packet.listeners.ServuxStructuresPlayListener;
@@ -57,6 +58,7 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("timeout", this.timeout);
         this.metadata.putInt("version", PacketType.Structures.PROTOCOL_VERSION);
+        this.metadata.putString("servux", ServuxReference.MOD_ID+"-"+ServuxReference.MOD_VERSION);
 
         // FIXME --> Move out of structures channel in the future
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
@@ -104,7 +106,7 @@ public class StructureDataProvider extends DataProviderBase
                     if (player != null)
                     {
                         StructureClient client = CLIENTS.get(uuid);
-                        if (client.isStructuresClient() && !client.isStructuresEnabled())
+                        if (client.isStructuresClient() && client.isStructuresEnabled())
                         {
                             // Only send packets to players who have sent the STRUCTURES_ACCEPT packet
                             //if (this.accepted.getOrDefault(uuid, false)) {
@@ -112,7 +114,7 @@ public class StructureDataProvider extends DataProviderBase
                             this.refreshTrackedChunks(player, tickCounter);
                         }
                         if (this.refreshSpawnMetadata())
-                            this.refreshSpawnMetadata(player);
+                            this.refreshSpawnMetadata(player, null);
                     }
                     else
                     {
@@ -160,12 +162,12 @@ public class StructureDataProvider extends DataProviderBase
             */
 
             // WAIT FOR CLIENTS TO REQUEST STRUCTURES DATA
-            StructureClient newClient = new StructureClient(player.getName().getLiteralString(), uuid, null, null);
+            StructureClient newClient = new StructureClient(player.getName().getLiteralString(), uuid, null);
             // registerClient handles the new PlayerDimensionPosition call and store's it.
             newClient.registerClient(player);
             newClient.structuresDisableClient();
             this.CLIENTS.put(uuid, newClient);
-            Servux.printDebug("register() StructureClient for player {}", player.getName().getLiteralString());
+            Servux.logger.info("registering StructureClient for player {}", player.getName().getLiteralString());
 
             //this.registeredPlayers.put(uuid, dim);
             //this.accepted.put(uuid, false);
@@ -192,8 +194,9 @@ public class StructureDataProvider extends DataProviderBase
     {
         UUID id = player.getUuid();
 
-        Servux.printDebug("unregister() for StructureClient for player {}", player.getName().getLiteralString());
+        Servux.logger.info("unregistering for StructureClient for player {}", player.getName().getLiteralString());
         StructureClient oldClient = this.CLIENTS.get(id);
+        oldClient.structuresDisableClient();
         oldClient.unregisterClient();
         this.CLIENTS.remove(id);
 
@@ -497,7 +500,7 @@ public class StructureDataProvider extends DataProviderBase
      * Added a simple "OPT-IN" Boolean system for players to "Accept/Decline" receiving structure packets
      * --> Saving bandwidth, saving kittens, etc.
      */
-    public void acceptStructuresFromPlayer(ServerPlayerEntity player)
+    public void acceptStructuresFromPlayer(ServerPlayerEntity player, NbtCompound data)
     {
         // Player requested for us to either ALLOW or DISALLOW sending them Structures packets
         UUID uuid = player.getUuid();
@@ -505,6 +508,30 @@ public class StructureDataProvider extends DataProviderBase
         {
             Servux.printDebug("acceptStructuresFromPlayer(): Accepting structures for StructureClient {}", player.getName().getLiteralString());
             StructureClient client = this.CLIENTS.get(uuid);
+            if (client.getVersion().isEmpty() && data.contains("version"))
+            {
+                String ver = data.getString("version");
+                if (ver.isEmpty())
+                {
+                    Servux.logger.info("acceptStructures from player {}", player.getName().getLiteralString());
+                }
+                else
+                {
+                    client.setClientVersion(ver);
+                    Servux.logger.info("acceptStructures from player {} with client version: {}", player.getName().getLiteralString(), ver);
+                }
+            }
+            else
+            {
+                if (client.getVersion().isEmpty())
+                {
+                    Servux.logger.info("acceptStructures from player {}", player.getName().getLiteralString());
+                }
+                else
+                {
+                    Servux.logger.info("acceptStructures from player {} with client version: {}", player.getName().getLiteralString(), client.getVersion());
+                }
+            }
             client.structuresEnableClient();
             client.setClientDimension(new PlayerDimensionPosition(player));
             this.CLIENTS.replace(uuid, client);
@@ -548,12 +575,19 @@ public class StructureDataProvider extends DataProviderBase
     {
         // Player requested for us to either ALLOW or DISALLOW sending them Structures packets
         UUID uuid = player.getUuid();
-        if (this.CLIENTS.containsKey(uuid))
-        {
-            Servux.printDebug("declineStructuresFromPlayer(): Declining structures for StructureClient {}", player.getName().getLiteralString());
+        if (this.CLIENTS.containsKey(uuid)) {
+            //Servux.printDebug("declineStructuresFromPlayer(): Declining structures for StructureClient {}", player.getName().getLiteralString());
             StructureClient client = this.CLIENTS.get(uuid);
             client.structuresDisableClient();
             //client.setClientDimension(new PlayerDimensionPosition(player));
+            if (client.getVersion().isEmpty())
+            {
+                Servux.logger.info("structuresDeclined from player {}", player.getName().getLiteralString());
+            }
+            else
+            {
+                Servux.logger.info("structuresDeclined from player {} with client version {}", player.getName().getLiteralString(), client.getVersion());
+            }
             this.CLIENTS.replace(uuid, client);
         }
         /*
@@ -570,7 +604,7 @@ public class StructureDataProvider extends DataProviderBase
         Servux.printDebug("StructureDataProvider#declineStructuresFromPlayer(): player {} is declining to receive structure data packets.", player.getName().getLiteralString());
     }
 
-    public void refreshMetadata(ServerPlayerEntity player)
+    public void refreshMetadata(ServerPlayerEntity player, NbtCompound data)
     {
         UUID uuid = player.getUuid();
         if (this.CLIENTS.containsKey(uuid))
@@ -579,6 +613,18 @@ public class StructureDataProvider extends DataProviderBase
         //}
         //if (this.registeredPlayers.containsKey(uuid))
         //{
+            StructureClient client = this.CLIENTS.get(uuid);
+            if (client.getVersion().isEmpty() && data.contains("version"))
+            {
+                String ver = data.getString("version");
+                if (!ver.isEmpty())
+                {
+                    client.setClientVersion(ver);
+                    Servux.printDebug("refreshMetadata(): Client version: {}", ver);
+                    this.CLIENTS.replace(uuid, client);
+                }
+            }
+            // Yeet packet
             NbtCompound nbt = new NbtCompound();
             nbt.copyFrom(this.metadata);
             nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
@@ -590,47 +636,66 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     /**
-     * MiniHUD sent us a list of structures that they have toggled.  For now, let's just copy the data.
+     * MiniHUD sent us a list of structures that they have toggled.
+     * For now, let's copy the data until we decide how to use it.
      */
     public void updateStructureTogglesFromPlayer(ServerPlayerEntity player, NbtCompound data)
     {
         UUID uuid = player.getUuid();
         if (this.CLIENTS.containsKey(uuid))
         {
-            Servux.printDebug("updateStructureTogglesFromPlayer():  copying structures toggle states from player {}", player.getName().getLiteralString());
+            Servux.printDebug("updateStructureTogglesFromPlayer(): copying structures toggle states from player {}", player.getName().getLiteralString());
             // Copy to it's NBT data, stripping out "PacketType"
             data.remove("packetType");
             StructureClient client = this.CLIENTS.get(uuid);
-            client.copyClientMetadata(data);
+            if (client.enabledStructures.isEmpty())
+                client.setEnabledStructures(data);
+            else
+                client.updateEnabledStructures(data);
             this.CLIENTS.replace(uuid, client);
+            // TODO --> now, what do we want to do with this data, such as only send the relevant data?
 
             // Debug call to list structure toggles state from clients.
-            // TODO --> now, what do we want to do with this data?
-            /*
             int i = 0;
-            for (String key : data.getKeys())
+            for (String key : client.enabledStructures.getKeys())
             {
                 // key is the StructureType name, ie. "ANCIENT_CITY", and the value is boolean.
-                Servux.printDebug("[{}] key: {}, value: {}", i, key, data.getBoolean(key));
+                Servux.printDebug("[{}] key: {}, value: {}", i, key, client.enabledStructures.getBoolean(key));
                 i++;
             }
-             */
         }
     }
 
     // FIXME --> Move out of structures channel in the future
-    public void refreshSpawnMetadata(ServerPlayerEntity player)
+    public void refreshSpawnMetadata(ServerPlayerEntity player, NbtCompound data)
     {
         UUID uuid = player.getUuid();
         if (this.CLIENTS.containsKey(uuid))
         {
             Servux.printDebug("refreshSpawnMetadata() received for StructureCLient {}", player.getName().getLiteralString());
         }
+        StructureClient client = this.CLIENTS.get(uuid);
+        if (client.getVersion().isEmpty() && data != null && data.contains("version"))
+        {
+            String ver = data.getString("version");
+            if (!ver.isEmpty())
+            {
+                client.setClientVersion(ver);
+                Servux.logger.info("refreshSpawnMetadata request from player {} with client version: {}", player.getName().getLiteralString(), ver);
+                this.CLIENTS.replace(uuid, client);
+            }
+            else
+            {
+                Servux.logger.info("refreshSpawnMetadata request from player {}", player.getName().getLiteralString());
+            }
+        }
+
         // Only replies to players who request it, or if the values have changed
         NbtCompound nbt = new NbtCompound();
         BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
         nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
         nbt.putString("id", getNetworkChannel());
+        nbt.putString("servux", ServuxReference.MOD_ID+"-"+ServuxReference.MOD_VERSION);
         nbt.putInt("spawnPosX", spawnPos.getX());
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());

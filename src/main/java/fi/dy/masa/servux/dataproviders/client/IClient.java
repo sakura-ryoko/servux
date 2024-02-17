@@ -1,7 +1,6 @@
 package fi.dy.masa.servux.dataproviders.client;
 
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.UUID;
@@ -17,8 +16,6 @@ public interface IClient
     UUID getClientUUID(ServerPlayerEntity player);
     String getClientVersion();
     void setClientVersion(String version);
-    void copyClientMetadata(NbtCompound metadata);
-    NbtCompound getClientMetadata();
 
     // TODO Structures Channel
     void structuresEnableClient();

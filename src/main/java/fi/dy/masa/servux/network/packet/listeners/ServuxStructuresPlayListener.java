@@ -91,17 +91,17 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
             if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_METADATA)
             {
                 Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): received a metadata request packet from player: {}.", player.getName().getLiteralString());
-                StructureDataProvider.INSTANCE.refreshMetadata(player);
+                StructureDataProvider.INSTANCE.refreshMetadata(player, data);
             }
             else if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_SPAWN_METADATA)
             {
                 Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): received a Spawn metadata refresh packet from player: {}.", player.getName().getLiteralString());
-                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player);
+                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
             }
             else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_ACCEPT)
             {
                 Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): received a STRUCTURES_ACCEPT request from player: {}.", player.getName().getLiteralString());
-                StructureDataProvider.INSTANCE.acceptStructuresFromPlayer(player);
+                StructureDataProvider.INSTANCE.acceptStructuresFromPlayer(player, data);
             }
             else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_DECLINED)
             {

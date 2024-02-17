@@ -89,7 +89,7 @@ public class LitematicsDataProvider extends DataProviderBase
     public void register(ServerPlayerEntity player)
     {
         UUID uuid = player.getUuid();
-        LitematicClient newClient = new LitematicClient(player.getName().getLiteralString(), uuid, null, null);
+        LitematicClient newClient = new LitematicClient(player.getName().getLiteralString(), uuid, null);
         newClient.registerClient(player);
         newClient.litematicsEnableClient();
         CLIENTS.put(uuid, newClient);

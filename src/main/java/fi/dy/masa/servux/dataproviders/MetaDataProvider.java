@@ -39,7 +39,7 @@ public class MetaDataProvider extends DataProviderBase
     public void register(ServerPlayerEntity player)
     {
         UUID uuid = player.getUuid();
-        MetadataClient newClient = new MetadataClient(player.getName().getLiteralString(), uuid, null, null);
+        MetadataClient newClient = new MetadataClient(player.getName().getLiteralString(), uuid, null);
         newClient.registerClient(player);
         newClient.metadataEnableClient();
         CLIENTS.put(uuid, newClient);
