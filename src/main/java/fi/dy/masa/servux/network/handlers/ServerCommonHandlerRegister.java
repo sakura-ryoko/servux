@@ -41,21 +41,29 @@ public class ServerCommonHandlerRegister
     public <T extends CustomPayload> CustomPayload.Id<T> getPayloadType(PayloadType type)
     {
         //Servux.printDebug("ServerCommonHandlerRegister#getPayload(): type {}", type.toString());
-        if (type == PayloadType.SERVUX_BYTEBUF)
+        if (type == PayloadType.SERVUX_BLOCKS)
+        {
+            return (CustomPayload.Id<T>) ServuxBlocksPayload.TYPE;
+        }
+        else if (type == PayloadType.SERVUX_BYTEBUF)
         {
             return (CustomPayload.Id<T>) ServuxBufPayload.TYPE;
         }
-        else if (type == PayloadType.SERVUX_STRUCTURES)
+        else if (type == PayloadType.SERVUX_ENTITIES)
         {
-            return (CustomPayload.Id<T>) ServuxStructuresPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxEntitiesPayload.TYPE;
+        }
+        else if (type == PayloadType.SERVUX_LITEMATICS)
+        {
+            return (CustomPayload.Id<T>) ServuxMetadataPayload.TYPE;
         }
         else if (type == PayloadType.SERVUX_METADATA)
         {
             return (CustomPayload.Id<T>) ServuxMetadataPayload.TYPE;
         }
-        else if (type == PayloadType.SERVUX_LITEMATICS)
+        else if (type == PayloadType.SERVUX_STRUCTURES)
         {
-            return (CustomPayload.Id<T>) ServuxMetadataPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxStructuresPayload.TYPE;
         }
         else
         {
@@ -66,21 +74,29 @@ public class ServerCommonHandlerRegister
     public <B extends ByteBuf, T extends CustomPayload> PacketCodec<B, T> getPacketCodec(PayloadType type)
     {
         //Servux.printDebug("ServerCommonHandlerRegister#getPacketCodec(): type {}", type.toString());
-        if (type == PayloadType.SERVUX_BYTEBUF)
+        if (type == PayloadType.SERVUX_BLOCKS)
+        {
+            return (PacketCodec<B, T>) ServuxBlocksPayload.CODEC;
+        }
+        else if (type == PayloadType.SERVUX_BYTEBUF)
         {
             return (PacketCodec<B, T>) ServuxBufPayload.CODEC;
         }
-        else if (type == PayloadType.SERVUX_STRUCTURES)
+        else if (type == PayloadType.SERVUX_ENTITIES)
         {
-            return (PacketCodec<B, T>) ServuxStructuresPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxEntitiesPayload.CODEC;
+        }
+        else if (type == PayloadType.SERVUX_LITEMATICS)
+        {
+            return (PacketCodec<B, T>) ServuxLitematicsPayload.CODEC;
         }
         else if (type == PayloadType.SERVUX_METADATA)
         {
             return (PacketCodec<B, T>) ServuxMetadataPayload.CODEC;
         }
-        else if (type == PayloadType.SERVUX_LITEMATICS)
+        else if (type == PayloadType.SERVUX_STRUCTURES)
         {
-            return (PacketCodec<B, T>) ServuxLitematicsPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxStructuresPayload.CODEC;
         }
         else
         {
