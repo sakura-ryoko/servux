@@ -7,6 +7,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 
+/**
+ * The functional Production Servux Structures Data Provider.
+ */
 public record ServuxStructuresPayload(NbtCompound data) implements CustomPayload
 {
     public static final Id<ServuxStructuresPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_STRUCTURES));

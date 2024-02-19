@@ -9,7 +9,6 @@ import net.minecraft.network.packet.CustomPayload;
 
 /**
  * Example Payload Type for extending a PacketByteBuf
- * @param byteBuf
  */
 public record ServuxBufPayload(ServuxByteBuf byteBuf) implements CustomPayload
 {

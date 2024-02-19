@@ -7,6 +7,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 
+/**
+ * Intended as a new future Servux Data Provider for sending Entity NBT data (i.e., Mob Health Information, etc.)
+ */
 public record ServuxEntitiesPayload(NbtCompound data) implements CustomPayload
 {
     public static final Id<ServuxEntitiesPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_ENTITIES));

@@ -7,6 +7,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 
+/**
+ * Intended as a new future Servux Data Provider for providing a common Litematic storage server
+ */
 public record ServuxLitematicsPayload(NbtCompound data) implements CustomPayload
 {
     public static final Id<ServuxLitematicsPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_LITEMATICS));

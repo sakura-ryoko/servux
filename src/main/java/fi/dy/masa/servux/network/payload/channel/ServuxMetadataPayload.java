@@ -7,6 +7,9 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 
+/**
+ * Intended as a new future Servux Data Provider for providing server-based Metadata / Rules (I.e, SPAWN_CHUNK_RADIUS, etc)
+ */
 public record ServuxMetadataPayload(NbtCompound data) implements CustomPayload
 {
     public static final Id<ServuxMetadataPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_METADATA));
