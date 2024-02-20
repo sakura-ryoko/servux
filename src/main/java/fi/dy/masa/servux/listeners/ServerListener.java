@@ -16,11 +16,13 @@ public class ServerListener implements IServerListener
         {
             ServuxReference.setOpenToLan(false);
             ServuxReference.setDedicated(false);
+            Servux.logger.info("Servux is running under Single Player mode.");
         }
         else if (minecraftServer.isDedicated())
         {
             ServuxReference.setOpenToLan(false);
             ServuxReference.setDedicated(true);
+            Servux.logger.info("Servux is running under Dedicated Server mode.");
         }
         PacketUtils.registerPayloads();
         Servux.printDebug("MinecraftServerEvents#onServerStarting(): invoked.");

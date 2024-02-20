@@ -154,7 +154,7 @@ public class StructureDataProvider extends DataProviderBase
             this.CLIENTS.put(uuid, newClient);
             Servux.logger.info("registering StructureClient for player {}", player.getName().getLiteralString());
 
-            if (ServuxReference.MOD_DEDICATED || ServuxReference.MOD_OPEN_TO_LAN)
+            if (ServuxReference.isDedicated() || ServuxReference.isOpenToLan())
             {
                 // TODO if this fails, we can still use the Fabric Network API method later
                 ServerPlayNetworkHandler handler = player.networkHandler;
@@ -662,7 +662,7 @@ public class StructureDataProvider extends DataProviderBase
         }
 
         // Only replies to players who request it, or if the values have changed
-        if (ServuxReference.MOD_DEDICATED || ServuxReference.MOD_OPEN_TO_LAN)
+        if (ServuxReference.isDedicated() || ServuxReference.isOpenToLan())
         {
             NbtCompound nbt = new NbtCompound();
             BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
