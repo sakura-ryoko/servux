@@ -43,27 +43,27 @@ public class ServerCommonHandlerRegister
         //Servux.printDebug("ServerCommonHandlerRegister#getPayload(): type {}", type.toString());
         if (type == PayloadType.SERVUX_BLOCKS)
         {
-            return (CustomPayload.Id<T>) ServuxBlocksPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxS2CBlocksPayload.TYPE;
         }
         else if (type == PayloadType.SERVUX_BYTEBUF)
         {
-            return (CustomPayload.Id<T>) ServuxBufPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxS2CBufPayload.TYPE;
         }
         else if (type == PayloadType.SERVUX_ENTITIES)
         {
-            return (CustomPayload.Id<T>) ServuxEntitiesPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxS2CEntitiesPayload.TYPE;
         }
         else if (type == PayloadType.SERVUX_LITEMATICS)
         {
-            return (CustomPayload.Id<T>) ServuxMetadataPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxS2CMetadataPayload.TYPE;
         }
         else if (type == PayloadType.SERVUX_METADATA)
         {
-            return (CustomPayload.Id<T>) ServuxMetadataPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxS2CMetadataPayload.TYPE;
         }
         else if (type == PayloadType.SERVUX_STRUCTURES)
         {
-            return (CustomPayload.Id<T>) ServuxStructuresPayload.TYPE;
+            return (CustomPayload.Id<T>) ServuxS2CStructuresPayload.TYPE;
         }
         else
         {
@@ -76,27 +76,27 @@ public class ServerCommonHandlerRegister
         //Servux.printDebug("ServerCommonHandlerRegister#getPacketCodec(): type {}", type.toString());
         if (type == PayloadType.SERVUX_BLOCKS)
         {
-            return (PacketCodec<B, T>) ServuxBlocksPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxS2CBlocksPayload.CODEC;
         }
         else if (type == PayloadType.SERVUX_BYTEBUF)
         {
-            return (PacketCodec<B, T>) ServuxBufPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxS2CBufPayload.CODEC;
         }
         else if (type == PayloadType.SERVUX_ENTITIES)
         {
-            return (PacketCodec<B, T>) ServuxEntitiesPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxS2CEntitiesPayload.CODEC;
         }
         else if (type == PayloadType.SERVUX_LITEMATICS)
         {
-            return (PacketCodec<B, T>) ServuxLitematicsPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxS2CLitematicsPayload.CODEC;
         }
         else if (type == PayloadType.SERVUX_METADATA)
         {
-            return (PacketCodec<B, T>) ServuxMetadataPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxS2CMetadataPayload.CODEC;
         }
         else if (type == PayloadType.SERVUX_STRUCTURES)
         {
-            return (PacketCodec<B, T>) ServuxStructuresPayload.CODEC;
+            return (PacketCodec<B, T>) ServuxS2CStructuresPayload.CODEC;
         }
         else
         {

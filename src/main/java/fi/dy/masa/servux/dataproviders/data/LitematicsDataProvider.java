@@ -7,7 +7,7 @@ import fi.dy.masa.servux.dataproviders.client.LitematicClient;
 import fi.dy.masa.servux.litematics.placement.LitematicPlacement;
 import fi.dy.masa.servux.litematics.players.PlayerIdentityProvider;
 import fi.dy.masa.servux.network.packet.PacketType;
-import fi.dy.masa.servux.network.payload.channel.ServuxLitematicsPayload;
+import fi.dy.masa.servux.network.payload.channel.ServuxS2CLitematicsPayload;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -25,7 +25,7 @@ import java.util.UUID;
 public class LitematicsDataProvider extends DataProviderBase
 {
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
-    private static Identifier getChannel() { return ServuxLitematicsPayload.TYPE.id(); }
+    private static Identifier getChannel() { return ServuxS2CLitematicsPayload.TYPE.id(); }
     protected final Map<UUID, LitematicClient> CLIENTS = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     // Where to store the litematics

@@ -9,7 +9,7 @@ import fi.dy.masa.servux.dataproviders.client.StructureClient;
 import fi.dy.masa.servux.network.packet.PacketType;
 import fi.dy.masa.servux.network.packet.listeners.ServuxStructuresPlayListener;
 import fi.dy.masa.servux.network.payload.PayloadType;
-import fi.dy.masa.servux.network.payload.channel.ServuxStructuresPayload;
+import fi.dy.masa.servux.network.payload.channel.ServuxS2CStructuresPayload;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -51,7 +51,7 @@ public class StructureDataProvider extends DataProviderBase
     private boolean refreshSpawnMetadata;
     // TODO
 
-    public static Identifier getChannel() { return ServuxStructuresPayload.TYPE.id(); }
+    public static Identifier getChannel() { return ServuxS2CStructuresPayload.TYPE.id(); }
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
@@ -154,24 +154,27 @@ public class StructureDataProvider extends DataProviderBase
             this.CLIENTS.put(uuid, newClient);
             Servux.logger.info("registering StructureClient for player {}", player.getName().getLiteralString());
 
-            // TODO if this fails, we can still use the Fabric Network API method later
-            ServerPlayNetworkHandler handler = player.networkHandler;
-            if (handler != null)
+            if (ServuxReference.MOD_DEDICATED || ServuxReference.MOD_OPEN_TO_LAN)
             {
-                Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {} via networkHandler", player.getName().getLiteralString());
-                NbtCompound nbt = new NbtCompound();
-                nbt.copyFrom(this.metadata);
-                nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
-                ServuxStructuresPayload payload = new ServuxStructuresPayload(nbt);
+                // TODO if this fails, we can still use the Fabric Network API method later
+                ServerPlayNetworkHandler handler = player.networkHandler;
+                if (handler != null)
+                {
+                    Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {} via networkHandler", player.getName().getLiteralString());
+                    NbtCompound nbt = new NbtCompound();
+                    nbt.copyFrom(this.metadata);
+                    nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
+                    ServuxS2CStructuresPayload payload = new ServuxS2CStructuresPayload(nbt);
 
-                ServuxStructuresPlayListener.INSTANCE.sendS2CPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
+                    ServuxStructuresPlayListener.INSTANCE.sendS2CPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
+                }
+                else
+                {
+                    Servux.printDebug("StructureDataProvider#register(): Skipping packet yeet for player: {} because networkHandler is NULL.", player.getName().getLiteralString());
+                }
             }
-            else
-            {
-                Servux.printDebug("StructureDataProvider#register(): Skipping packet yeet for player: {} because networkHandler is NULL.", player.getName().getLiteralString());
-            }
-
-            // Initial sync
+            // Initial sync (DO AFTER STRUCTURES_ACCEPT)
+            /*
             try
             {
                 int tickCounter = Objects.requireNonNull(player.getServer()).getTicks();
@@ -187,6 +190,7 @@ public class StructureDataProvider extends DataProviderBase
                     this.initialSyncStructuresToPlayerWithinRange(player, 10, 0);
                 }
             }
+             */
         }
     }
 
@@ -472,7 +476,7 @@ public class StructureDataProvider extends DataProviderBase
             NbtCompound tag = new NbtCompound();
             tag.put("Structures", structureList);
             tag.putInt("packetType", PacketType.Structures.PACKET_S2C_STRUCTURE_DATA);
-            Servux.printDebug("StructureDataProvider#sendStructures(): yeet packet to player: {}.", player.getName().getLiteralString());
+            //Servux.printDebug("StructureDataProvider#sendStructures(): yeet packet to player: {}.", player.getName().getLiteralString());
             ServuxStructuresPlayListener.INSTANCE.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, tag, player);
         }
     }
@@ -658,16 +662,19 @@ public class StructureDataProvider extends DataProviderBase
         }
 
         // Only replies to players who request it, or if the values have changed
-        NbtCompound nbt = new NbtCompound();
-        BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
-        nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
-        nbt.putString("id", getNetworkChannel());
-        nbt.putString("servux", ServuxReference.MOD_ID+"-"+ServuxReference.MOD_VERSION);
-        nbt.putInt("spawnPosX", spawnPos.getX());
-        nbt.putInt("spawnPosY", spawnPos.getY());
-        nbt.putInt("spawnPosZ", spawnPos.getZ());
-        nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
-        ServuxStructuresPlayListener.INSTANCE.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, nbt, player);
+        if (ServuxReference.MOD_DEDICATED || ServuxReference.MOD_OPEN_TO_LAN)
+        {
+            NbtCompound nbt = new NbtCompound();
+            BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
+            nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
+            nbt.putString("id", getNetworkChannel());
+            nbt.putString("servux", ServuxReference.MOD_ID + "-" + ServuxReference.MOD_VERSION);
+            nbt.putInt("spawnPosX", spawnPos.getX());
+            nbt.putInt("spawnPosY", spawnPos.getY());
+            nbt.putInt("spawnPosZ", spawnPos.getZ());
+            nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
+            ServuxStructuresPlayListener.INSTANCE.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, nbt, player);
+        }
     }
 
     public BlockPos getSpawnPos()

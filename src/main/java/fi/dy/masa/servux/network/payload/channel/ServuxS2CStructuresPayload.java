@@ -10,13 +10,13 @@ import net.minecraft.network.packet.CustomPayload;
 /**
  * The functional Production Servux Structures Data Provider.
  */
-public record ServuxStructuresPayload(NbtCompound data) implements CustomPayload
+public record ServuxS2CStructuresPayload(NbtCompound data) implements CustomPayload
 {
-    public static final Id<ServuxStructuresPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_STRUCTURES));
-    public static final PacketCodec<PacketByteBuf, ServuxStructuresPayload> CODEC = CustomPayload.codecOf(ServuxStructuresPayload::write, ServuxStructuresPayload::new);
+    public static final Id<ServuxS2CStructuresPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_STRUCTURES));
+    public static final PacketCodec<PacketByteBuf, ServuxS2CStructuresPayload> CODEC = CustomPayload.codecOf(ServuxS2CStructuresPayload::write, ServuxS2CStructuresPayload::new);
     public static final String KEY = PayloadTypeRegister.INSTANCE.getKey(PayloadType.SERVUX_STRUCTURES);
 
-    public ServuxStructuresPayload(PacketByteBuf buf) { this(buf.readNbt()); }
+    public ServuxS2CStructuresPayload(PacketByteBuf buf) { this(buf.readNbt()); }
 
     private void write(PacketByteBuf buf) { buf.writeNbt(data); }
 

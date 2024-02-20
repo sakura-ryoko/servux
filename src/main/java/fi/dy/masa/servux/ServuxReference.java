@@ -11,4 +11,32 @@ public class ServuxReference
     public static final EnvType MOD_ENVIRONMENT = FabricLoader.getInstance().getEnvironmentType();
     public static final boolean MOD_DEBUG = true;
     public static boolean isServer() { return MOD_ENVIRONMENT == EnvType.SERVER; }
+    public static boolean isClient() { return MOD_ENVIRONMENT == EnvType.CLIENT; }
+    public static boolean MOD_OPEN_TO_LAN = false;
+    public static boolean MOD_DEDICATED = false;
+    public static void setOpenToLan(boolean toggle)
+    {
+        if (toggle && isClient())
+        {
+            MOD_OPEN_TO_LAN = true;
+            MOD_DEDICATED = false;
+        }
+        else if (!toggle && isServer())
+        {
+            MOD_OPEN_TO_LAN = false;
+        }
+    }
+    public static void setDedicated(boolean toggle)
+    {
+        if (toggle && isServer())
+        {
+            MOD_OPEN_TO_LAN = false;
+            MOD_DEDICATED = true;
+        }
+        else if (!toggle && isClient())
+        {
+            MOD_DEDICATED = false;
+        }
+    }
+    // For keeping networking API separated for basic sanity checks.
 }

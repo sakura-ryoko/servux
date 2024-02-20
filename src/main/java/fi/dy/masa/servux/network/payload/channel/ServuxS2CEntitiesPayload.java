@@ -10,13 +10,13 @@ import net.minecraft.network.packet.CustomPayload;
 /**
  * Intended as a new future Servux Data Provider for sending Entity NBT data (i.e., Mob Health Information, etc.)
  */
-public record ServuxEntitiesPayload(NbtCompound data) implements CustomPayload
+public record ServuxS2CEntitiesPayload(NbtCompound data) implements CustomPayload
 {
-    public static final Id<ServuxEntitiesPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_ENTITIES));
-    public static final PacketCodec<PacketByteBuf, ServuxEntitiesPayload> CODEC = CustomPayload.codecOf(ServuxEntitiesPayload::write, ServuxEntitiesPayload::new);
+    public static final Id<ServuxS2CEntitiesPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_ENTITIES));
+    public static final PacketCodec<PacketByteBuf, ServuxS2CEntitiesPayload> CODEC = CustomPayload.codecOf(ServuxS2CEntitiesPayload::write, ServuxS2CEntitiesPayload::new);
     public static final String KEY = PayloadTypeRegister.INSTANCE.getKey(PayloadType.SERVUX_ENTITIES);
 
-    public ServuxEntitiesPayload(PacketByteBuf buf) { this(buf.readNbt()); }
+    public ServuxS2CEntitiesPayload(PacketByteBuf buf) { this(buf.readNbt()); }
 
     private void write(PacketByteBuf buf) { buf.writeNbt(data); }
 

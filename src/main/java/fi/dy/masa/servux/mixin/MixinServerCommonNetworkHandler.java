@@ -21,7 +21,7 @@ public class MixinServerCommonNetworkHandler
     @Inject(method = "onCustomPayload", at = @At("HEAD"), cancellable = true)
     private void servux_onCustomPayload(CustomPayloadC2SPacket packet, CallbackInfo ci)
     {
-        //Servux.printDebug("MixinServerCommonNetworkHandler#servux_onCustomPayload(): invoked");
+        Servux.printDebug("MixinServerCommonNetworkHandler#servux_onCustomPayload(): invoked");
         Object thisObj = this;
         if (thisObj instanceof ServerPlayNetworkHandler playHandler)
         {
@@ -33,32 +33,32 @@ public class MixinServerCommonNetworkHandler
                 switch (type)
                 {
                     case SERVUX_BLOCKS:
-                        ServuxBlocksPayload blocksPayload = (ServuxBlocksPayload) thisPayload;
+                        ServuxS2CBlocksPayload blocksPayload = (ServuxS2CBlocksPayload) thisPayload;
                         NetworkThreadUtils.forceMainThread(packet, playHandler, playHandler.player.getServerWorld());
                         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).receiveC2SPlayPayload(PayloadType.SERVUX_BLOCKS, blocksPayload, playHandler, ci);
                         break;
                     case SERVUX_BYTEBUF:
-                        ServuxBufPayload servuxPayload = (ServuxBufPayload) thisPayload;
+                        ServuxS2CBufPayload servuxPayload = (ServuxS2CBufPayload) thisPayload;
                         NetworkThreadUtils.forceMainThread(packet, playHandler, playHandler.player.getServerWorld());
                         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).receiveC2SPlayPayload(PayloadType.SERVUX_BYTEBUF, servuxPayload, playHandler, ci);
                         break;
                     case SERVUX_ENTITIES:
-                        ServuxEntitiesPayload entitiesPayload = (ServuxEntitiesPayload) thisPayload;
+                        ServuxS2CEntitiesPayload entitiesPayload = (ServuxS2CEntitiesPayload) thisPayload;
                         NetworkThreadUtils.forceMainThread(packet, playHandler, playHandler.player.getServerWorld());
                         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).receiveC2SPlayPayload(PayloadType.SERVUX_ENTITIES, entitiesPayload, playHandler, ci);
                         break;
                     case SERVUX_LITEMATICS:
-                        ServuxLitematicsPayload litematicsPayload = (ServuxLitematicsPayload) thisPayload;
+                        ServuxS2CLitematicsPayload litematicsPayload = (ServuxS2CLitematicsPayload) thisPayload;
                         NetworkThreadUtils.forceMainThread(packet, playHandler, playHandler.player.getServerWorld());
                         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).receiveC2SPlayPayload(PayloadType.SERVUX_LITEMATICS, litematicsPayload, playHandler, ci);
                         break;
                     case SERVUX_METADATA:
-                        ServuxMetadataPayload metadataPayload = (ServuxMetadataPayload) thisPayload;
+                        ServuxS2CMetadataPayload metadataPayload = (ServuxS2CMetadataPayload) thisPayload;
                         NetworkThreadUtils.forceMainThread(packet, playHandler, playHandler.player.getServerWorld());
                         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).receiveC2SPlayPayload(PayloadType.SERVUX_METADATA, metadataPayload, playHandler, ci);
                         break;
                     case SERVUX_STRUCTURES:
-                        ServuxStructuresPayload structuresPayload = (ServuxStructuresPayload) thisPayload;
+                        ServuxS2CStructuresPayload structuresPayload = (ServuxS2CStructuresPayload) thisPayload;
                         NetworkThreadUtils.forceMainThread(packet, playHandler, playHandler.player.getServerWorld());
                         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, structuresPayload, playHandler, ci);
                         break;

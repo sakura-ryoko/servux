@@ -10,12 +10,12 @@ import net.minecraft.network.packet.CustomPayload;
 /**
  * Example Payload Type for extending a PacketByteBuf
  */
-public record ServuxBufPayload(ServuxByteBuf byteBuf) implements CustomPayload
+public record ServuxS2CBufPayload(ServuxByteBuf byteBuf) implements CustomPayload
 {
-    public static final Id<ServuxBufPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_BYTEBUF));
-    public static final PacketCodec<PacketByteBuf, ServuxBufPayload> CODEC = CustomPayload.codecOf(ServuxBufPayload::write, ServuxBufPayload::new);
+    public static final Id<ServuxS2CBufPayload> TYPE = new Id<>(PayloadTypeRegister.INSTANCE.getIdentifier(PayloadType.SERVUX_BYTEBUF));
+    public static final PacketCodec<PacketByteBuf, ServuxS2CBufPayload> CODEC = CustomPayload.codecOf(ServuxS2CBufPayload::write, ServuxS2CBufPayload::new);
 
-    public ServuxBufPayload(PacketByteBuf input)
+    public ServuxS2CBufPayload(PacketByteBuf input)
     {
         this(new ServuxByteBuf(input.readBytes(input.readableBytes())));
     }
