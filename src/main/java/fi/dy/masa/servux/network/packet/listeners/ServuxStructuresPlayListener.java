@@ -17,6 +17,7 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,10 +32,11 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
             // Servux doesn't need to use the networkHandler interface, but the code is here to do so.
 
             //ServerPlayNetworkHandler handler = context.player().networkHandler;
+            //CallbackInfo ci = new CallbackInfo("ServuxStructuresPlayListener", false);
 
             //if (handler != null)
             //{
-                //ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
+                //ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler, ci);
             //}
             //else
                 ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context);
@@ -66,7 +68,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
     }
     @Override
-    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler handler)
+    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler handler, CallbackInfo ci)
     {
         // Can store the network handler here if wanted
         ServuxStructuresPayload packet = (ServuxStructuresPayload) payload;
@@ -74,6 +76,10 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         Servux.printDebug("ServuxStructuresPlayListener#receiveS2CPlayPayload(): handling packet from player {} via network handler.", player.getName().getLiteralString());
 
         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
+
+        // Cancel remaining processing
+        if (ci.isCancellable())
+            ci.cancel();
     }
     @Override
     public void decodeC2SNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)

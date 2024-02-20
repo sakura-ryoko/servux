@@ -8,6 +8,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerConfigurationNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 public class ServerConfigHandler<T extends CustomPayload> implements IServerConfigHandler
 {
@@ -104,13 +105,13 @@ public class ServerConfigHandler<T extends CustomPayload> implements IServerConf
             }
         }
     }
-    public <P extends CustomPayload> void receiveC2SConfigPayload(PayloadType type, P payload, ServerConfigurationNetworkHandler networkHandler)
+    public <P extends CustomPayload> void receiveC2SConfigPayload(PayloadType type, P payload, ServerConfigurationNetworkHandler networkHandler, CallbackInfo ci)
     {
         if (!this.handlers.isEmpty())
         {
             for (IPluginServerConfigHandler<T> handler : this.handlers.get(type))
             {
-                handler.receiveC2SConfigPayload(type, payload, networkHandler);
+                handler.receiveC2SConfigPayload(type, payload, networkHandler, ci);
             }
         }
     }

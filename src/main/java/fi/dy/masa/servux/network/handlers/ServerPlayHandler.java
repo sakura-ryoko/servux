@@ -8,6 +8,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHandler
 {
@@ -106,13 +107,13 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
            }
        }
    }
-    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler networkHandler)
+    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler networkHandler, CallbackInfo ci)
     {
         if (!this.handlers.isEmpty())
         {
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(type))
             {
-                handler.receiveC2SPlayPayload(type, payload, networkHandler);
+                handler.receiveC2SPlayPayload(type, payload, networkHandler, ci);
             }
         }
     }

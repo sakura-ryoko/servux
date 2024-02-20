@@ -4,12 +4,13 @@ import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.handlers.ServerConfigHandler;
 import fi.dy.masa.servux.network.handlers.ServerPlayHandler;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.impl.networking.PayloadTypeRegistryImpl;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -81,10 +82,18 @@ public class PayloadTypeRegister
             return;
         codec.registerPlayCodec();
 
-        Servux.printDebug("PayloadTypeRegister#registerPlayChannel(): registering Play S2C Channels: {}", id.id().toString());
-        PayloadTypeRegistry.playS2C().register(id, packetCodec);
-        PayloadTypeRegistry.playC2S().register(id, packetCodec);
-        // We need to register the channel bi-directionally for it to work.
+        if (PayloadTypeRegistryImpl.PLAY_S2C.get(id) != null || PayloadTypeRegistryImpl.PLAY_C2S.get(id) != null)
+        {
+            // This just saved Minecraft from crashing, your welcome.
+            Servux.logger.warn("registerPlayChannel(): blocked duplicate Play Channel registration attempt for: {}.", id.id().toString());
+        }
+        else
+        {
+            Servux.printDebug("PayloadTypeRegister#registerPlayChannel(): registering Play S2C Channels: {}", id.id().toString());
+            PayloadTypeRegistry.playS2C().register(id, packetCodec);
+            PayloadTypeRegistry.playC2S().register(id, packetCodec);
+            // We need to register the channel bi-directionally for it to work.
+        }
     }
 
     public <T extends CustomPayload> void registerConfigChannel(PayloadType type, CustomPayload.Id<T> id, PacketCodec<PacketByteBuf, T> packetCodec)
@@ -96,10 +105,18 @@ public class PayloadTypeRegister
             return;
         codec.registerConfigCodec();
 
-        Servux.printDebug("PayloadTypeRegister#registerConfigChannel(): registering Configuration S2C Channels: {}", id.id().toString());
-        PayloadTypeRegistry.configurationS2C().register(id, packetCodec);
-        PayloadTypeRegistry.configurationC2S().register(id, packetCodec);
-        // We need to register the channel bi-directionally for it to work.
+        if (PayloadTypeRegistryImpl.CONFIGURATION_S2C.get(id) != null || PayloadTypeRegistryImpl.CONFIGURATION_C2S.get(id) != null)
+        {
+            // This just saved Minecraft from crashing, your welcome.
+            Servux.logger.warn("registerConfigChannel(): blocked duplicate Configuration Channel registration attempt for: {}.", id.id().toString());
+        }
+        else
+        {
+            Servux.printDebug("PayloadTypeRegister#registerConfigChannel(): registering Configuration S2C Channels: {}", id.id().toString());
+            PayloadTypeRegistry.configurationS2C().register(id, packetCodec);
+            PayloadTypeRegistry.configurationC2S().register(id, packetCodec);
+            // We need to register the channel bi-directionally for it to work.
+        }
     }
 
     /**
@@ -130,6 +147,25 @@ public class PayloadTypeRegister
     {
         //Servux.printDebug("PayloadTypeRegister#getKey(): type: {}", type.toString());
         return TYPES.getOrDefault(type, null).getKey();
+    }
+
+    /**
+     * Search for a registered Payload type by Identifier
+     */
+    @Nullable
+    public PayloadType getPayloadType(Identifier id)
+    {
+        //Servux.printDebug("PayloadTypeRegister#getPayloadType(): checking for payload type: {}", id.toString());
+        for (PayloadType type : TYPES.keySet())
+        {
+            PayloadCodec codec = TYPES.get(type);
+            if (codec != null && codec.getId() == id)
+            {
+                return type;
+            }
+        }
+        // Not found
+        return null;
     }
 
     /**
