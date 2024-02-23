@@ -1,7 +1,7 @@
 package fi.dy.masa.servux;
 
-import fi.dy.masa.servux.event.PlayerHandler;
-import fi.dy.masa.servux.event.ServerHandler;
+import fi.dy.masa.malilib.event.PlayerHandler;
+import fi.dy.masa.malilib.event.ServerHandler;
 import fi.dy.masa.servux.listeners.PlayerListener;
 import fi.dy.masa.servux.listeners.ServerListener;
 import org.apache.logging.log4j.LogManager;

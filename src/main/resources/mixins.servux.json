@@ -5,16 +5,11 @@
   "minVersion": "0.8",
   "mixins": [
     "MixinMinecraftServer",
-    "MixinPlayerManager",
-    "MixinServerCommonNetworkHandler",
     "MixinServerWorld",
     "MixinThreadedAnvilChunkStorage"
   ],
   "injectors": {
     "defaultRequire": 1
   },
-  "client": [
-    "MixinClientPlayNetworkHandler",
-    "MixinIntegratedServer"
-  ]
+  "client": []
 }

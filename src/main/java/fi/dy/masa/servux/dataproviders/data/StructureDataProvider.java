@@ -2,14 +2,14 @@ package fi.dy.masa.servux.dataproviders.data;
 
 import java.util.*;
 
+import fi.dy.masa.malilib.network.payload.PayloadType;
+import fi.dy.masa.malilib.network.payload.channel.ServuxStructuresPayload;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.StructureClient;
-import fi.dy.masa.servux.network.packet.PacketType;
-import fi.dy.masa.servux.network.packet.listeners.ServuxStructuresPlayListener;
-import fi.dy.masa.servux.network.payload.PayloadType;
-import fi.dy.masa.servux.network.payload.channel.ServuxS2CStructuresPayload;
+import fi.dy.masa.servux.network.PacketType;
+import fi.dy.masa.servux.network.listeners.ServuxStructuresPlayListener;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -51,7 +51,7 @@ public class StructureDataProvider extends DataProviderBase
     private boolean refreshSpawnMetadata;
     // TODO
 
-    public static Identifier getChannel() { return ServuxS2CStructuresPayload.TYPE.id(); }
+    public static Identifier getChannel() { return ServuxStructuresPayload.TYPE.id(); }
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
@@ -164,7 +164,7 @@ public class StructureDataProvider extends DataProviderBase
                     NbtCompound nbt = new NbtCompound();
                     nbt.copyFrom(this.metadata);
                     nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
-                    ServuxS2CStructuresPayload payload = new ServuxS2CStructuresPayload(nbt);
+                    ServuxStructuresPayload payload = new ServuxStructuresPayload(nbt);
 
                     ServuxStructuresPlayListener.INSTANCE.sendS2CPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
                 }

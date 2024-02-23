@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.packet;
+package fi.dy.masa.servux.network;
 
 public class PacketType
 {

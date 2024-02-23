@@ -1,13 +1,13 @@
-package fi.dy.masa.servux.network.packet;
+package fi.dy.masa.servux.network;
 
+import fi.dy.masa.malilib.network.handler.play.ServerPlayHandler;
+import fi.dy.masa.malilib.network.payload.channel.*;
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.network.handlers.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.listeners.ServuxStructuresPlayListener;
-import fi.dy.masa.servux.network.payload.channel.ServuxS2CStructuresPayload;
+import fi.dy.masa.servux.network.listeners.ServuxStructuresPlayListener;
 
 public class PacketUtils
 {
-    static ServuxStructuresPlayListener<ServuxS2CStructuresPayload> servuxStructuresListener = ServuxStructuresPlayListener.INSTANCE;
+    static ServuxStructuresPlayListener<ServuxStructuresPayload> servuxStructuresListener = ServuxStructuresPlayListener.INSTANCE;
     private static boolean payloadsRegistered = false;
 
     public static void registerPayloads()

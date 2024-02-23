@@ -5,7 +5,6 @@ import java.util.function.BooleanSupplier;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
-import fi.dy.masa.servux.event.ServerHandler;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -33,6 +32,9 @@ public abstract class MixinMinecraftServer
         DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.ticks);
         this.profiler.pop();
     }
+
+    /*  Moved to MaLiLib
+
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"), method = "runServer")
     private void servux_onServerStarting(CallbackInfo ci)
     {
@@ -54,6 +56,8 @@ public abstract class MixinMinecraftServer
     {
         ((ServerHandler) ServerHandler.getInstance()).onServerStopped((MinecraftServer) (Object) this);
     }
+     */
+
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setSpawnPos(Lnet/minecraft/util/math/BlockPos;F)V", shift = At.Shift.AFTER))
     private void servux_checkSpawnChunkRadius(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci)
     {

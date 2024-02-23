@@ -1,10 +1,10 @@
 package fi.dy.masa.servux.dataproviders.data;
 
+import fi.dy.masa.malilib.network.payload.channel.ServuxEntitiesPayload;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.EntitiesClient;
-import fi.dy.masa.servux.network.packet.PacketType;
-import fi.dy.masa.servux.network.payload.channel.ServuxS2CEntitiesPayload;
+import fi.dy.masa.servux.network.PacketType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -20,7 +20,7 @@ import java.util.UUID;
 public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
-    private static Identifier getChannel() { return ServuxS2CEntitiesPayload.TYPE.id(); }
+    private static Identifier getChannel() { return ServuxEntitiesPayload.TYPE.id(); }
     protected final Map<UUID, EntitiesClient> CLIENTS = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected EntitiesDataProvider()

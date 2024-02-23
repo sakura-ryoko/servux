@@ -12,33 +12,47 @@ public class ServuxReference
     public static final boolean MOD_DEBUG = true;
     public static boolean isServer() { return MOD_ENVIRONMENT == EnvType.SERVER; }
     public static boolean isClient() { return MOD_ENVIRONMENT == EnvType.CLIENT; }
-    private static boolean MOD_OPEN_TO_LAN = false;
-    private static boolean MOD_DEDICATED = false;
+    private static boolean serverOpenToLan = false;
+    private static boolean serverDedicated = false;
+    private static boolean serverIntegrated = false;
+    public static void setIntegrated(boolean toggle)
+    {
+        if (toggle && isClient())
+        {
+            serverIntegrated = true;
+            serverDedicated = false;
+        }
+        else if (!toggle && isServer())
+        {
+            serverIntegrated = false;
+        }
+    }
     public static void setOpenToLan(boolean toggle)
     {
         if (toggle && isClient())
         {
-            MOD_OPEN_TO_LAN = true;
-            MOD_DEDICATED = false;
+            serverOpenToLan = true;
+            serverDedicated = false;
         }
         else if (!toggle && isServer())
         {
-            MOD_OPEN_TO_LAN = false;
+            serverOpenToLan = false;
         }
     }
     public static void setDedicated(boolean toggle)
     {
         if (toggle && isServer())
         {
-            MOD_OPEN_TO_LAN = false;
-            MOD_DEDICATED = true;
+            serverOpenToLan = false;
+            serverDedicated = true;
         }
         else if (!toggle && isClient())
         {
-            MOD_DEDICATED = false;
+            serverDedicated = false;
         }
     }
-    public static boolean isDedicated() { return MOD_DEDICATED; }
-    public static boolean isOpenToLan() { return MOD_OPEN_TO_LAN; }
+    public static boolean isDedicated() { return serverDedicated; }
+    public static boolean isIntegrated() { return serverIntegrated; }
+    public static boolean isOpenToLan() { return serverOpenToLan; }
     // For keeping networking API separated for basic sanity checks.
 }

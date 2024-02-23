@@ -1,10 +1,10 @@
 package fi.dy.masa.servux.dataproviders.data;
 
+import fi.dy.masa.malilib.network.payload.channel.ServuxMetadataPayload;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.MetadataClient;
-import fi.dy.masa.servux.network.packet.PacketType;
-import fi.dy.masa.servux.network.payload.channel.ServuxS2CMetadataPayload;
+import fi.dy.masa.servux.network.PacketType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -20,7 +20,7 @@ import java.util.UUID;
 public class MetaDataProvider extends DataProviderBase
 {
     public static final MetaDataProvider INSTANCE = new MetaDataProvider();
-    private static Identifier getChannel() { return ServuxS2CMetadataPayload.TYPE.id(); }
+    private static Identifier getChannel() { return ServuxMetadataPayload.TYPE.id(); }
     protected final Map<UUID, MetadataClient> CLIENTS = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected MetaDataProvider()
