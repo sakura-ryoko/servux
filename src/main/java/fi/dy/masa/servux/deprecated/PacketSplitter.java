@@ -114,7 +114,7 @@ public class PacketSplitter
         private PacketByteBuf receive(PacketByteBuf data, int maxLength)
         {
             data.readerIndex(0);
-            //data = PacketUtils.slice(data);
+            //data = PacketListenerRegister.slice(data);
 
             if (this.expectedSize < 0)
             {

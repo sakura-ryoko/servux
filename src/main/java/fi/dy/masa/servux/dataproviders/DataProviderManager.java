@@ -54,7 +54,7 @@ public class DataProviderManager
             //System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
             provider.setEnabled(enabled);
             /**
-             * Handled via PacketUtils, we don't need to stop listening, just discard the packets.
+             * Handled via PacketListenerRegister, we don't need to stop listening, just discard the packets.
             this.updatePacketHandlerRegistration(provider);
              */
 
@@ -104,7 +104,7 @@ public class DataProviderManager
     protected void updatePacketHandlerRegistration(IDataProvider provider)
     {
         /**
-         * Handled under ServerListener via PacketUtils
+         * Handled under ServerListener via PacketListenerRegister
         IPluginChannelHandler handler = provider.getPacketHandler();
 
         if (provider.isEnabled())

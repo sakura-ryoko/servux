@@ -17,7 +17,7 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
-        //PacketUtils.registerPayloads();
+        //PacketListenerRegister.registerPayloads();
 
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         //DataProviderManager.INSTANCE.registerDataProvider(MetaDataProvider.INSTANCE);
