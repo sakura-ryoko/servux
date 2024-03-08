@@ -31,14 +31,14 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         {
             // Servux doesn't need to use the networkHandler interface, but the code is here to do so.
 
-            ServerPlayNetworkHandler handler = context.player().networkHandler;
+            //ServerPlayNetworkHandler handler = context.player().networkHandler;
             CallbackInfo ci = new CallbackInfo("ServuxStructuresPlayListener", false);
 
-            if (handler != null)
-            {
-                ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler, ci);
-            }
-            else
+            //if (handler != null)
+            //{
+                //ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler, ci);
+            //}
+            //else
                 ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context);
         }
     };
