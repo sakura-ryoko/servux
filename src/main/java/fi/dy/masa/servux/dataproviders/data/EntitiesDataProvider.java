@@ -2,6 +2,7 @@ package fi.dy.masa.servux.dataproviders.data;
 
 import fi.dy.masa.malilib.network.payload.channel.ServuxEntitiesPayload;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.EntitiesClient;
 import fi.dy.masa.servux.network.PacketType;
@@ -29,8 +30,10 @@ public class EntitiesDataProvider extends DataProviderBase
                 "entity_data_provider",
                 PacketType.Entities.PROTOCOL_VERSION,
                 "Alpha interface for providing Entity Metadata backend for various mods.");
+
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("version", PacketType.Entities.PROTOCOL_VERSION);
+        this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
 
     //@Override

@@ -2,12 +2,16 @@ package fi.dy.masa.servux;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.MinecraftVersion;
 
 public class ServuxReference
 {
     public static final String MOD_ID = "servux";
     public static final String MOD_NAME = "ServuX";
     public static final String MOD_VERSION = Servux.getModVersionString(MOD_ID);
+    public static final String MC_VERSION = MinecraftVersion.CURRENT.getName();
+    public static final String MOD_TYPE = "fabric";
+    public static final String MOD_STRING = MOD_ID+"-"+MOD_TYPE+"-"+MC_VERSION+"-"+MOD_VERSION;
     private static final EnvType MOD_ENVIRONMENT = FabricLoader.getInstance().getEnvironmentType();
     public static final boolean MOD_DEBUG = true;
     public static boolean isServer() { return MOD_ENVIRONMENT == EnvType.SERVER; }
@@ -22,7 +26,7 @@ public class ServuxReference
             serverIntegrated = true;
             serverDedicated = false;
         }
-        else if (!toggle && isServer())
+        else
         {
             serverIntegrated = false;
         }
@@ -34,7 +38,7 @@ public class ServuxReference
             serverOpenToLan = true;
             serverDedicated = false;
         }
-        else if (!toggle && isServer())
+        else
         {
             serverOpenToLan = false;
         }
@@ -43,10 +47,10 @@ public class ServuxReference
     {
         if (toggle && isServer())
         {
-            serverOpenToLan = false;
             serverDedicated = true;
+            serverOpenToLan = false;
         }
-        else if (!toggle && isClient())
+        else
         {
             serverDedicated = false;
         }

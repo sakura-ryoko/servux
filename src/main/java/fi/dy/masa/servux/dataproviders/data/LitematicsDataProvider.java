@@ -41,8 +41,10 @@ public class LitematicsDataProvider extends DataProviderBase
                 "litematic_data_provider",
                 PacketType.Litematics.PROTOCOL_VERSION,
                 "Alpha interface for providing a Server-side backend for Litematic storage.");
+
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("version", PacketType.Litematics.PROTOCOL_VERSION);
+        this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
 
     public PlayerIdentityProvider getPlayerIdentityProvider() { return this.players; }

@@ -2,6 +2,7 @@ package fi.dy.masa.servux.dataproviders.data;
 
 import fi.dy.masa.malilib.network.payload.channel.ServuxBlocksPayload;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.BlocksClient;
 import fi.dy.masa.servux.network.PacketType;
@@ -29,8 +30,10 @@ public class BlocksDataProvider extends DataProviderBase
                 "block_data_provider",
                 PacketType.Blocks.PROTOCOL_VERSION,
                 "Alpha interface for providing Block Metadata for various mods.");
+
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("version", PacketType.Blocks.PROTOCOL_VERSION);
+        this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
 
     //@Override

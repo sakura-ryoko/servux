@@ -2,6 +2,7 @@ package fi.dy.masa.servux.dataproviders.data;
 
 import fi.dy.masa.malilib.network.payload.channel.ServuxMetadataPayload;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.MetadataClient;
 import fi.dy.masa.servux.network.PacketType;
@@ -29,8 +30,10 @@ public class MetaDataProvider extends DataProviderBase
                 "meta_data_provider",
                 PacketType.Metadata.PROTOCOL_VERSION,
                 "Alpha interface for providing a Server Metadata backend for various mods.");
+
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("version", PacketType.Metadata.PROTOCOL_VERSION);
+        this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
 
     //@Override

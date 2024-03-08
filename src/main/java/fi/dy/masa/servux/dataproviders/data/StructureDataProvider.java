@@ -45,7 +45,7 @@ public class StructureDataProvider extends DataProviderBase
     protected int updateInterval = 40;
     protected int retainDistance;
 
-    // FIXME --> Move out of structures channel in the future --> MetaDataProvider?
+    // FIXME --> Move out of structures channel in the future (Server Metadata channel, perhaps)
     private BlockPos spawnPos;
     private int spawnChunkRadius = -1;
     private boolean refreshSpawnMetadata;
@@ -61,14 +61,13 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel());
         this.metadata.putInt("timeout", this.timeout);
         this.metadata.putInt("version", PacketType.Structures.PROTOCOL_VERSION);
-        this.metadata.putString("servux", ServuxReference.MOD_ID+"-"+ServuxReference.MOD_VERSION);
+        this.metadata.putString("servux", ServuxReference.MOD_STRING);
 
-        // FIXME --> Move out of structures channel in the future
+        // FIXME --> Move out of structures channel in the future (Server Metadata channel, perhaps)
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
-        // TODO
     }
 
     @Override
@@ -637,7 +636,7 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
-    // FIXME --> Move out of structures channel in the future
+    // FIXME --> Move out of structures channel in the future (Server Metadata channel, perhaps)
     public void refreshSpawnMetadata(ServerPlayerEntity player, NbtCompound data)
     {
         UUID uuid = player.getUuid();
@@ -668,7 +667,7 @@ public class StructureDataProvider extends DataProviderBase
             BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
             nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
             nbt.putString("id", getNetworkChannel());
-            nbt.putString("servux", ServuxReference.MOD_ID + "-" + ServuxReference.MOD_VERSION);
+            nbt.putString("servux", ServuxReference.MOD_STRING);
             nbt.putInt("spawnPosX", spawnPos.getX());
             nbt.putInt("spawnPosY", spawnPos.getY());
             nbt.putInt("spawnPosZ", spawnPos.getZ());
