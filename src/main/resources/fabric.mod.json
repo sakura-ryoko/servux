@@ -33,5 +33,10 @@
 		"minecraft": ">=1.20.4",
 		"fabric-networking-api-v1": ">=4.0.5",
 		"malilib": ">=0.19.0-snap"
+	},
+	"custom": {
+		"modmenu": {
+			"parent": "malilib"
+		}
 	}
 }
