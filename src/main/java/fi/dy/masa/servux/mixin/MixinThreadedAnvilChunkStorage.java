@@ -16,7 +16,7 @@ public abstract class MixinThreadedAnvilChunkStorage
 {
     @Inject(method = "track(Lnet/minecraft/server/network/ServerPlayerEntity;Lnet/minecraft/world/chunk/WorldChunk;)V",
             at = @At("HEAD"))
-    private static void servux_onSendChunkPacket(ServerPlayerEntity player,
+    private static void servux$onSendChunkPacket(ServerPlayerEntity player,
                                                  WorldChunk chunk,
                                                  CallbackInfo ci)
     {

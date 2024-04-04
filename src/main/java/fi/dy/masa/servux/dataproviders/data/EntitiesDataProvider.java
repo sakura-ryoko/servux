@@ -1,6 +1,6 @@
 package fi.dy.masa.servux.dataproviders.data;
 
-import fi.dy.masa.malilib.network.payload.channel.ServuxEntitiesPayload;
+import fi.dy.masa.malilib.network.payload.PayloadType;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
@@ -8,7 +8,6 @@ import fi.dy.masa.servux.dataproviders.client.EntitiesClient;
 import fi.dy.masa.servux.network.PacketType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +20,6 @@ import java.util.UUID;
 public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
-    private static Identifier getChannel() { return ServuxEntitiesPayload.TYPE.id(); }
     protected final Map<UUID, EntitiesClient> CLIENTS = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected EntitiesDataProvider()
@@ -31,13 +29,13 @@ public class EntitiesDataProvider extends DataProviderBase
                 PacketType.Entities.PROTOCOL_VERSION,
                 "Alpha interface for providing Entity Metadata backend for various mods.");
 
-        this.metadata.putString("id", this.getNetworkChannel());
+        this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", PacketType.Entities.PROTOCOL_VERSION);
         this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
 
-    //@Override
-    public String getNetworkChannel() { return getChannel().toString(); }
+    @Override
+    public PayloadType getNetworkChannel() { return PayloadType.SERVUX_ENTITIES; }
 
     public void register(ServerPlayerEntity player)
     {

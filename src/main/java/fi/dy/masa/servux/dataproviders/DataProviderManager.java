@@ -25,17 +25,20 @@ public class DataProviderManager
     /**
      * Registers the given data provider, if it's not already registered
      */
-    public void registerDataProvider(IDataProvider provider)
+    public boolean registerDataProvider(IDataProvider provider)
     {
         String name = provider.getName();
 
-        if (!this.providers.containsKey(name))
+        if (this.providers.containsKey(name) == false)
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
             //System.out.printf("registerDataProvider: %s\n", provider);
+
+            return true;
         }
 
+        return false;
     }
 
     public boolean setProviderEnabled(String providerName, boolean enabled)
@@ -59,7 +62,7 @@ public class DataProviderManager
              */
 
 
-            if (enabled && provider.shouldTick() && !this.providersTicking.contains(provider))
+            if (enabled && provider.shouldTick() && this.providersTicking.contains(provider) == false)
             {
                 this.providersTicking.add(provider);
             }
@@ -76,7 +79,7 @@ public class DataProviderManager
 
     public void tickProviders(MinecraftServer server, int tickCounter)
     {
-        if (!this.providersTicking.isEmpty())
+        if (this.providersTicking.isEmpty() == false)
         {
             for (IDataProvider provider : this.providersTicking)
             {
@@ -86,36 +89,6 @@ public class DataProviderManager
                 }
             }
         }
-    }
-
-    @Deprecated
-    protected void registerEnabledPacketHandlers()
-    {
-        /**
-         * Handled under ServerNetworkPlayRegister
-        for (IDataProvider provider : this.providersImmutable)
-        {
-            this.updatePacketHandlerRegistration(provider);
-        }
-        */
-    }
-
-    @Deprecated
-    protected void updatePacketHandlerRegistration(IDataProvider provider)
-    {
-        /**
-         * Handled under ServerListener via PacketListenerRegister
-        IPluginChannelHandler handler = provider.getPacketHandler();
-
-        if (provider.isEnabled())
-        {
-            ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
-        }
-        else
-        {
-            ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
-        }
-         */
     }
 
     public void readFromConfig()

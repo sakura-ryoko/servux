@@ -1,6 +1,6 @@
 package fi.dy.masa.servux.dataproviders.data;
 
-import fi.dy.masa.malilib.network.payload.channel.ServuxLitematicsPayload;
+import fi.dy.masa.malilib.network.payload.PayloadType;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderBase;
@@ -10,7 +10,6 @@ import fi.dy.masa.servux.litematics.players.PlayerIdentityProvider;
 import fi.dy.masa.servux.network.PacketType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 
 import java.io.File;
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import java.util.UUID;
 public class LitematicsDataProvider extends DataProviderBase
 {
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
-    private static Identifier getChannel() { return ServuxLitematicsPayload.TYPE.id(); }
     protected final Map<UUID, LitematicClient> CLIENTS = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     // Where to store the litematics
@@ -42,7 +40,7 @@ public class LitematicsDataProvider extends DataProviderBase
                 PacketType.Litematics.PROTOCOL_VERSION,
                 "Alpha interface for providing a Server-side backend for Litematic storage.");
 
-        this.metadata.putString("id", this.getNetworkChannel());
+        this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", PacketType.Litematics.PROTOCOL_VERSION);
         this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
@@ -50,7 +48,7 @@ public class LitematicsDataProvider extends DataProviderBase
     public PlayerIdentityProvider getPlayerIdentityProvider() { return this.players; }
 
     @Override
-    public String getNetworkChannel() { return getChannel().toString(); }
+    public PayloadType getNetworkChannel() { return PayloadType.SERVUX_LITEMATICS; }
 
     // Returns the File object to the Litematics Storage
     public File getLitematicFolder()

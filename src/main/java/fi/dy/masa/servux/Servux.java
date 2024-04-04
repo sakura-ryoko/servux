@@ -2,8 +2,8 @@ package fi.dy.masa.servux;
 
 import fi.dy.masa.malilib.event.PlayerHandler;
 import fi.dy.masa.malilib.event.ServerHandler;
-import fi.dy.masa.servux.listeners.PlayerListener;
-import fi.dy.masa.servux.listeners.ServerListener;
+import fi.dy.masa.servux.event.PlayerListener;
+import fi.dy.masa.servux.event.ServerListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
@@ -17,14 +17,11 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
-        //PacketListenerRegister.registerPayloads();
-
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         //DataProviderManager.INSTANCE.registerDataProvider(MetaDataProvider.INSTANCE);
         //DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
 
-        // Init Handler's
         ServerListener serverListener = new ServerListener();
         ServerHandler.getInstance().registerServerHandler(serverListener);
         PlayerListener playerListener = new PlayerListener();

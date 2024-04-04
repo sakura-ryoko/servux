@@ -25,7 +25,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameRules;
@@ -53,14 +52,13 @@ public class StructureDataProvider extends DataProviderBase
     private boolean refreshSpawnMetadata;
     // TODO
 
-    public static Identifier getChannel() { return ServuxStructuresPayload.TYPE.id(); }
     protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
               PacketType.Structures.PROTOCOL_VERSION,
               "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
-        this.metadata.putString("id", this.getNetworkChannel());
+        this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("timeout", this.timeout);
         this.metadata.putInt("version", PacketType.Structures.PROTOCOL_VERSION);
         this.metadata.putString("servux", ServuxReference.MOD_STRING);
@@ -74,7 +72,7 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public String getNetworkChannel() { return getChannel().toString(); }
+    public PayloadType getNetworkChannel() { return PayloadType.SERVUX_STRUCTURES; }
 
     @Override
     public boolean shouldTick()
@@ -200,7 +198,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         UUID id = player.getUuid();
 
-        Servux.logger.info("unregistering for StructureClient for player {}", player.getName().getLiteralString());
+        Servux.logger.info("unregistering StructureClient for player {}", player.getName().getLiteralString());
         StructureClient oldClient = this.CLIENTS.get(id);
         oldClient.structuresDisableClient();
         oldClient.unregisterClient();
@@ -760,7 +758,7 @@ public class StructureDataProvider extends DataProviderBase
             BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
 
             nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_SPAWN_METADATA);
-            nbt.putString("id", getNetworkChannel());
+            nbt.putString("id", getNetworkChannel().toString());
             nbt.putString("servux", ServuxReference.MOD_STRING);
             nbt.putInt("spawnPosX", spawnPos.getX());
             nbt.putInt("spawnPosY", spawnPos.getY());

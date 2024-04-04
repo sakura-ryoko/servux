@@ -2,12 +2,12 @@ package fi.dy.masa.servux.dataproviders;
 
 public abstract class DataProviderBase implements IDataProvider
 {
-    // Change Identifier --> String, because it might confuse Minecraft
     protected final String name;
     protected final String description;
     protected final int protocolVersion;
     protected boolean enabled;
     private int tickRate = 40;
+
     protected DataProviderBase(String name, int protocolVersion, String description)
     {
         this.name = name;

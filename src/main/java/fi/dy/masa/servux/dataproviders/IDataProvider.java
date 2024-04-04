@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
+import fi.dy.masa.malilib.network.payload.PayloadType;
 import net.minecraft.server.MinecraftServer;
 
 public interface IDataProvider
@@ -27,7 +28,7 @@ public interface IDataProvider
      * for incoming data requests and to respond and send the requested data.
      * @return
      */
-    String getNetworkChannel();
+    PayloadType getNetworkChannel();
 
     /**
      * Returns the current protocol version this provider supports

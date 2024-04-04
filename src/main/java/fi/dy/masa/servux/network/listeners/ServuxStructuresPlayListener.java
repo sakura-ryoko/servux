@@ -5,7 +5,7 @@ import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
 import fi.dy.masa.malilib.network.handler.server.ServerPlayHandler;
 import fi.dy.masa.malilib.network.payload.PayloadCodec;
 import fi.dy.masa.malilib.network.payload.PayloadType;
-import fi.dy.masa.malilib.network.payload.PayloadTypeRegister;
+import fi.dy.masa.malilib.network.payload.PayloadManager;
 import fi.dy.masa.malilib.network.payload.channel.ServuxStructuresPayload;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
@@ -84,7 +84,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
     @Override
     public void decodeC2SNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)
     {
-        PayloadCodec codec = PayloadTypeRegister.getInstance().getPayloadCodec(type);
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
         if (codec == null)
         {
             Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): [ERROR] CODEC = null, ignoring packet from player {}.", player.getName().getLiteralString());
@@ -92,7 +92,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         }
         this.register = true;
         // Decode
-        if (Objects.equals(codec.getId().toString(), StructureDataProvider.INSTANCE.getNetworkChannel()))
+        if (Objects.equals(type, StructureDataProvider.INSTANCE.getNetworkChannel()))
         {
             int packetType = data.getInt("packetType");
             if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_METADATA)
@@ -173,7 +173,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
     @Override
     public void registerPlayPayload(PayloadType type)
     {
-        PayloadCodec codec = PayloadTypeRegister.getInstance().getPayloadCodec(type);
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
 
         if (codec == null)
         {
@@ -181,16 +181,14 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         }
         if (!codec.isPlayRegistered())
         {
-            //Servux.printDebug("ServuxStructuresPlayListener#registerPlayPayload(): received for type {}", type.toString());
-
-            PayloadTypeRegister.getInstance().registerPlayChannel(type, ServerCommonHandlerRegister.getInstance().getPayloadType(type), ServerCommonHandlerRegister.getInstance().getPacketCodec(type));
+            PayloadManager.getInstance().registerPlayChannel(type, ServerCommonHandlerRegister.getInstance().getPayloadType(type), ServerCommonHandlerRegister.getInstance().getPacketCodec(type));
         }
     }
     @Override
     @SuppressWarnings("unchecked")
     public void registerPlayHandler(PayloadType type)
     {
-        PayloadCodec codec = PayloadTypeRegister.getInstance().getPayloadCodec(type);
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
 
         if (codec == null)
         {
@@ -198,8 +196,6 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         }
         if (codec.isPlayRegistered())
         {
-            //Servux.printDebug("ServuxStructuresPlayListener#registerPlayHandler(): received for type {}", type.toString());
-
             ServerCommonHandlerRegister.getInstance().registerPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE, this);
             if (this.registered.containsKey(type))
                 this.registered.replace(type, true);
@@ -211,7 +207,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
     @SuppressWarnings("unchecked")
     public void unregisterPlayHandler(PayloadType type)
     {
-        PayloadCodec codec = PayloadTypeRegister.getInstance().getPayloadCodec(type);
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
 
         if (codec == null)
         {
@@ -219,8 +215,6 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         }
         if (codec.isPlayRegistered())
         {
-            //Servux.printDebug("ServuxStructuresPlayListener#unregisterPlayHandler(): received for type {}", type.toString());
-
             ServerCommonHandlerRegister.getInstance().unregisterPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE);
             if (this.registered.containsKey(type))
                 this.registered.replace(type, false);
