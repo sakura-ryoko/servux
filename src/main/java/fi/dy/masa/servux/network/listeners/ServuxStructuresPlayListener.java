@@ -25,7 +25,7 @@ import java.util.Objects;
 
 public abstract class ServuxStructuresPlayListener<T extends CustomPayload> implements IPluginServerPlayHandler<T>
 {
-    public static final ServuxStructuresPlayListener<ServuxStructuresPayload> INSTANCE = new ServuxStructuresPlayListener<>() {
+    private static final ServuxStructuresPlayListener<ServuxStructuresPayload> INSTANCE = new ServuxStructuresPlayListener<>() {
         @Override
         public void receive(ServuxStructuresPayload payload, ServerPlayNetworking.Context context)
         {
@@ -42,10 +42,13 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
                 ServuxStructuresPlayListener.INSTANCE.receiveC2SPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, context);
         }
     };
+    public static ServuxStructuresPlayListener<ServuxStructuresPayload> getInstance() { return INSTANCE; }
     private final Map<PayloadType, Boolean> registered = new HashMap<>();
     private boolean register;
+
     @Override
     public PayloadType getPayloadType() { return PayloadType.SERVUX_STRUCTURES; }
+
     @Override
     public void reset(PayloadType type)
     {
@@ -57,6 +60,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         else
             this.registered.put(type, false);
     }
+
     @Override
     public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworking.Context ctx)
     {
@@ -67,6 +71,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
 
         ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
     }
+
     @Override
     public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler handler, CallbackInfo ci)
     {
@@ -81,6 +86,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         if (ci.isCancellable())
             ci.cancel();
     }
+
     @Override
     public void decodeC2SNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)
     {
@@ -126,6 +132,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         else
             Servux.printDebug("ServuxStructuresPlayListener#decodeC2SNbtCompound(): received unhandled packet from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
     }
+
     @Override
     public void encodeS2CNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)
     {
@@ -140,6 +147,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         //else
             ServuxStructuresPlayListener.INSTANCE.sendS2CPlayPayload(type, payload, player);
     }
+
     @Override
     public <P extends CustomPayload> void sendS2CPlayPayload(PayloadType type, P payload, ServerPlayerEntity player)
     {
@@ -151,6 +159,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         else
             Servux.printDebug("ServuxStructuresPlayListener#sendS2CPlayPayload(): [ERROR] CanSend() -> {} is false", player.getName().getLiteralString());
     }
+
     @Override
     public <P extends CustomPayload> void sendS2CPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler handler)
     {
@@ -170,6 +179,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
         else
             Servux.printDebug("ServuxStructuresPlayListener#sendS2CPlayPayload(): [ERROR] accepts() -> {} is false", player.getName().getLiteralString());
     }
+
     @Override
     public void registerPlayPayload(PayloadType type)
     {
@@ -184,6 +194,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
             PayloadManager.getInstance().registerPlayChannel(type, ServerCommonHandlerRegister.getInstance().getPayloadType(type), ServerCommonHandlerRegister.getInstance().getPacketCodec(type));
         }
     }
+
     @Override
     @SuppressWarnings("unchecked")
     public void registerPlayHandler(PayloadType type)
@@ -203,6 +214,7 @@ public abstract class ServuxStructuresPlayListener<T extends CustomPayload> impl
                 this.registered.put(type, true);
         }
     }
+
     @Override
     @SuppressWarnings("unchecked")
     public void unregisterPlayHandler(PayloadType type)

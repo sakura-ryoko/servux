@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.dataproviders.data;
 
+import com.mojang.authlib.GameProfile;
 import fi.dy.masa.malilib.network.payload.PayloadType;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.ServuxReference;
@@ -12,6 +13,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.io.File;
+import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +28,7 @@ public class LitematicsDataProvider extends DataProviderBase
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
     protected final Map<UUID, LitematicClient> CLIENTS = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
+    protected final int protocolVersion = PacketType.Litematics.PROTOCOL_VERSION;
     // Where to store the litematics
     protected final String LitematicDirectory = "litematics";
     protected File worldFolder;
@@ -33,6 +36,7 @@ public class LitematicsDataProvider extends DataProviderBase
     // PlayerIdentityProvider is to store a list of names / UUID for use with linking to litematics,
     // not for active client information.
     protected PlayerIdentityProvider players = new PlayerIdentityProvider();
+
     protected LitematicsDataProvider()
     {
         super(
@@ -41,7 +45,7 @@ public class LitematicsDataProvider extends DataProviderBase
                 "Alpha interface for providing a Server-side backend for Litematic storage.");
 
         this.metadata.putString("id", this.getNetworkChannel().toString());
-        this.metadata.putInt("version", PacketType.Litematics.PROTOCOL_VERSION);
+        this.metadata.putInt("version", this.protocolVersion);
         this.metadata.putString("servux", ServuxReference.MOD_STRING);
     }
 
@@ -49,6 +53,9 @@ public class LitematicsDataProvider extends DataProviderBase
 
     @Override
     public PayloadType getNetworkChannel() { return PayloadType.SERVUX_LITEMATICS; }
+
+    @Override
+    public int getProtocolVersion() { return this.protocolVersion; }
 
     // Returns the File object to the Litematics Storage
     public File getLitematicFolder()
@@ -66,11 +73,11 @@ public class LitematicsDataProvider extends DataProviderBase
         else return null;
     }
 
-    public void register(ServerPlayerEntity player)
+    public void register(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
         UUID uuid = player.getUuid();
         LitematicClient newClient = new LitematicClient(player.getName().getLiteralString(), uuid, null);
-        newClient.registerClient(player);
+        newClient.registerClient(addr, profile, player);
         newClient.litematicsEnableClient();
         CLIENTS.put(uuid, newClient);
         Servux.printDebug("LitematicsDataProvider#register(): new LitematicClient register() for {}", player.getName().getLiteralString());
@@ -84,6 +91,7 @@ public class LitematicsDataProvider extends DataProviderBase
         CLIENTS.remove(uuid);
         Servux.printDebug("LitematicsDataProvider#register(): new LitematicClient unregister() for {}", player.getName().getLiteralString());
     }
+
     // Returns true if Litematic Placement is still downloading.
     public boolean getDownloadState(LitematicPlacement placement)
     {

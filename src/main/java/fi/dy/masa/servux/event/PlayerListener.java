@@ -20,33 +20,36 @@ public class PlayerListener implements IPlayerListener
     {
         if (result != null)
         {
-            Servux.printDebug("onClientConnect(): received connection from IP {}, profile {} (result: DENIED)", addr.toString(), profile.getName());
+            Servux.printDebug("onClientConnect(): received connection from Socket {}, profile {}, uuid {} (result: DENIED)", addr.toString(), profile.getName(), profile.getId());
             TranslatableTextContent content = (TranslatableTextContent) result.getContent();
             String key = content.getKey();
             String reason = Arrays.toString(content.getArgs());
-            Servux.printDebug("onClientConnect(): key {} // reason {}", key, reason);
-            // key: translation key (such as banned), reason: if a reason is given.
+            Servux.printDebug("onClientConnect(): [DENIED] key {} // reason {}", key, reason);
+            // key = translation key (such as banned), reason: if a reason is given.
+
+            // We can use this to preload any Clients during Login Phase,
+            // Maybe populate their IP Address into some kind of Auto-IP-Ban feature
+            // if they are denied login too many times?
         }
         else
         {
-            Servux.printDebug("onClientConnect(): received connection from IP {}, profile {} (result: SUCCESS)", addr.toString(), profile.getName());
-            // We can use this to preload any Clients during Login Phase, maybe populate their IP Address somewhere?
+            Servux.printDebug("onClientConnect(): received connection from Socket {}, profile {}, uuid {} (result: SUCCESS)", addr.toString(), profile.getName(), profile.getId());
         }
     }
 
     @Override
     public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
-        Servux.printDebug("onPlayerJoin(): received connection from IP {}, profile {} // player {}", addr.toString(), profile.getName(), player.getName().getLiteralString());
+        Servux.printDebug("onPlayerJoin(): received connection from Socket {}, profile {} // player {}", addr.toString(), profile.getId(), player.getName().getLiteralString());
 
-        StructureDataProvider.INSTANCE.register(player);
+        StructureDataProvider.INSTANCE.register(addr, profile, player);
     }
 
     @Override
     public void onPlayerRespawn(ServerPlayerEntity newPlayer, ServerPlayerEntity oldPlayer)
     {
         Servux.printDebug("onPlayerRespawn(): old player {}, new player {}", oldPlayer.getName().getLiteralString(), newPlayer.getName().getLiteralString());
-        // This is like for when a player dies, and has their Player Entity regenerated.
+        // This is for when a player dies, and has their Player Entity regenerated into a new ServerPlayerEntity
     }
 
     @Override

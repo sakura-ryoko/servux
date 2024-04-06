@@ -1,8 +1,10 @@
 package fi.dy.masa.servux.dataproviders.client;
 
+import com.mojang.authlib.GameProfile;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import javax.annotation.Nullable;
+import java.net.SocketAddress;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -11,6 +13,8 @@ public abstract class ClientBase implements IClient
     private String name;
     private UUID uuid;
     private String version;
+    private SocketAddress addr;
+    private GameProfile profile;
     private boolean enabled;
     private boolean registered;
 
@@ -19,19 +23,27 @@ public abstract class ClientBase implements IClient
         this.name = name;
         this.uuid = uuid;
         this.version = Objects.requireNonNullElse(version, "");
+        this.addr = null;
+        this.profile = null;
         this.registered = false;
         this.enabled = false;
     }
     public String getName() { return this.name; }
     public UUID getUUID() { return this.uuid; }
     public String getVersion() { return this.version; }
+    public SocketAddress getAddr() { return this.addr; }
+    public GameProfile getProfile() { return this.profile; }
     public void updateName(String name) { this.name = name; }
     public void updateUUID(UUID id) { this.uuid = id; }
     public void updateVersion(String ver) { this.version = ver; }
-    public void registerClient(ServerPlayerEntity player)
+    public void updateAddr(SocketAddress addr) { this.addr = addr; }
+    public void updateProfile(GameProfile profile) { this.profile = profile; }
+    public void registerClient(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
         updateName(player.getName().getLiteralString());
         updateUUID(player.getUuid());
+        updateAddr(addr);
+        updateProfile(profile);
         this.registered = true;
     }
     protected void setClientRegister(boolean toggle) { this.registered = toggle; }

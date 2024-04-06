@@ -1,10 +1,12 @@
 package fi.dy.masa.servux.dataproviders.client;
 
+import com.mojang.authlib.GameProfile;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import javax.annotation.Nullable;
+import java.net.SocketAddress;
 import java.util.UUID;
 
 /**
@@ -20,11 +22,13 @@ public class StructureClient extends ClientBase
     }
 
     @Override
-    public void registerClient(ServerPlayerEntity player)
+    public void registerClient(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
         this.updateName(player.getName().getLiteralString());
         UUID id = player.getUuid();
         this.updateUUID(id);
+        this.updateAddr(addr);
+        this.updateProfile(profile);
         this.dim = new PlayerDimensionPosition(player);
         this.enabledStructures = new NbtCompound();
         this.setClientRegister(true);

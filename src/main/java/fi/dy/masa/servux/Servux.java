@@ -1,13 +1,8 @@
 package fi.dy.masa.servux;
 
-import fi.dy.masa.malilib.event.PlayerHandler;
-import fi.dy.masa.malilib.event.ServerHandler;
-import fi.dy.masa.servux.event.PlayerListener;
-import fi.dy.masa.servux.event.ServerListener;
+import fi.dy.masa.malilib.event.InitializationHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import fi.dy.masa.servux.dataproviders.DataProviderManager;
-import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
 import net.fabricmc.api.ModInitializer;
 
 public class Servux implements ModInitializer
@@ -17,15 +12,7 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
-        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-        //DataProviderManager.INSTANCE.registerDataProvider(MetaDataProvider.INSTANCE);
-        //DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.readFromConfig();
-
-        ServerListener serverListener = new ServerListener();
-        ServerHandler.getInstance().registerServerHandler(serverListener);
-        PlayerListener playerListener = new PlayerListener();
-        PlayerHandler.getInstance().registerPlayerHandler(playerListener);
+        InitializationHandler.getInstance().registerInitializationHandler(new ServuxInitHandler());
     }
 
     public static String getModVersionString(String modId)
@@ -40,6 +27,7 @@ public class Servux implements ModInitializer
 
         return "?";
     }
+
     public static void printDebug(String key, Object... args)
     {
         if (ServuxReference.MOD_DEBUG)
