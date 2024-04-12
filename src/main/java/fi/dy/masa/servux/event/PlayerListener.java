@@ -70,16 +70,4 @@ public class PlayerListener implements IPlayerListener
         Servux.printDebug("onPlayerLeave(): player {}", player.getName().getLiteralString());
         StructureDataProvider.INSTANCE.unregister(player);
     }
-
-    @Override
-    public void onSetSimulDistance(int distance)
-    {
-        Servux.printDebug("onSetSimulDistance(): detected simulation distance change {}", distance);
-    }
-
-    @Override
-    public void onSetViewDistance(int distance)
-    {
-        Servux.printDebug("onSetViewDistance(): detected view distance change {}", distance);
-    }
 }

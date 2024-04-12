@@ -14,6 +14,7 @@ public class ServuxReference
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
     private static final EnvType MOD_ENVIRONMENT = FabricLoader.getInstance().getEnvironmentType();
     public static final boolean MOD_DEBUG = true;
+    // TODO if ServuX depends upon MaLiLib, these can be moved.
     private static boolean serverOpenToLan = false;
     private static boolean serverDedicated = false;
     public static boolean isServer() {return MOD_ENVIRONMENT == EnvType.SERVER;}

@@ -13,6 +13,10 @@ import fi.dy.masa.servux.event.PlayerListener;
 import fi.dy.masa.servux.event.ServerListener;
 import fi.dy.masa.servux.network.ServuxStructuresPlayListener;
 
+/**
+ * This file assumes that ServuX is best served being Multi-Environment with MaLiLib,
+ * Might as well use InitHandler.
+ */
 public class ServuxInitHandler implements IInitializationHandler
 {
     @Override
@@ -20,7 +24,7 @@ public class ServuxInitHandler implements IInitializationHandler
     {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
-        // TODO create a 'servux.json' called by ServerListener perhaps ?
+        // TODO create a 'servux.json' ?
 
         ServerListener serverListener = new ServerListener();
         ServerHandler.getInstance().registerServerHandler(serverListener);
