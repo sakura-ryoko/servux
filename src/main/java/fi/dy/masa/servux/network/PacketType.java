@@ -10,7 +10,6 @@ public class PacketType
         public static final int PACKET_C2S_REQUEST_METADATA = 3;
         public static final int PACKET_C2S_STRUCTURES_ACCEPT = 4;
         public static final int PACKET_C2S_STRUCTURES_DECLINED = 5;
-        //public static final int PACKET_C2S_STRUCTURE_TOGGLE = 6;
         public static final int PACKET_S2C_SPAWN_METADATA = 10;
         public static final int PACKET_C2S_REQUEST_SPAWN_METADATA = 11;
     }
