@@ -16,23 +16,10 @@ public class ServuxReference
     public static final boolean MOD_DEBUG = true;
     private static boolean serverOpenToLan = false;
     private static boolean serverDedicated = false;
-    private static boolean serverIntegrated = false;
-
     public static boolean isServer() {return MOD_ENVIRONMENT == EnvType.SERVER;}
-
     public static boolean isClient() {return MOD_ENVIRONMENT == EnvType.CLIENT;}
-
-    public static void setIntegrated(boolean toggle)
-    {
-        if (toggle && isClient())
-        {
-            serverIntegrated = true;
-            serverDedicated = false;
-        } else
-        {
-            serverIntegrated = false;
-        }
-    }
+    public static boolean isDedicated() {return serverDedicated;}
+    public static boolean isOpenToLan() {return serverOpenToLan;}
 
     public static void setOpenToLan(boolean toggle)
     {
@@ -57,10 +44,4 @@ public class ServuxReference
             serverDedicated = false;
         }
     }
-
-    public static boolean isDedicated() {return serverDedicated;}
-
-    public static boolean isIntegrated() {return serverIntegrated;}
-
-    public static boolean isOpenToLan() {return serverOpenToLan;}
 }

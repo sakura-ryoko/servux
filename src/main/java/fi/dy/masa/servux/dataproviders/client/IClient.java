@@ -27,16 +27,4 @@ public interface IClient
 
     // Structures Channel
     boolean isStructuresClient();
-
-    // Litematics Channel
-    boolean isLitematicsClient();
-
-    // Metadata Channel
-    boolean isMetadataClient();
-
-    // Blocks Channel
-    boolean isBlocksClient();
-
-    // Entities Channel
-    boolean isEntitiesClient();
 }

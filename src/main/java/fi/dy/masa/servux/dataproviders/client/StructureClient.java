@@ -105,13 +105,4 @@ public class StructureClient extends ClientBase
     {
         // Things to do during a Client Tick
     }
-
-    @Override
-    public boolean isMetadataClient() { return false; }
-    @Override
-    public boolean isBlocksClient() { return false; }
-    @Override
-    public boolean isEntitiesClient() { return false; }
-    @Override
-    public boolean isLitematicsClient() { return false; }
 }

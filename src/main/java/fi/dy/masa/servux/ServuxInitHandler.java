@@ -19,8 +19,6 @@ public class ServuxInitHandler implements IInitializationHandler
     public void registerModHandlers()
     {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-        //DataProviderManager.INSTANCE.registerDataProvider(MetaDataProvider.INSTANCE);
-        //DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
         // TODO create a 'servux.json' called by ServerListener perhaps ?
 

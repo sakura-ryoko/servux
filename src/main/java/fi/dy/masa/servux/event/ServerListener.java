@@ -19,10 +19,8 @@ public class ServerListener implements IServerListener
         else if (server.isDedicated())
         {
             ServuxReference.setOpenToLan(false);
-            ServuxReference.setIntegrated(false);
             ServuxReference.setDedicated(true);
         }
-        //PacketListenerRegister.registerListeners();
     }
 
     @Override
@@ -36,13 +34,11 @@ public class ServerListener implements IServerListener
     {
         ServuxReference.setOpenToLan(false);
         ServuxReference.setDedicated(false);
-        ServuxReference.setIntegrated(true);
     }
     @Override
     public void onServerOpenToLan(IntegratedServer server)
     {
         ServuxReference.setOpenToLan(true);
-        ServuxReference.setIntegrated(true);
         ServuxReference.setDedicated(false);
     }
 
@@ -56,7 +52,6 @@ public class ServerListener implements IServerListener
     public void onServerStopped(MinecraftServer minecraftServer)
     {
         ServuxReference.setOpenToLan(false);
-        ServuxReference.setIntegrated(false);
         ServuxReference.setDedicated(false);
     }
 }

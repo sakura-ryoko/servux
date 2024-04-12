@@ -46,14 +46,12 @@ public class StructureDataProvider extends DataProviderBase
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
-    // Default range to send to a player if render distance can't be determined
     private final int DEFAULT_CHUNK_RANGE = 10;
 
-    // FIXME --> Move out of structures channel in the future (Server Metadata channel, perhaps)
+    // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos;
     private int spawnChunkRadius = -1;
     private boolean refreshSpawnMetadata;
-    // TODO
 
     protected StructureDataProvider()
     {
@@ -66,12 +64,11 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putInt("version", this.protocolVersion);
         this.metadata.putString("servux", ServuxReference.MOD_STRING);
 
-        // FIXME --> Move out of structures channel in the future (Server Metadata channel, perhaps)
+        // TODO --> Move out of structures channel in the future
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
-        // TODO
     }
 
     @Override
@@ -137,6 +134,7 @@ public class StructureDataProvider extends DataProviderBase
     public void onStartedWatchingChunk(ServerPlayerEntity player, WorldChunk chunk)
     {
         UUID uuid = player.getUuid();
+
         if (this.CLIENTS.containsKey(uuid))
         {
             try
@@ -154,11 +152,12 @@ public class StructureDataProvider extends DataProviderBase
         if (!this.CLIENTS.containsKey(uuid))
         {
             StructureClient newClient = new StructureClient(player.getName().getLiteralString(), uuid, null);
+
             // registerClient handles the new PlayerDimensionPosition call and store's it.
             newClient.registerClient(addr, profile, player);
             newClient.structuresDisableClient();
             this.CLIENTS.put(uuid, newClient);
-            Servux.logger.info("registering StructureClient for player {}", player.getName().getLiteralString());
+            Servux.printDebug("registering StructureClient for player {}", player.getName().getLiteralString());
 
             if (ServuxReference.isDedicated() || ServuxReference.isOpenToLan())
             {
@@ -166,17 +165,12 @@ public class StructureDataProvider extends DataProviderBase
                 ServerPlayNetworkHandler handler = player.networkHandler;
                 if (handler != null)
                 {
-                    //Servux.printDebug("StructureDataProvider#register(): yeet packet for player: {} via networkHandler", player.getName().getLiteralString());
                     NbtCompound nbt = new NbtCompound();
                     nbt.copyFrom(this.metadata);
                     nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
                     ServuxStructuresPayload payload = new ServuxStructuresPayload(nbt);
 
                     ServuxStructuresPlayListener.getInstance().sendS2CPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
-                }
-                else
-                {
-                    Servux.logger.error("StructureDataProvider#register(): Skipping packet yeet for player: {} because networkHandler is NULL.", player.getName().getLiteralString());
                 }
             }
             // Initial sync (MOVED AFTER STRUCTURES_ACCEPT Packet)
@@ -204,7 +198,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         UUID id = player.getUuid();
 
-        Servux.logger.info("unregistering StructureClient for player {}", player.getName().getLiteralString());
+        Servux.printDebug("unregistering StructureClient for player {}", player.getName().getLiteralString());
         StructureClient oldClient = this.CLIENTS.get(id);
         oldClient.structuresDisableClient();
         oldClient.unregisterClient();
@@ -220,14 +214,13 @@ public class StructureDataProvider extends DataProviderBase
 
         this.timeouts.remove(uuid);
 
-        //Servux.printDebug("initialSyncStructuresToPlayerWithinRange(): StructureClient update player dim for {}", player.getName().getLiteralString());
         StructureClient client = this.CLIENTS.get(uuid);
         PlayerDimensionPosition newDim = new PlayerDimensionPosition(player);
         newDim.setPosition(player);
         client.setClientDimension(newDim);
         this.CLIENTS.replace(uuid, client);
 
-        Servux.printDebug("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
+        //Servux.printDebug("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
         this.sendStructures(player, references, tickCounter);
     }
 
@@ -240,7 +233,6 @@ public class StructureDataProvider extends DataProviderBase
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
             final int timeout = this.timeout;
 
-            //Servux.printDebug("StructureDataProvider#addChunkTimeoutIfHasReferences: {}", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
             map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout));
         }
@@ -256,7 +248,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             this.timeouts.remove(uuid);
 
-            Servux.printDebug("checkForDimensionChange(): StructureClient update player dim for {}", player.getName().getLiteralString());
+            //Servux.printDebug("checkForDimensionChange(): StructureClient update player dim for {}", player.getName().getLiteralString());
             PlayerDimensionPosition newDim = new PlayerDimensionPosition(player);
             newDim.setPosition(player);
             client.setClientDimension(newDim);
@@ -268,7 +260,7 @@ public class StructureDataProvider extends DataProviderBase
                                         final Map<Structure, LongSet> references,
                                         final int tickCounter)
     {
-        // System.out.printf("addOrRefreshTimeouts: references: %d\n", references.size());
+        //Servux.printDebug("StructureDataProvider#addOrRefreshTimeouts: references: {}", references.size());
         Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
         for (LongSet chunks : references.values())
@@ -288,7 +280,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (map != null)
         {
-            Servux.printDebug("StructureDataProvider#refreshTrackedChunks: timeouts: {}", map.size());
+            //Servux.printDebug("StructureDataProvider#refreshTrackedChunks: timeouts: {}", map.size());
             this.sendAndRefreshExpiredStructures(player, map, tickCounter);
         }
     }
@@ -340,7 +332,7 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            Servux.printDebug("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
+            //Servux.printDebug("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
 
             if (!references.isEmpty())
             {
@@ -368,8 +360,7 @@ public class StructureDataProvider extends DataProviderBase
             Structure feature = entry.getKey();
             LongSet startChunks = entry.getValue();
 
-            // TODO add an option && feature != StructureFeature.MINESHAFT,
-            //  --> SEE updateStructureTogglesFromPlayer() ... your welcome.
+            // TODO add an option && feature != StructureFeature.MINESHAFT
             if (!startChunks.isEmpty())
             {
                 references.merge(feature, startChunks, (oldSet, entrySet) -> {
@@ -397,8 +388,7 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<Structure, LongSet> entry : chunk.getStructureReferences().entrySet())
         {
-            // TODO add an option entry.getKey() != StructureFeature.MINESHAFT &&
-            //  --> SEE updateStructureTogglesFromPlayer() ... your welcome.
+            // TODO add an option entry.getKey() != StructureFeature.MINESHAFT
             if (!entry.getValue().isEmpty())
             {
                 return true;
@@ -444,7 +434,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        Servux.printDebug("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
+        //Servux.printDebug("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
         return starts;
     }
 
@@ -461,7 +451,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        Servux.printDebug("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
+        //Servux.printDebug("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
         return references;
     }
 
@@ -477,29 +467,18 @@ public class StructureDataProvider extends DataProviderBase
             this.addOrRefreshTimeouts(player.getUuid(), references, tickCounter);
 
             NbtList structureList = this.getStructureList(starts, world);
-            Servux.printDebug("StructureDataProvider#sendStructures(): starts: {} -> structureList: {} refs: {}", starts.size(), structureList.size(), references.keySet());
+            //Servux.printDebug("StructureDataProvider#sendStructures(): starts: {} -> structureList: {} refs: {}", starts.size(), structureList.size(), references.keySet());
 
             UUID uuid = player.getUuid();
             if (this.CLIENTS.containsKey(uuid))
             {
-                StructureClient client = this.CLIENTS.get(uuid);
-
-                // Don't filter if we didn't receive their Structure Toggles
-                if (!client.enabledStructures.isEmpty())
-                {
-                    structureList = this.filterStructureList(client, structureList);
-                }
+                //StructureClient client = this.CLIENTS.get(uuid);
 
                 NbtCompound tag = new NbtCompound();
                 tag.put("Structures", structureList);
                 tag.putInt("packetType", PacketType.Structures.PACKET_S2C_STRUCTURE_DATA);
-                //Servux.printDebug("StructureDataProvider#sendStructures(): yeet packet to player: {}.", player.getName().getLiteralString());
 
                 ServuxStructuresPlayListener.getInstance().encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, tag, player);
-            }
-            else
-            {
-                Servux.printDebug("StructureDataProvider#sendStructures(): not sending Structures to an un-registered client.");
             }
         }
     }
@@ -524,8 +503,8 @@ public class StructureDataProvider extends DataProviderBase
      */
     public void acceptStructuresFromPlayer(ServerPlayerEntity player, NbtCompound data)
     {
-        // Player requested for us to either ALLOW or DISALLOW sending them Structures packets
         UUID uuid = player.getUuid();
+
         if (this.CLIENTS.containsKey(uuid))
         {
             StructureClient client = this.CLIENTS.get(uuid);
@@ -534,30 +513,30 @@ public class StructureDataProvider extends DataProviderBase
                 String ver = data.getString("version");
                 if (ver.isEmpty())
                 {
-                    Servux.logger.info("acceptStructures from player {}", player.getName().getLiteralString());
+                    Servux.printDebug("acceptStructures from player {}", player.getName().getLiteralString());
                 }
                 else
                 {
                     client.setClientVersion(ver);
-                    Servux.logger.info("acceptStructures from player {} with client version: {}", player.getName().getLiteralString(), ver);
+                    Servux.printDebug("acceptStructures from player {} with client version: {}", player.getName().getLiteralString(), ver);
                 }
             }
             else
             {
                 if (client.getVersion().isEmpty())
                 {
-                    Servux.logger.info("acceptStructures from player {}", player.getName().getLiteralString());
+                    Servux.printDebug("acceptStructures from player {}", player.getName().getLiteralString());
                 }
                 else
                 {
-                    Servux.logger.info("acceptStructures from player {} with client version: {}", player.getName().getLiteralString(), client.getVersion());
+                    Servux.printDebug("acceptStructures from player {} with client version: {}", player.getName().getLiteralString(), client.getVersion());
                 }
             }
             client.structuresEnableClient();
             client.setClientDimension(new PlayerDimensionPosition(player));
             this.CLIENTS.replace(uuid, client);
         }
-        Servux.printDebug("StructureDataProvider#acceptStructuresFromPlayer(): start initialSyncStructuresToPlayerWithinRange() for player {}", player.getName().getLiteralString());
+        //Servux.printDebug("StructureDataProvider#acceptStructuresFromPlayer(): start initialSyncStructuresToPlayerWithinRange() for player {}", player.getName().getLiteralString());
 
         try
         {
@@ -578,37 +557,34 @@ public class StructureDataProvider extends DataProviderBase
 
     public void declineStructuresFromPlayer(ServerPlayerEntity player)
     {
-        // Player requested for us to either ALLOW or DISALLOW sending them Structures packets
         UUID uuid = player.getUuid();
+
         if (this.CLIENTS.containsKey(uuid))
         {
-            //Servux.printDebug("declineStructuresFromPlayer(): Declining structures for StructureClient {}", player.getName().getLiteralString());
             StructureClient client = this.CLIENTS.get(uuid);
+
             client.structuresDisableClient();
             //client.setClientDimension(new PlayerDimensionPosition(player));
             if (client.getVersion().isEmpty())
             {
-                Servux.logger.info("structuresDeclined from player {}", player.getName().getLiteralString());
+                Servux.printDebug("structuresDeclined from player {}", player.getName().getLiteralString());
             }
             else
             {
-                Servux.logger.info("structuresDeclined from player {} with client version {}", player.getName().getLiteralString(), client.getVersion());
+                Servux.printDebug("structuresDeclined from player {} with client version {}", player.getName().getLiteralString(), client.getVersion());
             }
             this.CLIENTS.replace(uuid, client);
         }
-
-        // The Player needs to send a REQUEST_METADATA packet to resume sending Structures.
-        Servux.printDebug("StructureDataProvider#declineStructuresFromPlayer(): player {} is declining to receive structure data packets.", player.getName().getLiteralString());
     }
 
     public void refreshMetadata(ServerPlayerEntity player, NbtCompound data)
     {
         UUID uuid = player.getUuid();
+
         if (this.CLIENTS.containsKey(uuid))
         {
-            Servux.printDebug("refreshMetadata() received for StructureClient {}", player.getName().getLiteralString());
-
             StructureClient client = this.CLIENTS.get(uuid);
+
             if (client.getVersion().isEmpty() && data.contains("version"))
             {
                 String ver = data.getString("version");
@@ -632,85 +608,7 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     /**
-     * MiniHUD sent us a list of structures that they have toggled.
-     */
-    public void updateStructureTogglesFromPlayer(ServerPlayerEntity player, NbtCompound data)
-    {
-        UUID uuid = player.getUuid();
-        if (this.CLIENTS.containsKey(uuid))
-        {
-            Servux.printDebug("updateStructureTogglesFromPlayer(): updating structure toggle states from player {}", player.getName().getLiteralString());
-
-            // Copy to it's NBT data, stripping out "PacketType", since that's not a Structure :)
-            data.remove("packetType");
-            StructureClient client = this.CLIENTS.get(uuid);
-            if (client.enabledStructures.isEmpty())
-            {
-                client.setEnabledStructures(data);
-            }
-            else
-            {
-                client.updateEnabledStructures(data);
-            }
-            this.CLIENTS.replace(uuid, client);
-
-            // Debug call to list structure toggles state from clients.
-            /*
-            int i = 0;
-            for (String key : client.enabledStructures.getKeys())
-            {
-                // key is the StructureType name, ie. "ANCIENT_CITY", and the value is boolean.
-                Servux.printDebug("[{}] key: {}, value: {}", i, key, client.enabledStructures.getBoolean(key));
-                i++;
-            }
-             */
-        }
-    }
-
-    public boolean isStructureToggled(StructureClient client, String id)
-    {
-        return switch (id)
-        {
-            case "minecraft:ancient_city" -> client.enabledStructures.getBoolean("ANCIENT_CITY");
-            case "minecraft:buried_treasure" -> client.enabledStructures.getBoolean("BURIED_TREASURE");
-            case "minecraft:desert_pyramid" -> client.enabledStructures.getBoolean("DESERT_PYRAMID");
-            case "minecraft:igloo" -> client.enabledStructures.getBoolean("IGLOO");
-            case "minecraft:jungle_pyramid" -> client.enabledStructures.getBoolean("JUNGLE_TEMPLE");
-            case "minecraft:mansion" -> client.enabledStructures.getBoolean("MANSION");
-            case "minecraft:mineshaft", "minecraft:mineshaft_mesa" -> client.enabledStructures.getBoolean("MINESHAFT");
-            case "minecraft:monument" -> client.enabledStructures.getBoolean("OCEAN_MONUMENT");
-            case "minecraft:ocean_ruin_cold" -> client.enabledStructures.getBoolean("OCEAN_RUIN");
-            case "minecraft:ocean_ruin_warm" -> client.enabledStructures.getBoolean("OCEAN_RUIN");
-            case "minecraft:pillager_outpost" -> client.enabledStructures.getBoolean("PILLAGER_OUTPOST");
-            case "minecraft:ruined_portal" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:ruined_portal_desert" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:ruined_portal_jungle" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:ruined_portal_mountain" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:ruined_portal_nether" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:ruined_portal_ocean" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:ruined_portal_swamp" -> client.enabledStructures.getBoolean("RUINED_PORTAL");
-            case "minecraft:shipwreck" -> client.enabledStructures.getBoolean("SHIPWRECK");
-            case "minecraft:shipwreck_beached" -> client.enabledStructures.getBoolean("SHIPWRECK");
-            case "minecraft:stronghold" -> client.enabledStructures.getBoolean("STRONGHOLD");
-            case "minecraft:trial_chambers" -> client.enabledStructures.getBoolean("TRIAL_CHAMBERS");
-            case "minecraft:village_desert" -> client.enabledStructures.getBoolean("VILLAGE");
-            case "minecraft:village_plains" -> client.enabledStructures.getBoolean("VILLAGE");
-            case "minecraft:village_savanna" -> client.enabledStructures.getBoolean("VILLAGE");
-            case "minecraft:village_snowy" -> client.enabledStructures.getBoolean("VILLAGE");
-            case "minecraft:village_taiga" -> client.enabledStructures.getBoolean("VILLAGE");
-            case "minecraft:swamp_hut" -> client.enabledStructures.getBoolean("WITCH_HUT");
-            case "minecraft:trail_ruins" -> client.enabledStructures.getBoolean("TRAIL_RUINS");
-            case "minecraft:bastion_remnant" -> client.enabledStructures.getBoolean("BASTION_REMNANT");
-            case "minecraft:fortress" -> client.enabledStructures.getBoolean("NETHER_FORTRESS");
-            case "minecraft:nether_fossil" -> client.enabledStructures.getBoolean("NETHER_FOSSIL");
-            case "minecraft:end_city" -> client.enabledStructures.getBoolean("END_CITY");
-            default -> client.enabledStructures.getBoolean("UNKNOWN");
-        };
-    }
-
-    /**
-     *  This allows StructureClients to individually ACCEPT/DECLINE individual Structure Types,
-     *  so ServUX will only send those that they have toggled ON, on a per-client basis.
+     *  This allows ServUX to only send those that are toggled ON, on a per-client basis, need be.
      */
     public NbtList filterStructureList(StructureClient client, NbtList oldList)
     {
@@ -719,50 +617,40 @@ public class StructureDataProvider extends DataProviderBase
         for (int i = 0; i < oldList.size(); i++)
         {
             NbtCompound oldStructure = oldList.getCompound(i);
-            String structureId = oldStructure.getString("id");
+            // TODO if you want this feature (I removed the rest of the code)
+            //String structureId = oldStructure.getString("id");
 
-            if (isStructureToggled(client, structureId))
-            {
-                Servux.printDebug("filterStructureList(): id {} sending to client {}", structureId, client.getName());
+            //if (isStructureToggled(client, structureId))
+            //{
+                //Servux.printDebug("filterStructureList(): id {} sending to client {}", structureId, client.getName());
                 newList.add(oldStructure);
-            }
-            else
-            {
-                Servux.printDebug("filterStructureList(): id {} filtered from client {}", structureId, client.getName());
-            }
+            //}
         }
 
         return newList;
     }
 
-    // FIXME --> Move out of structures channel in the future (Server Metadata channel, perhaps)
+    // TODO --> Move out of structures channel in the future (Server Metadata channel, perhaps)
     public void refreshSpawnMetadata(ServerPlayerEntity player, NbtCompound data)
     {
         UUID uuid = player.getUuid();
+
         if (this.CLIENTS.containsKey(uuid))
         {
-            Servux.printDebug("refreshSpawnMetadata() received for StructureClient {}", player.getName().getLiteralString());
             StructureClient client = this.CLIENTS.get(uuid);
+
             if (client.getVersion().isEmpty() && data != null && data.contains("version"))
             {
                 String ver = data.getString("version");
+
                 if (!ver.isEmpty())
                 {
                     client.setClientVersion(ver);
-                    Servux.logger.info("refreshSpawnMetadata request from player {} with client version: {}", player.getName().getLiteralString(), ver);
+                    Servux.printDebug("refreshSpawnMetadata request from player {} with client version: {}", player.getName().getLiteralString(), ver);
                     this.CLIENTS.replace(uuid, client);
-                }
-                else
-                {
-                    Servux.logger.info("refreshSpawnMetadata request from player {}", player.getName().getLiteralString());
                 }
             }
         }
-        else
-        {
-            Servux.logger.warn("refreshSpawnMetadata(): received request from a non-StructureClient player {}", player.getName().getLiteralString());
-        }
-
 
         // Only replies to players who request it, or if the values have changed
         if (ServuxReference.isDedicated() || ServuxReference.isOpenToLan())
@@ -808,18 +696,21 @@ public class StructureDataProvider extends DataProviderBase
     public int getSpawnChunkRadius()
     {
         if (this.spawnChunkRadius < 0)
+        {
             this.spawnChunkRadius = 2;
+        }
         return this.spawnChunkRadius;
     }
 
     public void setSpawnChunkRadius(int radius)
     {
         if (this.spawnChunkRadius != radius)
+        {
             this.refreshSpawnMetadata = true;
+        }
         this.spawnChunkRadius = radius;
     }
 
     public boolean refreshSpawnMetadata() { return this.refreshSpawnMetadata; }
     public void setRefreshSpawnMetadataComplete() { this.refreshSpawnMetadata = false; }
-    // TODO
 }
