@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.listeners;
+package fi.dy.masa.servux.network;
 
 import fi.dy.masa.malilib.network.handler.ServerCommonHandlerRegister;
 import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
@@ -8,8 +8,7 @@ import fi.dy.masa.malilib.network.payload.PayloadType;
 import fi.dy.masa.malilib.network.payload.PayloadManager;
 import fi.dy.masa.malilib.network.payload.channel.ServuxStructuresPayload;
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
-import fi.dy.masa.servux.network.PacketType;
+import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;

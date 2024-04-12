@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.mixin;
 
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;

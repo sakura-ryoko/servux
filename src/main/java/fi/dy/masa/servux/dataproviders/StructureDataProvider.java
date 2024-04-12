@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.dataproviders.data;
+package fi.dy.masa.servux.dataproviders;
 
 import java.net.SocketAddress;
 import java.util.*;
@@ -8,10 +8,9 @@ import fi.dy.masa.malilib.network.payload.PayloadType;
 import fi.dy.masa.malilib.network.payload.channel.ServuxStructuresPayload;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.ServuxReference;
-import fi.dy.masa.servux.dataproviders.DataProviderBase;
 import fi.dy.masa.servux.dataproviders.client.StructureClient;
 import fi.dy.masa.servux.network.PacketType;
-import fi.dy.masa.servux.network.listeners.ServuxStructuresPlayListener;
+import fi.dy.masa.servux.network.ServuxStructuresPlayListener;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 

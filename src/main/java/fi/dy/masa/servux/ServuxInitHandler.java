@@ -8,10 +8,10 @@ import fi.dy.masa.malilib.network.payload.PayloadManager;
 import fi.dy.masa.malilib.network.payload.PayloadType;
 import fi.dy.masa.malilib.network.payload.channel.ServuxStructuresPayload;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
-import fi.dy.masa.servux.dataproviders.data.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.PlayerListener;
 import fi.dy.masa.servux.event.ServerListener;
-import fi.dy.masa.servux.network.listeners.ServuxStructuresPlayListener;
+import fi.dy.masa.servux.network.ServuxStructuresPlayListener;
 
 public class ServuxInitHandler implements IInitializationHandler
 {
