@@ -24,14 +24,13 @@ public class ServuxInitHandler implements IInitializationHandler
     {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.readFromConfig();
-        // TODO create a 'servux.json' ?
 
         ServerListener serverListener = new ServerListener();
         ServerHandler.getInstance().registerServerHandler(serverListener);
         PlayerListener playerListener = new PlayerListener();
         PlayerHandler.getInstance().registerPlayerHandler(playerListener);
 
-        PayloadManager.getInstance().register(PayloadType.SERVUX_STRUCTURES, "structure_bounding_boxes", "servux", "structures");
+        PayloadManager.getInstance().register(PayloadType.SERVUX_STRUCTURES, "servux", "structures");
         ServuxStructuresPlayListener<ServuxStructuresPayload> servuxStructuresListener = ServuxStructuresPlayListener.getInstance();
         ServerPlayHandler.getInstance().registerServerPlayHandler(servuxStructuresListener);
     }

@@ -1,13 +1,11 @@
 package fi.dy.masa.servux.dataproviders.client;
 
-import com.mojang.authlib.GameProfile;
-import fi.dy.masa.servux.util.PlayerDimensionPosition;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import javax.annotation.Nullable;
 import java.net.SocketAddress;
 import java.util.UUID;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.server.network.ServerPlayerEntity;
+import fi.dy.masa.servux.util.PlayerDimensionPosition;
 
 /**
  * I've created a *MUCH* more flexible way to track individual Clients, and in a standard interface to be used across multiple DataProvider's.
@@ -15,7 +13,7 @@ import java.util.UUID;
 public class StructureClient extends ClientBase
 {
     private PlayerDimensionPosition dim;
-    public NbtCompound enabledStructures;
+
     public StructureClient(String name, UUID uuid, @Nullable String version)
     {
         super(name, uuid, version);
@@ -30,7 +28,6 @@ public class StructureClient extends ClientBase
         this.updateAddr(addr);
         this.updateProfile(profile);
         this.dim = new PlayerDimensionPosition(player);
-        this.enabledStructures = new NbtCompound();
         this.setClientRegister(true);
     }
 
@@ -38,7 +35,6 @@ public class StructureClient extends ClientBase
     public void unregisterClient()
     {
         this.dim = null;
-        this.enabledStructures.getKeys().clear();
         this.disableClient();
         this.setClientRegister(false);
     }
@@ -59,22 +55,6 @@ public class StructureClient extends ClientBase
     public void setClientVersion(String version)
     {
         this.updateVersion(version);
-    }
-
-    public void setEnabledStructures(NbtCompound data)
-    {
-        this.enabledStructures.copyFrom(data);
-    }
-
-    public NbtCompound getEnabledStructures()
-    {
-        return this.enabledStructures;
-    }
-
-    public void updateEnabledStructures(NbtCompound data)
-    {
-        this.enabledStructures.getKeys().clear();
-        this.enabledStructures.copyFrom(data);
     }
 
     public void structuresEnableClient() { this.enableClient(); }

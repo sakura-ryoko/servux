@@ -1,17 +1,16 @@
 package fi.dy.masa.servux.event;
 
-import com.mojang.authlib.GameProfile;
-import fi.dy.masa.malilib.interfaces.IPlayerListener;
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableTextContent;
-
 import javax.annotation.Nullable;
 import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.UUID;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableTextContent;
+import fi.dy.masa.malilib.interfaces.IPlayerListener;
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 
 public class PlayerListener implements IPlayerListener
 {

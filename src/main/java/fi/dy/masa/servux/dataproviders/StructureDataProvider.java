@@ -173,23 +173,6 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
             // Initial sync (MOVED AFTER STRUCTURES_ACCEPT Packet)
-            /*
-            try
-            {
-                int tickCounter = Objects.requireNonNull(player.getServer()).getTicks();
-                this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
-            }
-            catch (Exception ignored)
-            {
-                try {
-                    this.initialSyncStructuresToPlayerWithinRange(player, Objects.requireNonNull(player.getServer()).getPlayerManager().getViewDistance(), 0);
-                }
-                catch (Exception ignore)
-                {
-                    this.initialSyncStructuresToPlayerWithinRange(player, DEFAULT_CHUNK_RANGE, 0);
-                }
-            }
-             */
         }
     }
 

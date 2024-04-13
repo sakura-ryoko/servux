@@ -1,9 +1,9 @@
 package fi.dy.masa.servux;
 
-import fi.dy.masa.malilib.event.InitializationHandler;
+import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import net.fabricmc.api.ModInitializer;
+import fi.dy.masa.malilib.event.InitializationHandler;
 
 public class Servux implements ModInitializer
 {
