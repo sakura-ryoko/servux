@@ -23,6 +23,7 @@ public class ServerListener implements IServerListener
             ServuxReference.setOpenToLan(false);
             ServuxReference.setDedicated(true);
         }
+        DataProviderManager.INSTANCE.readFromConfig();
     }
 
     @Override

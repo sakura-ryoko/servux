@@ -23,7 +23,6 @@ public class ServuxInitHandler implements IInitializationHandler
     public void registerModHandlers()
     {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.readFromConfig();
 
         ServerListener serverListener = new ServerListener();
         ServerHandler.getInstance().registerServerHandler(serverListener);

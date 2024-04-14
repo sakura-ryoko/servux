@@ -23,7 +23,7 @@ public class DataProviderManager
     {
         return this.providersImmutable;
     }
-    protected File configDir = FileUtils.getConfigDirectory();
+    protected File configDir = null;
 
     /**
      * Registers the given data provider, if it's not already registered
@@ -132,6 +132,10 @@ public class DataProviderManager
 
     protected File getConfigFile()
     {
+        if (this.configDir == null)
+        {
+            this.configDir = FileUtils.getConfigDirectory();
+        }
         return new File(this.configDir, "servux.json");
     }
 }
