@@ -689,6 +689,8 @@ public class StructureDataProvider extends DataProviderBase
         if (this.spawnChunkRadius != radius)
         {
             this.refreshSpawnMetadata = true;
+            this.metadata.remove("spawnChunkRadius");
+            this.metadata.putInt("spawnChunkRadius", radius);
         }
         this.spawnChunkRadius = radius;
     }
