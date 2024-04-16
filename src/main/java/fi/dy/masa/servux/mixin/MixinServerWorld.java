@@ -15,7 +15,7 @@ public class MixinServerWorld
     @Shadow private int spawnChunkRadius;
 
     @Inject(method = "setSpawnPos", at = @At("TAIL"))
-    private void checkSpawnPos(BlockPos pos, float angle, CallbackInfo ci)
+    private void servux_onSetSpawnPos(BlockPos pos, float angle, CallbackInfo ci)
     {
         if (StructureDataProvider.INSTANCE.getSpawnPos() != pos)
         {

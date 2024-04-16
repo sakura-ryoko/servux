@@ -1,6 +1,8 @@
 package fi.dy.masa.servux.dataproviders;
 
+import javax.annotation.Nullable;
 import java.util.*;
+
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -30,13 +32,10 @@ import fi.dy.masa.servux.network.ServuxStructuresHandler;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
-import javax.annotation.Nullable;
-
 public class StructureDataProvider extends DataProviderBase
 {
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
-    protected final List<UUID> enabledPlayers = new ArrayList<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected final int protocolVersion = PacketType.Structures.PROTOCOL_VERSION;
@@ -71,67 +70,76 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public int getProtocolVersion() { return this.protocolVersion; }
-
-    //@Override
-    //public IPluginChannelHandler getPacketHandler()
-    //{
-        //return StructureDataPacketHandler.INSTANCE;
-    //}
-
-    @Override
     public boolean shouldTick()
     {
         return true;
     }
 
     @Override
+    public int getProtocolVersion() { return this.protocolVersion; }
+
+    //@Override
+    //public IPluginServerPlayHandler<ServuxStructuresPayload> getPacketHandler()
+    //{
+        //return ServuxStructuresHandler<ServuxStructuresPayload>
+    //}
+
+    @Override
     public void tick(MinecraftServer server, int tickCounter)
     {
         if ((tickCounter % this.updateInterval) == 0)
         {
-            if (this.registeredPlayers.isEmpty() == false)
+            //Servux.printDebug("=======================\n");
+            //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
+
+            List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
+            this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
+
+            int radius = this.getSpawnChunkRadius();
+            int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
+            if (radius != rule)
             {
-                //Servux.printDebug("=======================\n");
-                //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
-                this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
+                this.setSpawnChunkRadius(rule);
+            }
 
-                // Set Spawn Chunk Radius for Clients
-                int radius = this.getSpawnChunkRadius();
-                int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
-                if (radius != rule)
-                {
-                    this.setSpawnChunkRadius(rule);
-                }
+            for (ServerPlayerEntity player : playerList)
+            {
+                UUID uuid = player.getUuid();
 
-                Iterator<UUID> uuidIter = this.registeredPlayers.keySet().iterator();
-
-                while (uuidIter.hasNext())
-                {
-                    UUID uuid = uuidIter.next();
-                    ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
-
-                    if (player != null)
-                    {
-                        if (this.enabledPlayers.contains(uuid))
-                        {
-                            this.checkForDimensionChange(player);
-                            this.refreshTrackedChunks(player, tickCounter);
-                        }
-                        if (this.refreshSpawnMetadata())
-                        {
-                            this.refreshSpawnMetadata(player, null);
-                        }
-                    }
-                    else
-                    {
-                        this.timeouts.remove(uuid);
-                        uuidIter.remove();
-                    }
-                }
                 if (this.refreshSpawnMetadata())
                 {
-                    this.setRefreshSpawnMetadataComplete();
+                    this.refreshSpawnMetadata(player, null);
+                }
+                if (this.registeredPlayers.containsKey(uuid))
+                {
+                    this.checkForDimensionChange(player);
+                    this.refreshTrackedChunks(player, tickCounter);
+                }
+            }
+
+            this.checkForInvalidPlayers(server);
+            if (this.refreshSpawnMetadata())
+            {
+                this.setRefreshSpawnMetadataComplete();
+            }
+        }
+    }
+
+    public void checkForInvalidPlayers(MinecraftServer server)
+    {
+        if (this.registeredPlayers.isEmpty() == false)
+        {
+            Iterator<UUID> iter = this.registeredPlayers.keySet().iterator();
+
+            while (iter.hasNext())
+            {
+                UUID uuid = iter.next();
+
+                if (server.getPlayerManager().getPlayer(uuid) == null)
+                {
+                    Servux.printDebug("checkForInvalidPlayers(): removing invalid UUID {}", uuid.toString());
+                    this.timeouts.remove(uuid);
+                    iter.remove();
                 }
             }
         }
@@ -141,7 +149,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         UUID uuid = player.getUuid();
 
-        if (this.enabledPlayers.contains(uuid))
+        if (this.registeredPlayers.containsKey(uuid))
         {
             try
             {
@@ -159,7 +167,7 @@ public class StructureDataProvider extends DataProviderBase
         if (this.registeredPlayers.containsKey(uuid) == false)
         {
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
-            //int tickCounter = player.getServer().getTicks();
+            int tickCounter = player.getServer().getTicks();
 
             Servux.printDebug("registering structures for player {}", player.getName().getLiteralString());
 
@@ -174,8 +182,9 @@ public class StructureDataProvider extends DataProviderBase
                     ServuxStructuresPayload payload = new ServuxStructuresPayload(nbt);
 
                     ServuxStructuresHandler.getInstance().sendS2CPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
+
+                    this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
                 }
-                //this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
 
                 registered = true;
             }
@@ -186,13 +195,8 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean unregister(ServerPlayerEntity player)
     {
-        UUID id = player.getUuid();
-
         Servux.printDebug("unregistering structures for player {}", player.getName().getLiteralString());
-        if (this.enabledPlayers.contains(id))
-        {
-            this.enabledPlayers.remove(id);
-        }
+
         return this.registeredPlayers.remove(player.getUuid()) != null;
     }
 
@@ -314,7 +318,7 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            //Servux.printDebug("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
+            Servux.printDebug("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
 
             if (references.isEmpty() == false)
             {
@@ -416,7 +420,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        //Servux.printDebug("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
+        Servux.printDebug("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
         return starts;
     }
 
@@ -433,7 +437,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        //Servux.printDebug("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
+        Servux.printDebug("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
         return references;
     }
 
@@ -451,11 +455,8 @@ public class StructureDataProvider extends DataProviderBase
             NbtList structureList = this.getStructureList(starts, world);
             Servux.printDebug("StructureDataProvider#sendStructures(): starts: {} -> structureList: {} refs: {}", starts.size(), structureList.size(), references.keySet());
 
-            UUID uuid = player.getUuid();
-            if (this.enabledPlayers.contains(uuid))
+            if (this.registeredPlayers.containsKey(player.getUuid()))
             {
-                //StructureClient client = this.CLIENTS.get(uuid);
-
                 NbtCompound tag = new NbtCompound();
                 tag.put("Structures", structureList);
                 tag.putInt("packetType", PacketType.Structures.PACKET_S2C_STRUCTURE_DATA);
@@ -501,10 +502,10 @@ public class StructureDataProvider extends DataProviderBase
             {
                 Servux.printDebug("acceptStructures from player {}", player.getName().getLiteralString());
             }
-            if (this.enabledPlayers.contains(uuid) == false)
-            {
-                this.enabledPlayers.add(uuid);
-            }
+            //if (this.enabledPlayers.contains(uuid) == false)
+            //{
+                //this.enabledPlayers.add(uuid);
+            //}
             this.checkForDimensionChange(player);
         }
         Servux.printDebug("StructureDataProvider#acceptStructuresFromPlayer(): start initialSyncStructuresToPlayerWithinRange() for player {}", player.getName().getLiteralString());
@@ -532,7 +533,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (this.registeredPlayers.containsKey(uuid))
         {
-            this.enabledPlayers.remove(uuid);
+            //this.enabledPlayers.remove(uuid);
             this.checkForDimensionChange(player);
             Servux.printDebug("declineStructures: from player {}", player.getName().getLiteralString());
         }

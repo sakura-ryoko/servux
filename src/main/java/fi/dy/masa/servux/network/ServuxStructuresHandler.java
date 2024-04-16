@@ -78,11 +78,11 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         {
             int packetType = data.getInt("packetType");
 
-            if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_METADATA)
+            if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_REGISTER)
             {
                 Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a REQUEST_METADATA packet from player: {}.", player.getName().getLiteralString());
 
-                StructureDataProvider.INSTANCE.refreshMetadata(player, null);
+                StructureDataProvider.INSTANCE.register(player);
             }
             else if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_SPAWN_METADATA)
             {
@@ -90,17 +90,11 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
             }
-            else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_ACCEPT)
+            else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_UNREGISTER)
             {
-                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a STRUCTURES_ACCEPT packet from player: {}.", player.getName().getLiteralString());
+                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a STRUCTURES_UNREGISTER packet from player: {}.", player.getName().getLiteralString());
 
-                StructureDataProvider.INSTANCE.acceptStructuresFromPlayer(player, data);
-            }
-            else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_DECLINED)
-            {
-                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a STRUCTURES_DECLINED packet from player: {}.", player.getName().getLiteralString());
-
-                StructureDataProvider.INSTANCE.declineStructuresFromPlayer(player);
+                StructureDataProvider.INSTANCE.unregister(player);
             }
             else
             {

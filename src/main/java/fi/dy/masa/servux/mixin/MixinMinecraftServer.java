@@ -23,7 +23,7 @@ public abstract class MixinMinecraftServer
     @Shadow private int ticks;
 
     @Inject(method = "tick", at = @At("RETURN"))
-    private void onTickEnd(BooleanSupplier supplier, CallbackInfo ci)
+    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci)
     {
         this.profiler.push("servux_tick");
         DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.ticks);
@@ -33,7 +33,7 @@ public abstract class MixinMinecraftServer
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/util/math/MathHelper;square(I)I", shift = At.Shift.BEFORE),
             locals = LocalCapture.CAPTURE_FAILHARD)
-    private void onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
+    private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
                                       ServerWorld serverWorld, BlockPos blockPos, ServerChunkManager serverChunkManager, int i)
     {
         if (StructureDataProvider.INSTANCE.getSpawnPos() != blockPos)
