@@ -30,6 +30,8 @@ public class DataProviderManager
 
     /**
      * Registers the given data provider, if it's not already registered
+     * @param provider
+     * @return true if the provider did not exist yet and was successfully registered
      */
     public boolean registerDataProvider(IDataProvider provider)
     {
@@ -91,6 +93,28 @@ public class DataProviderManager
                     provider.tick(server, tickCounter);
                 }
             }
+        }
+    }
+
+    protected void registerEnabledPacketHandlers()
+    {
+        for (IDataProvider provider : this.providersImmutable)
+        {
+            this.updatePacketHandlerRegistration(provider);
+        }
+    }
+
+    protected void updatePacketHandlerRegistration(IDataProvider provider)
+    {
+        //IPluginChannelHandler handler = provider.getPacketHandler();
+
+        if (provider.isEnabled())
+        {
+            //ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
+        }
+        else
+        {
+            //ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
         }
     }
 

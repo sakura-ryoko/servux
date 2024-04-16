@@ -82,23 +82,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             {
                 Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a REQUEST_METADATA packet from player: {}.", player.getName().getLiteralString());
 
-                NbtCompound ping = new NbtCompound();
-                ping.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA_PING);
-
-                encodeS2CNbtCompound(type, ping, player);
-            }
-            else if (packetType == PacketType.Structures.PACKET_S2C_METADATA_PING)
-            {
-                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a METADATA_PING packet from player: {}.", player.getName().getLiteralString());
-
-                NbtCompound pong = new NbtCompound();
-                pong.putInt("packetType", PacketType.Structures.PACKET_C2S_METADATA_PONG);
-
-                encodeS2CNbtCompound(type, pong, player);
-            }
-            else if (packetType == PacketType.Structures.PACKET_C2S_METADATA_PONG)
-            {
-                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a METADATA_PONG packet from player: {}.", player.getName().getLiteralString());
+                StructureDataProvider.INSTANCE.refreshMetadata(player, null);
             }
             else if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_SPAWN_METADATA)
             {

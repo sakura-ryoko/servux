@@ -72,4 +72,10 @@ public interface IDataProvider
     default void tick(MinecraftServer server, int tickCounter)
     {
     }
+
+    /**
+     * Returns the network packet handler used for this data provider.
+     * @return
+     */
+    //IPluginChannelHandler getPacketHandler();
 }

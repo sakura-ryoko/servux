@@ -41,7 +41,7 @@ public class PlayerListener implements IPlayerListener
     {
         Servux.printDebug("onPlayerJoin(): received connection from Socket {}, profile {} // player {}", addr.toString(), profile.getId(), player.getName().getLiteralString());
 
-        StructureDataProvider.INSTANCE.register(addr, profile, player);
+        StructureDataProvider.INSTANCE.register(player);
     }
 
     @Override
