@@ -23,6 +23,7 @@ public class ServerListener implements IServerListener
             NetworkReference.getInstance().setOpenToLan(false);
             NetworkReference.getInstance().setDedicated(true);
         }
+
         DataProviderManager.INSTANCE.readFromConfig();
     }
 

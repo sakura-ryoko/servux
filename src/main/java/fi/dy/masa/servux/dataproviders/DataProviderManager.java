@@ -24,6 +24,9 @@ public class DataProviderManager
         return this.providersImmutable;
     }
     protected File configDir = null;
+    protected boolean DEBUG = false;
+    public boolean isDebug() { return this.DEBUG; }
+    protected void setDebugMode(boolean toggle) { this.DEBUG = toggle; }
 
     /**
      * Registers the given data provider, if it's not already registered
@@ -100,6 +103,12 @@ public class DataProviderManager
         {
             JsonObject root = el.getAsJsonObject();
 
+            if (JsonUtils.hasObject(root, "Generic"))
+            {
+                JsonObject generic = JsonUtils.getNestedObject(root, "Generic", false);
+
+                this.setDebugMode(JsonUtils.getBooleanOrDefault(generic, "debugLog", false));
+            }
             if (JsonUtils.hasObject(root, "DataProviderToggles"))
             {
                 obj = JsonUtils.getNestedObject(root, "DataProviderToggles", false);
@@ -118,6 +127,7 @@ public class DataProviderManager
     {
         JsonObject root = new JsonObject();
         JsonObject objToggles = new JsonObject();
+        JsonObject genericSettings = new JsonObject();
 
         for (IDataProvider provider : this.providersImmutable)
         {
@@ -126,6 +136,9 @@ public class DataProviderManager
         }
 
         root.add("DataProviderToggles", objToggles);
+
+        genericSettings.add("debugLog", new JsonPrimitive(this.DEBUG));
+        root.add("Generic", genericSettings);
 
         JsonUtils.writeJsonToFile(root, this.getConfigFile());
     }

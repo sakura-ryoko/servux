@@ -13,8 +13,6 @@ public class Reference
     public static final String MOD_TYPE = "fabric";
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
 
-    public static final boolean MOD_DEBUG = true;
-
     private static final EnvType MOD_ENVIRONMENT = FabricLoader.getInstance().getEnvironmentType();
     public static boolean isServer() {return MOD_ENVIRONMENT == EnvType.SERVER;}
     public static boolean isClient() {return MOD_ENVIRONMENT == EnvType.CLIENT;}
