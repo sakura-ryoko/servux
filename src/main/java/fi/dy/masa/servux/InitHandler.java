@@ -11,13 +11,13 @@ import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.PlayerListener;
 import fi.dy.masa.servux.event.ServerListener;
-import fi.dy.masa.servux.network.ServuxStructuresPlayListener;
+import fi.dy.masa.servux.network.ServuxStructuresHandler;
 
 /**
  * This file assumes that ServuX is best served being Multi-Environment with MaLiLib,
  * Might as well use InitHandler.
  */
-public class ServuxInitHandler implements IInitializationHandler
+public class InitHandler implements IInitializationHandler
 {
     @Override
     public void registerModHandlers()
@@ -30,7 +30,7 @@ public class ServuxInitHandler implements IInitializationHandler
         PlayerHandler.getInstance().registerPlayerHandler(playerListener);
 
         PayloadManager.getInstance().register(PayloadType.SERVUX_STRUCTURES, "servux", "structures");
-        ServuxStructuresPlayListener<ServuxStructuresPayload> servuxStructuresListener = ServuxStructuresPlayListener.getInstance();
+        ServuxStructuresHandler<ServuxStructuresPayload> servuxStructuresListener = ServuxStructuresHandler.getInstance();
         ServerPlayHandler.getInstance().registerServerPlayHandler(servuxStructuresListener);
     }
 }

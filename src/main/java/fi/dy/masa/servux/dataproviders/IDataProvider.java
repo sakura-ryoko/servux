@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.dataproviders;
 
-import fi.dy.masa.malilib.network.payload.PayloadType;
 import net.minecraft.server.MinecraftServer;
+import fi.dy.masa.malilib.network.payload.PayloadType;
 
 public interface IDataProvider
 {

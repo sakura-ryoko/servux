@@ -1,16 +1,20 @@
 package fi.dy.masa.servux.dataproviders;
 
+import fi.dy.masa.malilib.network.payload.PayloadType;
+
 public abstract class DataProviderBase implements IDataProvider
 {
     protected final String name;
+    protected final PayloadType type;
     protected final String description;
     protected final int protocolVersion;
     protected boolean enabled;
     private int tickRate = 40;
 
-    protected DataProviderBase(String name, int protocolVersion, String description)
+    protected DataProviderBase(String name, PayloadType type, int protocolVersion, String description)
     {
         this.name = name;
+        this.type = type;
         this.protocolVersion = protocolVersion;
         this.description = description;
     }
@@ -26,6 +30,9 @@ public abstract class DataProviderBase implements IDataProvider
     {
         return this.description;
     }
+
+    @Override
+    public PayloadType getNetworkChannel() { return this.type; }
 
     @Override
     public int getProtocolVersion()

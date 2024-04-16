@@ -6,13 +6,13 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.world.GameRules;
-import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 
@@ -21,8 +21,6 @@ public abstract class MixinMinecraftServer
 {
     @Shadow private Profiler profiler;
     @Shadow private int ticks;
-    @Shadow public abstract GameRules getGameRules();
-    @Shadow public abstract ServerWorld getOverworld();
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void onTickEnd(BooleanSupplier supplier, CallbackInfo ci)
@@ -32,18 +30,19 @@ public abstract class MixinMinecraftServer
         this.profiler.pop();
     }
 
-    @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setSpawnPos(Lnet/minecraft/util/math/BlockPos;F)V", shift = At.Shift.AFTER))
-    private void checkSpawnChunkRadius(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci)
+    @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/util/math/MathHelper;square(I)I", shift = At.Shift.BEFORE),
+            locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
+                                      ServerWorld serverWorld, BlockPos blockPos, ServerChunkManager serverChunkManager, int i)
     {
-        BlockPos worldSpawn = this.getOverworld().getSpawnPos();
-        int radius = this.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
-        Servux.printDebug("MixinMinecraftServer#servux_checkSpawnChunkRadius(): Spawn Position: {}, SPAWN_CHUNK_RADIUS: {}", this.getOverworld().getSpawnPos().toShortString(), radius);
-
-        if (StructureDataProvider.INSTANCE.getSpawnPos() != worldSpawn)
+        if (StructureDataProvider.INSTANCE.getSpawnPos() != blockPos)
         {
-            // Only set if value changed from stored value
-            StructureDataProvider.INSTANCE.setSpawnPos(worldSpawn);
+            StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
         }
-        StructureDataProvider.INSTANCE.setSpawnChunkRadius(radius);
+        if (StructureDataProvider.INSTANCE.getSpawnChunkRadius() != i)
+        {
+            StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
+        }
     }
 }

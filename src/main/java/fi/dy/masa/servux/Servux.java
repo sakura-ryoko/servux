@@ -7,12 +7,12 @@ import fi.dy.masa.malilib.event.InitializationHandler;
 
 public class Servux implements ModInitializer
 {
-    public static final Logger logger = LogManager.getLogger(ServuxReference.MOD_ID);
+    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
 
     @Override
     public void onInitialize()
     {
-        InitializationHandler.getInstance().registerInitializationHandler(new ServuxInitHandler());
+        InitializationHandler.getInstance().registerInitializationHandler(new InitHandler());
     }
 
     public static String getModVersionString(String modId)
@@ -30,7 +30,7 @@ public class Servux implements ModInitializer
 
     public static void printDebug(String key, Object... args)
     {
-        if (ServuxReference.MOD_DEBUG)
+        if (Reference.MOD_DEBUG)
         {
             logger.info(key, args);
         }

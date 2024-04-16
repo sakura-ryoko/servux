@@ -3,8 +3,8 @@ package fi.dy.masa.servux.event;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import fi.dy.masa.malilib.interfaces.IServerListener;
+import fi.dy.masa.malilib.network.NetworkReference;
 import fi.dy.masa.malilib.network.payload.PayloadManager;
-import fi.dy.masa.servux.ServuxReference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 
 // TODO --> Might not be required if we are using MaLiLib to do this for us.
@@ -15,13 +15,13 @@ public class ServerListener implements IServerListener
     {
         if (server.isSingleplayer())
         {
-            ServuxReference.setOpenToLan(false);
-            ServuxReference.setDedicated(false);
+            NetworkReference.getInstance().setOpenToLan(false);
+            NetworkReference.getInstance().setDedicated(false);
         }
         else if (server.isDedicated())
         {
-            ServuxReference.setOpenToLan(false);
-            ServuxReference.setDedicated(true);
+            NetworkReference.getInstance().setOpenToLan(false);
+            NetworkReference.getInstance().setDedicated(true);
         }
         DataProviderManager.INSTANCE.readFromConfig();
     }
@@ -35,14 +35,14 @@ public class ServerListener implements IServerListener
     @Override
     public void onServerIntegratedSetup(IntegratedServer server)
     {
-        ServuxReference.setOpenToLan(false);
-        ServuxReference.setDedicated(false);
+        NetworkReference.getInstance().setOpenToLan(false);
+        NetworkReference.getInstance().setDedicated(false);
     }
     @Override
     public void onServerOpenToLan(IntegratedServer server)
     {
-        ServuxReference.setOpenToLan(true);
-        ServuxReference.setDedicated(false);
+        NetworkReference.getInstance().setOpenToLan(true);
+        NetworkReference.getInstance().setDedicated(false);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class ServerListener implements IServerListener
     @Override
     public void onServerStopped(MinecraftServer minecraftServer)
     {
-        ServuxReference.setOpenToLan(false);
-        ServuxReference.setDedicated(false);
+        NetworkReference.getInstance().setOpenToLan(false);
+        NetworkReference.getInstance().setDedicated(false);
     }
 }
