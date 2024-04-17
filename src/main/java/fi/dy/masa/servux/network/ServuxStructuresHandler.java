@@ -80,9 +80,9 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
             if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_REGISTER)
             {
-                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a REQUEST_METADATA packet from player: {}.", player.getName().getLiteralString());
+                Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a STRUCTURES_REGISTER packet from player: {}.", player.getName().getLiteralString());
 
-                StructureDataProvider.INSTANCE.register(player);
+                StructureDataProvider.INSTANCE.register(player, player.getGameProfile());
             }
             else if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_SPAWN_METADATA)
             {
@@ -118,10 +118,6 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         {
             ServerPlayNetworking.send(player, payload);
         }
-        else
-        {
-            Servux.logger.error("sendS2CPlayPayload(): [API].canSend() -> {} is FALSE type: {}", player.getName().getLiteralString(), type.toString());
-        }
     }
 
     @Override
@@ -131,13 +127,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
         if (handler != null && handler.accepts(packet))
         {
-            ServerPlayerEntity player = handler.getPlayer();
-
             handler.sendPacket(packet);
-        }
-        else
-        {
-            Servux.logger.error("sendS2CPlayPayload(): [Handler].accepts() is FALSE type: {}", type.toString());
         }
     }
 

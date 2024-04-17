@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.dataproviders;
 
 import net.minecraft.server.MinecraftServer;
+import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
 import fi.dy.masa.malilib.network.payload.PayloadType;
 
 public interface IDataProvider
@@ -77,5 +78,5 @@ public interface IDataProvider
      * Returns the network packet handler used for this data provider.
      * @return
      */
-    //IPluginChannelHandler getPacketHandler();
+    IPluginServerPlayHandler<?> getPacketHandler();
 }

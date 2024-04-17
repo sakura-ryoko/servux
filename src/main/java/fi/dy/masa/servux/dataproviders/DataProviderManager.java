@@ -8,8 +8,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.server.MinecraftServer;
+import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
+import fi.dy.masa.malilib.network.handler.server.ServerPlayHandler;
 import fi.dy.masa.malilib.util.FileUtils;
-import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
@@ -41,7 +42,7 @@ public class DataProviderManager
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
-            Servux.printDebug("registerDataProvider: {}", provider);
+            //Servux.printDebug("registerDataProvider: {}", provider);
 
             return true;
         }
@@ -62,10 +63,10 @@ public class DataProviderManager
 
         if (enabled || wasEnabled != enabled)
         {
-            Servux.printDebug("setProviderEnabled: {} ({})", enabled, provider);
+            //Servux.printDebug("setProviderEnabled: {} ({})", enabled, provider);
             provider.setEnabled(enabled);
 
-            //this.updatePacketHandlerRegistration(provider);
+            this.updatePacketHandlerRegistration(provider);
 
             if (enabled && provider.shouldTick() && this.providersTicking.contains(provider) == false)
             {
@@ -106,15 +107,17 @@ public class DataProviderManager
 
     protected void updatePacketHandlerRegistration(IDataProvider provider)
     {
-        //IPluginChannelHandler handler = provider.getPacketHandler();
+        IPluginServerPlayHandler<?> handler = provider.getPacketHandler();
 
         if (provider.isEnabled())
         {
-            //ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
+            ServerPlayHandler.getInstance().registerServerPlayHandler(handler);
+            handler.registerPlayHandler(provider.getNetworkChannel());
         }
         else
         {
-            //ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
+            handler.unregisterPlayHandler(provider.getNetworkChannel());
+            ServerPlayHandler.getInstance().unregisterServerPlayHandler(handler);
         }
     }
 
