@@ -1,9 +1,11 @@
 package fi.dy.masa.servux.dataproviders;
 
+import net.minecraft.util.Identifier;
 import fi.dy.masa.malilib.network.payload.PayloadType;
 
 public abstract class DataProviderBase implements IDataProvider
 {
+    protected final Identifier networkChannel;
     protected final String name;
     protected final PayloadType type;
     protected final String description;
@@ -11,9 +13,10 @@ public abstract class DataProviderBase implements IDataProvider
     protected boolean enabled;
     private int tickRate = 40;
 
-    protected DataProviderBase(String name, PayloadType type, int protocolVersion, String description)
+    protected DataProviderBase(String name, Identifier channel, PayloadType type, int protocolVersion, String description)
     {
         this.name = name;
+        this.networkChannel = channel;
         this.type = type;
         this.protocolVersion = protocolVersion;
         this.description = description;
@@ -32,7 +35,10 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public PayloadType getNetworkChannel() { return this.type; }
+    public Identifier getNetworkChannel() { return this.networkChannel; }
+
+    @Override
+    public PayloadType getPayload() { return this.type; }
 
     @Override
     public int getProtocolVersion()

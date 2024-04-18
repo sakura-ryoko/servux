@@ -38,11 +38,11 @@ import fi.dy.masa.servux.util.Timeout;
 public class StructureDataProvider extends DataProviderBase
 {
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
+
     protected final static ServuxStructuresHandler<ServuxStructuresPayload> HANDLER = ServuxStructuresHandler.getInstance();
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
-    protected final int protocolVersion = PacketType.Structures.PROTOCOL_VERSION;
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
@@ -55,14 +55,13 @@ public class StructureDataProvider extends DataProviderBase
 
     protected StructureDataProvider()
     {
-        super("structure_bounding_boxes",
-              PayloadType.SERVUX_STRUCTURES,
-              PacketType.Structures.PROTOCOL_VERSION,
+        super("structure_bounding_boxes", new Identifier("servux", "strcutures"),
+              PayloadType.SERVUX_STRUCTURES, PacketType.Structures.PROTOCOL_VERSION,
     "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
         this.metadata.putString("name", this.getName());
         this.metadata.putString("id", this.getNetworkChannel().toString());
-        this.metadata.putInt("version", this.protocolVersion);
+        this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
         this.metadata.putInt("timeout", this.timeout);
 
@@ -78,7 +77,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         if (toggle)
         {
-            PayloadManager.getInstance().register(PayloadType.SERVUX_STRUCTURES, new Identifier("servux", "structures"));
+            PayloadManager.getInstance().register(this.getPayload(), new Identifier("servux", "structures"));
         }
 
         this.enabled = toggle;
@@ -89,9 +88,6 @@ public class StructureDataProvider extends DataProviderBase
     {
         return this.enabled;
     }
-
-    @Override
-    public int getProtocolVersion() { return this.protocolVersion; }
 
     @Override
     public IPluginServerPlayHandler<ServuxStructuresPayload> getPacketHandler()
@@ -169,11 +165,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (this.registeredPlayers.containsKey(uuid))
         {
-            try
-            {
-                this.addChunkTimeoutIfHasReferences(uuid, chunk, Objects.requireNonNull(player.getServer()).getTicks());
-            }
-            catch (Exception ignored) {}
+            this.addChunkTimeoutIfHasReferences(uuid, chunk, player.getServer().getTicks());
         }
     }
 
@@ -202,14 +194,15 @@ public class StructureDataProvider extends DataProviderBase
             if (NetworkReference.getInstance().isDedicated() || NetworkReference.getInstance().isOpenToLan())
             {
                 ServerPlayNetworkHandler handler = player.networkHandler;
+
                 if (handler != null)
                 {
                     NbtCompound nbt = new NbtCompound();
                     nbt.copyFrom(this.metadata);
                     nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
-                    ServuxStructuresPayload payload = new ServuxStructuresPayload(nbt);
 
-                    HANDLER.sendS2CPlayPayload(payload, handler);
+                    // Using the networkHandler method allows this to work
+                    HANDLER.sendS2CPlayPayload(new ServuxStructuresPayload(nbt), handler);
 
                     this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
                 }
@@ -221,6 +214,11 @@ public class StructureDataProvider extends DataProviderBase
         return registered;
     }
 
+    /**
+     * Returns true if the UUID is the local Host player
+     * @param id (UUID)
+     * @return (true/false)
+     */
     protected boolean isHost(UUID id)
     {
         return this.localHostPlayer != null && this.localHostPlayer.equals(id);
@@ -513,7 +511,7 @@ public class StructureDataProvider extends DataProviderBase
         return list;
     }
 
-    // TODO --> Move out of structures channel in the future (Server Metadata channel, perhaps ?)
+    // TODO --> Move out of structures channel in the future (Some Metadata channel, perhaps)
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
         UUID uuid = player.getUuid();
@@ -565,7 +563,7 @@ public class StructureDataProvider extends DataProviderBase
             this.metadata.putInt("spawnPosZ", spawnPos.getZ());
             this.refreshSpawnMetadata = true;
 
-            //Servux.printDebug("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
+            Servux.printDebug("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
         }
 
         this.spawnPos = spawnPos;

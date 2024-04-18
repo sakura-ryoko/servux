@@ -4,7 +4,6 @@ import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.malilib.interfaces.IServerListener;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 
-// TODO --> Might not be required if we are using MaLiLib to do this for us.
 public class ServerListener implements IServerListener
 {
     @Override

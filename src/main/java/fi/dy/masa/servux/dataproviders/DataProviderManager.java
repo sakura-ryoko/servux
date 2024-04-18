@@ -16,6 +16,7 @@ import fi.dy.masa.servux.util.JsonUtils;
 public class DataProviderManager
 {
     public static final DataProviderManager INSTANCE = new DataProviderManager();
+
     protected final HashMap<String, IDataProvider> providers = new HashMap<>();
     protected ImmutableList<IDataProvider> providersImmutable = ImmutableList.of();
     protected ArrayList<IDataProvider> providersTicking = new ArrayList<>();
@@ -42,7 +43,7 @@ public class DataProviderManager
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
-            //Servux.printDebug("registerDataProvider: {}", provider);
+            //Servux.logger.info("registerDataProvider: {}", provider);
 
             return true;
         }
@@ -63,7 +64,7 @@ public class DataProviderManager
 
         if (enabled || wasEnabled != enabled)
         {
-            //Servux.printDebug("setProviderEnabled: {} ({})", enabled, provider);
+            //Servux.logger.info("setProviderEnabled: {} ({})", enabled, provider);
             provider.setEnabled(enabled);
 
             this.updatePacketHandlerRegistration(provider);
@@ -112,11 +113,11 @@ public class DataProviderManager
         if (provider.isEnabled())
         {
             ServerPlayHandler.getInstance().registerServerPlayHandler(handler);
-            handler.registerPlayHandler(provider.getNetworkChannel());
+            handler.registerPlayHandler(provider.getPayload());
         }
         else
         {
-            handler.unregisterPlayHandler(provider.getNetworkChannel());
+            handler.unregisterPlayHandler(provider.getPayload());
             ServerPlayHandler.getInstance().unregisterServerPlayHandler(handler);
         }
     }
@@ -132,9 +133,9 @@ public class DataProviderManager
 
             if (JsonUtils.hasObject(root, "Generic"))
             {
-                JsonObject generic = JsonUtils.getNestedObject(root, "Generic", false);
+                obj = JsonUtils.getNestedObject(root, "Generic", false);
 
-                this.setDebugMode(JsonUtils.getBooleanOrDefault(generic, "debugLog", false));
+                this.setDebugMode(JsonUtils.getBooleanOrDefault(obj, "debugLog", false));
             }
             if (JsonUtils.hasObject(root, "DataProviderToggles"))
             {
