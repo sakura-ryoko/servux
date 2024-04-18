@@ -2,14 +2,12 @@ package fi.dy.masa.servux.network;
 
 import java.util.Objects;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import fi.dy.masa.malilib.network.handler.CommonHandlerRegister;
 import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
 import fi.dy.masa.malilib.network.handler.server.ServerPlayHandler;
 import fi.dy.masa.malilib.network.payload.PayloadCodec;
@@ -30,46 +28,9 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     };
     public static ServuxStructuresHandler<ServuxStructuresPayload> getInstance() { return INSTANCE; }
     private boolean servuxRegistered;
-    private boolean register;
 
     @Override
     public PayloadType getPayloadType() { return PayloadType.SERVUX_STRUCTURES; }
-
-    public void setRegister(boolean toggle)
-    {
-        this.register = toggle;
-    }
-
-    @Override
-    public void reset(PayloadType type)
-    {
-        if (type.equals(getPayloadType()) && this.servuxRegistered)
-        {
-            this.servuxRegistered = false;
-        }
-        this.register = false;
-    }
-
-    @Override
-    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworking.Context ctx)
-    {
-        ServuxStructuresPayload packet = (ServuxStructuresPayload) payload;
-        ServerPlayerEntity player = ctx.player();
-
-        ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
-    }
-
-    @Override
-    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworkHandler handler, CallbackInfo ci)
-    {
-        ServuxStructuresPayload packet = (ServuxStructuresPayload) payload;
-        ServerPlayerEntity player = handler.getPlayer();
-
-        ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
-
-        if (ci.isCancellable())
-            ci.cancel();
-    }
 
     @Override
     public void decodeC2SNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)
@@ -104,11 +65,67 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
+    public void reset(PayloadType type)
+    {
+        if (type.equals(getPayloadType()) && this.servuxRegistered)
+        {
+            this.servuxRegistered = false;
+        }
+    }
+
+    @Override
+    public void registerPlayPayload(PayloadType type)
+    {
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
+
+        if (codec != null && codec.isPlayRegistered() == false)
+        {
+            PayloadManager.getInstance().registerPlayChannel(type, ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void registerPlayHandler(PayloadType type)
+    {
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
+
+        if (codec != null && codec.isPlayRegistered())
+        {
+            PayloadManager.getInstance().registerPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE, this);
+            this.servuxRegistered = true;
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void unregisterPlayHandler(PayloadType type)
+    {
+        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
+
+        if (codec != null && codec.isPlayRegistered())
+        {
+            reset(getPayloadType());
+
+            PayloadManager.getInstance().unregisterPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE);
+        }
+    }
+
+    @Override
+    public <P extends CustomPayload> void receiveC2SPlayPayload(PayloadType type, P payload, ServerPlayNetworking.Context ctx)
+    {
+        ServuxStructuresPayload packet = (ServuxStructuresPayload) payload;
+        ServerPlayerEntity player = ctx.player();
+
+        ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
+    }
+
+    @Override
     public void encodeS2CNbtCompound(PayloadType type, NbtCompound data, ServerPlayerEntity player)
     {
         ServuxStructuresPayload payload = new ServuxStructuresPayload(data);
 
-        ServuxStructuresHandler.INSTANCE.sendS2CPlayPayload(type, payload, player);
+        this.sendS2CPlayPayload(type, payload, player);
     }
 
     @Override
@@ -128,44 +145,6 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         if (handler != null && handler.accepts(packet))
         {
             handler.sendPacket(packet);
-        }
-    }
-
-    @Override
-    public void registerPlayPayload(PayloadType type)
-    {
-        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
-
-        if (codec != null && codec.isPlayRegistered() == false)
-        {
-            PayloadManager.getInstance().registerPlayChannel(type, CommonHandlerRegister.getInstance().getPayloadType(type), CommonHandlerRegister.getInstance().getPacketCodec(type));
-        }
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void registerPlayHandler(PayloadType type)
-    {
-        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
-
-        if (codec != null && codec.isPlayRegistered())
-        {
-            CommonHandlerRegister.getInstance().registerPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE, this);
-            this.servuxRegistered = true;
-        }
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void unregisterPlayHandler(PayloadType type)
-    {
-        PayloadCodec codec = PayloadManager.getInstance().getPayloadCodec(type);
-
-        if (codec != null && codec.isPlayRegistered())
-        {
-            reset(getPayloadType());
-
-            CommonHandlerRegister.getInstance().unregisterPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE);
         }
     }
 }
