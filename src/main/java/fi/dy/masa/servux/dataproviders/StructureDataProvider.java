@@ -14,6 +14,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameRules;
@@ -77,7 +78,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         if (toggle)
         {
-            PayloadManager.getInstance().register(PayloadType.SERVUX_STRUCTURES, "servux", "structures");
+            PayloadManager.getInstance().register(PayloadType.SERVUX_STRUCTURES, new Identifier("servux", "structures"));
         }
 
         this.enabled = toggle;
@@ -208,7 +209,7 @@ public class StructureDataProvider extends DataProviderBase
                     nbt.putInt("packetType", PacketType.Structures.PACKET_S2C_METADATA);
                     ServuxStructuresPayload payload = new ServuxStructuresPayload(nbt);
 
-                    HANDLER.sendS2CPlayPayload(PayloadType.SERVUX_STRUCTURES, payload, handler);
+                    HANDLER.sendS2CPlayPayload(payload, handler);
 
                     this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
                 }
@@ -493,8 +494,7 @@ public class StructureDataProvider extends DataProviderBase
                 tag.put("Structures", structureList);
                 tag.putInt("packetType", PacketType.Structures.PACKET_S2C_STRUCTURE_DATA);
 
-                //ServuxStructuresHandler.getInstance().encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, tag, player);
-                HANDLER.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, tag, player);
+                HANDLER.encodeS2CNbtCompound(tag, player);
             }
         }
     }
@@ -539,7 +539,7 @@ public class StructureDataProvider extends DataProviderBase
             nbt.putInt("spawnPosZ", spawnPos.getZ());
             nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
 
-            HANDLER.encodeS2CNbtCompound(PayloadType.SERVUX_STRUCTURES, nbt, player);
+            HANDLER.encodeS2CNbtCompound(nbt, player);
         }
     }
 
@@ -565,7 +565,7 @@ public class StructureDataProvider extends DataProviderBase
             this.metadata.putInt("spawnPosZ", spawnPos.getZ());
             this.refreshSpawnMetadata = true;
 
-            Servux.printDebug("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
+            //Servux.printDebug("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
         }
 
         this.spawnPos = spawnPos;
