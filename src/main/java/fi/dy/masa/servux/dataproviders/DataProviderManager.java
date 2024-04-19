@@ -8,8 +8,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.server.MinecraftServer;
-import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
-import fi.dy.masa.malilib.network.handler.server.ServerPlayHandler;
+import fi.dy.masa.malilib.network.server.IPluginServerPlayHandler;
+import fi.dy.masa.malilib.network.server.ServerPlayHandler;
 import fi.dy.masa.malilib.util.FileUtils;
 import fi.dy.masa.servux.util.JsonUtils;
 
@@ -26,9 +26,6 @@ public class DataProviderManager
         return this.providersImmutable;
     }
     protected File configDir = null;
-    protected boolean DEBUG = false;
-    public boolean isDebug() { return this.DEBUG; }
-    protected void setDebugMode(boolean toggle) { this.DEBUG = toggle; }
 
     /**
      * Registers the given data provider, if it's not already registered
@@ -131,12 +128,6 @@ public class DataProviderManager
         {
             JsonObject root = el.getAsJsonObject();
 
-            if (JsonUtils.hasObject(root, "Generic"))
-            {
-                obj = JsonUtils.getNestedObject(root, "Generic", false);
-
-                this.setDebugMode(JsonUtils.getBooleanOrDefault(obj, "debugLog", false));
-            }
             if (JsonUtils.hasObject(root, "DataProviderToggles"))
             {
                 obj = JsonUtils.getNestedObject(root, "DataProviderToggles", false);
@@ -155,7 +146,6 @@ public class DataProviderManager
     {
         JsonObject root = new JsonObject();
         JsonObject objToggles = new JsonObject();
-        JsonObject genericSettings = new JsonObject();
 
         for (IDataProvider provider : this.providersImmutable)
         {
@@ -164,9 +154,6 @@ public class DataProviderManager
         }
 
         root.add("DataProviderToggles", objToggles);
-
-        genericSettings.add("debugLog", new JsonPrimitive(this.DEBUG));
-        root.add("Generic", genericSettings);
 
         JsonUtils.writeJsonToFile(root, this.getConfigFile());
     }

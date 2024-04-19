@@ -7,8 +7,8 @@ import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
-import fi.dy.masa.malilib.network.handler.server.ServerPlayHandler;
+import fi.dy.masa.malilib.network.server.IPluginServerPlayHandler;
+import fi.dy.masa.malilib.network.server.ServerPlayHandler;
 import fi.dy.masa.malilib.network.payload.PayloadCodec;
 import fi.dy.masa.malilib.network.payload.PayloadManager;
 import fi.dy.masa.malilib.network.payload.PayloadType;
@@ -38,20 +38,14 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
         if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_REGISTER)
         {
-            Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a STRUCTURES_REGISTER packet from player: {}.", player.getName().getLiteralString());
-
             StructureDataProvider.INSTANCE.register(player, player.getGameProfile());
         }
         else if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_SPAWN_METADATA)
         {
-            Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a REQUEST_SPAWN_METADATA packet from player: {}.", player.getName().getLiteralString());
-
             StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
         }
         else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_UNREGISTER)
         {
-            Servux.printDebug("ServuxStructuresHandler#decodeC2SNbtCompound(): received a STRUCTURES_UNREGISTER packet from player: {}.", player.getName().getLiteralString());
-
             StructureDataProvider.INSTANCE.unregister(player);
         }
         else
@@ -101,7 +95,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
         if (codec != null && codec.isPlayRegistered())
         {
-            reset(getPayloadType());
+            reset(type);
 
             PayloadManager.getInstance().unregisterPlayHandler((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE);
         }
@@ -113,15 +107,13 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         ServuxStructuresPayload packet = (ServuxStructuresPayload) payload;
         ServerPlayerEntity player = ctx.player();
 
-        ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(PayloadType.SERVUX_STRUCTURES, packet.data(), player);
+        ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(this.getPayloadType(), packet.data(), player);
     }
 
     @Override
     public void encodeS2CNbtCompound(NbtCompound data, ServerPlayerEntity player)
     {
-        ServuxStructuresPayload payload = new ServuxStructuresPayload(data);
-
-        ServuxStructuresHandler.INSTANCE.sendS2CPlayPayload(payload, player);
+        ServuxStructuresHandler.INSTANCE.sendS2CPlayPayload(new ServuxStructuresPayload(data), player);
     }
 
     @Override

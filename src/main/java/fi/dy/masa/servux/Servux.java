@@ -1,6 +1,5 @@
 package fi.dy.masa.servux;
 
-import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,13 +26,5 @@ public class Servux implements ModInitializer
         }
 
         return "?";
-    }
-
-    public static void printDebug(String key, Object... args)
-    {
-        if (DataProviderManager.INSTANCE.isDebug())
-        {
-            logger.info(key, args);
-        }
     }
 }

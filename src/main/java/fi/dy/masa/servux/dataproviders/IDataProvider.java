@@ -2,7 +2,7 @@ package fi.dy.masa.servux.dataproviders;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import fi.dy.masa.malilib.network.handler.server.IPluginServerPlayHandler;
+import fi.dy.masa.malilib.network.server.IPluginServerPlayHandler;
 import fi.dy.masa.malilib.network.payload.PayloadType;
 
 public interface IDataProvider
