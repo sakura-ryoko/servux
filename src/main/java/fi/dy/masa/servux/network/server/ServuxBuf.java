@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.channel;
+package fi.dy.masa.servux.network.server;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.PacketByteBuf;

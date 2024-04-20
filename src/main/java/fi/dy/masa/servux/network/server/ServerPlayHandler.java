@@ -5,7 +5,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
-import fi.dy.masa.servux.network.channel.ServuxBuf;
 
 /**
  * The Server Network Play handler

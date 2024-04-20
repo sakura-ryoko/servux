@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.channel;
+package fi.dy.masa.servux.network.handler;
 
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -24,11 +24,20 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         }
     };
     public static ServuxStructuresHandler<ServuxStructuresPayload> getInstance() { return INSTANCE; }
+
+    public static final Identifier CHANNEL_ID = new Identifier("servux", "structures");
+    public static final int PROTOCOL_VERSION = 2;
+    public static final int PACKET_S2C_METADATA = 1;
+    public static final int PACKET_S2C_STRUCTURE_DATA = 2;
+    public static final int PACKET_C2S_STRUCTURES_REGISTER = 3;
+    public static final int PACKET_C2S_STRUCTURES_UNREGISTER = 4;
+    public static final int PACKET_S2C_SPAWN_METADATA = 10;
+    public static final int PACKET_C2S_REQUEST_SPAWN_METADATA = 11;
     private boolean servuxRegistered;
     private boolean payloadRegistered = false;
 
     @Override
-    public Identifier getPayloadChannel() { return PacketType.Structures.CHANNEL_ID; }
+    public Identifier getPayloadChannel() { return CHANNEL_ID; }
 
     @Override
     public boolean isPlayRegistered(Identifier channel)
@@ -46,15 +55,15 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     {
         int packetType = data.getInt("packetType");
 
-        if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_REGISTER)
+        if (packetType == PACKET_C2S_STRUCTURES_REGISTER)
         {
             StructureDataProvider.INSTANCE.register(player);
         }
-        else if (packetType == PacketType.Structures.PACKET_C2S_REQUEST_SPAWN_METADATA)
+        else if (packetType == PACKET_C2S_REQUEST_SPAWN_METADATA)
         {
             StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
         }
-        else if (packetType == PacketType.Structures.PACKET_C2S_STRUCTURES_UNREGISTER)
+        else if (packetType == PACKET_C2S_STRUCTURES_UNREGISTER)
         {
             StructureDataProvider.INSTANCE.unregister(player);
         }
