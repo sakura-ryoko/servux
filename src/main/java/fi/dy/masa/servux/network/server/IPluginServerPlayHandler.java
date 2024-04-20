@@ -16,6 +16,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
 {
     Identifier getPayloadChannel();
     boolean isPlayRegistered(Identifier channel);
+    default void setPlayRegistered(Identifier channel) {}
     default void reset(Identifier channel) {}
     default void registerPlayPayload(Identifier channel) {}
     default void registerPlayHandler(Identifier channel) {}

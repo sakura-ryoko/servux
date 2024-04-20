@@ -51,6 +51,15 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
+    public void setPlayRegistered(Identifier channel)
+    {
+        if (channel.equals(this.getPayloadChannel()))
+        {
+            this.payloadRegistered = true;
+        }
+    }
+
+    @Override
     public void decodeNbtCompound(Identifier channel, NbtCompound data, ServerPlayerEntity player)
     {
         int packetType = data.getInt("packetType");
@@ -87,13 +96,16 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     {
         Servux.logger.error("registerPlayPayload() called for {}", channel.toString());
 
-        if (this.servuxRegistered == false && this.payloadRegistered == false)
+        if (this.servuxRegistered == false && this.payloadRegistered == false &&
+        ServerPlayHandler.getInstance().isServerPlayChannelRegistered(this) == false)
         {
+            Servux.logger.error("registerPlayPayload() registering for {}", channel.toString());
+
             PayloadTypeRegistry.playC2S().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
             PayloadTypeRegistry.playS2C().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
-
-            this.payloadRegistered = true;
         }
+
+        this.payloadRegistered = true;
     }
 
     @Override
@@ -143,12 +155,10 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public <P extends CustomPayload> void sendPlayPayload(P payload, ServerPlayerEntity player)
     {
-        if (payload.getId().id().equals(this.getPayloadChannel()) && this.payloadRegistered)
+        if (payload.getId().id().equals(this.getPayloadChannel()) && this.payloadRegistered &&
+            ServerPlayNetworking.canSend(player, payload.getId()))
         {
-            if (ServerPlayNetworking.canSend(player, payload.getId()))
-            {
-                ServerPlayNetworking.send(player, payload);
-            }
+            ServerPlayNetworking.send(player, payload);
         }
     }
 

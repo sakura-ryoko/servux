@@ -25,18 +25,39 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     @SuppressWarnings("unchecked")
     public <P extends CustomPayload> void registerServerPlayHandler(IPluginServerPlayHandler<P> handler)
     {
+        boolean isRegistered = this.isServerPlayChannelRegistered(handler);
         Identifier channel = handler.getPayloadChannel();
 
         if (this.handlers.containsEntry(channel, handler) == false)
         {
             this.handlers.put(channel, (IPluginServerPlayHandler<T>) handler);
 
-            if (handler.isPlayRegistered(channel) == false)
+            if (handler.isPlayRegistered(channel) == false && isRegistered == false)
             {
+                // Only register if another handler isn't already registered for this channel ID.
                 handler.registerPlayPayload(channel);
+                handler.registerPlayHandler(channel);
             }
-            handler.registerPlayHandler(channel);
+
+            handler.setPlayRegistered(channel);
         }
+    }
+
+    @Override
+    public <P extends CustomPayload> boolean isServerPlayChannelRegistered(IPluginServerPlayHandler<P> handler)
+    {
+        Identifier channel = handler.getPayloadChannel();
+        boolean isRegistered = false;
+
+        for (IPluginServerPlayHandler<T> handlerEnt : this.handlers.get(channel))
+        {
+            if (isRegistered == false)
+            {
+                isRegistered = handlerEnt.isPlayRegistered(channel);
+            }
+        }
+
+        return isRegistered;
     }
 
     @Override
