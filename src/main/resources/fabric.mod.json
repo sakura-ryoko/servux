@@ -17,7 +17,7 @@
 		"discord": "https://discordapp.com/channels/211786369951989762/453662800460644354/"
 	},
 
-	"environment": "*",
+	"environment": "server",
 
 	"entrypoints": {
 		"main": [
@@ -30,13 +30,7 @@
 	],
 
 	"depends": {
-		"minecraft": ">=1.20.5-rc.1",
-		"fabric-networking-api-v1": ">=4.0.7",
-		"malilib": ">=0.19.0-rc1"
-	},
-	"custom": {
-		"modmenu": {
-			"parent": "malilib"
-		}
+		"minecraft": ">=1.20.5-rc.2",
+		"fabric-networking-api-v1": ">=4.0.7"
 	}
 }

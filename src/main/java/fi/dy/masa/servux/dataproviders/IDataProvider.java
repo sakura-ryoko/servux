@@ -2,8 +2,7 @@ package fi.dy.masa.servux.dataproviders;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import fi.dy.masa.malilib.network.server.IPluginServerPlayHandler;
-import fi.dy.masa.malilib.network.payload.PayloadType;
+import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
 
 public interface IDataProvider
 {
@@ -31,13 +30,6 @@ public interface IDataProvider
      * @return
      */
     Identifier getNetworkChannel();
-
-    /**
-     * Returns the network payload type used by this data provider to listen
-     * for incoming data requests and to respond and send the requested data.
-     * @return
-     */
-    PayloadType getPayload();
 
     /**
      * Returns the current protocol version this provider supports

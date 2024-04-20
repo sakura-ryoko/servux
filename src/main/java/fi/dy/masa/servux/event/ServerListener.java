@@ -1,8 +1,8 @@
 package fi.dy.masa.servux.event;
 
 import net.minecraft.server.MinecraftServer;
-import fi.dy.masa.malilib.interfaces.IServerListener;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
+import fi.dy.masa.servux.interfaces.IServerListener;
 
 public class ServerListener implements IServerListener
 {
@@ -19,8 +19,14 @@ public class ServerListener implements IServerListener
     }
 
     @Override
-    public void onServerStopping(MinecraftServer minecraftServer)
+    public void onServerStopping(MinecraftServer server)
     {
         DataProviderManager.INSTANCE.writeToConfig();
+    }
+
+    @Override
+    public void onServerStopped(MinecraftServer server)
+    {
+        // NO-OP
     }
 }

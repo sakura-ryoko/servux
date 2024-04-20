@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.profiler.Profiler;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.event.ServerHandler;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer
@@ -44,5 +45,29 @@ public abstract class MixinMinecraftServer
         {
             StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
         }
+    }
+
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"), method = "runServer")
+    private void onServerStarting(CallbackInfo ci)
+    {
+        ((ServerHandler) ServerHandler.getInstance()).onServerStarting((MinecraftServer) (Object) this);
+    }
+
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;createMetadata()Lnet/minecraft/server/ServerMetadata;", ordinal = 0), method = "runServer")
+    private void onServerStarted(CallbackInfo ci)
+    {
+        ((ServerHandler) ServerHandler.getInstance()).onServerStarted((MinecraftServer) (Object) this);
+    }
+
+    @Inject(at = @At("HEAD"), method = "shutdown")
+    private void onServerStopping(CallbackInfo info)
+    {
+        ((ServerHandler) ServerHandler.getInstance()).onServerStopping((MinecraftServer) (Object) this);
+    }
+
+    @Inject(at = @At("TAIL"), method = "shutdown")
+    private void onServerStopped(CallbackInfo info)
+    {
+        ((ServerHandler) ServerHandler.getInstance()).onServerStopped((MinecraftServer) (Object) this);
     }
 }
