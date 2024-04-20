@@ -34,9 +34,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
 
             if (handler.isPlayRegistered(channel) == false && isRegistered == false)
             {
-                // Only register if another handler isn't already registered for this channel ID.
                 handler.registerPlayPayload(channel);
-                handler.registerPlayHandler(channel);
             }
 
             handler.setPlayRegistered(channel);
@@ -130,7 +128,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeC2SNbtCompound(Identifier channel, NbtCompound data, ServerPlayerEntity player)
+    public void decodeNbtCompound(Identifier channel, NbtCompound data, ServerPlayerEntity player)
     {
         if (this.handlers.isEmpty() == false)
         {
@@ -144,7 +142,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeC2SByteBuf(Identifier channel, ServuxBuf data, ServerPlayerEntity player)
+    public void decodeByteBuf(Identifier channel, ServuxBuf data, ServerPlayerEntity player)
     {
         if (this.handlers.isEmpty() == false)
         {
@@ -158,7 +156,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeC2SObject(Identifier channel, Object data, ServerPlayerEntity player)
+    public void decodeObject(Identifier channel, Object data, ServerPlayerEntity player)
     {
         if (this.handlers.isEmpty() == false)
         {

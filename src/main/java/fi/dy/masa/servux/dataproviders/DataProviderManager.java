@@ -9,9 +9,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.server.ServerPlayHandler;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
@@ -41,7 +38,7 @@ public class DataProviderManager
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
-            Servux.logger.info("registerDataProvider: {}", provider);
+            //Servux.logger.info("registerDataProvider: {}", provider);
 
             return true;
         }
@@ -62,9 +59,8 @@ public class DataProviderManager
 
         if (enabled || wasEnabled != enabled)
         {
-            Servux.logger.info("setProviderEnabled: {} ({})", enabled, provider);
+            //Servux.logger.info("setProviderEnabled: {} ({})", enabled, provider);
             provider.setEnabled(enabled);
-
             this.updatePacketHandlerRegistration(provider);
 
             if (enabled && provider.shouldTick() && this.providersTicking.contains(provider) == false)
@@ -106,15 +102,15 @@ public class DataProviderManager
 
     protected void updatePacketHandlerRegistration(IDataProvider provider)
     {
-        IPluginServerPlayHandler<?> handler = provider.getPacketHandler();
-
         if (provider.isEnabled())
         {
-            ServerPlayHandler.getInstance().registerServerPlayHandler(handler);
+            provider.registerHandler();
+            provider.getPacketHandler().registerPlayHandler(provider.getNetworkChannel());
         }
         else
         {
-            ServerPlayHandler.getInstance().unregisterServerPlayHandler(handler);
+            provider.getPacketHandler().unregisterPlayHandler(provider.getNetworkChannel());
+            provider.unregisterHandler();
         }
     }
 

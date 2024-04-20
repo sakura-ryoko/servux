@@ -42,9 +42,9 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public boolean isPlayRegistered(Identifier channel)
     {
-        if (channel.equals(this.getPayloadChannel()))
+        if (channel.equals(getPayloadChannel()))
         {
-            return this.payloadRegistered;
+            return payloadRegistered;
         }
 
         return false;
@@ -66,6 +66,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
         if (packetType == PACKET_C2S_STRUCTURES_REGISTER)
         {
+            StructureDataProvider.INSTANCE.unregister(player);
             StructureDataProvider.INSTANCE.register(player);
         }
         else if (packetType == PACKET_C2S_REQUEST_SPAWN_METADATA)
@@ -75,6 +76,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         else if (packetType == PACKET_C2S_STRUCTURES_UNREGISTER)
         {
             StructureDataProvider.INSTANCE.unregister(player);
+            StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
         }
         else
         {
@@ -94,15 +96,13 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void registerPlayPayload(Identifier channel)
     {
-        Servux.logger.error("registerPlayPayload() called for {}", channel.toString());
-
         if (this.servuxRegistered == false && this.payloadRegistered == false &&
         ServerPlayHandler.getInstance().isServerPlayChannelRegistered(this) == false)
         {
-            Servux.logger.error("registerPlayPayload() registering for {}", channel.toString());
+            //Servux.logger.info("registerPlayPayload() registering for {}", channel.toString());
 
-            PayloadTypeRegistry.playC2S().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
             PayloadTypeRegistry.playS2C().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
+            PayloadTypeRegistry.playC2S().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
         }
 
         this.payloadRegistered = true;
@@ -112,10 +112,10 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @SuppressWarnings("unchecked")
     public void registerPlayHandler(Identifier channel)
     {
-        Servux.logger.error("registerPlayHandler() called for {}", channel.toString());
-
         if (channel.equals(this.getPayloadChannel()) && this.payloadRegistered)
         {
+            //Servux.logger.info("registerPlayHandler() called for {}", channel.toString());
+
             ServerPlayNetworking.registerGlobalReceiver((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE, this);
             this.servuxRegistered = true;
         }
@@ -124,12 +124,11 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void unregisterPlayHandler(Identifier channel)
     {
-        Servux.logger.error("unregisterPlayHandler() called for {}", channel.toString());
-
         if (channel.equals(this.getPayloadChannel()) && this.payloadRegistered)
         {
-            reset(channel);
+            //Servux.logger.info("unregisterPlayHandler() called for {}", channel.toString());
 
+            this.servuxRegistered = false;
             ServerPlayNetworking.unregisterGlobalReceiver(ServuxStructuresPayload.TYPE.id());
         }
     }
@@ -139,10 +138,9 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     {
         if (payload.getId().id().equals(this.getPayloadChannel()))
         {
-            ServuxStructuresPayload packet = (ServuxStructuresPayload) payload;
             ServerPlayerEntity player = ctx.player();
 
-            ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeC2SNbtCompound(this.getPayloadChannel(), packet.data(), player);
+            ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeNbtCompound(CHANNEL_ID, ((ServuxStructuresPayload) payload).data(), player);
         }
     }
 

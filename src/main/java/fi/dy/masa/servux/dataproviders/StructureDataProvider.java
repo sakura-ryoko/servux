@@ -22,10 +22,10 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.structure.Structure;
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.handler.ServuxStructuresHandler;
 import fi.dy.masa.servux.network.handler.ServuxStructuresPayload;
 import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
+import fi.dy.masa.servux.network.server.ServerPlayHandler;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -42,7 +42,7 @@ public class StructureDataProvider extends DataProviderBase
     protected int retainDistance;
 
     // FIXME --> Move out of structures channel in the future
-    private BlockPos spawnPos = new BlockPos(0, 0, 0);
+    private BlockPos spawnPos = BlockPos.ORIGIN;
     private int spawnChunkRadius = -1;
     private boolean refreshSpawnMetadata;
 
@@ -70,6 +70,18 @@ public class StructureDataProvider extends DataProviderBase
     public void setEnabled(boolean toggle)
     {
         this.enabled = toggle;
+    }
+
+    @Override
+    public void registerHandler()
+    {
+        ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
+    }
+
+    @Override
+    public void unregisterHandler()
+    {
+        ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
     }
 
     @Override
@@ -165,7 +177,7 @@ public class StructureDataProvider extends DataProviderBase
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             int tickCounter = server.getTicks();
 
-            Servux.logger.info("registering structures for player {}", player.getName().getLiteralString());
+            //Servux.logger.info("registering structures for player {}", player.getName().getLiteralString());
 
             ServerPlayNetworkHandler handler = player.networkHandler;
 
@@ -189,7 +201,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean unregister(ServerPlayerEntity player)
     {
-        Servux.logger.info("unregistering structures for player {}", player.getName().getLiteralString());
+        //Servux.logger.info("unregistering structures for player {}", player.getName().getLiteralString());
 
         return this.registeredPlayers.remove(player.getUuid()) != null;
     }
@@ -204,8 +216,8 @@ public class StructureDataProvider extends DataProviderBase
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
-        Servux.logger.info("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
-        this.sendStructures(player, references, tickCounter);
+        //Servux.logger.info("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
+        this.sendStructures(player, references, tickCounter, false);
     }
 
     protected void addChunkTimeoutIfHasReferences(final UUID uuid, WorldChunk chunk, final int tickCounter)
@@ -239,7 +251,7 @@ public class StructureDataProvider extends DataProviderBase
                                         final Map<Structure, LongSet> references,
                                         final int tickCounter)
     {
-        Servux.logger.info("StructureDataProvider#addOrRefreshTimeouts: references: {}", references.size());
+        //Servux.logger.info("StructureDataProvider#addOrRefreshTimeouts: references: {}", references.size());
         Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
         for (LongSet chunks : references.values())
@@ -259,7 +271,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (map != null)
         {
-            Servux.logger.info("StructureDataProvider#refreshTrackedChunks: timeouts: {}", map.size());
+            //Servux.logger.info("StructureDataProvider#refreshTrackedChunks: timeouts: {}", map.size());
             this.sendAndRefreshExpiredStructures(player, map, tickCounter);
         }
     }
@@ -311,11 +323,11 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            Servux.logger.info("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
+            //Servux.logger.info("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
 
             if (references.isEmpty() == false)
             {
-                this.sendStructures(player, references, tickCounter);
+                this.sendStructures(player, references, tickCounter, true);
             }
         }
     }
@@ -413,7 +425,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        Servux.logger.info("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
+        //Servux.logger.info("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
         return starts;
     }
 
@@ -430,13 +442,14 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        Servux.logger.info("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
+        //Servux.logger.info("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
         return references;
     }
 
     protected void sendStructures(ServerPlayerEntity player,
                                   Map<Structure, LongSet> references,
-                                  int tickCounter)
+                                  int tickCounter,
+                                  boolean useApi)
     {
         ServerWorld world = player.getServerWorld();
         Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
@@ -446,7 +459,7 @@ public class StructureDataProvider extends DataProviderBase
             this.addOrRefreshTimeouts(player.getUuid(), references, tickCounter);
 
             NbtList structureList = this.getStructureList(starts, world);
-            Servux.logger.info("StructureDataProvider#sendStructures(): starts: {} -> structureList: {} refs: {}", starts.size(), structureList.size(), references.keySet());
+            //Servux.logger.info("StructureDataProvider#sendStructures(): starts: {} -> structureList: {} refs: {}", starts.size(), structureList.size(), references.keySet());
 
             if (this.registeredPlayers.containsKey(player.getUuid()))
             {
@@ -454,7 +467,14 @@ public class StructureDataProvider extends DataProviderBase
                 tag.put("Structures", structureList);
                 tag.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_STRUCTURE_DATA);
 
-                HANDLER.encodeNbtCompound(tag, player);
+                if (useApi)
+                {
+                    HANDLER.encodeNbtCompound(tag, player);
+                }
+                else
+                {
+                    HANDLER.sendPlayPayload(new ServuxStructuresPayload(tag), player.networkHandler);
+                }
             }
         }
     }
@@ -494,7 +514,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         if (this.spawnPos == null)
         {
-            this.setSpawnPos(new BlockPos(0, 0, 0));
+            this.setSpawnPos(BlockPos.ORIGIN);
         }
 
         return this.spawnPos;
@@ -512,7 +532,7 @@ public class StructureDataProvider extends DataProviderBase
             this.metadata.putInt("spawnPosZ", spawnPos.getZ());
             this.refreshSpawnMetadata = true;
 
-            Servux.logger.info("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
+            //Servux.logger.info("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
         }
 
         this.spawnPos = spawnPos;
@@ -536,7 +556,7 @@ public class StructureDataProvider extends DataProviderBase
             this.metadata.putInt("spawnChunkRadius", radius);
             this.refreshSpawnMetadata = true;
 
-            Servux.logger.info("setSpawnPos(): updating Spawn Chunk Radius [{}] -> [{}]", this.spawnChunkRadius, radius);
+            //Servux.logger.info("setSpawnPos(): updating Spawn Chunk Radius [{}] -> [{}]", this.spawnChunkRadius, radius);
         }
 
         this.spawnChunkRadius = radius;
