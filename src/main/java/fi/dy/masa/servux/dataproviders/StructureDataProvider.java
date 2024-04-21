@@ -522,7 +522,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public void setSpawnPos(BlockPos spawnPos)
     {
-        if (this.spawnPos != spawnPos)
+        if (this.spawnPos.equals(spawnPos) == false)
         {
             this.metadata.remove("spawnPosX");
             this.metadata.remove("spawnPosY");
