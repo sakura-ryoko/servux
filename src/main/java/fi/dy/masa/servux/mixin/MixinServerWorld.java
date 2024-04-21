@@ -17,7 +17,7 @@ public class MixinServerWorld
     @Inject(method = "setSpawnPos", at = @At("TAIL"))
     private void servux_onSetSpawnPos(BlockPos pos, float angle, CallbackInfo ci)
     {
-        if (StructureDataProvider.INSTANCE.getSpawnPos() != pos)
+        if (StructureDataProvider.INSTANCE.getSpawnPos().equals(pos) == false)
         {
             StructureDataProvider.INSTANCE.setSpawnPos(pos);
         }

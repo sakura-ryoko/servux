@@ -37,7 +37,7 @@ public abstract class MixinMinecraftServer
     private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
                                       ServerWorld serverWorld, BlockPos blockPos, ServerChunkManager serverChunkManager, int i)
     {
-        if (StructureDataProvider.INSTANCE.getSpawnPos() != blockPos)
+        if (StructureDataProvider.INSTANCE.getSpawnPos().equals(blockPos) == false)
         {
             StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
         }
