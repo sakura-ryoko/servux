@@ -59,25 +59,20 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data)
     {
-        int packetType = data.getInt("packetType");
-
-        if (packetType == PACKET_C2S_STRUCTURES_REGISTER)
+        switch (data.getInt("packetType"))
         {
-            StructureDataProvider.INSTANCE.unregister(player);
-            StructureDataProvider.INSTANCE.register(player);
-        }
-        else if (packetType == PACKET_C2S_REQUEST_SPAWN_METADATA)
-        {
-            StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
-        }
-        else if (packetType == PACKET_C2S_STRUCTURES_UNREGISTER)
-        {
-            StructureDataProvider.INSTANCE.unregister(player);
-            StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
-        }
-        else
-        {
-            Servux.logger.warn("ServuxStructuresHandler#decodeC2SNbtCompound(): Invalid packetType from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
+            case PACKET_C2S_STRUCTURES_REGISTER ->
+            {
+                StructureDataProvider.INSTANCE.unregister(player);
+                StructureDataProvider.INSTANCE.register(player);
+            }
+            case PACKET_C2S_REQUEST_SPAWN_METADATA -> StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
+            case PACKET_C2S_STRUCTURES_UNREGISTER ->
+            {
+                StructureDataProvider.INSTANCE.unregister(player);
+                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, data);
+            }
+            default -> Servux.logger.warn("ServuxStructuresHandler#decodeC2SNbtCompound(): Invalid packetType from player: {}, of size in bytes: {}.", player.getName(), data.getSizeInBytes());
         }
     }
 
