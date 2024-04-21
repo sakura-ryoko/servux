@@ -128,13 +128,13 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeNbtCompound(Identifier channel, NbtCompound data, ServerPlayerEntity player)
+    public void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data)
     {
         if (this.handlers.isEmpty() == false)
         {
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
             {
-                handler.decodeNbtCompound(channel, data, player);
+                handler.decodeNbtCompound(channel, player, data);
             }
         }
     }
@@ -142,13 +142,13 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeByteBuf(Identifier channel, ServuxBuf data, ServerPlayerEntity player)
+    public void decodeByteBuf(Identifier channel, ServerPlayerEntity player, ServuxBuf data)
     {
         if (this.handlers.isEmpty() == false)
         {
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
             {
-                handler.decodeByteBuf(channel, data, player);
+                handler.decodeByteBuf(channel, player, data);
             }
         }
     }
@@ -156,13 +156,13 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeObject(Identifier channel, Object data, ServerPlayerEntity player)
+    public void decodeObjects(Identifier channel, ServerPlayerEntity player, Object... args)
     {
         if (this.handlers.isEmpty() == false)
         {
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
             {
-                handler.decodeObject(channel, data, player);
+                handler.decodeObjects(channel, player, args);
             }
         }
     }

@@ -188,7 +188,7 @@ public class StructureDataProvider extends DataProviderBase
                 nbt.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_METADATA);
 
                 // Using the networkHandler method allows this to work
-                HANDLER.sendPlayPayload(new ServuxStructuresPayload(nbt), handler);
+                HANDLER.sendPlayPayload(handler, new ServuxStructuresPayload(nbt));
 
                 this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
             }
@@ -469,11 +469,11 @@ public class StructureDataProvider extends DataProviderBase
 
                 if (useApi)
                 {
-                    HANDLER.encodeNbtCompound(tag, player);
+                    HANDLER.encodeNbtCompound(player, tag);
                 }
                 else
                 {
-                    HANDLER.sendPlayPayload(new ServuxStructuresPayload(tag), player.networkHandler);
+                    HANDLER.sendPlayPayload(player.networkHandler, new ServuxStructuresPayload(tag));
                 }
             }
         }
@@ -507,7 +507,7 @@ public class StructureDataProvider extends DataProviderBase
         nbt.putInt("spawnPosZ", spawnPos.getZ());
         nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
 
-        HANDLER.encodeNbtCompound(nbt, player);
+        HANDLER.encodeNbtCompound(player, nbt);
     }
 
     public BlockPos getSpawnPos()

@@ -4,9 +4,6 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
@@ -60,7 +57,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
-    public void decodeNbtCompound(Identifier channel, NbtCompound data, ServerPlayerEntity player)
+    public void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data)
     {
         int packetType = data.getInt("packetType");
 
@@ -140,37 +137,13 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         {
             ServerPlayerEntity player = ctx.player();
 
-            ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeNbtCompound(CHANNEL_ID, ((ServuxStructuresPayload) payload).data(), player);
+            ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeNbtCompound(CHANNEL_ID, player, ((ServuxStructuresPayload) payload).data());
         }
     }
 
     @Override
-    public void encodeNbtCompound(NbtCompound data, ServerPlayerEntity player)
+    public void encodeNbtCompound(ServerPlayerEntity player, NbtCompound data)
     {
-        ServuxStructuresHandler.INSTANCE.sendPlayPayload(new ServuxStructuresPayload(data), player);
-    }
-
-    @Override
-    public <P extends CustomPayload> void sendPlayPayload(P payload, ServerPlayerEntity player)
-    {
-        if (payload.getId().id().equals(this.getPayloadChannel()) && this.payloadRegistered &&
-            ServerPlayNetworking.canSend(player, payload.getId()))
-        {
-            ServerPlayNetworking.send(player, payload);
-        }
-    }
-
-    @Override
-    public <P extends CustomPayload> void sendPlayPayload(P payload, ServerPlayNetworkHandler handler)
-    {
-        if (payload.getId().id().equals(this.getPayloadChannel()) && this.payloadRegistered)
-        {
-            Packet<?> packet = new CustomPayloadS2CPacket(payload);
-
-            if (handler != null && handler.accepts(packet))
-            {
-                handler.sendPacket(packet);
-            }
-        }
+        ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPayload(data));
     }
 }
