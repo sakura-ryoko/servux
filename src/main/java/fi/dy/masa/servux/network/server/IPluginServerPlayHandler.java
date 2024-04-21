@@ -46,6 +46,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * This is called immediately upon HANDLER registration.
      * See the fabric-networking-api-v1 Java Docs under PayloadTypeRegistry -> register()
      * for more information on how to do this.
+     * -
      * @param channel (Your Channel ID)
      */
     default void registerPlayPayload(Identifier channel) {}
@@ -55,6 +56,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * You can use the HANDLER itself (Singleton method), or any other class that you choose.
      * See the fabric-network-api-v1 Java Docs under ServerPlayNetworking.registerGlobalReceiver()
      * for more information on how to do this.
+     * -
      * @param channel (Your Channel ID)
      */
     default void registerPlayHandler(Identifier channel) {}
@@ -64,6 +66,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * You can use the HANDLER itself (Singleton method), or any other class that you choose.
      * See the fabric-network-api-v1 Java Docs under ServerPlayNetworking.unregisterGlobalReceiver()
      * for more information on how to do this.
+     * -
      * @param channel (Your Channel ID)
      */
     default void unregisterPlayHandler(Identifier channel) {}
@@ -79,6 +82,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
 
     /**
      * Receive Payload via the legacy "onCustomPayload" from a Network Handler Mixin interface.
+     * -
      * @param payload (Payload to decode)
      * @param handler (Network Handler that received the data)
      * @param ci (Callbackinfo for sending ci.cancel(), if wanted)
@@ -128,7 +132,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     }
 
     /**
-     * Sends the Payload to the player using the NetworkHandler interface.
+     * Sends the Payload to the player using the ServerPlayNetworkHandler interface.
      * @param handler (ServerPlayNetworkHandler)
      * @param payload (The Payload to send)
      * @param <P> (Payload Param)
