@@ -150,7 +150,7 @@ public class PayloadUtils
         return false;
     }
 
-    public static void unregisterPlayHandler(@Nonnull Identifier id)
+    public static void unregisterPlayReceiver(@Nonnull Identifier id)
     {
         ServerPlayNetworking.unregisterGlobalReceiver(id);
     }
