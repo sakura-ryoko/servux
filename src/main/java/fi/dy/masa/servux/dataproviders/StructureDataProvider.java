@@ -171,6 +171,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean register(ServerPlayerEntity player)
     {
+        // System.out.printf("register\n");
         boolean registered = false;
         MinecraftServer server = player.getServer();
         UUID uuid = player.getUuid();
@@ -179,9 +180,6 @@ public class StructureDataProvider extends DataProviderBase
         {
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             int tickCounter = server.getTicks();
-
-            //Servux.logger.info("registering structures for player {}", player.getName().getLiteralString());
-
             ServerPlayNetworkHandler handler = player.networkHandler;
 
             if (handler != null)
@@ -204,8 +202,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean unregister(ServerPlayerEntity player)
     {
-        //Servux.logger.info("unregistering structures for player {}", player.getName().getLiteralString());
-
+        // System.out.printf("unregister\n");
         return this.registeredPlayers.remove(player.getUuid()) != null;
     }
 
@@ -219,7 +216,7 @@ public class StructureDataProvider extends DataProviderBase
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
-        //Servux.logger.info("StructureDataProvider#initialSyncStructuresToPlayerWithinRange: references: {}", references.size());
+        // System.out.printf("initialSyncStructuresToPlayerWithinRange: references: %d\n", references.size());
         this.sendStructures(player, references, tickCounter, false);
     }
 
@@ -254,7 +251,7 @@ public class StructureDataProvider extends DataProviderBase
                                         final Map<Structure, LongSet> references,
                                         final int tickCounter)
     {
-        //Servux.logger.info("StructureDataProvider#addOrRefreshTimeouts: references: {}", references.size());
+        // System.out.printf("addOrRefreshTimeouts: references: %d\n", references.size());
         Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
         for (LongSet chunks : references.values())
@@ -274,7 +271,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (map != null)
         {
-            //Servux.logger.info("StructureDataProvider#refreshTrackedChunks: timeouts: {}", map.size());
+            // System.out.printf("refreshTrackedChunks: timeouts: %d\n", map.size());
             this.sendAndRefreshExpiredStructures(player, map, tickCounter);
         }
     }
@@ -326,7 +323,7 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            //Servux.logger.info("StructureDataProvider#sendAndRefreshExpiredStructures: positionsToUpdate: {} -> references: {}, to: {}", positionsToUpdate.size(), references.size(), this.timeout);
+            // System.out.printf("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d\n", positionsToUpdate.size(), references.size(), this.timeout);
 
             if (references.isEmpty() == false)
             {
@@ -428,7 +425,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        //Servux.logger.info("StructureDataProvider#getStructureStartsFromReferences: references: {} -> starts: {}", references.size(), starts.size());
+        // System.out.printf("getStructureStartsFromReferences: references: %d -> starts: %d\n", references.size(), starts.size());
         return starts;
     }
 
@@ -445,7 +442,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        //Servux.logger.info("StructureDataProvider#getStructureReferencesWithinRange: references: {}", references.size());
+        // System.out.printf("getStructureReferencesWithinRange: references: %d\n", references.size());
         return references;
     }
 
@@ -462,7 +459,7 @@ public class StructureDataProvider extends DataProviderBase
             this.addOrRefreshTimeouts(player.getUuid(), references, tickCounter);
 
             NbtList structureList = this.getStructureList(starts, world);
-            //Servux.logger.info("StructureDataProvider#sendStructures(): starts: {} -> structureList: {} refs: {}", starts.size(), structureList.size(), references.keySet());
+            // System.out.printf("sendStructures: starts: %d -> structureList: %d. refs: %s\n", starts.size(), structureList.size(), references.keySet());
 
             if (this.registeredPlayers.containsKey(player.getUuid()))
             {

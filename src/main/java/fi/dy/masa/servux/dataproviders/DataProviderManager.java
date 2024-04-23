@@ -38,8 +38,7 @@ public class DataProviderManager
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
-            //Servux.logger.info("registerDataProvider: {}", provider);
-
+            //System.out.printf("registerDataProvider: %s\n", provider);
             return true;
         }
 
@@ -59,7 +58,7 @@ public class DataProviderManager
 
         if (enabled || wasEnabled != enabled)
         {
-            //Servux.logger.info("setProviderEnabled: {} ({})", enabled, provider);
+            //System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
             provider.setEnabled(enabled);
             this.updatePacketHandlerRegistration(provider);
 

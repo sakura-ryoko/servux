@@ -6,7 +6,6 @@
 
 	"description": "Server-side support and integration for masa's client mods",
 	"license": "LGPLv3",
-	"icon": "assets/servux/icon.png",
 	"authors": [
 		"masa"
 	],
