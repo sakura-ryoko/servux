@@ -15,7 +15,6 @@ import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
-import fi.dy.masa.servux.Servux;
 
 /**
  * Interface for ServerPlayHandler
@@ -70,17 +69,29 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     {
         if (channel.equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()) == false)
         {
-            switch (direction)
+            try
             {
-                case TO_SERVER, FROM_CLIENT -> PayloadTypeRegistry.playC2S().register(id, codec);
-                case FROM_SERVER, TO_CLIENT -> PayloadTypeRegistry.playS2C().register(id, codec);
-                default ->
+                switch (direction)
                 {
-                    PayloadTypeRegistry.playC2S().register(id, codec);
-                    PayloadTypeRegistry.playS2C().register(id, codec);
+                    case TO_SERVER, FROM_CLIENT -> PayloadTypeRegistry.playC2S().register(id, codec);
+                    case FROM_SERVER, TO_CLIENT -> PayloadTypeRegistry.playS2C().register(id, codec);
+                    default ->
+                    {
+                        PayloadTypeRegistry.playC2S().register(id, codec);
+                        PayloadTypeRegistry.playS2C().register(id, codec);
+                    }
                 }
             }
+            catch (IllegalArgumentException e)
+            {
+                throw new IllegalArgumentException("registerPlayPayload: Channel ID "+ channel +" is already registered");
+            }
+
             this.setPlayRegistered(channel);
+        }
+        else
+        {
+            throw new IllegalArgumentException("registerPlayPayload: Channel ID "+ channel +" is invalid, or it is already registered");
         }
     }
 
@@ -106,15 +117,13 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             }
             catch (IllegalArgumentException e)
             {
-                Servux.logger.error("registerPlayReceiver IllegalArgumentException: Payload not registered");
+                throw new IllegalArgumentException("registerPlayReceiver: Channel ID " + channel + " payload has not been registered");
             }
         }
         else
         {
-            Servux.logger.error("registerPlayReceiver: Invalid channel ID");
+            throw new IllegalArgumentException("registerPlayReceiver: Channel ID "+ channel +" is invalid, or not registered");
         }
-
-        return false;
     }
 
     /**
