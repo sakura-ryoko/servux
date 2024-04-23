@@ -47,13 +47,13 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * Sets your HANDLER as registered.
      * @param channel (Your Channel ID)
      */
-    default void setPlayRegistered(Identifier channel) {}
+    void setPlayRegistered(Identifier channel);
 
     /**
      * Send your HANDLER a global reset() event, such as when the server is shutting down.
      * @param channel (Your Channel ID)
      */
-    default void reset(Identifier channel) {}
+    void reset(Identifier channel);
 
     /**
      * Register your Payload with Fabric API.
@@ -87,6 +87,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             }
 
             this.setPlayRegistered(this.getPayloadChannel());
+            return;
         }
 
         Servux.logger.error("registerPlayPayload: channel ID [{}] is invalid, or it is already registered", this.getPayloadChannel());
@@ -137,7 +138,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param payload (Payload to decode)
      * @param ctx (Fabric Context)
      */
-    default void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx) {}
+    void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx);
 
     /**
      * Receive Payload via the legacy "onCustomPayload" from a Network Handler Mixin interface.
