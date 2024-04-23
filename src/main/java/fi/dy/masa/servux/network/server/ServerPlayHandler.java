@@ -41,7 +41,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
         if (this.handlers.remove(channel, handler))
         {
             handler.reset(channel);
-            handler.unregisterPlayReceiver(channel);
+            handler.unregisterPlayReceiver();
         }
     }
 

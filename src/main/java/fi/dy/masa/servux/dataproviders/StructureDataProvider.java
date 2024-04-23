@@ -76,14 +76,14 @@ public class StructureDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        HANDLER.registerPlayPayload(this.getNetworkChannel(), IPluginServerPlayHandler.BOTH_SERVER, ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
-        HANDLER.registerPlayReceiver(this.getNetworkChannel(), ServuxStructuresPayload.TYPE, HANDLER::receivePlayPayload);
+        HANDLER.registerPlayPayload(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        HANDLER.registerPlayReceiver(ServuxStructuresPayload.TYPE, HANDLER::receivePlayPayload);
     }
 
     @Override
     public void unregisterHandler()
     {
-        HANDLER.unregisterPlayReceiver(this.getNetworkChannel());
+        HANDLER.unregisterPlayReceiver();
         ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
     }
 

@@ -15,6 +15,7 @@ import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import fi.dy.masa.servux.Servux;
 
 /**
  * Interface for ServerPlayHandler
@@ -59,15 +60,13 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * See the fabric-networking-api-v1 Java Docs under PayloadTypeRegistry -> register()
      * for more information on how to do this.
      * -
-     * @param channel (Your Channel ID)
      * @param direction (Payload Direction)
      * @param id (Your Payload Id<T>)
      * @param codec (Your Payload's CODEC)
      */
-    default void registerPlayPayload(Identifier channel, int direction,
-                                     @Nonnull CustomPayload.Id<T> id, @Nonnull PacketCodec<? super RegistryByteBuf,T> codec)
+    default void registerPlayPayload(@Nonnull CustomPayload.Id<T> id, @Nonnull PacketCodec<? super RegistryByteBuf,T> codec, int direction)
     {
-        if (channel.equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()) == false)
+        if (this.isPlayRegistered(this.getPayloadChannel()) == false)
         {
             try
             {
@@ -84,15 +83,13 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             }
             catch (IllegalArgumentException e)
             {
-                throw new IllegalArgumentException("registerPlayPayload: Channel ID "+ channel +" is already registered");
+                Servux.logger.error("registerPlayPayload: channel ID [{}] is is already registered", this.getPayloadChannel());
             }
 
-            this.setPlayRegistered(channel);
+            this.setPlayRegistered(this.getPayloadChannel());
         }
-        else
-        {
-            throw new IllegalArgumentException("registerPlayPayload: Channel ID "+ channel +" is invalid, or it is already registered");
-        }
+
+        Servux.logger.error("registerPlayPayload: channel ID [{}] is invalid, or it is already registered", this.getPayloadChannel());
     }
 
     /**
@@ -101,15 +98,13 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * See the fabric-network-api-v1 Java Docs under ServerPlayNetworking.registerGlobalReceiver()
      * for more information on how to do this.
      * -
-     * @param channel (Your Channel ID)
      * @param id (Your Payload Id<T>)
      * @param receiver (Your Packet Receiver // if null, uses this::receivePlayPayload)
      * @return (True / False)
      */
-    default boolean registerPlayReceiver(Identifier channel,
-                                         @Nonnull CustomPayload.Id<T> id, @Nullable ServerPlayNetworking.PlayPayloadHandler<T> receiver)
+    default boolean registerPlayReceiver(@Nonnull CustomPayload.Id<T> id, @Nullable ServerPlayNetworking.PlayPayloadHandler<T> receiver)
     {
-        if (channel.equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
+        if (this.isPlayRegistered(this.getPayloadChannel()))
         {
             try
             {
@@ -117,13 +112,12 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             }
             catch (IllegalArgumentException e)
             {
-                throw new IllegalArgumentException("registerPlayReceiver: Channel ID " + channel + " payload has not been registered");
+                Servux.logger.error("registerPlayReceiver: Channel ID [{}] payload has not been registered", this.getPayloadChannel());
             }
         }
-        else
-        {
-            throw new IllegalArgumentException("registerPlayReceiver: Channel ID "+ channel +" is invalid, or not registered");
-        }
+
+        Servux.logger.error("registerPlayReceiver: Channel ID [{}] is invalid, or not registered", this.getPayloadChannel());
+        return false;
     }
 
     /**
@@ -131,15 +125,10 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * You can use the HANDLER itself (Singleton method), or any other class that you choose.
      * See the fabric-network-api-v1 Java Docs under ServerPlayNetworking.unregisterGlobalReceiver()
      * for more information on how to do this.
-     * -
-     * @param channel (Your Channel ID)
      */
-    default void unregisterPlayReceiver(Identifier channel)
+    default void unregisterPlayReceiver()
     {
-        if (channel.equals(this.getPayloadChannel()))
-        {
-            ServerPlayNetworking.unregisterGlobalReceiver(channel);
-        }
+        ServerPlayNetworking.unregisterGlobalReceiver(this.getPayloadChannel());
     }
 
     /**
