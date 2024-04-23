@@ -25,37 +25,12 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     @SuppressWarnings("unchecked")
     public <P extends CustomPayload> void registerServerPlayHandler(IPluginServerPlayHandler<P> handler)
     {
-        boolean isRegistered = this.isServerPlayChannelRegistered(handler);
         Identifier channel = handler.getPayloadChannel();
 
         if (this.handlers.containsEntry(channel, handler) == false)
         {
             this.handlers.put(channel, (IPluginServerPlayHandler<T>) handler);
-
-            if (handler.isPlayRegistered(channel) == false && isRegistered == false)
-            {
-                handler.registerPlayPayload(channel);
-            }
-
-            handler.setPlayRegistered(channel);
         }
-    }
-
-    @Override
-    public <P extends CustomPayload> boolean isServerPlayChannelRegistered(IPluginServerPlayHandler<P> handler)
-    {
-        Identifier channel = handler.getPayloadChannel();
-        boolean isRegistered = false;
-
-        for (IPluginServerPlayHandler<T> handlerEnt : this.handlers.get(channel))
-        {
-            if (isRegistered == false)
-            {
-                isRegistered = handlerEnt.isPlayRegistered(channel);
-            }
-        }
-
-        return isRegistered;
     }
 
     @Override
@@ -65,7 +40,8 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
 
         if (this.handlers.remove(channel, handler))
         {
-            handler.unregisterPlayHandler(channel);
+            handler.reset(channel);
+            handler.unregisterPlayReceiver(channel);
         }
     }
 
@@ -79,48 +55,6 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
             {
                 handler.reset(channel);
-            }
-        }
-    }
-
-    /**
-     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
-     */
-    public void registerPlayPayload(Identifier channel)
-    {
-       if (this.handlers.isEmpty() == false)
-       {
-           for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
-           {
-               handler.registerPlayPayload(channel);
-           }
-       }
-    }
-
-    /**
-     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
-     */
-    public void registerPlayHandler(Identifier channel)
-    {
-        if (this.handlers.isEmpty() == false)
-        {
-            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
-            {
-                handler.registerPlayHandler(channel);
-            }
-        }
-    }
-
-    /**
-     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
-     */
-    public void unregisterPlayHandler(Identifier channel)
-    {
-        if (this.handlers.isEmpty() == false)
-        {
-            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
-            {
-                handler.unregisterPlayHandler(channel);
             }
         }
     }
@@ -156,13 +90,69 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     /**
      * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
      */
-    public void decodeObjects(Identifier channel, ServerPlayerEntity player, Object... args)
+    public <D> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1)
     {
         if (this.handlers.isEmpty() == false)
         {
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
             {
-                handler.decodeObjects(channel, player, args);
+                handler.decodeObject(channel, player, data1);
+            }
+        }
+    }
+
+    /**
+     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
+     */
+    public <D, E> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2)
+    {
+        if (this.handlers.isEmpty() == false)
+        {
+            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
+            {
+                handler.decodeObject(channel, player, data1, data2);
+            }
+        }
+    }
+
+    /**
+     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
+     */
+    public <D, E, F> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3)
+    {
+        if (this.handlers.isEmpty() == false)
+        {
+            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
+            {
+                handler.decodeObject(channel, player, data1, data2, data3);
+            }
+        }
+    }
+
+    /**
+     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
+     */
+    public <D, E, F, G> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3, G data4)
+    {
+        if (this.handlers.isEmpty() == false)
+        {
+            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
+            {
+                handler.decodeObject(channel, player, data1, data2, data3, data4);
+            }
+        }
+    }
+
+    /**
+     * API CALLS DO NOT USE ANYWHERE ELSE (DANGEROUS!)
+     */
+    public <D, E, F, G, H> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3, G data4, H data5)
+    {
+        if (this.handlers.isEmpty() == false)
+        {
+            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
+            {
+                handler.decodeObject(channel, player, data1, data2, data3, data4, data5);
             }
         }
     }

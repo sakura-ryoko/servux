@@ -1,6 +1,5 @@
 package fi.dy.masa.servux.network.handler;
 
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
@@ -86,47 +85,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     }
 
     @Override
-    public void registerPlayPayload(Identifier channel)
-    {
-        if (this.servuxRegistered == false && this.payloadRegistered == false &&
-        ServerPlayHandler.getInstance().isServerPlayChannelRegistered(this) == false)
-        {
-            //Servux.logger.info("registerPlayPayload() registering for {}", channel.toString());
-
-            PayloadTypeRegistry.playS2C().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
-            PayloadTypeRegistry.playC2S().register(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC);
-        }
-
-        this.payloadRegistered = true;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void registerPlayHandler(Identifier channel)
-    {
-        if (channel.equals(this.getPayloadChannel()) && this.payloadRegistered)
-        {
-            //Servux.logger.info("registerPlayHandler() called for {}", channel.toString());
-
-            ServerPlayNetworking.registerGlobalReceiver((CustomPayload.Id<T>) ServuxStructuresPayload.TYPE, this);
-            this.servuxRegistered = true;
-        }
-    }
-
-    @Override
-    public void unregisterPlayHandler(Identifier channel)
-    {
-        if (channel.equals(this.getPayloadChannel()) && this.payloadRegistered)
-        {
-            //Servux.logger.info("unregisterPlayHandler() called for {}", channel.toString());
-
-            this.servuxRegistered = false;
-            ServerPlayNetworking.unregisterGlobalReceiver(ServuxStructuresPayload.TYPE.id());
-        }
-    }
-
-    @Override
-    public <P extends CustomPayload> void receivePlayPayload(P payload, ServerPlayNetworking.Context ctx)
+    public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
         if (payload.getId().id().equals(this.getPayloadChannel()))
         {

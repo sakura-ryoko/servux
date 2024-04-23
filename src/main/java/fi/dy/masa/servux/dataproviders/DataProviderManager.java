@@ -105,11 +105,9 @@ public class DataProviderManager
         if (provider.isEnabled())
         {
             provider.registerHandler();
-            provider.getPacketHandler().registerPlayHandler(provider.getNetworkChannel());
         }
         else
         {
-            provider.getPacketHandler().unregisterPlayHandler(provider.getNetworkChannel());
             provider.unregisterHandler();
         }
     }
