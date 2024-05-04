@@ -188,12 +188,16 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param player (Player to send the data to)
      * @param payload (The Payload to send)
      */
-    default void sendPlayPayload(ServerPlayerEntity player, T payload)
+    default void sendPlayPayload(@Nonnull ServerPlayerEntity player, @Nonnull T payload)
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()) &&
             ServerPlayNetworking.canSend(player, payload.getId()))
         {
             ServerPlayNetworking.send(player, payload);
+        }
+        else
+        {
+            Servux.logger.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
     }
 
@@ -202,16 +206,24 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param handler (ServerPlayNetworkHandler)
      * @param payload (The Payload to send)
      */
-    default void sendPlayPayload(ServerPlayNetworkHandler handler, T payload)
+    default void sendPlayPayload(@Nonnull ServerPlayNetworkHandler handler, @Nonnull T payload)
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
             Packet<?> packet = new CustomPayloadS2CPacket(payload);
 
-            if (handler != null && handler.accepts(packet))
+            if (handler.accepts(packet))
             {
                 handler.sendPacket(packet);
             }
+            else
+            {
+                Servux.logger.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, network handler currently does not accept packets", payload.getId().id().toString());
+            }
+        }
+        else
+        {
+            Servux.logger.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
     }
 }
