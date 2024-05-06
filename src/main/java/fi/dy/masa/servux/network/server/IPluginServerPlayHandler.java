@@ -150,7 +150,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void receivePlayPayload(T payload, ServerPlayNetworkHandler handler, CallbackInfo ci) {}
 
     /**
-     * Payload Decoder wrapper function.
+     * Payload Decoder wrapper function [OPTIONAL]
      * Implements how the data is processed after being decoded from the receivePlayPayload().
      * You can ignore these and implement your own helper class/methods.
      * These are provided as an example, and can be used in your HANDLER directly.
@@ -168,7 +168,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default <D, E, F, G, H> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3, G data4, H data5) {}
 
     /**
-     * Payload Encoder wrapper function.
+     * Payload Encoder wrapper function [OPTIONAL]
      * Implements how to encode() your Payload, then forward complete Payload to sendPlayPayload().
      * -
      * @param player (Player to send the data to)
@@ -187,26 +187,33 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * -
      * @param player (Player to send the data to)
      * @param payload (The Payload to send)
+     * @return (true/false --> for error control)
      */
-    default void sendPlayPayload(@Nonnull ServerPlayerEntity player, @Nonnull T payload)
+    default boolean sendPlayPayload(@Nonnull ServerPlayerEntity player, @Nonnull T payload)
     {
-        if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()) &&
-            ServerPlayNetworking.canSend(player, payload.getId()))
+        if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            ServerPlayNetworking.send(player, payload);
+            if (ServerPlayNetworking.canSend(player, payload.getId()))
+            {
+                ServerPlayNetworking.send(player, payload);
+                return true;
+            }
         }
         else
         {
             Servux.logger.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
+
+        return false;
     }
 
     /**
      * Sends the Payload to the player using the ServerPlayNetworkHandler interface.
      * @param handler (ServerPlayNetworkHandler)
      * @param payload (The Payload to send)
+     * @return (true/false --> for error control)
      */
-    default void sendPlayPayload(@Nonnull ServerPlayNetworkHandler handler, @Nonnull T payload)
+    default boolean sendPlayPayload(@Nonnull ServerPlayNetworkHandler handler, @Nonnull T payload)
     {
         if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
@@ -215,15 +222,14 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             if (handler.accepts(packet))
             {
                 handler.sendPacket(packet);
-            }
-            else
-            {
-                Servux.logger.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, network handler currently does not accept packets", payload.getId().id().toString());
+                return true;
             }
         }
         else
         {
             Servux.logger.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
+
+        return false;
     }
 }
