@@ -203,6 +203,8 @@ public class StructureDataProvider extends DataProviderBase
     public boolean unregister(ServerPlayerEntity player)
     {
         // System.out.printf("unregister\n");
+        HANDLER.resetFailures(this.getNetworkChannel(), player);
+
         return this.registeredPlayers.remove(player.getUuid()) != null;
     }
 
