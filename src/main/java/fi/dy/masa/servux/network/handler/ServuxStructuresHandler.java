@@ -33,7 +33,6 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     public static final int PACKET_S2C_SPAWN_METADATA = 10;
     public static final int PACKET_C2S_REQUEST_SPAWN_METADATA = 11;
 
-    private boolean servuxRegistered;
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
     private static final int MAX_FAILURES = 3;
@@ -85,9 +84,17 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void reset(Identifier channel)
     {
-        if (channel.equals(CHANNEL_ID) && this.servuxRegistered)
+        if (channel.equals(CHANNEL_ID))
         {
-            this.servuxRegistered = false;
+            this.failures.clear();
+        }
+    }
+
+    public void resetFailures(Identifier channel, ServerPlayerEntity player)
+    {
+        if (channel.equals(CHANNEL_ID))
+        {
+            this.failures.remove(player.getUuid());
         }
     }
 
