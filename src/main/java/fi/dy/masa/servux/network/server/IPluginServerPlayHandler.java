@@ -162,10 +162,6 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data) {}
     default void decodeByteBuf(Identifier channel, ServerPlayerEntity player, ServuxBuf data) {}
     default <D> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1) {}
-    default <D, E> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2) {}
-    default <D, E, F> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3) {}
-    default <D, E, F, G> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3, G data4) {}
-    default <D, E, F, G, H> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1, E data2, F data3, G data4, H data5) {}
 
     /**
      * Payload Encoder wrapper function [OPTIONAL]
@@ -177,10 +173,6 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void encodeNbtCompound(ServerPlayerEntity player, NbtCompound data) {}
     default void encodeByteBuf(ServerPlayerEntity player, ServuxBuf data) {}
     default <D> void encodeObject(ServerPlayerEntity player, D data1) {}
-    default <D, E> void encodeObject(ServerPlayerEntity player, D data1, E data2) {}
-    default <D, E, F> void encodeObject(ServerPlayerEntity player, D data1, E data2, F data3) {}
-    default <D, E, F, G> void encodeObject(ServerPlayerEntity player, D data1, E data2, F data3, G data4) {}
-    default <D, E, F, G, H> void encodeObject(ServerPlayerEntity player, D data1, E data2, F data3, G data4, H data5) {}
 
     /**
      * Sends the Payload to the player using the Fabric-API interface.
