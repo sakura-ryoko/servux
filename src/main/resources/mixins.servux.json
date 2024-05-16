@@ -7,7 +7,7 @@
                 "MixinMinecraftServer",
                 "MixinPlayerManager",
                 "MixinServerWorld",
-                "MixinThreadedAnvilChunkStorage"
+                "MixinServerChunkLoadingManager"
         ],
         "injectors": {
                 "defaultRequire": 1
