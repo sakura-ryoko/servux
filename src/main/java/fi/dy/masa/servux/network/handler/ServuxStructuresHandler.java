@@ -24,7 +24,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     };
     public static ServuxStructuresHandler<ServuxStructuresPayload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = new Identifier("servux", "structures");
+    public static final Identifier CHANNEL_ID = Identifier.of("servux", "structures");
     public static final int PROTOCOL_VERSION = 2;
     public static final int PACKET_S2C_METADATA = 1;
     public static final int PACKET_S2C_STRUCTURE_DATA = 2;
