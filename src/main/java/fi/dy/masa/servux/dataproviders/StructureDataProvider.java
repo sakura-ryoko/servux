@@ -40,8 +40,8 @@ public class StructureDataProvider extends DataProviderBase
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
-    protected final int MAX_STRUCUTRES = 8;
-    // Maximum structures in one packet (8 structures ~800k which is a lot less than the packet max)
+    protected final int MAX_STRUCUTRES = 6;
+    // Maximum structures in one packet (6 structures ~800k which is a lot less than the packet max)
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
