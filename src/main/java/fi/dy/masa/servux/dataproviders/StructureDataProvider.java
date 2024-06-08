@@ -475,15 +475,15 @@ public class StructureDataProvider extends DataProviderBase
                 for (int i = 0; i < structureList.size(); i++)
                 {
                     NbtCompound structure = structureList.getCompound(i);
-                    int structsureSize = structure.getSizeInBytes();
+                    int structureSize = structure.getSizeInBytes();
 
-                    if ((splitList.getSizeInBytes() + structsureSize + 42) > MAX_STRUCTURE_SIZE)
+                    if ((splitList.getSizeInBytes() + structureSize + 42) > MAX_STRUCTURE_SIZE)
                     {
                         this.sendStructurePacket(player, splitList, useApi);
                         splitList.clear();
                         splitList = new NbtList();
                     }
-                    if (structsureSize < MAX_STRUCTURE_SIZE)
+                    if (structureSize < MAX_STRUCTURE_SIZE)
                     {
                         splitList.add(structure);
                     }
