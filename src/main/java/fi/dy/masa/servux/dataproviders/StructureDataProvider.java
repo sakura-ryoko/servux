@@ -40,8 +40,8 @@ public class StructureDataProvider extends DataProviderBase
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
-    protected final int MAX_STRUCUTRES = 6;
-    // Maximum structures in one packet (6 structures ~800k which is a lot less than the packet max)
+    protected final int MAX_STRUCTURE_SIZE = 2097152;
+    // Maximum structure size of one Nbt packet
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -450,6 +450,9 @@ public class StructureDataProvider extends DataProviderBase
         return references;
     }
 
+    /**
+     * New method splits Structure Packets based upon MAX_STRUCTURE_SIZE
+     */
     protected void sendStructures(ServerPlayerEntity player,
                                   Map<Structure, LongSet> references,
                                   int tickCounter,
@@ -467,78 +470,49 @@ public class StructureDataProvider extends DataProviderBase
 
             if (this.registeredPlayers.containsKey(player.getUuid()))
             {
-                if (structureList.size() < this.MAX_STRUCUTRES)
-                {
-                    NbtCompound tag = new NbtCompound();
-                    tag.put("Structures", structureList);
-                    tag.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_STRUCTURE_DATA);
+                NbtList splitList = new NbtList();
 
-                    if (useApi)
+                for (int i = 0; i < structureList.size(); i++)
+                {
+                    NbtCompound structure = structureList.getCompound(i);
+                    int structsureSize = structure.getSizeInBytes();
+
+                    if ((splitList.getSizeInBytes() + structsureSize + 42) > MAX_STRUCTURE_SIZE)
                     {
-                        HANDLER.encodeNbtCompound(player, tag);
+                        this.sendStructurePacket(player, splitList, useApi);
+                        splitList.clear();
+                        splitList = new NbtList();
                     }
-                    else
+                    if (structsureSize < MAX_STRUCTURE_SIZE)
                     {
-                        HANDLER.sendPlayPayload(player.networkHandler, new ServuxStructuresPayload(tag));
+                        splitList.add(structure);
                     }
+                    // Ignore if a single Structure exceeds the allowed value (very unlikely)
                 }
-                else
+
+                if (splitList.size() > 0)
                 {
-                    NbtList listSplit = new NbtList();
-                    int total = structureList.size();
-                    int count = 0;
-
-                    //Servux.logger.warn("sendStructures(): splitting a total of {} structures", total);
-
-                    for (int i = 0; i < total; i++)
-                    {
-                        listSplit.add(structureList.get(i));
-
-                        if (count < this.MAX_STRUCUTRES)
-                        {
-                            count++;
-                        }
-                        else
-                        {
-                            //Servux.logger.warn("sendStructures(): yeeting {} // {} structures", listSplit.size(), total);
-
-                            NbtCompound tag = new NbtCompound();
-                            tag.put("Structures", listSplit);
-                            tag.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_STRUCTURE_DATA);
-
-                            if (useApi)
-                            {
-                                HANDLER.encodeNbtCompound(player, tag);
-                            }
-                            else
-                            {
-                                HANDLER.sendPlayPayload(player.networkHandler, new ServuxStructuresPayload(tag));
-                            }
-
-                            listSplit.clear();
-                            count = 0;
-                        }
-                    }
-
-                    if (listSplit.isEmpty() == false)
-                    {
-                        //Servux.logger.warn("sendStructures(): yeeting remaining {} // {} structures", listSplit.size(), total);
-
-                        NbtCompound tag = new NbtCompound();
-                        tag.put("Structures", listSplit);
-                        tag.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_STRUCTURE_DATA);
-
-                        if (useApi)
-                        {
-                            HANDLER.encodeNbtCompound(player, tag);
-                        }
-                        else
-                        {
-                            HANDLER.sendPlayPayload(player.networkHandler, new ServuxStructuresPayload(tag));
-                        }
-                    }
+                    this.sendStructurePacket(player, splitList, useApi);
                 }
             }
+        }
+    }
+
+    private void sendStructurePacket(ServerPlayerEntity player, NbtList structureList, boolean useApi)
+    {
+        //Servux.logger.warn("sendStructurePacket(): count [{}], listSize {}", structureList.size(), structureList.getSizeInBytes());
+
+        NbtCompound tag = new NbtCompound();
+        tag.put("Structures", structureList);
+        tag.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_STRUCTURE_DATA);
+
+        if (useApi)
+        {
+            HANDLER.encodeNbtCompound(player, tag);
+        }
+        else
+        {
+            HANDLER.sendPlayPayload(player.networkHandler, new ServuxStructuresPayload(tag));
         }
     }
 
