@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import io.netty.buffer.Unpooled;
-import org.jetbrains.annotations.ApiStatus;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.listener.ServerPlayPacketListener;
@@ -20,7 +20,6 @@ import net.minecraft.util.Pair;
  * @author skyrising
  *
  */
-@ApiStatus.Experimental
 public class PayloadSplitter
 {
     public static final int MAX_TOTAL_PER_PACKET_S2C = 1048576;
@@ -29,13 +28,11 @@ public class PayloadSplitter
 
     private static final Map<Pair<PacketListener, Identifier>, ReadingSession> READING_SESSIONS = new HashMap<>();
 
-    @ApiStatus.Experimental
     public static <T extends CustomPayload> boolean send(IPluginServerPlayHandler<T> handler, @Nonnull PacketByteBuf packet, ServerPlayerEntity player)
     {
         return send(handler, packet, MAX_PAYLOAD_PER_PACKET_S2C, player);
     }
 
-    @ApiStatus.Experimental
     private static <T extends CustomPayload> boolean send(IPluginServerPlayHandler<T> handler, @Nonnull PacketByteBuf packet, int payloadLimit, ServerPlayerEntity player)
     {
         int len = packet.writerIndex();
@@ -65,7 +62,6 @@ public class PayloadSplitter
     /**
      * Not used for receiving under Servux, but just leaving this here for extending
      */
-    @ApiStatus.Experimental
     public static <T extends CustomPayload> PacketByteBuf receive(IPluginServerPlayHandler<T> handler,
                                                          PacketByteBuf buf,
                                                          ServerPlayNetworkHandler networkHandler)
@@ -74,7 +70,6 @@ public class PayloadSplitter
     }
 
     @Nullable
-    @ApiStatus.Experimental
     private static PacketByteBuf receive(Identifier channel,
                                          PacketByteBuf data,
                                          int maxLength,
@@ -84,21 +79,30 @@ public class PayloadSplitter
         return READING_SESSIONS.computeIfAbsent(key, ReadingSession::new).receive(data, maxLength);
     }
 
-    @ApiStatus.Experimental
+    /**
+     * Sends a packet type ID as a VarInt, and then the given Compound tag.
+     */
+    public static <T extends CustomPayload> void sendPacketTypeAndCompound(IPluginServerPlayHandler<T> handler, int packetType, NbtCompound data, ServerPlayerEntity player)
+    {
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+        buf.writeVarInt(packetType);
+        buf.writeNbt(data);
+
+        send(handler, buf, player);
+    }
+
     private static class ReadingSession
     {
         private final Pair<PacketListener, Identifier> key;
         private int expectedSize = -1;
         private PacketByteBuf received;
 
-        @ApiStatus.Experimental
         private ReadingSession(Pair<PacketListener, Identifier> key)
         {
             this.key = key;
         }
 
         @Nullable
-        @ApiStatus.Experimental
         private PacketByteBuf receive(PacketByteBuf data, int maxLength)
         {
             data.readerIndex(0);
