@@ -40,8 +40,11 @@ public class StructureDataProvider extends DataProviderBase
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
-    protected final int MAX_STRUCTURE_SIZE = 2097152;
-    // Maximum structure size of one Nbt packet
+    protected final int MAX_STRUCTURE_SIZE = 1572864;
+    // Maximum structure size of one Nbt packet (2097152)
+    // 2097152 = 2048 x 1024
+    // 1572864 = 1536 x 1024 ~halfway
+    // 1048576 = 1024 x 1024
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
