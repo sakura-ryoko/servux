@@ -5,13 +5,13 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.server.ServerPlayHandler;
 
 public abstract class ServuxStructuresHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
 {
@@ -24,7 +24,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     };
     public static ServuxStructuresHandler<ServuxStructuresPayload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = new Identifier("servux", "structures");
+    public static final Identifier CHANNEL_ID = Identifier.of("servux", "structures");
     public static final int PROTOCOL_VERSION = 2;
     public static final int PACKET_S2C_METADATA = 1;
     public static final int PACKET_S2C_STRUCTURE_DATA = 2;
@@ -64,6 +64,10 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data)
     {
+        if (channel.equals(CHANNEL_ID) == false)
+        {
+            return;
+        }
         switch (data.getInt("packetType"))
         {
             case PACKET_C2S_STRUCTURES_REGISTER ->
@@ -103,10 +107,14 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {
-            ServerPlayerEntity player = ctx.player();
-
-            ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeNbtCompound(CHANNEL_ID, player, ((ServuxStructuresPayload) payload).data());
+            ServuxStructuresHandler.INSTANCE.decodeNbtCompound(CHANNEL_ID, ctx.player(), ((ServuxStructuresPayload) payload).data());
         }
+    }
+
+    @Override
+    public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf)
+    {
+        // NO-OP
     }
 
     @Override
