@@ -74,7 +74,7 @@ public abstract class ServuxStructuresHandlerTest<T extends CustomPayload> imple
         {
             return;
         }
-        Servux.logger.error("decodeStructuresData(): received packet from {}, of packetType {} // size in bytes [{}]", player.getName().getLiteralString(), data.getPacketType(), data.getTotalSize());
+        //Servux.logger.error("decodeStructuresData(): received packet from {}, of packetType {} // size in bytes [{}]", player.getName().getLiteralString(), data.getPacketType(), data.getTotalSize());
 
         switch (data.getPacketType())
         {
@@ -132,7 +132,7 @@ public abstract class ServuxStructuresHandlerTest<T extends CustomPayload> imple
     @Override
     public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf packet)
     {
-        Servux.logger.warn("encodeWithSplitter(): packet yeet");
+        //Servux.logger.warn("encodeWithSplitter(): packet yeet");
         ServuxStructuresHandlerTest.INSTANCE.encodeStructuresData(player, new ServuxStructuresDataTest(PACKET_S2C_STRUCTURE_DATA, packet));
     }
 
@@ -145,7 +145,7 @@ public abstract class ServuxStructuresHandlerTest<T extends CustomPayload> imple
 
             if (PayloadSplitter.send(this, buffer, player))
             {
-                Servux.logger.warn("encodeStructuresData(): splitter Finished");
+                //Servux.logger.warn("encodeStructuresData(): splitter Finished");
                 ServuxStructuresHandlerTest.INSTANCE.encodeStructuresData(player, new ServuxStructuresDataTest(PACKET_S2C_STRUCTURE_DATA_END, new NbtCompound()));
             }
         }
