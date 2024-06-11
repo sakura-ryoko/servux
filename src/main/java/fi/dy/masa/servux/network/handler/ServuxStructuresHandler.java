@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -108,6 +109,12 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         {
             ServuxStructuresHandler.INSTANCE.decodeNbtCompound(CHANNEL_ID, ctx.player(), ((ServuxStructuresPayload) payload).data());
         }
+    }
+
+    @Override
+    public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf)
+    {
+        // NO-OP
     }
 
     @Override

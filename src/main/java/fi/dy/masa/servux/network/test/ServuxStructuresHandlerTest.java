@@ -35,7 +35,7 @@ public abstract class ServuxStructuresHandlerTest<T extends CustomPayload> imple
     private static final int MAX_FAILURES = 3;
     // Tracks PacketSend failures until MAX_FAILURES
 
-    public final int PROTOCOL_VERSION = 2;
+    public static final int PROTOCOL_VERSION = 2;
     public static final int PACKET_S2C_METADATA = 1;
     public static final int PACKET_S2C_STRUCTURE_DATA = 2;
     public static final int PACKET_C2S_STRUCTURES_REGISTER = 3;

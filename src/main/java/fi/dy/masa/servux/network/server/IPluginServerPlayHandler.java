@@ -176,18 +176,11 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default <D> void encodeObject(ServerPlayerEntity player, D data1) {}
 
     /**
-     * Used as an iterative "wrapper" for Payload Splitter to receive a packet with
-     * @param handler (networkHandler only used with Reading Session)
-     * @param buf (Buffer to receive)
-     */
-    default void decodeWithSplitter(ServerPlayNetworkHandler handler, PacketByteBuf buf) {}
-
-    /**
      * Used as an iterative "wrapper" for Payload Splitter to send individual Packets
      * @param player (Player to send the packet to)
      * @param buf (Sliced Buffer to send)
      */
-    default void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf) {}
+    void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf);
 
     /**
      * Sends the Payload to the player using the Fabric-API interface.

@@ -7,9 +7,10 @@ import org.jetbrains.annotations.ApiStatus;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.network.server.IServerPayloadData;
 
 @ApiStatus.Experimental
-public class ServuxStructuresDataTest
+public class ServuxStructuresDataTest implements IServerPayloadData
 {
     private NbtCompound NBT;
     private PacketByteBuf BUFFER;
@@ -35,6 +36,12 @@ public class ServuxStructuresDataTest
     {
         this.packetType = packetType;
         this.BUFFER = packet;
+    }
+
+    @Override
+    public int getVersion()
+    {
+        return ServuxStructuresHandlerTest.PROTOCOL_VERSION;
     }
 
     public int getPacketType() { return this.packetType; }
@@ -66,7 +73,13 @@ public class ServuxStructuresDataTest
         return total;
     }
 
-    @Nullable
+    @Override
+    public boolean isEmpty()
+    {
+        return !this.hasNbt() && !this.hasPacket();
+    }
+
+    //@Override
     public static ServuxStructuresDataTest fromPacket(PacketByteBuf input)
     {
         int type = input.readVarInt();
@@ -125,7 +138,8 @@ public class ServuxStructuresDataTest
         }
     }
 
-    public void reset()
+    @Override
+    public void clear()
     {
         this.packetType = -1;
 
