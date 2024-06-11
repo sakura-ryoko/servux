@@ -34,14 +34,18 @@ public class StructureDataProvider extends DataProviderBase
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
 
     protected final static ServuxStructuresHandler<ServuxStructuresPayload> HANDLER = ServuxStructuresHandler.getInstance();
+    //protected final static ServuxStructuresHandlerTest<ServuxStructuresPayloadTest> TESTER = ServuxStructuresHandlerTest.getInstance();
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
-    protected final int MAX_STRUCTURE_SIZE = 2097152;
-    // Maximum structure size of one Nbt packet
+    protected final int MAX_STRUCTURE_SIZE = 1572864;
+    // Maximum structure size of one Nbt packet (2097152)
+    // 2097152 = 2048 x 1024
+    // 1572864 = 1536 x 1024 ~halfway
+    // 1048576 = 1024 x 1024
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -80,6 +84,10 @@ public class StructureDataProvider extends DataProviderBase
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
         HANDLER.registerPlayPayload(ServuxStructuresPayload.TYPE, ServuxStructuresPayload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
         HANDLER.registerPlayReceiver(ServuxStructuresPayload.TYPE, HANDLER::receivePlayPayload);
+
+        //ServerPlayHandler.getInstance().registerServerPlayHandler(TESTER);
+        //TESTER.registerPlayPayload(ServuxStructuresPayloadTest.TYPE, ServuxStructuresPayloadTest.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        //TESTER.registerPlayReceiver(ServuxStructuresPayloadTest.TYPE, TESTER::receivePlayPayload);
     }
 
     @Override
@@ -87,6 +95,9 @@ public class StructureDataProvider extends DataProviderBase
     {
         HANDLER.unregisterPlayReceiver();
         ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
+
+        //TESTER.unregisterPlayReceiver();
+        //ServerPlayHandler.getInstance().unregisterServerPlayHandler(TESTER);
     }
 
     @Override
@@ -192,6 +203,7 @@ public class StructureDataProvider extends DataProviderBase
 
                 // Using the networkHandler method allows this to work
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPayload(nbt));
+                //TESTER.sendPlayPayload(handler, new ServuxStructuresPayloadTest(new ServuxStructuresDataTest(ServuxStructuresHandlerTest.PACKET_S2C_METADATA, nbt)));
 
                 this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance(), tickCounter);
             }
@@ -206,6 +218,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         // System.out.printf("unregister\n");
         HANDLER.resetFailures(this.getNetworkChannel(), player);
+        //TESTER.resetFailures(TESTER.getPayloadChannel(), player);
 
         return this.registeredPlayers.remove(player.getUuid()) != null;
     }
@@ -470,6 +483,14 @@ public class StructureDataProvider extends DataProviderBase
 
             if (this.registeredPlayers.containsKey(player.getUuid()))
             {
+                /*
+                Servux.logger.error("sendStructures(): Yeeting Structure Packets to player {}", player.getName().getLiteralString());
+                NbtCompound test = new NbtCompound();
+                test.putInt("packetType", ServuxStructuresHandler.PACKET_S2C_STRUCTURE_DATA);
+                test.put("Structures", structureList.copy());
+                TESTER.encodeStructuresData(player, new ServuxStructuresDataTest(ServuxStructuresHandlerTest.PACKET_S2C_STRUCTURE_DATA_START, test));
+                 */
+
                 NbtList splitList = new NbtList();
 
                 for (int i = 0; i < structureList.size(); i++)
@@ -545,6 +566,7 @@ public class StructureDataProvider extends DataProviderBase
         nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
 
         HANDLER.encodeNbtCompound(player, nbt);
+        //TESTER.encodeStructuresData(player, new ServuxStructuresDataTest(ServuxStructuresHandlerTest.PACKET_S2C_SPAWN_METADATA, nbt));
     }
 
     public BlockPos getSpawnPos()

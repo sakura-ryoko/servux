@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
@@ -173,6 +174,20 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void encodeNbtCompound(ServerPlayerEntity player, NbtCompound data) {}
     default void encodeByteBuf(ServerPlayerEntity player, ServuxBuf data) {}
     default <D> void encodeObject(ServerPlayerEntity player, D data1) {}
+
+    /**
+     * Used as an iterative "wrapper" for Payload Splitter to receive a packet with
+     * @param handler (networkHandler only used with Reading Session)
+     * @param buf (Buffer to receive)
+     */
+    default void decodeWithSplitter(ServerPlayNetworkHandler handler, PacketByteBuf buf) {}
+
+    /**
+     * Used as an iterative "wrapper" for Payload Splitter to send individual Packets
+     * @param player (Player to send the packet to)
+     * @param buf (Sliced Buffer to send)
+     */
+    default void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf) {}
 
     /**
      * Sends the Payload to the player using the Fabric-API interface.

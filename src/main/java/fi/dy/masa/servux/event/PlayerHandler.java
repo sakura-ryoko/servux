@@ -5,6 +5,7 @@ import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.jetbrains.annotations.ApiStatus;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -30,9 +31,7 @@ public class PlayerHandler implements IPlayerManager
         this.handlers.remove(handler);
     }
 
-    /**
-     * NOT PUBLIC API - DO NOT CALL
-     */
+    @ApiStatus.Internal
     public void onClientConnect(SocketAddress addr, GameProfile profile, @Nullable Text result)
     {
         if (!this.handlers.isEmpty())
@@ -44,6 +43,7 @@ public class PlayerHandler implements IPlayerManager
         }
     }
 
+    @ApiStatus.Internal
     public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
@@ -55,6 +55,7 @@ public class PlayerHandler implements IPlayerManager
         }
     }
 
+    @ApiStatus.Internal
     public void onPlayerRespawn(ServerPlayerEntity newPlayer, ServerPlayerEntity oldPlayer)
     {
         if (!this.handlers.isEmpty())
@@ -66,6 +67,7 @@ public class PlayerHandler implements IPlayerManager
         }
     }
 
+    @ApiStatus.Internal
     public void onPlayerOp(GameProfile profile, UUID uuid, @Nullable ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
@@ -77,6 +79,7 @@ public class PlayerHandler implements IPlayerManager
         }
     }
 
+    @ApiStatus.Internal
     public void onPlayerDeOp(GameProfile profile, UUID uuid, @Nullable ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
@@ -88,6 +91,7 @@ public class PlayerHandler implements IPlayerManager
         }
     }
 
+    @ApiStatus.Internal
     public void onPlayerLeave(ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())

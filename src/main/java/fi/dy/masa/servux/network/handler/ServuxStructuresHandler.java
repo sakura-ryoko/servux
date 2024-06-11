@@ -11,7 +11,6 @@ import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.server.ServerPlayHandler;
 
 public abstract class ServuxStructuresHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
 {
@@ -64,6 +63,10 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data)
     {
+        if (channel.equals(CHANNEL_ID) == false)
+        {
+            return;
+        }
         switch (data.getInt("packetType"))
         {
             case PACKET_C2S_STRUCTURES_REGISTER ->
@@ -103,9 +106,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     {
         if (payload.getId().id().equals(CHANNEL_ID))
         {
-            ServerPlayerEntity player = ctx.player();
-
-            ((ServerPlayHandler<?>) ServerPlayHandler.getInstance()).decodeNbtCompound(CHANNEL_ID, player, ((ServuxStructuresPayload) payload).data());
+            ServuxStructuresHandler.INSTANCE.decodeNbtCompound(CHANNEL_ID, ctx.player(), ((ServuxStructuresPayload) payload).data());
         }
     }
 
