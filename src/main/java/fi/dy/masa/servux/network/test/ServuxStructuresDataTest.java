@@ -66,53 +66,6 @@ public class ServuxStructuresDataTest
         return total;
     }
 
-    public void fromBufferToNbt()
-    {
-        if (this.packetType == ServuxStructuresHandlerTest.PACKET_S2C_STRUCTURE_DATA)
-        {
-            if (this.BUFFER != null && this.BUFFER.readableBytes() > 0)
-            {
-                try
-                {
-                    this.NBT = this.BUFFER.readNbt();
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("fromPacketToNbt: error reading packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-
-            Servux.logger.error("fromPacketToNbt: Packet Buffer is empty / null");
-        }
-    }
-
-    public void toBufferFromNbt()
-    {
-        if (this.packetType == ServuxStructuresHandlerTest.PACKET_S2C_STRUCTURE_DATA)
-        {
-            if (this.BUFFER != null)
-            {
-                this.BUFFER.release();
-            }
-
-            if (this.NBT == null || this.NBT.isEmpty())
-            {
-                Servux.logger.error("toPacketFromNbt: NbtCompound is empty");
-                return;
-            }
-
-            try
-            {
-                this.BUFFER = new PacketByteBuf(Unpooled.buffer());
-                this.BUFFER.writeNbt(this.NBT);
-            }
-            catch (Exception e)
-            {
-                Servux.logger.error("toPacketFromNbt: error writing to packet: [{}]", e.getLocalizedMessage());
-            }
-        }
-    }
-
     @Nullable
     public static ServuxStructuresDataTest fromPacket(PacketByteBuf input)
     {
