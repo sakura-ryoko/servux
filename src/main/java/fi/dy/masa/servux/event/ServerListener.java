@@ -13,20 +13,8 @@ public class ServerListener implements IServerListener
     }
 
     @Override
-    public void onServerStarted(MinecraftServer server)
-    {
-        // NO-OP
-    }
-
-    @Override
     public void onServerStopping(MinecraftServer server)
     {
         DataProviderManager.INSTANCE.writeToConfig();
-    }
-
-    @Override
-    public void onServerStopped(MinecraftServer server)
-    {
-        // NO-OP
     }
 }
