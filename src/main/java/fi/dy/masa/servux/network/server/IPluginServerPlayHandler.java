@@ -179,8 +179,9 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * Used as an iterative "wrapper" for Payload Splitter to send individual Packets
      * @param player (Player to send the packet to)
      * @param buf (Sliced Buffer to send)
+     * @param networkHandler (Network Handler as a fail-over option)
      */
-    void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf);
+    void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf, ServerPlayNetworkHandler networkHandler);
 
     /**
      * Sends the Payload to the player using the Fabric-API interface.
