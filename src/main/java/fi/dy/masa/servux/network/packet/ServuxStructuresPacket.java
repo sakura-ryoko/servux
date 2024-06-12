@@ -97,12 +97,13 @@ public class ServuxStructuresPacket implements IServerPayloadData
     @Override
     public void toPacket(PacketByteBuf output)
     {
+        output.writeVarInt(this.packetType.get());
+
         if (this.packetType.equals(Type.PACKET_S2C_STRUCTURE_DATA))
         {
             // Write Packet Buffer
             try
             {
-                output.writeVarInt(this.packetType.get());
                 output.writeBytes(this.buffer.readBytes(this.buffer.readableBytes()));
             }
             catch (Exception e)
@@ -115,7 +116,6 @@ public class ServuxStructuresPacket implements IServerPayloadData
             // Write NBT
             try
             {
-                output.writeVarInt(this.packetType.get());
                 output.writeNbt(this.nbt);
             }
             catch (Exception e)
@@ -217,7 +217,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
     public record Payload(ServuxStructuresPacket data) implements CustomPayload
     {
         public static final Id<Payload> ID = new Id<>(ServuxStructuresHandler.CHANNEL_ID);
-        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(ServuxStructuresPacket.Payload::write, ServuxStructuresPacket.Payload::new);
+        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
         public Payload(PacketByteBuf input)
         {
