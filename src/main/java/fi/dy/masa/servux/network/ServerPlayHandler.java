@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.server;
+package fi.dy.masa.servux.network;
 
 import com.google.common.collect.ArrayListMultimap;
 import org.jetbrains.annotations.ApiStatus;

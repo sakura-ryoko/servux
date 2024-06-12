@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.server;
+package fi.dy.masa.servux.network;
 
 import javax.annotation.Nullable;
 import net.minecraft.network.PacketByteBuf;

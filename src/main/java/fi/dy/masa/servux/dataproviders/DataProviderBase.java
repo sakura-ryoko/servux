@@ -32,7 +32,10 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public Identifier getNetworkChannel() { return this.networkChannel; }
+    public Identifier getNetworkChannel()
+    {
+        return this.networkChannel;
+    }
 
     @Override
     public int getProtocolVersion()

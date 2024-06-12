@@ -9,7 +9,7 @@ import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.registry.DynamicRegistryManager;
-import fi.dy.masa.servux.network.server.ServuxBuf;
+import fi.dy.masa.servux.network.ServuxBuf;
 
 public class PayloadUtils
 {
