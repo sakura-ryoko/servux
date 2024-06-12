@@ -17,13 +17,7 @@ public class MixinServerWorld
     @Inject(method = "setSpawnPos", at = @At("TAIL"))
     private void servux_onSetSpawnPos(BlockPos pos, float angle, CallbackInfo ci)
     {
-        if (StructureDataProvider.INSTANCE.getSpawnPos().equals(pos) == false)
-        {
-            StructureDataProvider.INSTANCE.setSpawnPos(pos);
-        }
-        if (StructureDataProvider.INSTANCE.getSpawnChunkRadius() != (this.spawnChunkRadius - 1))
-        {
-            StructureDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
-        }
+        StructureDataProvider.INSTANCE.setSpawnPos(pos);
+        StructureDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
     }
 }

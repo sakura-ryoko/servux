@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.handler;
+package fi.dy.masa.servux.network.packet;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +14,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
-import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.server.PacketSplitter;
+import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+import fi.dy.masa.servux.network.PacketSplitter;
 
 @Environment(EnvType.SERVER)
 public abstract class ServuxStructuresHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>

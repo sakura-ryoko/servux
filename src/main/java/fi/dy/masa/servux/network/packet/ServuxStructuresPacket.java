@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.network.handler;
+package fi.dy.masa.servux.network.packet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -8,7 +8,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.network.server.IServerPayloadData;
+import fi.dy.masa.servux.network.IServerPayloadData;
 
 public class ServuxStructuresPacket implements IServerPayloadData
 {
@@ -217,7 +217,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
     public record Payload(ServuxStructuresPacket data) implements CustomPayload
     {
         public static final Id<Payload> ID = new Id<>(ServuxStructuresHandler.CHANNEL_ID);
-        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(ServuxStructuresPacket.Payload::write, ServuxStructuresPacket.Payload::new);
+        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
         public Payload(PacketByteBuf input)
         {

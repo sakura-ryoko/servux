@@ -37,14 +37,8 @@ public abstract class MixinMinecraftServer
     private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
                                       ServerWorld serverWorld, BlockPos blockPos, ServerChunkManager serverChunkManager, int i)
     {
-        if (StructureDataProvider.INSTANCE.getSpawnPos().equals(blockPos) == false)
-        {
-            StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
-        }
-        if (StructureDataProvider.INSTANCE.getSpawnChunkRadius() != i)
-        {
-            StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
-        }
+        StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
+        StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"), method = "runServer")
