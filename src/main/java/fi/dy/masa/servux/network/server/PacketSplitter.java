@@ -17,7 +17,7 @@ import net.minecraft.util.Identifier;
  * Updated by Sakura to work with newer versions by changing the Reading Session keys,
  * and using the HANDLER interface to send packets via the Payload system
  */
-public class PayloadSplitter
+public class PacketSplitter
 {
     public static final int MAX_TOTAL_PER_PACKET_S2C = 1048576;
     public static final int MAX_PAYLOAD_PER_PACKET_S2C = MAX_TOTAL_PER_PACKET_S2C - 5;
