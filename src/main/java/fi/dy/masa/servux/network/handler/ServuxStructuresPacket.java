@@ -36,12 +36,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
     public ServuxStructuresPacket(Type type, @Nonnull PacketByteBuf packet)
     {
         this.packetType = type;
-
-        if (this.buffer != null)
-        {
-            this.buffer.clear();
-        }
-
+        this.nbt = new NbtCompound();
         this.buffer = packet;
     }
 
@@ -91,7 +86,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
 
     public boolean hasBuffer() { return this.buffer != null && this.buffer.isReadable(); }
 
-    public boolean hasNbt() { return this.nbt != null && this.nbt.isEmpty() == false; }
+    public boolean hasNbt() { return this.nbt != null && !this.nbt.isEmpty(); }
 
     @Override
     public boolean isEmpty()
@@ -130,6 +125,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
         }
     }
 
+    @Nullable
     public static ServuxStructuresPacket fromPacket(PacketByteBuf input)
     {
         int i = input.readVarInt();
@@ -205,7 +201,6 @@ public class ServuxStructuresPacket implements IServerPayloadData
         PACKET_C2S_STRUCTURES_REGISTER(3),
         PACKET_C2S_STRUCTURES_UNREGISTER(4),
         PACKET_S2C_STRUCTURE_DATA_START(5),
-        PACKET_S2C_STRUCTURE_DATA_END(6),
         PACKET_S2C_SPAWN_METADATA(10),
         PACKET_C2S_REQUEST_SPAWN_METADATA(11);
 
@@ -221,8 +216,8 @@ public class ServuxStructuresPacket implements IServerPayloadData
 
     public record Payload(ServuxStructuresPacket data) implements CustomPayload
     {
-        public static final Id<ServuxStructuresPacket.Payload> ID = new Id<>(ServuxStructuresHandler.CHANNEL_ID);
-        public static final PacketCodec<PacketByteBuf, ServuxStructuresPacket.Payload> CODEC = CustomPayload.codecOf(ServuxStructuresPacket.Payload::write, ServuxStructuresPacket.Payload::new);
+        public static final Id<Payload> ID = new Id<>(ServuxStructuresHandler.CHANNEL_ID);
+        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(ServuxStructuresPacket.Payload::write, ServuxStructuresPacket.Payload::new);
 
         public Payload(PacketByteBuf input)
         {
@@ -235,7 +230,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
         }
 
         @Override
-        public Id<ServuxStructuresPacket.Payload> getId()
+        public Id<Payload> getId()
         {
             return ID;
         }
