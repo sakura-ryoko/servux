@@ -15,7 +15,7 @@ import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.server.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.server.PayloadSplitter;
+import fi.dy.masa.servux.network.server.PacketSplitter;
 
 @Environment(EnvType.SERVER)
 public abstract class ServuxStructuresHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
@@ -68,7 +68,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
         switch (packet.getType())
         {
-            // Only NBT type packets are received from MiniHUD, not using PayloadSplitter
+            // Only NBT type packets are received from MiniHUD, not using PacketSplitter
             case PACKET_C2S_STRUCTURES_REGISTER ->
             {
                 //Servux.logger.warn("decodeStructuresPacket(): received Structures Register from player {}", player.getName().getLiteralString());
@@ -116,7 +116,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
     @Override
     public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
     {
-        // Send each PayloadSplitter buffer slice
+        // Send each PacketSplitter buffer slice
         ServuxStructuresHandler.INSTANCE.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA, buffer));
     }
 
@@ -127,7 +127,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             // Send Structure Data via Packet Splitter
             PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
             buffer.writeNbt(packet.getCompound());
-            PayloadSplitter.send(this, buffer, player, player.networkHandler);
+            PacketSplitter.send(this, buffer, player, player.networkHandler);
         }
         else if (ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPacket.Payload(packet)) == false)
         {
