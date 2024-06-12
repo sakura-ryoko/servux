@@ -97,12 +97,13 @@ public class ServuxStructuresPacket implements IServerPayloadData
     @Override
     public void toPacket(PacketByteBuf output)
     {
+        output.writeVarInt(this.packetType.get());
+
         if (this.packetType.equals(Type.PACKET_S2C_STRUCTURE_DATA))
         {
             // Write Packet Buffer
             try
             {
-                output.writeVarInt(this.packetType.get());
                 output.writeBytes(this.buffer.readBytes(this.buffer.readableBytes()));
             }
             catch (Exception e)
@@ -115,7 +116,6 @@ public class ServuxStructuresPacket implements IServerPayloadData
             // Write NBT
             try
             {
-                output.writeVarInt(this.packetType.get());
                 output.writeNbt(this.nbt);
             }
             catch (Exception e)
