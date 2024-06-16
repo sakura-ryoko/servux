@@ -1,5 +1,3 @@
-[![](https://jitpack.io/v/sakura-ryoko/servux.svg)](https://jitpack.io/#sakura-ryoko/servux)
-
 Servux
 ==============
 Servux is a server-side mod that provides extra support/features for some client-side mods when playing on a server.
