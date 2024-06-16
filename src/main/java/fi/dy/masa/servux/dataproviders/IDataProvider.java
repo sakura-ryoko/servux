@@ -2,7 +2,7 @@ package fi.dy.masa.servux.dataproviders;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
-import fi.dy.masa.servux.network.IPluginChannelHandler;
+import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 
 public interface IDataProvider
 {
@@ -50,6 +50,18 @@ public interface IDataProvider
     void setEnabled(boolean enabled);
 
     /**
+     * Informs this data provider that the server has started and should be waiting for requests
+     * @return
+     */
+    void registerHandler();
+
+    /**
+     * Informs this data provider that the server has stopped and should no longer process any data
+     * @return
+     */
+    void unregisterHandler();
+
+    /**
      * Returns whether or not this data provider should get ticked to periodically send some data,
      * or if it's only listening for incoming requests and responds to them directly.
      * @return
@@ -78,5 +90,5 @@ public interface IDataProvider
      * Returns the network packet handler used for this data provider.
      * @return
      */
-    IPluginChannelHandler getPacketHandler();
+    IPluginServerPlayHandler<?> getPacketHandler();
 }

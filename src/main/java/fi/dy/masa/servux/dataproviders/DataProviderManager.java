@@ -8,8 +8,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.server.MinecraftServer;
-import fi.dy.masa.servux.network.IPluginChannelHandler;
-import fi.dy.masa.servux.network.ServerPacketChannelHandler;
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
@@ -24,6 +23,7 @@ public class DataProviderManager
     {
         return this.providersImmutable;
     }
+    protected File configDir = null;
 
     /**
      * Registers the given data provider, if it's not already registered
@@ -101,15 +101,13 @@ public class DataProviderManager
 
     protected void updatePacketHandlerRegistration(IDataProvider provider)
     {
-        IPluginChannelHandler handler = provider.getPacketHandler();
-
         if (provider.isEnabled())
         {
-            ServerPacketChannelHandler.INSTANCE.registerServerChannelHandler(handler);
+            provider.registerHandler();
         }
         else
         {
-            ServerPacketChannelHandler.INSTANCE.unregisterServerChannelHandler(handler);
+            provider.unregisterHandler();
         }
     }
 
@@ -154,6 +152,10 @@ public class DataProviderManager
 
     protected File getConfigFile()
     {
-        return new File("servux.json");
+        if (this.configDir == null)
+        {
+            this.configDir = Reference.DEFAULT_CONFIG_DIR;
+        }
+        return new File(this.configDir, "servux.json");
     }
 }
