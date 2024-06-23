@@ -13,6 +13,7 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.BlockEntitiesDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
@@ -75,14 +76,15 @@ public abstract class ServuxBlockEntitiesHandler<T extends CustomPayload> implem
             case PACKET_C2S_BLOCK_ENTITY_REGISTER ->
             {
                 Servux.logger.warn("ServuxBlockEntitiesHandler#decodeServerData(): received Block Entities Register from player {}", player.getName().getLiteralString());
-                //StructureDataProvider.INSTANCE.unregister(player);
-                //StructureDataProvider.INSTANCE.register(player);
+                BlockEntitiesDataProvider.INSTANCE.unregister(player);
+                BlockEntitiesDataProvider.INSTANCE.register(player);
             }
+            case PACKET_C2S_REQUEST_METADATA -> BlockEntitiesDataProvider.INSTANCE.refreshMetadata(player, packet.getCompound());
             case PACKET_C2S_BLOCK_ENTITY_UNREGISTER ->
             {
                 Servux.logger.warn("ServuxBlockEntitiesHandler#decodeServerData(): received Block Entities Un-Register from player {}", player.getName().getLiteralString());
-                //StructureDataProvider.INSTANCE.unregister(player);
-                //StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+                BlockEntitiesDataProvider.INSTANCE.unregister(player);
+                BlockEntitiesDataProvider.INSTANCE.refreshMetadata(player, packet.getCompound());
             }
             default -> Servux.logger.warn("decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }

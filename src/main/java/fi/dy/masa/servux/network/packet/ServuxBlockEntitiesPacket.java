@@ -108,7 +108,7 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#toPacket: error writing data to packet: [{}]", e.getLocalizedMessage());
+                Servux.logger.error("ServuxBlockEntitiesPacket#toPacket: error writing data to packet: [{}]", e.getLocalizedMessage());
             }
         }
         else
@@ -120,7 +120,7 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                Servux.logger.error("ServuxBlockEntitiesPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
             }
         }
     }
@@ -134,7 +134,7 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
         if (type == null)
         {
             // Invalid Type
-            Servux.logger.warn("ServuxStructuresPacket#fromPacket: invalid packet type received");
+            Servux.logger.warn("ServuxBlockEntitiesPacket#fromPacket: invalid packet type received");
         }
         else if (type.equals(Type.PACKET_S2C_BLOCK_ENTITY_DATA))
         {
@@ -145,7 +145,7 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#fromPacket: error reading Buffer from packet: [{}]", e.getLocalizedMessage());
+                Servux.logger.error("ServuxBlockEntitiesPacket#fromPacket: error reading Buffer from packet: [{}]", e.getLocalizedMessage());
             }
         }
         else
@@ -157,7 +157,7 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
             }
             catch (Exception e)
             {
-                Servux.logger.error("ServuxStructuresPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
+                Servux.logger.error("ServuxBlockEntitiesPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
             }
         }
 
@@ -197,10 +197,11 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
     public enum Type
     {
         PACKET_S2C_METADATA(1),
-        PACKET_S2C_BLOCK_ENTITY_DATA(2),
+        PACKET_C2S_REQUEST_METADATA(2),
         PACKET_C2S_BLOCK_ENTITY_REGISTER(3),
         PACKET_C2S_BLOCK_ENTITY_UNREGISTER(4),
-        PACKET_S2C_BLOCK_ENTITY_DATA_START(5);
+        PACKET_S2C_BLOCK_ENTITY_DATA_START(5),
+        PACKET_S2C_BLOCK_ENTITY_DATA(6);
 
         private final int type;
 

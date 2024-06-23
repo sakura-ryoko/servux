@@ -67,12 +67,6 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public void setEnabled(boolean toggle)
-    {
-        this.enabled = toggle;
-    }
-
-    @Override
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
