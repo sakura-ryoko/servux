@@ -201,7 +201,9 @@ public class ServuxBlockEntitiesPacket implements IServerPayloadData
         PACKET_C2S_BLOCK_ENTITY_REGISTER(3),
         PACKET_C2S_BLOCK_ENTITY_UNREGISTER(4),
         PACKET_S2C_BLOCK_ENTITY_DATA_START(5),
-        PACKET_S2C_BLOCK_ENTITY_DATA(6);
+        PACKET_S2C_BLOCK_ENTITY_DATA(6),
+        PACKET_C2S_BLOCK_ENTITY_REQUEST(7),
+        PACKET_S2C_BLOCK_ENTITY_REQUEST_DENIED(8);
 
         private final int type;
 
