@@ -12,16 +12,16 @@ import net.minecraft.world.chunk.WorldChunk;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.ServuxBlockEntitiesHandler;
-import fi.dy.masa.servux.network.packet.ServuxBlockEntitiesPacket;
+import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
+import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
-public class BlockEntitiesDataProvider extends DataProviderBase
+public class EntitiesDataProvider extends DataProviderBase
 {
-    public static final BlockEntitiesDataProvider INSTANCE = new BlockEntitiesDataProvider();
+    public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
 
-    protected final static ServuxBlockEntitiesHandler<ServuxBlockEntitiesPacket.Payload> HANDLER = ServuxBlockEntitiesHandler.getInstance();
+    protected final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
@@ -29,11 +29,11 @@ public class BlockEntitiesDataProvider extends DataProviderBase
     protected int updateInterval = 40;
     protected int retainDistance;
 
-    protected BlockEntitiesDataProvider()
+    protected EntitiesDataProvider()
     {
         super("block_entity_data",
-                ServuxBlockEntitiesHandler.CHANNEL_ID,
-                ServuxBlockEntitiesPacket.PROTOCOL_VERSION,
+                ServuxEntitiesHandler.CHANNEL_ID,
+                ServuxEntitiesPacket.PROTOCOL_VERSION,
                 "Block Entity Data provider for Client Side mods.");
 
         this.metadata.putString("name", this.getName());
@@ -47,8 +47,8 @@ public class BlockEntitiesDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        HANDLER.registerPlayPayload(ServuxBlockEntitiesPacket.Payload.ID, ServuxBlockEntitiesPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
-        HANDLER.registerPlayReceiver(ServuxBlockEntitiesPacket.Payload.ID, HANDLER::receivePlayPayload);
+        HANDLER.registerPlayPayload(ServuxEntitiesPacket.Payload.ID, ServuxEntitiesPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        HANDLER.registerPlayReceiver(ServuxEntitiesPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class BlockEntitiesDataProvider extends DataProviderBase
                 NbtCompound nbt = new NbtCompound();
                 nbt.copyFrom(this.metadata);
 
-                HANDLER.sendPlayPayload(handler, new ServuxBlockEntitiesPacket.Payload(new ServuxBlockEntitiesPacket(ServuxBlockEntitiesPacket.Type.PACKET_S2C_METADATA, nbt)));
+                HANDLER.sendPlayPayload(handler, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(ServuxEntitiesPacket.Type.PACKET_S2C_METADATA, nbt)));
                 //this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance()+2, tickCounter);
                 // TODO
             }
@@ -125,7 +125,7 @@ public class BlockEntitiesDataProvider extends DataProviderBase
 
     public void refreshMetadata(ServerPlayerEntity player, NbtCompound tag)
     {
-        HANDLER.encodeServerData(player, new ServuxBlockEntitiesPacket(ServuxBlockEntitiesPacket.Type.PACKET_S2C_METADATA, this.metadata));
+        HANDLER.encodeServerData(player, new ServuxEntitiesPacket(ServuxEntitiesPacket.Type.PACKET_S2C_METADATA, this.metadata));
     }
 
     public boolean unregister(ServerPlayerEntity player)
