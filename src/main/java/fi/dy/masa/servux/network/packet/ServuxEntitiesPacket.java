@@ -229,6 +229,30 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                     Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
+            case PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE ->
+            {
+                try
+                {
+                    output.writeBlockPos(this.pos);
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Response to packet: [{}]", e.getLocalizedMessage());
+                }
+            }
+            case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE ->
+            {
+                try
+                {
+                    output.writeVarInt(this.entityId);
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Entity Response to packet: [{}]", e.getLocalizedMessage());
+                }
+            }
             default ->
             {
                 // Write NBT
