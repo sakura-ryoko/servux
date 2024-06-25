@@ -120,7 +120,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
     {
         // Send each PacketSplitter buffer slice
-        ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(buffer)));
+        ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.ResponseData(buffer)));
     }
 
     @Override
