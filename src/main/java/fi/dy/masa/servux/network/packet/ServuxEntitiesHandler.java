@@ -30,7 +30,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     };
     public static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = Identifier.of("servux", "entities");
+    public static final Identifier CHANNEL_ID = Identifier.of("servux", "entity_data");
 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
@@ -68,23 +68,22 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
         {
             return;
         }
-        Servux.logger.error("ServuxEntitiesHandler#decodeServerData(): received packet from {}, of packetType {} // size in bytes [{}]", player.getName().getLiteralString(), packet.getPacketType(), packet.getTotalSize());
-
         switch (packet.getType())
         {
-            // Only NBT type packets are received from MiniHUD, not using PacketSplitter
-            case PACKET_C2S_ENTITY_REGISTER ->
+            case PACKET_C2S_METADATA_REQUEST ->
             {
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Block Entities Register from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.unregister(player);
-                EntitiesDataProvider.INSTANCE.register(player);
+                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Metadata Request from player {}", player.getName().getLiteralString());
+                EntitiesDataProvider.INSTANCE.sendMetadata(player);
             }
-            case PACKET_C2S_REQUEST_METADATA -> EntitiesDataProvider.INSTANCE.refreshMetadata(player, packet.getCompound());
-            case PACKET_C2S_ENTITY_UNREGISTER ->
+            case PACKET_C2S_BLOCK_ENTITY_REQUEST ->
             {
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Block Entities Un-Register from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.unregister(player);
-                EntitiesDataProvider.INSTANCE.refreshMetadata(player, packet.getCompound());
+                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Block Entity Request from player {}", player.getName().getLiteralString());
+                EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getTransactionId(), packet.getPos());
+            }
+            case PACKET_C2S_ENTITY_REQUEST ->
+            {
+                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Request from player {}", player.getName().getLiteralString());
+                EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getTransactionId(), packet.getEntityId());
             }
             default -> Servux.logger.warn("decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
@@ -121,7 +120,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
     {
         // Send each PacketSplitter buffer slice
-        ServuxEntitiesHandler.INSTANCE.encodeServerData(player, new ServuxEntitiesPacket(ServuxEntitiesPacket.Type.PACKET_S2C_ENTITY_DATA, buffer));
+        ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(buffer)));
     }
 
     @Override
@@ -129,26 +128,27 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     {
         ServuxEntitiesPacket packet = (ServuxEntitiesPacket) data;
 
-        if (packet.getType().equals(ServuxEntitiesPacket.Type.PACKET_S2C_ENTITY_DATA_START))
+        // Send Response Data via Packet Splitter
+        if (packet.getType().equals(ServuxEntitiesPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
         {
-            // Send Structure Data via Packet Splitter
             PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
+            buffer.writeVarInt(packet.getTransactionId());
             buffer.writeNbt(packet.getCompound());
             PacketSplitter.send(this, buffer, player, player.networkHandler);
         }
         else if (ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(packet)) == false)
         {
-            // Packet failure tracking
             UUID id = player.getUuid();
 
+            // Packet failure tracking
             if (this.failures.containsKey(id) == false)
             {
                 this.failures.put(id, 1);
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                Servux.logger.info("Unregistering Block Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
-                //StructureDataProvider.INSTANCE.unregister(player);
+                Servux.logger.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                EntitiesDataProvider.INSTANCE.onPacketFailure(player);
             }
             else
             {

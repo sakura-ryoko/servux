@@ -7,37 +7,88 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
 
 public class ServuxEntitiesPacket implements IServerPayloadData
 {
     private Type packetType;
+    private int transactionId;
+    private int entityId;
+    private BlockPos pos;
     private NbtCompound nbt;
     private PacketByteBuf buffer;
     public static final int PROTOCOL_VERSION = 1;
 
-    public ServuxEntitiesPacket(Type type, @Nullable NbtCompound nbt)
+    // Metadata/Request Packet
+    public ServuxEntitiesPacket(NbtCompound nbt, boolean request)
     {
-        this.packetType = type;
-
-        if (nbt != null && nbt.isEmpty() == false)
+        if (request)
         {
-            this.nbt = new NbtCompound();
-            this.nbt.copyFrom(nbt);
+            this.packetType = Type.PACKET_C2S_METADATA_REQUEST;
         }
+        else
+        {
+            this.packetType = Type.PACKET_S2C_METADATA;
+        }
+        this.nbt = new NbtCompound();
+        this.nbt.copyFrom(nbt);
+        this.clearPacket();
+    }
+
+    // Block Entity Query
+    public ServuxEntitiesPacket(int transactionId, BlockPos pos)
+    {
+        this.packetType = Type.PACKET_C2S_BLOCK_ENTITY_REQUEST;
+        this.transactionId = transactionId;
+        this.pos = pos;
+        this.nbt = new NbtCompound();
+        this.clearPacket();
+    }
+
+    // Entity Query
+    public ServuxEntitiesPacket(int transactionId, int entityId)
+    {
+        this.packetType = Type.PACKET_C2S_ENTITY_REQUEST;
+        this.transactionId = transactionId;
+        this.entityId = entityId;
+        this.nbt = new NbtCompound();
+        this.clearPacket();
+    }
+
+    // Response Nbt Packet, set splitter to true to use Packet Splitter
+    public ServuxEntitiesPacket(int transactionId, NbtCompound nbt, boolean splitter)
+    {
+        if (splitter)
+        {
+            this.packetType = Type.PACKET_S2C_NBT_RESPONSE_START;
+        }
+        else
+        {
+            this.packetType = Type.PACKET_S2C_NBT_RESPONSE_SIMPLE;
+        }
+        this.transactionId = transactionId;
+        this.nbt = new NbtCompound();
+        this.nbt.copyFrom(nbt);
+        this.clearPacket();
+    }
+
+    // Response Packet Slice (Packet Splitter)
+    public ServuxEntitiesPacket(@Nonnull PacketByteBuf packet)
+    {
+        this.packetType = Type.PACKET_S2C_NBT_RESPONSE_DATA;
+        this.nbt = new NbtCompound();
+        this.buffer = packet;
+    }
+
+    private void clearPacket()
+    {
         if (this.buffer != null)
         {
             this.buffer.clear();
             this.buffer = new PacketByteBuf(Unpooled.buffer());
         }
-    }
-
-    public ServuxEntitiesPacket(Type type, @Nonnull PacketByteBuf packet)
-    {
-        this.packetType = type;
-        this.nbt = new NbtCompound();
-        this.buffer = packet;
     }
 
     @Override
@@ -74,6 +125,12 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         return this.packetType;
     }
 
+    public int getTransactionId() { return this.transactionId; }
+
+    public int getEntityId() { return this.entityId; }
+
+    public BlockPos getPos() { return this.pos; }
+
     public NbtCompound getCompound()
     {
         return this.nbt;
@@ -99,28 +156,70 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     {
         output.writeVarInt(this.packetType.get());
 
-        if (this.packetType.equals(Type.PACKET_S2C_ENTITY_DATA))
+        switch (this.packetType)
         {
-            // Write Packet Buffer
-            try
+            case PACKET_C2S_BLOCK_ENTITY_REQUEST ->
             {
-                output.writeBytes(this.buffer.readBytes(this.buffer.readableBytes()));
+                // Write BE Request
+                try
+                {
+                    output.writeVarInt(this.transactionId);
+                    output.writeBlockPos(this.pos);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Request to packet: [{}]", e.getLocalizedMessage());
+                }
             }
-            catch (Exception e)
+            case PACKET_C2S_ENTITY_REQUEST ->
             {
-                Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing data to packet: [{}]", e.getLocalizedMessage());
+                // Write Entity Request
+                try
+                {
+                    output.writeVarInt(this.transactionId);
+                    output.writeVarInt(this.entityId);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Entity Request to packet: [{}]", e.getLocalizedMessage());
+                }
             }
-        }
-        else
-        {
-            // Write NBT
-            try
+            case PACKET_S2C_NBT_RESPONSE_SIMPLE ->
             {
-                output.writeNbt(this.nbt);
+                // Write Response (Without Packet Splitter)
+                try
+                {
+                    output.writeVarInt(this.transactionId);
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing response data to packet: [{}]", e.getLocalizedMessage());
+                }
             }
-            catch (Exception e)
+            case PACKET_S2C_NBT_RESPONSE_DATA ->
             {
-                Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                // Write Packet Buffer (Slice)
+                try
+                {
+                    output.writeBytes(this.buffer.readBytes(this.buffer.readableBytes()));
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
+                }
+            }
+            default ->
+            {
+                // Write NBT
+                try
+                {
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                }
             }
         }
     }
@@ -135,29 +234,81 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         {
             // Invalid Type
             Servux.logger.warn("ServuxEntitiesPacket#fromPacket: invalid packet type received");
+            return null;
         }
-        else if (type.equals(Type.PACKET_S2C_ENTITY_DATA))
+        switch (type)
         {
-            // Read Packet Buffer
-            try
+            case PACKET_C2S_BLOCK_ENTITY_REQUEST ->
             {
-                return new ServuxEntitiesPacket(type, new PacketByteBuf(input.readBytes(input.readableBytes())));
+                // Read Packet Buffer
+                try
+                {
+                    return new ServuxEntitiesPacket(input.readVarInt(), input.readBlockPos());
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Block Entity Request from packet: [{}]", e.getLocalizedMessage());
+                }
             }
-            catch (Exception e)
+            case PACKET_C2S_ENTITY_REQUEST ->
             {
-                Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Buffer from packet: [{}]", e.getLocalizedMessage());
+                // Read Packet Buffer
+                try
+                {
+                    return new ServuxEntitiesPacket(input.readVarInt(), input.readVarInt());
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Entity Request from packet: [{}]", e.getLocalizedMessage());
+                }
             }
-        }
-        else
-        {
-            // Read Nbt
-            try
+            case PACKET_S2C_NBT_RESPONSE_SIMPLE ->
             {
-                return new ServuxEntitiesPacket(type, input.readNbt());
+                // Read Nbt Response (Without Packet Splitter)
+                try
+                {
+                    return new ServuxEntitiesPacket(input.readVarInt(), input.readNbt(), false);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Response from packet: [{}]", e.getLocalizedMessage());
+                }
             }
-            catch (Exception e)
+            case PACKET_S2C_NBT_RESPONSE_DATA ->
             {
-                Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
+                // Read Packet Buffer Slice
+                try
+                {
+                    return new ServuxEntitiesPacket(new PacketByteBuf(input.readBytes(input.readableBytes())));
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Buffer from packet: [{}]", e.getLocalizedMessage());
+                }
+            }
+            case PACKET_C2S_METADATA_REQUEST ->
+            {
+                // Read Nbt
+                try
+                {
+                    return new ServuxEntitiesPacket(input.readNbt(), true);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
+                }
+            }
+            default ->
+            {
+                // Read Nbt
+                try
+                {
+                    return new ServuxEntitiesPacket(input.readNbt(), false);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
+                }
             }
         }
 
@@ -171,12 +322,10 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         {
             this.nbt = new NbtCompound();
         }
-        if (this.buffer != null && this.buffer.readableBytes() > 0)
-        {
-            this.buffer.clear();
-            this.buffer = new PacketByteBuf(Unpooled.buffer());
-        }
-
+        this.clearPacket();
+        this.transactionId = -1;
+        this.entityId = -1;
+        this.pos = BlockPos.ORIGIN;
         this.packetType = null;
     }
 
@@ -197,13 +346,12 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     public enum Type
     {
         PACKET_S2C_METADATA(1),
-        PACKET_C2S_REQUEST_METADATA(2),
-        PACKET_C2S_ENTITY_REGISTER(3),
-        PACKET_C2S_ENTITY_UNREGISTER(4),
-        PACKET_S2C_ENTITY_DATA_START(5),
-        PACKET_S2C_ENTITY_DATA(6),
-        PACKET_C2S_ENTITY_REQUEST(7),
-        PACKET_S2C_ENTITY_REQUEST_DENIED(8);
+        PACKET_C2S_METADATA_REQUEST(2),
+        PACKET_C2S_BLOCK_ENTITY_REQUEST(3),
+        PACKET_C2S_ENTITY_REQUEST(4),
+        PACKET_S2C_NBT_RESPONSE_START(5),
+        PACKET_S2C_NBT_RESPONSE_SIMPLE(6),
+        PACKET_S2C_NBT_RESPONSE_DATA(7);
 
         private final int type;
 
@@ -231,7 +379,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         }
 
         @Override
-        public Id<Payload> getId()
+        public Id<? extends CustomPayload> getId()
         {
             return ID;
         }
