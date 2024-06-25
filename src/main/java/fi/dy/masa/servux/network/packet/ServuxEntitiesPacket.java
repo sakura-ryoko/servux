@@ -21,40 +21,54 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     private PacketByteBuf buffer;
     public static final int PROTOCOL_VERSION = 1;
 
-    // Metadata/Request Packet
-    public ServuxEntitiesPacket(NbtCompound nbt, boolean request)
-    {
-        if (request)
-        {
-            this.packetType = Type.PACKET_C2S_METADATA_REQUEST;
-        }
-        else
-        {
-            this.packetType = Type.PACKET_S2C_METADATA;
-        }
-        this.nbt = new NbtCompound();
-        this.nbt.copyFrom(nbt);
+    private ServuxEntitiesPacket(Type type) {
+        this.packetType = type;
         this.clearPacket();
     }
 
-    // Block Entity Query
-    public ServuxEntitiesPacket(int transactionId, BlockPos pos)
+    public static ServuxEntitiesPacket MetadataRequest(NbtCompound nbt)
     {
-        this.packetType = Type.PACKET_C2S_BLOCK_ENTITY_REQUEST;
-        this.transactionId = transactionId;
-        this.pos = pos;
-        this.nbt = new NbtCompound();
-        this.clearPacket();
+        var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_METADATA_REQUEST);
+        packet.nbt = nbt.copy();
+        return packet;
     }
 
-    // Entity Query
-    public ServuxEntitiesPacket(int transactionId, int entityId)
+    public static ServuxEntitiesPacket MetadataResponse(NbtCompound nbt)
     {
-        this.packetType = Type.PACKET_C2S_ENTITY_REQUEST;
-        this.transactionId = transactionId;
-        this.entityId = entityId;
-        this.nbt = new NbtCompound();
-        this.clearPacket();
+        var packet = new ServuxEntitiesPacket(Type.PACKET_S2C_METADATA);
+        packet.nbt = nbt.copy();
+        return packet;
+    }
+
+    // Entity simple response
+    public static ServuxEntitiesPacket SimpleEntityResponse(int entityId, NbtCompound nbt)
+    {
+        var packet = new ServuxEntitiesPacket(Type.PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE);
+        packet.nbt = nbt.copy();
+        packet.entityId = entityId;
+        return packet;
+    }
+
+    public static ServuxEntitiesPacket SimpleBlockResponse(BlockPos pos, NbtCompound nbt)
+    {
+        var packet = new ServuxEntitiesPacket(Type.PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE);
+        packet.nbt = nbt.copy();
+        packet.pos = pos.toImmutable();
+        return packet;
+    }
+
+    public static ServuxEntitiesPacket BlockEntityRequest(BlockPos pos)
+    {
+        var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_BLOCK_ENTITY_REQUEST);
+        packet.pos = pos.toImmutable();
+        return packet;
+    }
+
+    public static ServuxEntitiesPacket EntityRequest(int entityId)
+    {
+        var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_ENTITY_REQUEST);
+        packet.entityId = entityId;
+        return packet;
     }
 
     // Response Nbt Packet, set splitter to true to use Packet Splitter
@@ -209,6 +223,30 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                     Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
+            case PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE ->
+            {
+                try
+                {
+                    output.writeBlockPos(this.pos);
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Block Entity Response to packet: [{}]", e.getLocalizedMessage());
+                }
+            }
+            case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE ->
+            {
+                try
+                {
+                    output.writeVarInt(this.entityId);
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing Entity Response to packet: [{}]", e.getLocalizedMessage());
+                }
+            }
             default ->
             {
                 // Write NBT
@@ -243,7 +281,8 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 // Read Packet Buffer
                 try
                 {
-                    return new ServuxEntitiesPacket(input.readVarInt(), input.readBlockPos());
+                    input.readVarInt(); // todo: old code compat
+                    return ServuxEntitiesPacket.BlockEntityRequest(input.readBlockPos());
                 }
                 catch (Exception e)
                 {
@@ -255,7 +294,8 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 // Read Packet Buffer
                 try
                 {
-                    return new ServuxEntitiesPacket(input.readVarInt(), input.readVarInt());
+                    input.readVarInt(); // todo: old code compat
+                    return ServuxEntitiesPacket.EntityRequest(input.readVarInt());
                 }
                 catch (Exception e)
                 {
@@ -291,7 +331,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                 // Read Nbt
                 try
                 {
-                    return new ServuxEntitiesPacket(input.readNbt(), true);
+                    return ServuxEntitiesPacket.MetadataRequest(input.readNbt());
                 }
                 catch (Exception e)
                 {
@@ -300,15 +340,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
             }
             default ->
             {
-                // Read Nbt
-                try
-                {
-                    return new ServuxEntitiesPacket(input.readNbt(), false);
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading NBT from packet: [{}]", e.getLocalizedMessage());
-                }
+                Servux.logger.error("ServuxEntitiesPacket#fromPacket: Unknown packet type!");
             }
         }
 
@@ -351,7 +383,9 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         PACKET_C2S_ENTITY_REQUEST(4),
         PACKET_S2C_NBT_RESPONSE_START(5),
         PACKET_S2C_NBT_RESPONSE_SIMPLE(6),
-        PACKET_S2C_NBT_RESPONSE_DATA(7);
+        PACKET_S2C_NBT_RESPONSE_DATA(7),
+        PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE(8),
+        PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE(9);
 
         private final int type;
 

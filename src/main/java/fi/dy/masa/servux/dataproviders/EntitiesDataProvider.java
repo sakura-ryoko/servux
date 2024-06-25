@@ -59,11 +59,11 @@ public class EntitiesDataProvider extends DataProviderBase
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
         {
-            HANDLER.sendPlayPayload(player.networkHandler, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(this.metadata, false)));
+            HANDLER.sendPlayPayload(player.networkHandler, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
         }
         else
         {
-            HANDLER.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(this.metadata, false)));
+            HANDLER.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
         }
     }
 
@@ -72,21 +72,21 @@ public class EntitiesDataProvider extends DataProviderBase
         // Do something when packets fail, if required
     }
 
-    public void onBlockEntityRequest(ServerPlayerEntity player, int transactionId, BlockPos pos)
+    public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        Servux.logger.warn("onBlockEntityRequest(): from player {} // transactionId {}", player.getName().getLiteralString(), transactionId);
+        Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
-        HANDLER.encodeServerData(player, new ServuxEntitiesPacket(transactionId, nbt, true));
+        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
 
-    public void onEntityRequest(ServerPlayerEntity player, int transactionId, int entityId)
+    public void onEntityRequest(ServerPlayerEntity player, int entityId)
     {
-        Servux.logger.warn("onEntityRequest(): from player {} // transactionId {}", player.getName().getLiteralString(), transactionId);
+        Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
 
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, new ServuxEntitiesPacket(transactionId, nbt, true));
+        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
     }
 }
