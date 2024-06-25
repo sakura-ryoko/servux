@@ -21,6 +21,10 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     private PacketByteBuf buffer;
     public static final int PROTOCOL_VERSION = 1;
 
+    private ServuxEntitiesPacket(Type type) {
+        this.packetType = type;
+    }
+
     // Metadata/Request Packet
     public ServuxEntitiesPacket(NbtCompound nbt, boolean request)
     {
@@ -55,6 +59,22 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         this.entityId = entityId;
         this.nbt = new NbtCompound();
         this.clearPacket();
+    }
+
+    public static ServuxEntitiesPacket EntityResponse(int entityId, NbtCompound nbt)
+    {
+        var packet = new ServuxEntitiesPacket(Type.PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE);
+        packet.nbt = nbt;
+        packet.entityId = entityId;
+        return packet;
+    }
+
+    public static ServuxEntitiesPacket BlockEntityResponse(BlockPos pos, NbtCompound nbt)
+    {
+        var packet = new ServuxEntitiesPacket(Type.PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE);
+        packet.nbt = nbt;
+        packet.pos = pos;
+        return packet;
     }
 
     // Response Nbt Packet, set splitter to true to use Packet Splitter
@@ -351,7 +371,9 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         PACKET_C2S_ENTITY_REQUEST(4),
         PACKET_S2C_NBT_RESPONSE_START(5),
         PACKET_S2C_NBT_RESPONSE_SIMPLE(6),
-        PACKET_S2C_NBT_RESPONSE_DATA(7);
+        PACKET_S2C_NBT_RESPONSE_DATA(7),
+        PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE(8),
+        PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE(9);
 
         private final int type;
 

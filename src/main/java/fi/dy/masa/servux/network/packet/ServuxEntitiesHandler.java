@@ -78,12 +78,12 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
             case PACKET_C2S_BLOCK_ENTITY_REQUEST ->
             {
                 Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Block Entity Request from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getTransactionId(), packet.getPos());
+                EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             }
             case PACKET_C2S_ENTITY_REQUEST ->
             {
                 Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Request from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getTransactionId(), packet.getEntityId());
+                EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             }
             default -> Servux.logger.warn("decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
