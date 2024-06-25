@@ -59,11 +59,11 @@ public class EntitiesDataProvider extends DataProviderBase
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
         {
-            HANDLER.sendPlayPayload(player.networkHandler, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(this.metadata, false)));
+            HANDLER.sendPlayPayload(player.networkHandler, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
         }
         else
         {
-            HANDLER.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(new ServuxEntitiesPacket(this.metadata, false)));
+            HANDLER.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
         }
     }
 
@@ -78,7 +78,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxEntitiesPacket.BlockEntityResponse(pos, nbt));
+        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
@@ -87,6 +87,6 @@ public class EntitiesDataProvider extends DataProviderBase
 
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxEntitiesPacket.EntityResponse(entityId, nbt));
+        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
     }
 }
