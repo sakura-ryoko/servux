@@ -76,37 +76,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
             case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.sendMetadata(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
-            case PACKET_S2C_NBT_RESPONSE_DATA ->
-            {
-                UUID uuid = player.getUuid();
-                long readingSessionKey;
 
-                if (!this.readingSessionKeys.containsKey(uuid))
-                {
-                    readingSessionKey = Random.create(Util.getMeasuringTimeMs()).nextLong();
-                    this.readingSessionKeys.put(uuid, readingSessionKey);
-                }
-                else
-                {
-                    readingSessionKey = this.readingSessionKeys.get(uuid);
-                }
-
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
-                PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
-
-                if (fullPacket != null)
-                {
-                    try
-                    {
-                        this.readingSessionKeys.remove(uuid);
-                        EntitiesDataProvider.INSTANCE.handleBulkEntityData(player, fullPacket.readVarInt(), fullPacket.readNbt());
-                    }
-                    catch (Exception e)
-                    {
-                        Servux.logger.error("ServuxEntitiesHandler#decodeServerData(): Entity Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
-                    }
-                }
-            }
             default -> Servux.logger.warn("decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
