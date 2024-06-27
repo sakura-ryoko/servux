@@ -14,6 +14,7 @@ public class PlayerListener implements IPlayerListener
     {
         StructureDataProvider.INSTANCE.register(player);
         EntitiesDataProvider.INSTANCE.sendMetadata(player);
+        EntitiesDataProvider.INSTANCE.sendMetadata_Litematica(player);
     }
 
     @Override
