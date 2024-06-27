@@ -444,7 +444,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
 
     public record Payload(ServuxLitematicaPacket data) implements CustomPayload
     {
-        public static final Id<Payload> ID = new Id<>(ServuxEntitiesHandler.CHANNEL_ID);
+        public static final Id<Payload> ID = new Id<>(ServuxLitematicaHandler.CHANNEL_ID);
         public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
         public Payload(PacketByteBuf input)
