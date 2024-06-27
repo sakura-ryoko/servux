@@ -89,4 +89,10 @@ public class EntitiesDataProvider extends DataProviderBase
         NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
     }
+
+    public void handleBulkEntityData(ServerPlayerEntity player, int transactionId, NbtCompound tags)
+    {
+        Servux.logger.warn("handleBulkEntityData(): from player {}", player.getName().getLiteralString());
+        // Paste to World
+    }
 }

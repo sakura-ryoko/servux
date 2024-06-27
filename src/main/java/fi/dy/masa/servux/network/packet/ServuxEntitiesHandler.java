@@ -12,6 +12,8 @@ import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
+import net.minecraft.util.math.random.Random;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -35,6 +37,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
     private static final int MAX_FAILURES = 4;
+    private final Map<UUID, Long> readingSessionKeys = new HashMap<>();
 
     @Override
     public Identifier getPayloadChannel() { return CHANNEL_ID; }
@@ -64,26 +67,45 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     {
         ServuxEntitiesPacket packet = (ServuxEntitiesPacket) data;
 
-        if (channel.equals(CHANNEL_ID) == false)
+        if (!channel.equals(CHANNEL_ID))
         {
             return;
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST ->
+            case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_BLOCK_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
+            case PACKET_C2S_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
+            case PACKET_S2C_NBT_RESPONSE_DATA ->
             {
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Metadata Request from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.sendMetadata(player);
-            }
-            case PACKET_C2S_BLOCK_ENTITY_REQUEST ->
-            {
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Block Entity Request from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
-            }
-            case PACKET_C2S_ENTITY_REQUEST ->
-            {
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Request from player {}", player.getName().getLiteralString());
-                EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
+                UUID uuid = player.getUuid();
+                long readingSessionKey;
+
+                if (!this.readingSessionKeys.containsKey(uuid))
+                {
+                    readingSessionKey = Random.create(Util.getMeasuringTimeMs()).nextLong();
+                    this.readingSessionKeys.put(uuid, readingSessionKey);
+                }
+                else
+                {
+                    readingSessionKey = this.readingSessionKeys.get(uuid);
+                }
+
+                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
+
+                if (fullPacket != null)
+                {
+                    try
+                    {
+                        this.readingSessionKeys.remove(uuid);
+                        EntitiesDataProvider.INSTANCE.handleBulkEntityData(player, fullPacket.readVarInt(), fullPacket.readNbt());
+                    }
+                    catch (Exception e)
+                    {
+                        Servux.logger.error("ServuxEntitiesHandler#decodeServerData(): Entity Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
+                    }
+                }
             }
             default -> Servux.logger.warn("decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
@@ -120,7 +142,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
     {
         // Send each PacketSplitter buffer slice
-        ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.ResponseData(buffer)));
+        ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.ResponseS2CData(buffer)));
     }
 
     @Override
@@ -136,12 +158,12 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
             buffer.writeNbt(packet.getCompound());
             PacketSplitter.send(this, buffer, player, player.networkHandler);
         }
-        else if (ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(packet)) == false)
+        else if (!ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(packet)))
         {
             UUID id = player.getUuid();
 
             // Packet failure tracking
-            if (this.failures.containsKey(id) == false)
+            if (!this.failures.containsKey(id))
             {
                 this.failures.put(id, 1);
             }
