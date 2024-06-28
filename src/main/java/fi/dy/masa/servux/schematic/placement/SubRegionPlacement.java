@@ -8,15 +8,13 @@ import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 
-import javax.annotation.Nullable;
-
 public class SubRegionPlacement
 {
     private final String name;
     private final BlockPos defaultPos;
     private BlockPos pos;
-    private BlockRotation rotation = BlockRotation.NONE;
-    private BlockMirror mirror = BlockMirror.NONE;
+    public BlockRotation rotation = BlockRotation.NONE;
+    public BlockMirror mirror = BlockMirror.NONE;
     private boolean enabled = true;
     private boolean renderingEnabled = true;
     private boolean ignoreEntities;
@@ -42,26 +40,6 @@ public class SubRegionPlacement
     public boolean ignoreEntities()
     {
         return this.ignoreEntities;
-    }
-
-    public void setCoordinateLocked(PositionUtils.CoordinateType coord, boolean locked)
-    {
-        int mask = 0x1 << coord.ordinal();
-
-        if (locked)
-        {
-            this.coordinateLockMask |= mask;
-        }
-        else
-        {
-            this.coordinateLockMask &= ~mask;
-        }
-    }
-
-    public boolean isCoordinateLocked(PositionUtils.CoordinateType coord)
-    {
-        int mask = 0x1 << coord.ordinal();
-        return (this.coordinateLockMask & mask) != 0;
     }
 
     public boolean matchesRequirement(RequiredEnabled required)
@@ -97,26 +75,6 @@ public class SubRegionPlacement
     public BlockMirror getMirror()
     {
         return this.mirror;
-    }
-
-    public void setRenderingEnabled(boolean renderingEnabled)
-    {
-        this.renderingEnabled = renderingEnabled;
-    }
-
-    public void toggleRenderingEnabled()
-    {
-        this.setRenderingEnabled(! this.isRenderingEnabled());
-    }
-
-    void setEnabled(boolean enabled)
-    {
-        this.enabled = enabled;
-    }
-
-    void toggleEnabled()
-    {
-        this.setEnabled(! this.isEnabled());
     }
 
     void toggleIgnoreEntities()

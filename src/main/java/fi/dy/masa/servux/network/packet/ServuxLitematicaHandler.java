@@ -151,7 +151,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
         ServuxLitematicaPacket packet = (ServuxLitematicaPacket) data;
 
         // Send Response Data via Packet Splitter
-        if (packet.getType().equals(ServuxEntitiesPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
+        if (packet.getType().equals(ServuxLitematicaPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
         {
             PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
             buffer.writeVarInt(packet.getTransactionId());

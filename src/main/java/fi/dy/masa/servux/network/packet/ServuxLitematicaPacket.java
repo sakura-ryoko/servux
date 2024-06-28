@@ -430,7 +430,9 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         PACKET_S2C_NBT_RESPONSE_DATA(11),
         // For Packet Splitter (Oversize Packets, C2S)
         PACKET_C2S_NBT_RESPONSE_START(12),
-        PACKET_C2S_NBT_RESPONSE_DATA(13);
+        PACKET_C2S_NBT_RESPONSE_DATA(13),
+        PACKET_C2S_LITEMATICA_PASTE_START(16),
+        PACKET_C2S_LITEMATICA_PASTE_DATA(17);
 
         private final int type;
 

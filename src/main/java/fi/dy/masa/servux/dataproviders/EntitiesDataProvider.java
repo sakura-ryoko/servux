@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
+import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
@@ -146,6 +147,7 @@ public class EntitiesDataProvider extends DataProviderBase
     public void handleBulkEntityData(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         Servux.logger.warn("handleBulkEntityData(): from player {}", player.getName().getLiteralString());
+        SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
         // Paste to World
     }
 }
