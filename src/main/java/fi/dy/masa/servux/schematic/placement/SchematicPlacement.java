@@ -8,6 +8,8 @@ import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.IntBoundingBox;
 import fi.dy.masa.servux.util.PositionUtils;
+import fi.dy.masa.servux.util.ReplaceBehavior;
+import fi.dy.masa.servux.util.SchematicPlacingUtils;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.server.world.ServerWorld;
@@ -57,7 +59,7 @@ public class SchematicPlacement
     {
         try
         {
-            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getCompound("Schematics")), NbtHelper.toBlockPos(tags, "Origin").orElseThrow(), tags.getString("Name"), true);
+            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getCompound("Schematics")), NbtHelper.toBlockPos(tags, "Origin").orElseThrow(), tags.getString("Name"), false);
             placement.mirror = BlockMirror.values()[tags.getInt("Mirror")];
             placement.rotation = BlockRotation.values()[tags.getInt("Rotation")];
             for (String name : tags.getCompound("SubRegions").getKeys())
@@ -65,12 +67,11 @@ public class SchematicPlacement
                 NbtCompound compound = tags.getCompound("SubRegions").getCompound(name);
                 var sub = new SubRegionPlacement(NbtHelper.toBlockPos(compound, "Pos").orElseThrow(), compound.getString("Name"));
                 sub.mirror = BlockMirror.values()[compound.getInt("Mirror")];
-                sub.rotation = BlockRotation.values()[tags.getInt("Rotation")];
+                sub.rotation = BlockRotation.values()[compound.getInt("Rotation")];
                 placement.relativeSubRegionPlacements.put(name, sub);
             }
             return placement;
-        }
-        catch (CommandSyntaxException e)
+        } catch (CommandSyntaxException e)
         {
             throw new RuntimeException(e);
         }
@@ -185,8 +186,7 @@ public class SchematicPlacement
                 if (pos1 == null)
                 {
                     pos1 = tmp;
-                }
-                else if (tmp.getX() < pos1.getX() || tmp.getY() < pos1.getY() || tmp.getZ() < pos1.getZ())
+                } else if (tmp.getX() < pos1.getX() || tmp.getY() < pos1.getY() || tmp.getZ() < pos1.getZ())
                 {
                     pos1 = PositionUtils.getMinCorner(tmp, pos1);
                 }
@@ -196,8 +196,7 @@ public class SchematicPlacement
                 if (pos2 == null)
                 {
                     pos2 = tmp;
-                }
-                else if (tmp.getX() > pos2.getX() || tmp.getY() > pos2.getY() || tmp.getZ() > pos2.getZ())
+                } else if (tmp.getX() > pos2.getX() || tmp.getY() > pos2.getY() || tmp.getZ() > pos2.getZ())
                 {
                     pos2 = PositionUtils.getMaxCorner(tmp, pos2);
                 }
@@ -265,8 +264,7 @@ public class SchematicPlacement
                     pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).add(boxOriginAbsolute);
 
                     builder.put(regionName, new Box(boxOriginAbsolute, pos2, regionName));
-                }
-                else
+                } else
                 {
                     Servux.logger.warn("SchematicPlacement.getSubRegionBoxFor(): Size for sub-region '{}' not found in the schematic '{}'", regionName, this.schematic.getMetadata().getName());
                 }
@@ -353,6 +351,7 @@ public class SchematicPlacement
 
     /**
      * Moves the sub-region to the given <b>absolute</b> position.
+     *
      * @param regionName
      * @param newPos
      */
@@ -361,7 +360,7 @@ public class SchematicPlacement
         if (this.relativeSubRegionPlacements.containsKey(regionName))
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             // The input argument position is an absolute position, so need to convert to relative position here
             newPos = newPos.subtract(this.origin);
@@ -380,7 +379,7 @@ public class SchematicPlacement
         if (this.relativeSubRegionPlacements.containsKey(regionName))
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             this.relativeSubRegionPlacements.get(regionName).setRotation(rotation);
             this.onModified();
@@ -393,13 +392,12 @@ public class SchematicPlacement
         if (this.relativeSubRegionPlacements.containsKey(regionName))
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             this.relativeSubRegionPlacements.get(regionName).setMirror(mirror);
             this.onModified();
         }
     }
-
 
 
     public void resetAllSubRegionsToSchematicValues()
@@ -413,7 +411,7 @@ public class SchematicPlacement
         if (updatePlacementManager)
         {
             // Marks the currently touched chunks before doing the modification
-            
+
         }
 
         Map<String, BlockPos> areaPositions = this.schematic.getAreaPositions();
@@ -441,7 +439,7 @@ public class SchematicPlacement
         if (pos != null && placement != null)
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             placement.resetToOriginalValues();
             this.onModified();
@@ -457,7 +455,7 @@ public class SchematicPlacement
         if (this.origin.equals(origin) == false)
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             this.origin = origin;
             this.updateEnclosingBox();
@@ -472,7 +470,7 @@ public class SchematicPlacement
         if (this.rotation != rotation)
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             this.rotation = rotation;
             this.updateEnclosingBox();
@@ -486,7 +484,7 @@ public class SchematicPlacement
         if (this.mirror != mirror)
         {
             // Marks the currently touched chunks before doing the modification
-            
+
 
             this.mirror = mirror;
             this.updateEnclosingBox();
@@ -508,8 +506,48 @@ public class SchematicPlacement
         }
     }
 
+    private Box getEnclosingBox()
+    {
+        ImmutableMap<String, Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
+        BlockPos pos1 = null;
+        BlockPos pos2 = null;
+
+        for (Box box : boxes.values())
+        {
+            BlockPos tmp;
+            tmp = PositionUtils.getMinCorner(box.getPos1(), box.getPos2());
+
+            if (pos1 == null)
+            {
+                pos1 = tmp;
+            } else if (tmp.getX() < pos1.getX() || tmp.getY() < pos1.getY() || tmp.getZ() < pos1.getZ())
+            {
+                pos1 = PositionUtils.getMinCorner(tmp, pos1);
+            }
+
+            tmp = PositionUtils.getMaxCorner(box.getPos1(), box.getPos2());
+
+            if (pos2 == null)
+            {
+                pos2 = tmp;
+            } else if (tmp.getX() > pos2.getX() || tmp.getY() > pos2.getY() || tmp.getZ() > pos2.getZ())
+            {
+                pos2 = PositionUtils.getMaxCorner(tmp, pos2);
+            }
+        }
+
+        if (pos1 != null && pos2 != null)
+        {
+            return new Box(pos1, pos2, "Enclosing Box (Servux)");
+        }
+
+        return null;
+    }
+
     public void pasteTo(ServerWorld serverWorld)
     {
+        this.getEnclosingBox().toVanilla().streamChunkPos().forEach(chunkPos ->
+                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos, this, ReplaceBehavior.ALL, false));
         // todo
     }
 }

@@ -4,14 +4,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.util.JsonUtils;
 import fi.dy.masa.servux.util.PositionUtils;
+import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 
 import javax.annotation.Nullable;
 
 public class Box
 {
-    @Nullable private BlockPos pos1;
-    @Nullable private BlockPos pos2;
+    @Nullable
+    private BlockPos pos1;
+    @Nullable
+    private BlockPos pos2;
     private BlockPos size = BlockPos.ORIGIN;
     private String name = "Unnamed";
     private PositionUtils.Corner selectedCorner = PositionUtils.Corner.NONE;
@@ -107,12 +110,10 @@ public class Box
         if (this.pos1 != null && this.pos2 != null)
         {
             this.size = PositionUtils.getAreaSizeFromRelativeEndPosition(this.pos2.subtract(this.pos1));
-        }
-        else if (this.pos1 == null && this.pos2 == null)
+        } else if (this.pos1 == null && this.pos2 == null)
         {
             this.size = BlockPos.ORIGIN;
-        }
-        else
+        } else
         {
             this.size = new BlockPos(1, 1, 1);
         }
@@ -129,9 +130,12 @@ public class Box
 
         switch (type)
         {
-            case X: return pos.getX();
-            case Y: return pos.getY();
-            case Z: return pos.getZ();
+            case X:
+                return pos.getX();
+            case Y:
+                return pos.getY();
+            case Z:
+                return pos.getZ();
         }
 
         return 0;
@@ -142,8 +146,7 @@ public class Box
         if (corner == PositionUtils.Corner.CORNER_1)
         {
             this.setPos1(pos);
-        }
-        else if (corner == PositionUtils.Corner.CORNER_2)
+        } else if (corner == PositionUtils.Corner.CORNER_2)
         {
             this.setPos2(pos);
         }
@@ -204,5 +207,21 @@ public class Box
         obj.add("name", new JsonPrimitive(this.name));
 
         return this.pos1 != null || this.pos2 != null ? obj : null;
+    }
+
+    public net.minecraft.util.math.BlockBox toVanilla()
+    {
+        if (pos1 != null && pos2 != null)
+        {
+            return new BlockBox(
+                    Math.min(pos1.getX(), pos2.getX()),
+                    Math.min(pos1.getY(), pos2.getY()),
+                    Math.min(pos1.getZ(), pos2.getZ()),
+                    Math.max(pos1.getX(), pos2.getX()),
+                    Math.max(pos1.getY(), pos2.getY()),
+                    Math.max(pos1.getZ(), pos2.getZ())
+            );
+        }
+        return null;
     }
 }
