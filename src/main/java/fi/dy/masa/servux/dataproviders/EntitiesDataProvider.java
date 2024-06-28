@@ -5,6 +5,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -149,8 +150,11 @@ public class EntitiesDataProvider extends DataProviderBase
         Servux.logger.warn("handleBulkEntityData(): from player {}", player.getName().getLiteralString());
         if (tags.getString("Task").equals("LitematicaPaste"))
         {
+            long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             placement.pasteTo(player.getServerWorld());
+            long timeElapsed = System.currentTimeMillis() - timeStart;
+            player.sendMessage(Text.literal("Pasted ").append(placement.getName()).append(" to world ").append(player.getServerWorld().getRegistryKey().getValue().toString()).append(" in ").append(String.valueOf(timeElapsed)).append("ms."), false);
         }
     }
 }
