@@ -144,10 +144,13 @@ public class EntitiesDataProvider extends DataProviderBase
         LITEMATICA_HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
     }
 
-    public void handleBulkEntityData(ServerPlayerEntity player, int transactionId, NbtCompound tags)
+    public void handleClientNbtRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         Servux.logger.warn("handleBulkEntityData(): from player {}", player.getName().getLiteralString());
-        SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
-        // Paste to World
+        if (tags.getString("Task").equals("LitematicaPaste"))
+        {
+            SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
+            placement.pasteTo(player.getServerWorld());
+        }
     }
 }

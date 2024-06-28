@@ -99,7 +99,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        EntitiesDataProvider.INSTANCE.handleBulkEntityData(player, fullPacket.readVarInt(), fullPacket.readNbt());
+                        EntitiesDataProvider.INSTANCE.handleClientNbtRequest(player, fullPacket.readVarInt(), fullPacket.readNbt());
                     }
                     catch (Exception e)
                     {
