@@ -33,7 +33,7 @@ public class LitematicsDataProvider extends DataProviderBase
         super("litematic_data",
                 ServuxEntitiesHandler.CHANNEL_ID,
                 ServuxEntitiesPacket.PROTOCOL_VERSION,
-                0, "servux.provider.litematic_data",
+                0, Reference.MOD_ID+ ".provider.litematic_data",
                 "Litematics Data provider.");
 
         this.metadata.putString("name", this.getName());

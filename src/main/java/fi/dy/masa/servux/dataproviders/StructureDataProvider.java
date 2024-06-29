@@ -57,7 +57,7 @@ public class StructureDataProvider extends DataProviderBase
         super("structure_bounding_boxes",
                 ServuxStructuresHandler.CHANNEL_ID,
                 ServuxStructuresPacket.PROTOCOL_VERSION,
-                0, "servux.provider.structure_bounding_boxes",
+                0, Reference.MOD_ID+ ".provider.structure_bounding_boxes",
                 "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
         this.metadata.putString("name", this.getName());
