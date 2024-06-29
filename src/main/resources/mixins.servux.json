@@ -6,8 +6,10 @@
         "mixins": [
                 "MixinMinecraftServer",
                 "MixinPlayerManager",
+                "MixinServerChunkLoadingManager",
                 "MixinServerWorld",
-                "MixinServerChunkLoadingManager"
+                "MixinWorld",
+                "MixinWorldChunk"
         ],
         "injectors": {
                 "defaultRequire": 1
