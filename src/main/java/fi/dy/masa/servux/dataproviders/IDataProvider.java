@@ -1,6 +1,8 @@
 package fi.dy.masa.servux.dataproviders;
 
+import com.google.gson.JsonObject;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 
@@ -91,4 +93,19 @@ public interface IDataProvider
      * @return
      */
     IPluginServerPlayHandler<?> getPacketHandler();
+
+    /**
+     * Determine if Player has permissions to this Data Provider
+     * @param player (Player to test permissions for)
+     * @return (true|false)
+     */
+    boolean hasPermission(ServerPlayerEntity player);
+
+    /**
+     * Config file handling
+     * @return
+     */
+    JsonObject toJson();
+
+    void fromJson(JsonObject obj);
 }

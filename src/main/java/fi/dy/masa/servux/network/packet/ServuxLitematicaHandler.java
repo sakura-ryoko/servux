@@ -15,7 +15,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.random.Random;
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
@@ -73,9 +73,9 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.sendMetadata_Litematica(player);
-            case PACKET_C2S_BLOCK_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onBlockEntityRequest_Litematica(player, packet.getPos());
-            case PACKET_C2S_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onEntityRequest_Litematica(player, packet.getEntityId());
+            case PACKET_C2S_METADATA_REQUEST -> LitematicsDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_BLOCK_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
+            case PACKET_C2S_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
                 UUID uuid = player.getUuid();
@@ -91,7 +91,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                Servux.logger.warn("ServuxLitematicaHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
@@ -99,15 +99,15 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        EntitiesDataProvider.INSTANCE.handleClientNbtRequest(player, fullPacket.readVarInt(), fullPacket.readNbt());
+                        LitematicsDataProvider.INSTANCE.handleClientNbtRequest(player, fullPacket.readVarInt(), fullPacket.readNbt());
                     }
                     catch (Exception e)
                     {
-                        Servux.logger.error("ServuxEntitiesHandler#decodeServerData(): Entity Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
+                        Servux.logger.error("ServuxLitematicaHandler#decodeServerData(): Entity Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
                     }
                 }
             }
-            default -> Servux.logger.warn("decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.logger.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -170,7 +170,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             else if (this.failures.get(id) > MAX_FAILURES)
             {
                 Servux.logger.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
-                EntitiesDataProvider.INSTANCE.onPacketFailure_Litematica(player);
+                LitematicsDataProvider.INSTANCE.onPacketFailure(player);
             }
             else
             {

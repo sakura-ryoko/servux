@@ -4,6 +4,7 @@ import java.net.SocketAddress;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.server.network.ServerPlayerEntity;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
 
@@ -14,7 +15,7 @@ public class PlayerListener implements IPlayerListener
     {
         StructureDataProvider.INSTANCE.register(player);
         EntitiesDataProvider.INSTANCE.sendMetadata(player);
-        EntitiesDataProvider.INSTANCE.sendMetadata_Litematica(player);
+        LitematicsDataProvider.INSTANCE.sendMetadata(player);
     }
 
     @Override

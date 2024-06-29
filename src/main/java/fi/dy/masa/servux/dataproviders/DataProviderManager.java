@@ -124,6 +124,16 @@ public class DataProviderManager
             {
                 obj = JsonUtils.getNestedObject(root, "DataProviderToggles", false);
             }
+
+            for (IDataProvider provider : this.providersImmutable)
+            {
+                String name = provider.getName();
+
+                if (JsonUtils.hasObject(root, name))
+                {
+                    provider.fromJson(JsonUtils.getNestedObject(root, name, false));
+                }
+            }
         }
 
         for (IDataProvider provider : this.providersImmutable)
@@ -146,6 +156,12 @@ public class DataProviderManager
         }
 
         root.add("DataProviderToggles", objToggles);
+
+        for (IDataProvider provider : this.providersImmutable)
+        {
+            String name = provider.getName();
+            root.add(name, provider.toJson());
+        }
 
         JsonUtils.writeJsonToFile(root, this.getConfigFile());
     }

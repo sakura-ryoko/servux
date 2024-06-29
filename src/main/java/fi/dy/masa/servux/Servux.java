@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.PlayerHandler;
 import fi.dy.masa.servux.event.PlayerListener;
@@ -19,6 +20,7 @@ public class Servux implements ModInitializer
     public void onInitialize()
     {
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
+        DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(EntitiesDataProvider.INSTANCE);
 
         ServerListener serverListener = new ServerListener();

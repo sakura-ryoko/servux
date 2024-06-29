@@ -2,9 +2,12 @@ package fi.dy.masa.servux.dataproviders;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.MinecraftServer;
@@ -22,10 +25,12 @@ import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.structure.Structure;
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
-import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
+import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
+import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
+import fi.dy.masa.servux.util.JsonUtils;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -40,6 +45,7 @@ public class StructureDataProvider extends DataProviderBase
     protected int timeout = 30 * 20;
     protected int updateInterval = 40;
     protected int retainDistance;
+    protected int permissionLevel = -1;
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -51,7 +57,8 @@ public class StructureDataProvider extends DataProviderBase
         super("structure_bounding_boxes",
                 ServuxStructuresHandler.CHANNEL_ID,
                 ServuxStructuresPacket.PROTOCOL_VERSION,
-    "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
+                0, "servux.provider.structure_bounding_boxes",
+                "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
         this.metadata.putString("name", this.getName());
         this.metadata.putString("id", this.getNetworkChannel().toString());
@@ -169,6 +176,13 @@ public class StructureDataProvider extends DataProviderBase
         boolean registered = false;
         MinecraftServer server = player.getServer();
         UUID uuid = player.getUuid();
+
+        if (this.hasPermission(player) == false)
+        {
+            // No Permission
+            Servux.logger.info("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            return registered;
+        }
 
         if (this.registeredPlayers.containsKey(uuid) == false)
         {
@@ -550,4 +564,44 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean refreshSpawnMetadata() { return this.refreshSpawnMetadata; }
     public void setRefreshSpawnMetadataComplete() { this.refreshSpawnMetadata = false; }
+
+    protected void setPermissionLevel(int level)
+    {
+        if (!(level < 0 || level > 4))
+        {
+            this.permissionLevel = level;
+        }
+    }
+
+    @Override
+    public boolean hasPermission(ServerPlayerEntity player)
+    {
+        return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+    }
+
+    @Override
+    public JsonObject toJson()
+    {
+        JsonObject obj = new JsonObject();
+
+        if (this.permissionLevel > -1)
+        {
+            obj.add("permission_level", new JsonPrimitive(this.permissionLevel));
+        }
+        else
+        {
+            obj.add("permission_level", new JsonPrimitive(this.defaultPerm));
+        }
+
+        return obj;
+    }
+
+    @Override
+    public void fromJson(JsonObject obj)
+    {
+        if (JsonUtils.hasInteger(obj, "permission_level"))
+        {
+            this.setPermissionLevel(JsonUtils.getInteger(obj, "permission_level"));
+        }
+    }
 }
