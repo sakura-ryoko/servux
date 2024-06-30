@@ -128,8 +128,15 @@ public class StructureDataProvider extends DataProviderBase
                 }
                 if (this.registeredPlayers.containsKey(uuid))
                 {
-                    this.checkForDimensionChange(player);
-                    this.refreshTrackedChunks(player, tickCounter);
+                    if (this.hasPermission(player) == false)
+                    {
+                        this.unregister(player);
+                    }
+                    else
+                    {
+                        this.checkForDimensionChange(player);
+                        this.refreshTrackedChunks(player, tickCounter);
+                    }
                 }
             }
 
