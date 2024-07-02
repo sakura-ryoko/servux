@@ -138,7 +138,7 @@ public class LitematicsDataProvider extends DataProviderBase
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             placement.pasteTo(player.getServerWorld());
             long timeElapsed = System.currentTimeMillis() - timeStart;
-            player.sendMessage(Text.of("§6Pasted "+placement.getName()+" to world "+player.getServerWorld().getRegistryKey().getValue().toString()+" in §a"+timeElapsed+"§rms."), false);
+            player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
         }
     }
 
