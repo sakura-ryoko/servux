@@ -31,8 +31,8 @@ public class LitematicsDataProvider extends DataProviderBase
     protected LitematicsDataProvider()
     {
         super("litematic_data",
-                ServuxEntitiesHandler.CHANNEL_ID,
-                ServuxEntitiesPacket.PROTOCOL_VERSION,
+                ServuxLitematicaHandler.CHANNEL_ID,
+                ServuxLitematicaPacket.PROTOCOL_VERSION,
                 0, Reference.MOD_ID+ ".provider.litematic_data",
                 "Litematics Data provider.");
 
