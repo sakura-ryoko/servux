@@ -187,7 +187,7 @@ public class StructureDataProvider extends DataProviderBase
         if (this.hasPermission(player) == false)
         {
             // No Permission
-            Servux.logger.info("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.logger.warn("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return registered;
         }
 

@@ -13,8 +13,6 @@ import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
-import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
@@ -123,6 +121,13 @@ public class LitematicsDataProvider extends DataProviderBase
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
             Servux.logger.warn("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            player.sendMessage(Text.literal("§cInsufficient Permissions for the Litematic paste operation.§r"));
+            return;
+        }
+        if (player.isCreative() == false)
+        {
+            Servux.logger.warn("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
+            player.sendMessage(Text.literal("§cCreative Mode is required for the Litematic paste operation.§r"));
             return;
         }
 
@@ -133,7 +138,7 @@ public class LitematicsDataProvider extends DataProviderBase
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             placement.pasteTo(player.getServerWorld());
             long timeElapsed = System.currentTimeMillis() - timeStart;
-            player.sendMessage(Text.literal("Pasted ").append(placement.getName()).append(" to world ").append(player.getServerWorld().getRegistryKey().getValue().toString()).append(" in ").append(String.valueOf(timeElapsed)).append("ms."), false);
+            player.sendMessage(Text.of("§6Pasted "+placement.getName()+" to world "+player.getServerWorld().getRegistryKey().getValue().toString()+" in §a"+timeElapsed+"§rms."), false);
         }
     }
 

@@ -34,7 +34,7 @@ public abstract class MixinBlockItem extends Item
             if (stateOrig != null && this.canPlace(ctx, stateOrig))
             {
                 UseContext context = UseContext.from(ctx, ctx.getHand());
-                cir.setReturnValue(PlacementHandler.applyPlacementProtocolToPlacementState(stateOrig, context));
+                cir.setReturnValue(PlacementHandler.applyPlacementProtocolV3(stateOrig, context));
             }
         //}
     }

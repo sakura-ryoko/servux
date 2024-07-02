@@ -25,30 +25,10 @@ import fi.dy.masa.servux.Servux;
 public class PlacementHandler
 {
     public static final ImmutableSet<Property<?>> WHITELISTED_PROPERTIES = ImmutableSet.of(
-            // BooleanProperty:
-            // INVERTED - DaylightDetector
-            // OPEN - Barrel, Door, FenceGate, Trapdoor
-            // PERSISTENT - Leaves
-            // CAN_SUMMON - Shrieker
             Properties.INVERTED,
             Properties.OPEN,
             Properties.PERSISTENT,
             Properties.CAN_SUMMON,
-            // EnumProperty:
-            // ATTACHMENT - Bell
-            // AXIS - Pillar
-            // BED_PART - Beds
-            // BLOCK_HALF - Stairs, Trapdoor
-            // BLOCK_FACE - Button, Grindstone, Lever
-            // CHEST_TYPE - Chest
-            // COMPARATOR_MODE - Comparator
-            // DOOR_HINGE - Door
-            // DOUBLE_BLOCK_HALF - Doors, Plants
-            // ORIENTATION - Crafter
-            // RAIL_SHAPE / STRAIGHT_RAIL_SHAPE - Rails
-            // SLAB_TYPE - Slab - PARTIAL ONLY: TOP and BOTTOM, not DOUBLE
-            // STAIR_SHAPE - Stairs (needed to get the correct state, otherwise the player facing would be a factor)
-            // BLOCK_FACE - Button, Grindstone, Lever
             Properties.ATTACHMENT,
             Properties.AXIS,
             Properties.BED_PART,
@@ -63,100 +43,11 @@ public class PlacementHandler
             Properties.STRAIGHT_RAIL_SHAPE,
             Properties.SLAB_TYPE,
             Properties.STAIR_SHAPE,
-            // IntProperty:
-            // BITES - Cake
-            // DELAY - Repeater
-            // NOTE - NoteBlock
-            // ROTATION - Banner, Sign, Skull
             Properties.BITES,
             Properties.DELAY,
             Properties.NOTE,
             Properties.ROTATION
     );
-
-    public static EasyPlacementProtocol getEffectiveProtocolVersion()
-    {
-        return EasyPlacementProtocol.V3;
-    }
-
-    @Nullable
-    public static BlockState applyPlacementProtocolToPlacementState(BlockState state, UseContext context)
-    {
-        EasyPlacementProtocol protocol = getEffectiveProtocolVersion();
-
-        if (protocol == EasyPlacementProtocol.V3)
-        {
-            return applyPlacementProtocolV3(state, context);
-        }
-        else if (protocol == EasyPlacementProtocol.V2)
-        {
-            return applyPlacementProtocolV2(state, context);
-        }
-        else
-        {
-            return state;
-        }
-    }
-
-    public static BlockState applyPlacementProtocolV2(BlockState state, UseContext context)
-    {
-        int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
-
-        if (protocolValue < 0)
-        {
-            return state;
-        }
-
-        @Nullable DirectionProperty property = BlockUtils.getFirstDirectionProperty(state);
-
-        if (property != null)
-        {
-            state = applyDirectionProperty(state, context, property, protocolValue);
-
-            if (state == null)
-            {
-                return null;
-            }
-        }
-        else if (state.contains(Properties.AXIS))
-        {
-            Direction.Axis axis = Direction.Axis.VALUES[((protocolValue >> 1) & 0x3) % 3];
-
-            if (Properties.AXIS.getValues().contains(axis))
-            {
-                state = state.with(Properties.AXIS, axis);
-            }
-        }
-
-        // Divide by two, and then remove the 4 bits used for the facing
-        protocolValue >>>= 5;
-
-        if (protocolValue > 0)
-        {
-            Block block = state.getBlock();
-
-            if (block instanceof RepeaterBlock)
-            {
-                Integer delay = protocolValue;
-
-                if (RepeaterBlock.DELAY.getValues().contains(delay))
-                {
-                    state = state.with(RepeaterBlock.DELAY, delay);
-                }
-            }
-            else if (block instanceof ComparatorBlock)
-            {
-                state = state.with(ComparatorBlock.MODE, ComparatorMode.SUBTRACT);
-            }
-        }
-
-        if (state.contains(Properties.BLOCK_HALF))
-        {
-            state = state.with(Properties.BLOCK_HALF, protocolValue > 0 ? BlockHalf.TOP : BlockHalf.BOTTOM);
-        }
-
-        return state;
-    }
 
     public static <T extends Comparable<T>> BlockState applyPlacementProtocolV3(BlockState state, UseContext context)
     {
@@ -269,6 +160,66 @@ public class PlacementHandler
             }
 
             state = state.with(property, facing);
+        }
+
+        return state;
+    }
+
+    public static BlockState applyPlacementProtocolV2(BlockState state, UseContext context)
+    {
+        int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
+
+        if (protocolValue < 0)
+        {
+            return state;
+        }
+
+        @Nullable DirectionProperty property = BlockUtils.getFirstDirectionProperty(state);
+
+        if (property != null)
+        {
+            state = applyDirectionProperty(state, context, property, protocolValue);
+
+            if (state == null)
+            {
+                return null;
+            }
+        }
+        else if (state.contains(Properties.AXIS))
+        {
+            Direction.Axis axis = Direction.Axis.VALUES[((protocolValue >> 1) & 0x3) % 3];
+
+            if (Properties.AXIS.getValues().contains(axis))
+            {
+                state = state.with(Properties.AXIS, axis);
+            }
+        }
+
+        // Divide by two, and then remove the 4 bits used for the facing
+        protocolValue >>>= 5;
+
+        if (protocolValue > 0)
+        {
+            Block block = state.getBlock();
+
+            if (block instanceof RepeaterBlock)
+            {
+                Integer delay = protocolValue;
+
+                if (RepeaterBlock.DELAY.getValues().contains(delay))
+                {
+                    state = state.with(RepeaterBlock.DELAY, delay);
+                }
+            }
+            else if (block instanceof ComparatorBlock)
+            {
+                state = state.with(ComparatorBlock.MODE, ComparatorMode.SUBTRACT);
+            }
+        }
+
+        if (state.contains(Properties.BLOCK_HALF))
+        {
+            state = state.with(Properties.BLOCK_HALF, protocolValue > 0 ? BlockHalf.TOP : BlockHalf.BOTTOM);
         }
 
         return state;

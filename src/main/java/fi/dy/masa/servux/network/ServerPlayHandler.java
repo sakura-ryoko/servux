@@ -3,7 +3,6 @@ package fi.dy.masa.servux.network;
 import com.google.common.collect.ArrayListMultimap;
 import org.jetbrains.annotations.ApiStatus;
 import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 
 /**
@@ -53,26 +52,6 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
             for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
             {
                 handler.reset(channel);
-            }
-        }
-    }
-
-    /**
-     * This allows your Data Channel to be "shared" among more than one mod.
-     * Using the IServerPayloadData interface as the Data Packet type.
-     * @param channel (The shared Channel)
-     * @param player (The Player it came from)
-     * @param data (The Data type packet)
-     * @param <P> (The Type of Data as a Generic)
-     */
-    @ApiStatus.Internal
-    public <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayerEntity player, P data)
-    {
-        if (this.handlers.isEmpty() == false)
-        {
-            for (IPluginServerPlayHandler<T> handler : this.handlers.get(channel))
-            {
-                handler.decodeServerData(channel, player, data);
             }
         }
     }
