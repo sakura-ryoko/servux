@@ -7,7 +7,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -15,7 +14,6 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
-import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class EntitiesDataProvider extends DataProviderBase
@@ -115,22 +113,15 @@ public class EntitiesDataProvider extends DataProviderBase
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
     }
 
-    public void handleClientNbtRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
+    public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         if (this.hasPermission(player) == false)
         {
             return;
         }
 
-        Servux.logger.warn("handleBulkEntityData(): from player {}", player.getName().getLiteralString());
-        if (tags.getString("Task").equals("LitematicaPaste"))
-        {
-            long timeStart = System.currentTimeMillis();
-            SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
-            placement.pasteTo(player.getServerWorld());
-            long timeElapsed = System.currentTimeMillis() - timeStart;
-            player.sendMessage(Text.literal("Pasted ").append(placement.getName()).append(" to world ").append(player.getServerWorld().getRegistryKey().getValue().toString()).append(" in ").append(String.valueOf(timeElapsed)).append("ms."), false);
-        }
+        Servux.logger.warn("handleBulkClientRequest(): from player {}", player.getName().getLiteralString());
+        // todo
     }
 
     protected void setPermissionLevel(int level)

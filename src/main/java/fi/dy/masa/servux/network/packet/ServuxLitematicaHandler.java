@@ -76,6 +76,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             case PACKET_C2S_METADATA_REQUEST -> LitematicsDataProvider.INSTANCE.sendMetadata(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
+            case PACKET_C2S_BULK_ENTITY_NBT_REQUEST -> LitematicsDataProvider.INSTANCE.onBulkEntityRequest(player, packet.getChunkPos(), packet.getCompound());
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
                 UUID uuid = player.getUuid();
@@ -99,7 +100,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        LitematicsDataProvider.INSTANCE.handleClientNbtRequest(player, fullPacket.readVarInt(), fullPacket.readNbt());
+                        LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, fullPacket.readVarInt(), fullPacket.readNbt());
                     }
                     catch (Exception e)
                     {
