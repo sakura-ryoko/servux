@@ -80,11 +80,11 @@ public class LitematicsDataProvider extends DataProviderBase
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.logger.info("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.logger.warn("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
 
-        Servux.logger.warn("LitematicsDataProvider#sendMetadata: sendMetadata to player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("LitematicsDataProvider#sendMetadata: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -109,7 +109,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
@@ -123,7 +123,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {}", player.getName().getLiteralString());
 
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
@@ -196,7 +196,7 @@ public class LitematicsDataProvider extends DataProviderBase
         long timeElapsed = System.currentTimeMillis() - timeStart;
 
         HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-        player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
+        //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
     }
 
     public void handleClientPasteRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
@@ -214,7 +214,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        Servux.logger.warn("LitematicsDataProvider#handleClientPasteRequest(): from player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("LitematicsDataProvider#handleClientPasteRequest(): from player {}", player.getName().getLiteralString());
         if (tags.getString("Task").equals("LitematicaPaste"))
         {
             long timeStart = System.currentTimeMillis();

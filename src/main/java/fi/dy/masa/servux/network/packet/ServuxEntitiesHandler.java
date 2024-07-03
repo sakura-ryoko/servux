@@ -169,7 +169,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                Servux.logger.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                //Servux.logger.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 EntitiesDataProvider.INSTANCE.onPacketFailure(player);
             }
             else

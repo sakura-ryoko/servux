@@ -63,11 +63,11 @@ public class EntitiesDataProvider extends DataProviderBase
         if (this.hasPermission(player) == false)
         {
             // No Permission
-            Servux.logger.info("entity_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.logger.warn("entity_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
 
-        Servux.logger.warn("entityDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("entityDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -92,7 +92,7 @@ public class EntitiesDataProvider extends DataProviderBase
             return;
         }
 
-        Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
@@ -106,7 +106,7 @@ public class EntitiesDataProvider extends DataProviderBase
             return;
         }
 
-        Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
 
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
@@ -120,7 +120,7 @@ public class EntitiesDataProvider extends DataProviderBase
             return;
         }
 
-        Servux.logger.warn("handleBulkClientRequest(): from player {}", player.getName().getLiteralString());
+        Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
         // todo
     }
 
