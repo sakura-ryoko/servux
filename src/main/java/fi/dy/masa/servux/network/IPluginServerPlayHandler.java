@@ -163,6 +163,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data) {}
     default void decodeByteBuf(Identifier channel, ServerPlayerEntity player, ServuxBuf data) {}
     default <D> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1) {}
+    default <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayerEntity player, P data) {}
 
     /**
      * Payload Encoder wrapper function [OPTIONAL]
@@ -174,6 +175,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
     default void encodeNbtCompound(ServerPlayerEntity player, NbtCompound data) {}
     default void encodeByteBuf(ServerPlayerEntity player, ServuxBuf data) {}
     default <D> void encodeObject(ServerPlayerEntity player, D data1) {}
+    default <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data) {}
 
     /**
      * Used as an iterative "wrapper" for Payload Splitter to send individual Packets

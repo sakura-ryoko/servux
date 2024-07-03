@@ -6,16 +6,20 @@ public abstract class DataProviderBase implements IDataProvider
 {
     protected final Identifier networkChannel;
     protected final String name;
+    protected final String permNode;
     protected final String description;
     protected final int protocolVersion;
+    protected final int defaultPerm;
     protected boolean enabled;
     private int tickRate = 40;
 
-    protected DataProviderBase(String name, Identifier channel, int protocolVersion, String description)
+    protected DataProviderBase(String name, Identifier channel, int protocolVersion, int defaultPerm, String permNode, String description)
     {
         this.name = name;
         this.networkChannel = channel;
         this.protocolVersion = protocolVersion;
+        this.defaultPerm = defaultPerm > -1 && defaultPerm < 5 ? defaultPerm : 0;
+        this.permNode = permNode;
         this.description = description;
     }
 

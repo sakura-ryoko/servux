@@ -64,7 +64,8 @@ public class PacketSplitter
                                                          long key,
                                                          PacketByteBuf buf)
     {
-        return receive(handler.getPayloadChannel(), key, buf, DEFAULT_MAX_RECEIVE_SIZE_C2S);
+        // this size needed to be bumped larger for Litematics
+        return receive(handler.getPayloadChannel(), key, buf, DEFAULT_MAX_RECEIVE_SIZE_S2C);
     }
 
     @Nullable

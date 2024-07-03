@@ -60,7 +60,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
     public void decodeStructuresPacket(Identifier channel, ServerPlayerEntity player, ServuxStructuresPacket packet)
     {
-        if (channel.equals(CHANNEL_ID) == false)
+        if (!channel.equals(CHANNEL_ID))
         {
             return;
         }
@@ -129,18 +129,18 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             buffer.writeNbt(packet.getCompound());
             PacketSplitter.send(this, buffer, player, player.networkHandler);
         }
-        else if (ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPacket.Payload(packet)) == false)
+        else if (!ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPacket.Payload(packet)))
         {
             // Packet failure tracking
             UUID id = player.getUuid();
 
-            if (this.failures.containsKey(id) == false)
+            if (!this.failures.containsKey(id))
             {
                 this.failures.put(id, 1);
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                //Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 StructureDataProvider.INSTANCE.unregister(player);
             }
             else
