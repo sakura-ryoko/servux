@@ -49,7 +49,8 @@ public class PlacementHandler
     );
 
     public static final ImmutableMap<Property<?>, BiFunction<BlockState, UseContext, Boolean>> PROPERTY_VALIDATORS = ImmutableMap.<Property<?>, BiFunction<BlockState, UseContext, Boolean>>builder()
-            .put(Properties.HORIZONTAL_FACING, (value, ctx) -> {
+            .put(Properties.HORIZONTAL_FACING, (value, ctx) ->
+            {
                 if (value.getProperties().contains(Properties.BLOCK_FACE))
                 {
                     return value.canPlaceAt(ctx.getWorld(), ctx.getPos());
@@ -61,10 +62,10 @@ public class PlacementHandler
     public static <T extends Comparable<T>> BlockState applyPlacementProtocolV3(BlockState state, UseContext context)
     {
         int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
+        BlockState oldState = state;
         //System.out.printf("hit vec.x %s, pos.x: %s\n", context.getHitVec().getX(), context.getPos().getX());
         //System.out.printf("raw protocol value in: 0x%08X\n", protocolValue);
 
-        BlockState oldState = state;
         if (protocolValue < 0)
         {
             return oldState;
