@@ -7,6 +7,8 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -99,7 +101,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        EntitiesDataProvider.INSTANCE.handleBulkClientRequest(player, fullPacket.readVarInt(), fullPacket.readNbt());
+                        EntitiesDataProvider.INSTANCE.handleBulkClientRequest(player, fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                     }
                     catch (Exception e)
                     {
