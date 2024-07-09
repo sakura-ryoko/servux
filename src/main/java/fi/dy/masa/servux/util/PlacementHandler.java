@@ -48,17 +48,6 @@ public class PlacementHandler
             Properties.ROTATION
     );
 
-    public static final ImmutableMap<Property<?>, BiFunction<BlockState, UseContext, Boolean>> PROPERTY_VALIDATORS = ImmutableMap.<Property<?>, BiFunction<BlockState, UseContext, Boolean>>builder()
-            .put(Properties.HORIZONTAL_FACING, (value, ctx) ->
-            {
-                if (value.getProperties().contains(Properties.BLOCK_FACE))
-                {
-                    return value.canPlaceAt(ctx.getWorld(), ctx.getPos());
-                }
-                return true;
-            })
-            .build();
-
     public static <T extends Comparable<T>> BlockState applyPlacementProtocolV3(BlockState state, UseContext context)
     {
         int protocolValue = (int) (context.getHitVec().x - (double) context.getPos().getX()) - 2;
@@ -78,9 +67,13 @@ public class PlacementHandler
         {
             //System.out.printf("applying: 0x%08X\n", protocolValue);
             state = applyDirectionProperty(state, context, property, protocolValue);
-            var validator = PROPERTY_VALIDATORS.get(property);
 
-            if ((validator == null || validator.apply(state, context)) && state.canPlaceAt(context.getWorld(), context.getPos()))
+            if (state == null)
+            {
+                return null;
+            }
+
+            if (state.canPlaceAt(context.getWorld(), context.getPos()))
             {
                 //System.out.printf("validator passed for \"%s\"\n", property.getName());
                 oldState = state;
@@ -89,11 +82,6 @@ public class PlacementHandler
             {
                 //System.out.printf("validator failed for \"%s\"\n", property.getName());
                 state = oldState;
-            }
-
-            if (state == null)
-            {
-                return null;
             }
 
             // Consume the bits used for the facing
@@ -132,8 +120,7 @@ public class PlacementHandler
                             //System.out.printf("applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
 
-                            BiFunction<BlockState, UseContext, Boolean> validator = PROPERTY_VALIDATORS.get(prop);
-                            if ((validator == null || validator.apply(state, context)) && state.canPlaceAt(context.getWorld(), context.getPos()))
+                            if (state.canPlaceAt(context.getWorld(), context.getPos()))
                             {
                                 //System.out.printf("validator passed for \"%s\"\n", prop.getName());
                                 oldState = state;
