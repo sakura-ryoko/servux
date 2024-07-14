@@ -150,53 +150,60 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        long timeStart = System.currentTimeMillis();
-        NbtList tileList = new NbtList();
-        NbtList entityList = new NbtList();
-        int minY = req.getInt("minY");
-        int maxY = req.getInt("maxY");
-        BlockPos pos1 = new BlockPos(chunkPos.getStartX(), minY, chunkPos.getStartZ());
-        BlockPos pos2 = new BlockPos(chunkPos.getEndX(), maxY, chunkPos.getEndZ());
-        net.minecraft.util.math.Box bb = PositionUtils.createEnclosingAABB(pos1, pos2);
-        Set<BlockPos> teSet = chunk.getBlockEntityPositions();
-        List<Entity> entities = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
-
-        for (BlockPos tePos : teSet)
+        // TODO --> Split out the task this way (I should have done this under 0.3.0),
+        //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
+        if ((req.contains("Task") && req.getString("Task").equals("BulkEntityRequest")) ||
+            req.contains("Task") == false)
         {
-            if ((tePos.getX() < chunkPos.getStartX() || tePos.getX() > chunkPos.getEndX()) ||
-                (tePos.getZ() < chunkPos.getStartZ() || tePos.getZ() > chunkPos.getEndZ()) ||
-                (tePos.getY() < minY || tePos.getY() > maxY))
+            long timeStart = System.currentTimeMillis();
+            NbtList tileList = new NbtList();
+            NbtList entityList = new NbtList();
+            int minY = req.getInt("minY");
+            int maxY = req.getInt("maxY");
+            BlockPos pos1 = new BlockPos(chunkPos.getStartX(), minY, chunkPos.getStartZ());
+            BlockPos pos2 = new BlockPos(chunkPos.getEndX(), maxY, chunkPos.getEndZ());
+            net.minecraft.util.math.Box bb = PositionUtils.createEnclosingAABB(pos1, pos2);
+            Set<BlockPos> teSet = chunk.getBlockEntityPositions();
+            List<Entity> entities = world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+
+            for (BlockPos tePos : teSet)
             {
-                continue;
+                if ((tePos.getX() < chunkPos.getStartX() || tePos.getX() > chunkPos.getEndX()) ||
+                        (tePos.getZ() < chunkPos.getStartZ() || tePos.getZ() > chunkPos.getEndZ()) ||
+                        (tePos.getY() < minY || tePos.getY() > maxY))
+                {
+                    continue;
+                }
+
+                BlockEntity be = world.getBlockEntity(tePos);
+                NbtCompound beTag = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
+                tileList.add(beTag);
             }
 
-            BlockEntity be = world.getBlockEntity(tePos);
-            NbtCompound beTag = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
-            tileList.add(beTag);
-        }
-
-        for (Entity entity : entities)
-        {
-            NbtCompound entTag = new NbtCompound();
-
-            if (entity.saveNbt(entTag))
+            for (Entity entity : entities)
             {
-                Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
-                NBTUtils.writeEntityPositionToTag(posVec, entTag);
-                entTag.putInt("entityId", entity.getId());
-                entityList.add(entTag);
+                NbtCompound entTag = new NbtCompound();
+
+                if (entity.saveNbt(entTag))
+                {
+                    Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
+                    NBTUtils.writeEntityPositionToTag(posVec, entTag);
+                    entTag.putInt("entityId", entity.getId());
+                    entityList.add(entTag);
+                }
             }
+
+            NbtCompound output = new NbtCompound();
+            output.putString("Task", "BulkEntityReply");
+            output.put("TileEntities", tileList);
+            output.put("Entities", entityList);
+            output.putInt("chunkX", chunkPos.x);
+            output.putInt("chunkZ", chunkPos.z);
+            long timeElapsed = System.currentTimeMillis() - timeStart;
+
+            HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
+            //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
         }
-
-        NbtCompound output = new NbtCompound();
-        output.put("TileEntities", tileList);
-        output.put("Entities", entityList);
-        output.putInt("chunkX", chunkPos.x);
-        output.putInt("chunkZ", chunkPos.z);
-        long timeElapsed = System.currentTimeMillis() - timeStart;
-
-        HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-        //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
     }
 
     public void handleClientPasteRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
