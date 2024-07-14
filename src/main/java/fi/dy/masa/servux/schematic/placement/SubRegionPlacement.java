@@ -3,7 +3,7 @@ package fi.dy.masa.servux.schematic.placement;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import fi.dy.masa.servux.util.PositionUtils;
+import fi.dy.masa.servux.Servux;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
@@ -15,10 +15,8 @@ public class SubRegionPlacement
     private BlockPos pos;
     public BlockRotation rotation = BlockRotation.NONE;
     public BlockMirror mirror = BlockMirror.NONE;
-    private boolean enabled = true;
-    private boolean renderingEnabled = true;
-    private boolean ignoreEntities;
-    private int coordinateLockMask;
+    public boolean enabled = true;
+    public boolean ignoreEntities;
 
     public SubRegionPlacement(BlockPos pos, String name)
     {
@@ -30,11 +28,6 @@ public class SubRegionPlacement
     public boolean isEnabled()
     {
         return this.enabled;
-    }
-
-    public boolean isRenderingEnabled()
-    {
-        return this.renderingEnabled;
     }
 
     public boolean ignoreEntities()
@@ -54,7 +47,8 @@ public class SubRegionPlacement
             return this.isEnabled();
         }
 
-        return this.isEnabled() && this.isRenderingEnabled();
+        Servux.logger.warn("RequiredEnabled.RENDERING_ENABLED is not supported on server side!");
+        return false;
     }
 
     public String getName()
@@ -84,7 +78,7 @@ public class SubRegionPlacement
 
     void setPos(BlockPos pos)
     {
-        this.pos = PositionUtils.getModifiedPartiallyLockedPosition(this.pos, pos, this.coordinateLockMask);
+        this.pos = pos;
     }
 
     void setRotation(BlockRotation rotation)
@@ -133,9 +127,9 @@ public class SubRegionPlacement
         obj.add("name", new JsonPrimitive(this.getName()));
         obj.add("rotation", new JsonPrimitive(this.rotation.name()));
         obj.add("mirror", new JsonPrimitive(this.mirror.name()));
-        obj.add("locked_coords", new JsonPrimitive(this.coordinateLockMask));
+        obj.add("locked_coords", new JsonPrimitive(0));
         obj.add("enabled", new JsonPrimitive(this.enabled));
-        obj.add("rendering_enabled", new JsonPrimitive(this.renderingEnabled));
+        obj.add("rendering_enabled", new JsonPrimitive(true));
         obj.add("ignore_entities", new JsonPrimitive(this.ignoreEntities));
 
         return obj;

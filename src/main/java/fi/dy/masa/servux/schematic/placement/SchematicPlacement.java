@@ -68,6 +68,8 @@ public class SchematicPlacement
                 var sub = new SubRegionPlacement(NbtHelper.toBlockPos(compound, "Pos").orElseThrow(), compound.getString("Name"));
                 sub.mirror = BlockMirror.values()[compound.getInt("Mirror")];
                 sub.rotation = BlockRotation.values()[compound.getInt("Rotation")];
+                sub.ignoreEntities = compound.getBoolean("IgnoreEntities");
+                sub.enabled = compound.getBoolean("Enabled");
                 placement.relativeSubRegionPlacements.put(name, sub);
             }
             return placement;
@@ -544,10 +546,10 @@ public class SchematicPlacement
         return null;
     }
 
-    public void pasteTo(ServerWorld serverWorld)
+    public void pasteTo(ServerWorld serverWorld, ReplaceBehavior replaceBehavior)
     {
         this.getEnclosingBox().toVanilla().streamChunkPos().forEach(chunkPos ->
-                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos, this, ReplaceBehavior.ALL, false));
+                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos, this, replaceBehavior, false));
         // todo
     }
 }
