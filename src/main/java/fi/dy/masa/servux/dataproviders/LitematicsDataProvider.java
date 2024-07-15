@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import fi.dy.masa.servux.util.*;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -27,10 +28,6 @@ import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.selection.Box;
-import fi.dy.masa.servux.util.EntityUtils;
-import fi.dy.masa.servux.util.JsonUtils;
-import fi.dy.masa.servux.util.NBTUtils;
-import fi.dy.masa.servux.util.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
@@ -226,7 +223,8 @@ public class LitematicsDataProvider extends DataProviderBase
         {
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
-            placement.pasteTo(player.getServerWorld());
+            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
+            placement.pasteTo(player.getServerWorld(), replaceMode);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
         }
