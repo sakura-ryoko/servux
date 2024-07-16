@@ -3,10 +3,7 @@ package fi.dy.masa.servux;
 import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import fi.dy.masa.servux.dataproviders.DataProviderManager;
-import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
-import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
+import fi.dy.masa.servux.dataproviders.*;
 import fi.dy.masa.servux.event.PlayerHandler;
 import fi.dy.masa.servux.event.PlayerListener;
 import fi.dy.masa.servux.event.ServerHandler;
@@ -19,9 +16,10 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
-        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(EntitiesDataProvider.INSTANCE);
+        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
+        //DataProviderManager.INSTANCE.registerDataProvider(TweaksDataProvider.INSTANCE);
 
         ServerListener serverListener = new ServerListener();
         ServerHandler.getInstance().registerServerHandler(serverListener);

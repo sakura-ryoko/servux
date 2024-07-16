@@ -13,9 +13,10 @@ public class PlayerListener implements IPlayerListener
     @Override
     public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
-        StructureDataProvider.INSTANCE.register(player);
         EntitiesDataProvider.INSTANCE.sendMetadata(player);
         LitematicsDataProvider.INSTANCE.sendMetadata(player);
+        StructureDataProvider.INSTANCE.register(player);
+        //TweaksDataProvider.INSTANCE.sendMetadata(player);
     }
 
     @Override

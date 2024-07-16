@@ -2,6 +2,7 @@ package fi.dy.masa.servux.network.packet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.List;
 import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
@@ -12,31 +13,30 @@ import net.minecraft.util.math.ChunkPos;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
 
-public class ServuxLitematicaPacket implements IServerPayloadData
+public class ServuxTweaksPacket implements IServerPayloadData
 {
     private Type packetType;
     private int transactionId;
     private int entityId;
     private BlockPos pos;
     private NbtCompound nbt;
-    private ChunkPos chunkPos;
     private PacketByteBuf buffer;
+    private List<ChunkPos> requestingChunks;
     public static final int PROTOCOL_VERSION = 1;
 
-    private ServuxLitematicaPacket(Type type)
+    private ServuxTweaksPacket(Type type)
     {
         this.packetType = type;
         this.transactionId = -1;
         this.entityId = -1;
         this.pos = BlockPos.ORIGIN;
-        this.chunkPos = ChunkPos.ORIGIN;
         this.nbt = new NbtCompound();
         this.clearPacket();
     }
 
-    public static ServuxLitematicaPacket MetadataRequest(@Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket MetadataRequest(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_METADATA_REQUEST);
+        var packet = new ServuxTweaksPacket(Type.PACKET_C2S_METADATA_REQUEST);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -44,9 +44,9 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxLitematicaPacket MetadataResponse(@Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket MetadataResponse(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_METADATA);
+        var packet = new ServuxTweaksPacket(Type.PACKET_S2C_METADATA);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -55,9 +55,9 @@ public class ServuxLitematicaPacket implements IServerPayloadData
     }
 
     // Entity simple response
-    public static ServuxLitematicaPacket SimpleEntityResponse(int entityId, @Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket SimpleEntityResponse(int entityId, @Nullable NbtCompound nbt)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE);
+        var packet = new ServuxTweaksPacket(Type.PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -66,9 +66,9 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxLitematicaPacket SimpleBlockResponse(BlockPos pos, @Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket SimpleBlockResponse(BlockPos pos, @Nullable NbtCompound nbt)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE);
+        var packet = new ServuxTweaksPacket(Type.PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -77,57 +77,46 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxLitematicaPacket BlockEntityRequest(BlockPos pos)
+    public static ServuxTweaksPacket BlockEntityRequest(BlockPos pos)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_BLOCK_ENTITY_REQUEST);
+        var packet = new ServuxTweaksPacket(Type.PACKET_C2S_BLOCK_ENTITY_REQUEST);
         packet.pos = pos.toImmutable();
         return packet;
     }
 
-    public static ServuxLitematicaPacket EntityRequest(int entityId)
+    public static ServuxTweaksPacket EntityRequest(int entityId)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_ENTITY_REQUEST);
+        var packet = new ServuxTweaksPacket(Type.PACKET_C2S_ENTITY_REQUEST);
         packet.entityId = entityId;
-        return packet;
-    }
-
-    public static ServuxLitematicaPacket BulkNbtRequest(ChunkPos chunkPos, @Nullable NbtCompound nbt)
-    {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_BULK_ENTITY_NBT_REQUEST);
-        packet.chunkPos = chunkPos;
-        if (nbt != null)
-        {
-            packet.nbt.copyFrom(nbt);
-        }
         return packet;
     }
 
     // Nbt Packet, using Packet Splitter
-    public static ServuxLitematicaPacket ResponseS2CStart(@Nonnull NbtCompound nbt)
+    public static ServuxTweaksPacket ResponseS2CStart(@Nonnull NbtCompound nbt)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_NBT_RESPONSE_START);
+        var packet = new ServuxTweaksPacket(Type.PACKET_S2C_NBT_RESPONSE_START);
         packet.nbt.copyFrom(nbt);
         return packet;
     }
 
-    public static ServuxLitematicaPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
+    public static ServuxTweaksPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
+        var packet = new ServuxTweaksPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
         packet.nbt = new NbtCompound();
         return packet;
     }
 
-    public static ServuxLitematicaPacket ResponseC2SStart(@Nonnull NbtCompound nbt)
+    public static ServuxTweaksPacket ResponseC2SStart(@Nonnull NbtCompound nbt)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_NBT_RESPONSE_START);
+        var packet = new ServuxTweaksPacket(Type.PACKET_C2S_NBT_RESPONSE_START);
         packet.nbt.copyFrom(nbt);
         return packet;
     }
 
-    public static ServuxLitematicaPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
+    public static ServuxTweaksPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
     {
-        var packet = new ServuxLitematicaPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
+        var packet = new ServuxTweaksPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
         packet.nbt = new NbtCompound();
         return packet;
@@ -195,8 +184,6 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         return this.nbt;
     }
 
-    public ChunkPos getChunkPos() { return this.chunkPos; }
-
     public PacketByteBuf getBuffer()
     {
         return this.buffer;
@@ -229,7 +216,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing Block Entity Request to packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#toPacket: error writing Block Entity Request to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_ENTITY_REQUEST ->
@@ -242,7 +229,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing Entity Request to packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#toPacket: error writing Entity Request to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE ->
@@ -254,7 +241,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing Block Entity Response to packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#toPacket: error writing Block Entity Response to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE ->
@@ -266,19 +253,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing Entity Response to packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-            case PACKET_C2S_BULK_ENTITY_NBT_REQUEST ->
-            {
-                try
-                {
-                    output.writeChunkPos(this.chunkPos);
-                    output.writeNbt(this.nbt);
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing Bulk Entity Request to packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#toPacket: error writing Entity Response to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_NBT_RESPONSE_DATA, PACKET_C2S_NBT_RESPONSE_DATA ->
@@ -290,27 +265,15 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA ->
-            {
-                // Write NBT
-                try
-                {
-                    output.writeNbt(this.nbt);
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxLitematicaPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-            default -> Servux.logger.error("ServuxLitematicaPacket#toPacket: Unknown packet type!");
+            default -> Servux.logger.error("ServuxTweaksPacket#toPacket: Unknown packet type!");
         }
     }
 
     @Nullable
-    public static ServuxLitematicaPacket fromPacket(PacketByteBuf input)
+    public static ServuxTweaksPacket fromPacket(PacketByteBuf input)
     {
         int i = input.readVarInt();
         Type type = getType(i);
@@ -318,7 +281,7 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         if (type == null)
         {
             // Invalid Type
-            Servux.logger.warn("ServuxLitematicaPacket#fromPacket: invalid packet type received");
+            Servux.logger.warn("ServuxTweaksPacket#fromPacket: invalid packet type received");
             return null;
         }
         switch (type)
@@ -329,11 +292,11 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 try
                 {
                     input.readVarInt(); // todo: old code compat
-                    return ServuxLitematicaPacket.BlockEntityRequest(input.readBlockPos());
+                    return ServuxTweaksPacket.BlockEntityRequest(input.readBlockPos());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Block Entity Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading Block Entity Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_ENTITY_REQUEST ->
@@ -342,44 +305,33 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 try
                 {
                     input.readVarInt(); // todo: old code compat
-                    return ServuxLitematicaPacket.EntityRequest(input.readVarInt());
+                    return ServuxTweaksPacket.EntityRequest(input.readVarInt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Entity Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading Entity Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE ->
             {
                 try
                 {
-                    return ServuxLitematicaPacket.SimpleBlockResponse(input.readBlockPos(), input.readNbt());
+                    return ServuxTweaksPacket.SimpleBlockResponse(input.readBlockPos(), input.readNbt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Block Entity Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading Block Entity Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE ->
             {
                 try
                 {
-                    return ServuxLitematicaPacket.SimpleEntityResponse(input.readVarInt(), input.readNbt());
+                    return ServuxTweaksPacket.SimpleEntityResponse(input.readVarInt(), input.readNbt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Entity Response from packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-            case PACKET_C2S_BULK_ENTITY_NBT_REQUEST ->
-            {
-                try
-                {
-                    return ServuxLitematicaPacket.BulkNbtRequest(input.readChunkPos(), input.readNbt());
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Bulk Entity Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading Entity Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_NBT_RESPONSE_DATA ->
@@ -387,11 +339,11 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxLitematicaPacket.ResponseS2CData(new PacketByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxTweaksPacket.ResponseS2CData(new PacketByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading S2C Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading S2C Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_NBT_RESPONSE_DATA ->
@@ -399,11 +351,11 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxLitematicaPacket.ResponseC2SData(new PacketByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxTweaksPacket.ResponseC2SData(new PacketByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading C2S Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading C2S Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_METADATA_REQUEST ->
@@ -411,11 +363,11 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 // Read Nbt
                 try
                 {
-                    return ServuxLitematicaPacket.MetadataRequest(input.readNbt());
+                    return ServuxTweaksPacket.MetadataRequest(input.readNbt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_METADATA ->
@@ -423,14 +375,14 @@ public class ServuxLitematicaPacket implements IServerPayloadData
                 // Read Nbt
                 try
                 {
-                    return ServuxLitematicaPacket.MetadataResponse(input.readNbt());
+                    return ServuxTweaksPacket.MetadataResponse(input.readNbt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxLitematicaPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxTweaksPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            default -> Servux.logger.error("ServuxLitematicaPacket#fromPacket: Unknown packet type!");
+            default -> Servux.logger.error("ServuxTweaksPacket#fromPacket: Unknown packet type!");
         }
 
         return null;
@@ -472,7 +424,6 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         PACKET_C2S_ENTITY_REQUEST(4),
         PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE(5),
         PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE(6),
-        PACKET_C2S_BULK_ENTITY_NBT_REQUEST(7),
         // For Packet Splitter (Oversize Packets, S2C)
         PACKET_S2C_NBT_RESPONSE_START(10),
         PACKET_S2C_NBT_RESPONSE_DATA(11),
@@ -490,9 +441,9 @@ public class ServuxLitematicaPacket implements IServerPayloadData
         int get() { return this.type; }
     }
 
-    public record Payload(ServuxLitematicaPacket data) implements CustomPayload
+    public record Payload(ServuxTweaksPacket data) implements CustomPayload
     {
-        public static final Id<Payload> ID = new Id<>(ServuxLitematicaHandler.CHANNEL_ID);
+        public static final Id<Payload> ID = new Id<>(ServuxEntitiesHandler.CHANNEL_ID);
         public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
         public Payload(PacketByteBuf input)
