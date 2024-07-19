@@ -93,7 +93,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                //Servux.logger.warn("ServuxTweaksHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                //Servux.debugLog("ServuxTweaksHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)

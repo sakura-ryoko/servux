@@ -77,7 +77,11 @@ public class StructureDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        HANDLER.registerPlayPayload(ServuxStructuresPacket.Payload.ID, ServuxStructuresPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        if (this.isRegistered() == false)
+        {
+            HANDLER.registerPlayPayload(ServuxStructuresPacket.Payload.ID, ServuxStructuresPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+            this.setRegistered(true);
+        }
         HANDLER.registerPlayReceiver(ServuxStructuresPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -187,7 +191,7 @@ public class StructureDataProvider extends DataProviderBase
         if (this.hasPermission(player) == false)
         {
             // No Permission
-            Servux.logger.warn("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return registered;
         }
 
@@ -224,8 +228,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         UUID uuid = player.getUuid();
         ChunkPos center = player.getWatchedSection().toChunkPos();
-        Map<Structure, LongSet> references =
-                this.getStructureReferencesWithinRange(player.getServerWorld(), center, chunkRadius);
+        Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.getServerWorld(), center, chunkRadius);
 
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
@@ -403,8 +406,7 @@ public class StructureDataProvider extends DataProviderBase
         return false;
     }
 
-    protected Map<ChunkPos, StructureStart>
-    getStructureStartsFromReferences(ServerWorld world, Map<Structure, LongSet> references)
+    protected Map<ChunkPos, StructureStart> getStructureStartsFromReferences(ServerWorld world, Map<Structure, LongSet> references)
     {
         Map<ChunkPos, StructureStart> starts = new HashMap<>();
 
@@ -443,8 +445,7 @@ public class StructureDataProvider extends DataProviderBase
         return starts;
     }
 
-    protected Map<Structure, LongSet>
-    getStructureReferencesWithinRange(ServerWorld world, ChunkPos center, int chunkRadius)
+    protected Map<Structure, LongSet> getStructureReferencesWithinRange(ServerWorld world, ChunkPos center, int chunkRadius)
     {
         Map<Structure, LongSet> references = new HashMap<>();
 
@@ -480,9 +481,9 @@ public class StructureDataProvider extends DataProviderBase
 
             if (this.registeredPlayers.containsKey(player.getUuid()))
             {
-                NbtCompound test = new NbtCompound();
-                test.put("Structures", structureList.copy());
-                HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START, test));
+                NbtCompound nbt = new NbtCompound();
+                nbt.put("Structures", structureList.copy());
+                HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START, nbt));
             }
         }
     }
@@ -539,7 +540,7 @@ public class StructureDataProvider extends DataProviderBase
             this.metadata.putInt("spawnPosZ", spawnPos.getZ());
             this.refreshSpawnMetadata = true;
 
-            //Servux.logger.info("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
+            Servux.debugLog("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
         }
 
         this.spawnPos = spawnPos;
@@ -563,14 +564,19 @@ public class StructureDataProvider extends DataProviderBase
             this.metadata.putInt("spawnChunkRadius", radius);
             this.refreshSpawnMetadata = true;
 
-            //Servux.logger.info("setSpawnPos(): updating Spawn Chunk Radius [{}] -> [{}]", this.spawnChunkRadius, radius);
+            Servux.debugLog("setSpawnPos(): updating Spawn Chunk Radius [{}] -> [{}]", this.spawnChunkRadius, radius);
         }
 
         this.spawnChunkRadius = radius;
     }
 
     public boolean refreshSpawnMetadata() { return this.refreshSpawnMetadata; }
-    public void setRefreshSpawnMetadataComplete() { this.refreshSpawnMetadata = false; }
+
+    public void setRefreshSpawnMetadataComplete()
+    {
+        this.refreshSpawnMetadata = false;
+        Servux.debugLog("setRefreshSpawnMetadataComplete()");
+    }
 
     protected void setPermissionLevel(int level)
     {

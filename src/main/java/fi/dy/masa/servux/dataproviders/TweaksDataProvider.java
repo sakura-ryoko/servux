@@ -41,7 +41,11 @@ public class TweaksDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        HANDLER.registerPlayPayload(ServuxTweaksPacket.Payload.ID, ServuxTweaksPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        if (this.isRegistered() == false)
+        {
+            HANDLER.registerPlayPayload(ServuxTweaksPacket.Payload.ID, ServuxTweaksPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+            this.setRegistered(true);
+        }
         HANDLER.registerPlayReceiver(ServuxTweaksPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -63,7 +67,7 @@ public class TweaksDataProvider extends DataProviderBase
         if (this.hasPermission(player) == false)
         {
             // No Permission
-            Servux.logger.warn("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
 

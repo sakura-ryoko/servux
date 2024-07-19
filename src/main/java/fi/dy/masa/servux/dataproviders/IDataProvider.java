@@ -52,6 +52,20 @@ public interface IDataProvider
     void setEnabled(boolean enabled);
 
     /**
+     * Returns true if this data provider is currently Play Registered,
+     * This is meant to stop Servux from trying to re-register the Play Channel
+     * @return
+     */
+    boolean isRegistered();
+
+    /**
+     * Marks this Data Provider as Play Registered.
+     * This is meant to stop Servux from trying to re-register the Play Channel
+     * @param toggle
+     */
+    void setRegistered(boolean toggle);
+
+    /**
      * Informs this data provider that the server has started and should be waiting for requests
      * @return
      */

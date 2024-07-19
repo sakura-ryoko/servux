@@ -11,6 +11,7 @@ public abstract class DataProviderBase implements IDataProvider
     protected final int protocolVersion;
     protected final int defaultPerm;
     protected boolean enabled;
+    protected boolean playRegistered;
     private int tickRate = 40;
 
     protected DataProviderBase(String name, Identifier channel, int protocolVersion, int defaultPerm, String permNode, String description)
@@ -57,6 +58,18 @@ public abstract class DataProviderBase implements IDataProvider
     public void setEnabled(boolean enabled)
     {
         this.enabled = enabled;
+    }
+
+    @Override
+    public boolean isRegistered()
+    {
+        return this.playRegistered;
+    }
+
+    @Override
+    public void setRegistered(boolean toggle)
+    {
+        this.playRegistered = toggle;
     }
 
     protected void setTickRate(int tickRate)

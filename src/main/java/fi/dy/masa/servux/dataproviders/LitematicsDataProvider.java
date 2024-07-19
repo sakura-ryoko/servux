@@ -55,7 +55,11 @@ public class LitematicsDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+        if (this.isRegistered() == false)
+        {
+            HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+            this.setRegistered(true);
+        }
         HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -77,7 +81,7 @@ public class LitematicsDataProvider extends DataProviderBase
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.logger.warn("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return;
         }
 
@@ -131,7 +135,7 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         if (this.hasPermission(player) == false)
         {
-            Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            //Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
             return;
         }
         if (req == null || req.isEmpty())
@@ -207,13 +211,13 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
-            Servux.logger.warn("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
             player.sendMessage(Text.literal("§cInsufficient Permissions for the Litematic paste operation.§r"));
             return;
         }
         if (player.isCreative() == false)
         {
-            Servux.logger.warn("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
             player.sendMessage(Text.literal("§cCreative Mode is required for the Litematic paste operation.§r"));
             return;
         }

@@ -142,6 +142,11 @@ public class DataProviderManager
             boolean enabled = obj != null && JsonUtils.getBooleanOrDefault(obj, name, false);
             this.setProviderEnabled(provider, enabled);
         }
+
+        if (el == null)
+        {
+            this.writeToConfig();
+        }
     }
 
     public void writeToConfig()

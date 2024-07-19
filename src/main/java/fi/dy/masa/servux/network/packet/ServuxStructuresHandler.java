@@ -64,21 +64,20 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         {
             return;
         }
-        //Servux.logger.error("decodeStructuresPacket(): received packet from {}, of packetType {} // size in bytes [{}]", player.getName().getLiteralString(), packet.getPacketType(), packet.getTotalSize());
 
         switch (packet.getType())
         {
             // Only NBT type packets are received from MiniHUD, not using PacketSplitter
             case PACKET_C2S_STRUCTURES_REGISTER ->
             {
-                //Servux.logger.warn("decodeStructuresPacket(): received Structures Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("decodeStructuresPacket(): received Structures Register from player {}", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.register(player);
             }
             case PACKET_C2S_REQUEST_SPAWN_METADATA -> StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             case PACKET_C2S_STRUCTURES_UNREGISTER ->
             {
-                //Servux.logger.warn("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             }

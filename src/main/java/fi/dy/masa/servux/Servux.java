@@ -16,6 +16,7 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
+        DataProviderManager.INSTANCE.registerDataProvider(ServuxConfigProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(EntitiesDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
@@ -26,5 +27,13 @@ public class Servux implements ModInitializer
 
         PlayerListener playerListener = new PlayerListener();
         PlayerHandler.getInstance().registerPlayerHandler(playerListener);
+    }
+
+    public static void debugLog(String msg, Object... args)
+    {
+        if (ServuxConfigProvider.INSTANCE.hasDebugMode())
+        {
+            logger.info(msg, args);
+        }
     }
 }

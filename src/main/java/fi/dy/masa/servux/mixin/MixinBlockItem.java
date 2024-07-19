@@ -10,6 +10,8 @@ import net.minecraft.block.BlockState;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.server.network.ServerPlayerEntity;
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.PlacementHandler;
 import fi.dy.masa.servux.util.PlacementHandler.UseContext;
 
@@ -27,15 +29,20 @@ public abstract class MixinBlockItem extends Item
     @Inject(method = "getPlacementState", at = @At("HEAD"), cancellable = true)
     private void modifyPlacementState(ItemPlacementContext ctx, CallbackInfoReturnable<BlockState> cir)
     {
-        //if (Configs.Generic.CLIENT_PLACEMENT_ROTATION.getBooleanValue())
-        //{
-            BlockState stateOrig = this.getBlock().getPlacementState(ctx);
-
-            if (stateOrig != null && this.canPlace(ctx, stateOrig))
+        if (ctx.getPlayer() instanceof ServerPlayerEntity player)
+        {
+            if (ServuxConfigProvider.INSTANCE.hasPermission_EasyPlace(player) == false)
             {
-                UseContext context = UseContext.from(ctx, ctx.getHand());
-                cir.setReturnValue(PlacementHandler.applyPlacementProtocolV3(stateOrig, context));
+                return;
             }
-        //}
+        }
+
+        BlockState stateOrig = this.getBlock().getPlacementState(ctx);
+
+        if (stateOrig != null && this.canPlace(ctx, stateOrig))
+        {
+            UseContext context = UseContext.from(ctx, ctx.getHand());
+            cir.setReturnValue(PlacementHandler.applyPlacementProtocolV3(stateOrig, context));
+        }
     }
 }

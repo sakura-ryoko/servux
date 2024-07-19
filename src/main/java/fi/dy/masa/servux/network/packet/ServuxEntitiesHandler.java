@@ -93,7 +93,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                Servux.logger.warn("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                //Servux.debugLog("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
