@@ -5,9 +5,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import fi.dy.masa.servux.dataproviders.*;
 import fi.dy.masa.servux.event.PlayerHandler;
-import fi.dy.masa.servux.event.PlayerListener;
+import fi.dy.masa.servux.servux.PlayerListener;
 import fi.dy.masa.servux.event.ServerHandler;
-import fi.dy.masa.servux.event.ServerListener;
+import fi.dy.masa.servux.servux.ServerListener;
 
 public class Servux implements ModInitializer
 {

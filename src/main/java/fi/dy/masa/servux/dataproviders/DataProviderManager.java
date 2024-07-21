@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.Reference;
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
@@ -111,10 +112,28 @@ public class DataProviderManager
         }
     }
 
+    public void onServerTickEndPre()
+    {
+        for (IDataProvider provider : this.providersImmutable)
+        {
+            provider.onTickEndPre();
+        }
+    }
+
+    public void onServerTickEndPost()
+    {
+        for (IDataProvider provider : this.providersImmutable)
+        {
+            provider.onTickEndPost();
+        }
+    }
+
     public void readFromConfig()
     {
         JsonElement el = JsonUtils.parseJsonFile(this.getConfigFile());
         JsonObject obj = null;
+
+        Servux.debugLog("DataProviderManager#readFromConfig()");
 
         if (el != null && el.isJsonObject())
         {
@@ -142,17 +161,14 @@ public class DataProviderManager
             boolean enabled = obj != null && JsonUtils.getBooleanOrDefault(obj, name, false);
             this.setProviderEnabled(provider, enabled);
         }
-
-        if (el == null)
-        {
-            this.writeToConfig();
-        }
     }
 
     public void writeToConfig()
     {
         JsonObject root = new JsonObject();
         JsonObject objToggles = new JsonObject();
+
+        Servux.debugLog("DataProviderManager#writeToConfig()");
 
         for (IDataProvider provider : this.providersImmutable)
         {

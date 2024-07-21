@@ -10,6 +10,9 @@ public class CommandProvider
     private static final CommandProvider INSTANCE = new CommandProvider();
     public static CommandProvider getInstance() { return INSTANCE; }
 
+    /**
+     * The idea here is to eventually create a more Robust Command Provider, using an interface
+     */
     public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher,
                                  CommandRegistryAccess registryAccess,
                                  CommandManager.RegistrationEnvironment environment)

@@ -116,6 +116,13 @@ public interface IDataProvider
     boolean hasPermission(ServerPlayerEntity player);
 
     /**
+     * Signal The Data Providers when the server is shutting down
+     * (Pre / Post)
+     */
+    void onTickEndPre();
+    void onTickEndPost();
+
+    /**
      * Config file handling
      * @return
      */

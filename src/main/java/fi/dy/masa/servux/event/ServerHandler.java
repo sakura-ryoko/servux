@@ -3,6 +3,7 @@ package fi.dy.masa.servux.event;
 import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.ApiStatus;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.interfaces.IServerListener;
 
@@ -51,6 +52,30 @@ public class ServerHandler implements IServerManager
             for (IServerListener handler : this.handlers)
             {
                 handler.onServerStarted(server);
+            }
+        }
+    }
+
+    @ApiStatus.Internal
+    public void onServerResourceReloadPre(MinecraftServer server, ResourceManager resourceManager)
+    {
+        if (!this.handlers.isEmpty())
+        {
+            for (IServerListener handler : this.handlers)
+            {
+                handler.onServerResourceReloadPre(server, resourceManager);
+            }
+        }
+    }
+
+    @ApiStatus.Internal
+    public void onServerResourceReloadPost(MinecraftServer server, ResourceManager resourceManager, boolean success)
+    {
+        if (!this.handlers.isEmpty())
+        {
+            for (IServerListener handler : this.handlers)
+            {
+                handler.onServerResourceReloadPost(server, resourceManager, success);
             }
         }
     }

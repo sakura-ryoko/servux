@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.interfaces;
 
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
 
 public interface IServerListener
@@ -15,6 +16,19 @@ public interface IServerListener
      * @param server (The MinecraftServer object)
      */
     default void onServerStarted(MinecraftServer server) {}
+
+    /**
+     * Called when the Resources (Data Packs) are starting to be reloaded
+     * @param server (The MinecraftServer object)
+     * @param resourceManager (The ResourceManager Object)
+     */
+    default void onServerResourceReloadPre(MinecraftServer server, ResourceManager resourceManager) {}
+
+    /**
+     * Called when the Resources (Data Packs) are finished being reloaded
+     * @param server (The MinecraftServer object)
+     */
+    default void onServerResourceReloadPost(MinecraftServer server, ResourceManager resourceManager, boolean success) {}
 
     /**
      * Called when the local MinecraftServer enters its initial "stopping" state

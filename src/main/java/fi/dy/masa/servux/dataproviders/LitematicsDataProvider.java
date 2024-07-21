@@ -256,6 +256,18 @@ public class LitematicsDataProvider extends DataProviderBase
         return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
     }
 
+    @Override
+    public void onTickEndPre()
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void onTickEndPost()
+    {
+        // NO-OP
+    }
+
     public boolean hasPermissionsForPaste(ServerPlayerEntity player)
     {
         return (this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel > -1 ? this.pastePermissionLevel : this.defaultPerm));

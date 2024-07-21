@@ -593,6 +593,18 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
+    public void onTickEndPre()
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void onTickEndPost()
+    {
+        // NO-OP
+    }
+
+    @Override
     public JsonObject toJson()
     {
         JsonObject obj = new JsonObject();

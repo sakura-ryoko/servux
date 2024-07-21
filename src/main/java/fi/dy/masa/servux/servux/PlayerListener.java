@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.event;
+package fi.dy.masa.servux.servux;
 
 import java.net.SocketAddress;
 import com.mojang.authlib.GameProfile;

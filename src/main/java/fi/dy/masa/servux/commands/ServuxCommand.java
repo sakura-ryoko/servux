@@ -17,10 +17,18 @@ public class ServuxCommand
                 ServuxConfigProvider.INSTANCE.hasPermission(source.getPlayer()) || source.hasPermissionLevel(4)))
             .then(CommandManager.literal("reload").requires((source) ->
                 ServuxConfigProvider.INSTANCE.hasBasePermission_Node(source.getPlayer(), "reload") || source.hasPermissionLevel(4))
-            .executes((ctx) ->
-            {
-                ServuxConfigProvider.INSTANCE.doReload(ctx.getSource());
-                return 1;
-            })));
+                .executes((ctx) ->
+                {
+                    ServuxConfigProvider.INSTANCE.doReloadConfig(ctx.getSource());
+                    return 1;
+                }))
+            .then(CommandManager.literal("save").requires((source) ->
+                ServuxConfigProvider.INSTANCE.hasBasePermission_Node(source.getPlayer(), "save") || source.hasPermissionLevel(4))
+                .executes((ctx) ->
+                {
+                    ServuxConfigProvider.INSTANCE.doSaveConfig(ctx.getSource());
+                    return 1;
+                }))
+            );
     }
 }

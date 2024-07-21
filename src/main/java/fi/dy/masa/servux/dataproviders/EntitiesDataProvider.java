@@ -62,6 +62,7 @@ public class EntitiesDataProvider extends DataProviderBase
         return HANDLER;
     }
 
+
     public void sendMetadata(ServerPlayerEntity player)
     {
         if (this.hasPermission(player) == false)
@@ -140,6 +141,18 @@ public class EntitiesDataProvider extends DataProviderBase
     public boolean hasPermission(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+    }
+
+    @Override
+    public void onTickEndPre()
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void onTickEndPost()
+    {
+        // NO-OP
     }
 
     @Override

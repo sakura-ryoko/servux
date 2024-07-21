@@ -46,12 +46,21 @@ public class ServuxConfigProvider extends DataProviderBase
         return null;
     }
 
-    public void doReload(ServerCommandSource source)
+    public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
         source.sendFeedback(() ->
         {
             return Text.of("Reloading config!");
+        }, true);
+    }
+
+    public void doSaveConfig(ServerCommandSource source)
+    {
+        DataProviderManager.INSTANCE.writeToConfig();
+        source.sendFeedback(() ->
+        {
+            return Text.of("Saving config!");
         }, true);
     }
 
@@ -118,6 +127,18 @@ public class ServuxConfigProvider extends DataProviderBase
         }
 
         return Permissions.check(player, this.permNode+".easy_place", this.easyPlacePermissionLevel > -1 ? this.easyPlacePermissionLevel : this.defaultPerm);
+    }
+
+    @Override
+    public void onTickEndPre()
+    {
+        // NO-OP
+    }
+
+    @Override
+    public void onTickEndPost()
+    {
+        // NO-OP
     }
 
     @Override
