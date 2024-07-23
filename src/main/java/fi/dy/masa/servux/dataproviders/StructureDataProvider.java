@@ -3,6 +3,7 @@ package fi.dy.masa.servux.dataproviders;
 import javax.annotation.Nullable;
 import java.util.*;
 
+import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringListSetting;
@@ -54,6 +55,7 @@ public class StructureDataProvider extends DataProviderBase
     private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", Text.of("Structures Whitelist"), Text.of("List of structures to whitelist"), List.of());
     private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", Text.of("Update Interval"), Text.of("The update interval in ticks"), 40, 1200, 1);
     private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", Text.of("Timeout"), Text.of("The timeout in ticks"), 600, 1200, 40);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -79,6 +81,12 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return settings;
     }
 
     @Override
