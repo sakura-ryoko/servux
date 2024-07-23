@@ -97,7 +97,12 @@ public abstract class DataProviderBase implements IDataProvider
     @Override
     public JsonObject toJson()
     {
-        return null;
+        JsonObject object = new JsonObject();
+        for (IServuxSetting<?> setting : getSettings())
+        {
+            object.addProperty(setting.name(), setting.getValue().toString());
+        }
+        return object;
     }
 
     @Override
