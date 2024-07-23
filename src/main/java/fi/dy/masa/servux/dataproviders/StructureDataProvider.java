@@ -2,20 +2,24 @@ package fi.dy.masa.servux.dataproviders;
 
 import javax.annotation.Nullable;
 import java.util.*;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.annotations.SerializedName;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.GameRules;
@@ -30,7 +34,6 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
-import fi.dy.masa.servux.util.JsonUtils;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -42,10 +45,8 @@ public class StructureDataProvider extends DataProviderBase
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
-    protected int timeout = 30 * 20;
-    protected int updateInterval = 40;
     protected int retainDistance;
-    protected int permissionLevel = -1;
+    private StructureDataProviderConfig config = new StructureDataProviderConfig();
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -64,7 +65,7 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
-        this.metadata.putInt("timeout", this.timeout);
+        this.metadata.putInt("timeout", config.timeout);
 
         // TODO --> Move out of structures channel in the future
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
@@ -107,7 +108,7 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter)
     {
-        if ((tickCounter % this.updateInterval) == 0)
+        if ((tickCounter % config.updateInterval) == 0)
         {
             //Servux.printDebug("=======================\n");
             //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
@@ -244,11 +245,10 @@ public class StructureDataProvider extends DataProviderBase
         if (this.chunkHasStructureReferences(pos.x, pos.z, chunk.getWorld()))
         {
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
-            final int timeout = this.timeout;
 
             //System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
-            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout));
+            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - config.timeout));
         }
     }
 
@@ -309,7 +309,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             Timeout timeout = entry.getValue();
 
-            if (timeout.needsUpdate(tickCounter, this.timeout))
+            if (timeout.needsUpdate(tickCounter, config.timeout))
             {
                 positionsToUpdate.add(entry.getKey());
             }
@@ -495,8 +495,12 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
-            ChunkPos pos = entry.getKey();
-            list.add(entry.getValue().toNbt(ctx, pos));
+            Identifier structureType = Registries.STRUCTURE_TYPE.getId(entry.getValue().getStructure().getType());
+            if (this.shouldSendStructure(structureType))
+            {
+                ChunkPos pos = entry.getKey();
+                list.add(entry.getValue().toNbt(ctx, pos));
+            }
         }
 
         return list;
@@ -582,14 +586,14 @@ public class StructureDataProvider extends DataProviderBase
     {
         if (!(level < 0 || level > 4))
         {
-            this.permissionLevel = level;
+            config.permissionLevel = level;
         }
     }
 
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+        return Permissions.check(player, this.permNode, config.permissionLevel);
     }
 
     @Override
@@ -607,26 +611,45 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public JsonObject toJson()
     {
-        JsonObject obj = new JsonObject();
+        return new Gson().toJsonTree(config).getAsJsonObject();
+    }
 
-        if (this.permissionLevel > -1)
+    public static final class StructureDataProviderConfig
+    {
+        @SerializedName("permission_level")
+        private int permissionLevel = 0;
+        @SerializedName("structures_blacklist")
+        private StructureList structuresBlacklist = new StructureList();
+        @SerializedName("structures_whitelist")
+        private StructureList structuresWhitelist = new StructureList();
+        @SerializedName("update_interval")
+        private int updateInterval = 40;
+        private int timeout = 30 * 20;
+
+        public static class StructureList
         {
-            obj.add("permission_level", new JsonPrimitive(this.permissionLevel));
+            public boolean enabled = false;
+            public List<String> structures = List.of();
         }
-        else
+    }
+
+    public boolean shouldSendStructure(Identifier identifier)
+    {
+        if (config.structuresWhitelist.enabled)
         {
-            obj.add("permission_level", new JsonPrimitive(this.defaultPerm));
+            return config.structuresWhitelist.structures.contains(identifier.toString());
+        }
+        if (config.structuresBlacklist.enabled)
+        {
+            return !config.structuresBlacklist.structures.contains(identifier.toString());
         }
 
-        return obj;
+        return true;
     }
 
     @Override
     public void fromJson(JsonObject obj)
     {
-        if (JsonUtils.hasInteger(obj, "permission_level"))
-        {
-            this.setPermissionLevel(JsonUtils.getInteger(obj, "permission_level"));
-        }
+        config = new Gson().fromJson(obj, StructureDataProviderConfig.class);
     }
 }
