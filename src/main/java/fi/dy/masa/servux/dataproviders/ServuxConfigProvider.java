@@ -16,7 +16,7 @@ import java.util.List;
 public class ServuxConfigProvider extends DataProviderBase
 {
     public static final ServuxConfigProvider INSTANCE = new ServuxConfigProvider();
-    ServuxConfig config = null;
+    ServuxConfig config = new ServuxConfig();
 
     protected ServuxConfigProvider()
     {
@@ -47,6 +47,7 @@ public class ServuxConfigProvider extends DataProviderBase
     public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
+        DataProviderManager.INSTANCE.writeToConfig();
         source.sendFeedback(() -> Text.of("Reloaded config!"), true);
     }
 
