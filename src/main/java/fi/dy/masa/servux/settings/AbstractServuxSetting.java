@@ -2,25 +2,34 @@ package fi.dy.masa.servux.settings;
 
 import net.minecraft.text.Text;
 
+import java.util.List;
+
 public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 {
     private final String name;
     private final Text prettyName;
     private final Text comment;
     private final T defaultValue;
+    private final List<String> examples;
 
-    public AbstractServuxSetting(
-        String name,
-        Text prettyName,
-        Text comment,
-        T defaultValue
-    )
+    public AbstractServuxSetting(String name, Text prettyName, Text comment, T defaultValue, List<String> examples)
     {
         this.name = name;
         this.prettyName = prettyName;
         this.comment = comment;
         this.defaultValue = defaultValue;
         this.value = defaultValue;
+        this.examples = examples;
+    }
+
+    public AbstractServuxSetting(String name, Text prettyName, Text comment, T defaultValue)
+    {
+        this.name = name;
+        this.prettyName = prettyName;
+        this.comment = comment;
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+        this.examples = List.of();
     }
 
     private T value;
@@ -80,5 +89,11 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     public Text comment()
     {
         return comment;
+    }
+
+    @Override
+    public List<String> examples()
+    {
+        return examples;
     }
 }

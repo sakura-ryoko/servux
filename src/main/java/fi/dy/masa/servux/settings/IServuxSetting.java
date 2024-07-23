@@ -2,11 +2,14 @@ package fi.dy.masa.servux.settings;
 
 import net.minecraft.text.Text;
 
+import java.util.List;
+
 public interface IServuxSetting<T>
 {
     String name();
     Text prettyName();
     Text comment();
+    List<String> examples();
 
     T getDefaultValue();
     T getValue();

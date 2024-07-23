@@ -2,11 +2,13 @@ package fi.dy.masa.servux.settings;
 
 import net.minecraft.text.Text;
 
+import java.util.List;
+
 public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
 {
     public ServuxBoolSetting(String name, Text prettyName, Text comment, boolean defaultValue)
     {
-        super(name, prettyName, comment, defaultValue);
+        super(name, prettyName, comment, defaultValue, List.of("true", "false"));
     }
 
     @Override
