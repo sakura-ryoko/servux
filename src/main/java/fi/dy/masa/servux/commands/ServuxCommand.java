@@ -3,7 +3,7 @@ package fi.dy.masa.servux.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
@@ -11,6 +11,7 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
+import net.minecraft.text.Text;
 
 public class ServuxCommand
 {
@@ -59,8 +60,28 @@ public class ServuxCommand
             return builder.buildFuture();
         });
         node.then(CommandManager.argument("value", StringArgumentType.greedyString())
+                .suggests((ctx, builder) -> {
+                    String settingName = ctx.getArgument("setting", String.class);
+                    var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                    if (setting != null)
+                    {
+                        return CommandSource.suggestMatching(setting.examples(), builder);
+                    }
+                    return builder.buildFuture();
+                })
             .executes((ctx) -> {
-
+                String settingName = ctx.getArgument("setting", String.class);
+                var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                if (setting == null)
+                {
+                    throw new SimpleCommandExceptionType(Text.of("Unknown setting")).create();
+                }
+                String value = ctx.getArgument("value", String.class);
+                if (!setting.validateString(value))
+                {
+                    throw new SimpleCommandExceptionType(Text.of("Invalid value")).create();
+                }
+                setting.setValueFromString(value);
                 return 1;
             }));
         return node;
