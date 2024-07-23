@@ -84,7 +84,7 @@ public class DataProviderManager
         {
             for (IDataProvider provider : this.providersTicking)
             {
-                if ((tickCounter % provider.getTickRate()) == 0)
+                if ((tickCounter % provider.getTickInterval()) == 0)
                 {
                     provider.tick(server, tickCounter);
                 }

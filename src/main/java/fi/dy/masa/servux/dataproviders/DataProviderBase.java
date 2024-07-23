@@ -1,6 +1,9 @@
 package fi.dy.masa.servux.dataproviders;
 
+import fi.dy.masa.servux.settings.IServuxSetting;
 import net.minecraft.util.Identifier;
+
+import java.util.List;
 
 public abstract class DataProviderBase implements IDataProvider
 {
@@ -78,8 +81,14 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public final int getTickRate()
+    public final int getTickInterval()
     {
         return this.tickRate;
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return List.of();
     }
 }

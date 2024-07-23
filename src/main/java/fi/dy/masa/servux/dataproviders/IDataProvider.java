@@ -1,10 +1,13 @@
 package fi.dy.masa.servux.dataproviders;
 
 import com.google.gson.JsonObject;
+import fi.dy.masa.servux.settings.IServuxSetting;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+
+import java.util.List;
 
 public interface IDataProvider
 {
@@ -91,7 +94,7 @@ public interface IDataProvider
      * Returns the interval in game ticks that this data provider should be ticked at
      * @return
      */
-    int getTickRate();
+    int getTickInterval();
 
     /**
      * Called at the given tick rate
@@ -129,4 +132,6 @@ public interface IDataProvider
     JsonObject toJson();
 
     void fromJson(JsonObject obj);
+
+    List<IServuxSetting<?>> getSettings();
 }
