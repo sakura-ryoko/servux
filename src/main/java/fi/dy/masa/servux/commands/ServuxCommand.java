@@ -5,13 +5,16 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
+import fi.dy.masa.servux.util.StringUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.command.CommandSource;
+import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 public class ServuxCommand
 {
@@ -38,7 +41,7 @@ public class ServuxCommand
     }
 
     private static ArgumentBuilder<ServerCommandSource, ?> updateSettingsNode() {
-        var node = CommandManager.argument("setting", StringArgumentType.string());
+        var node = CommandManager.argument("setting", IdentifierArgumentType.identifier());
         node.suggests((ctx, builder) -> {
             if (builder.getRemainingLowerCase().contains(":"))
             {
@@ -61,7 +64,8 @@ public class ServuxCommand
         });
         node.then(CommandManager.argument("value", StringArgumentType.greedyString())
                 .suggests((ctx, builder) -> {
-                    String settingName = ctx.getArgument("setting", String.class);
+                    Identifier settingId = ctx.getArgument("setting", Identifier.class);
+                    String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
                     var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
                     if (setting != null)
                     {
@@ -70,7 +74,8 @@ public class ServuxCommand
                     return builder.buildFuture();
                 })
             .executes((ctx) -> {
-                String settingName = ctx.getArgument("setting", String.class);
+                Identifier settingId = ctx.getArgument("setting", Identifier.class);
+                String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
                 var pair = DataProviderManager.INSTANCE.getSettingByName(settingName);
                 if (pair == null)
                 {

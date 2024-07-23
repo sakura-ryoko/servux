@@ -1,5 +1,7 @@
 package fi.dy.masa.servux.util;
 
+import net.minecraft.util.Identifier;
+
 public class StringUtils
 {
     public static String getModVersionString(String modId)
@@ -13,5 +15,10 @@ public class StringUtils
         }
 
         return "?";
+    }
+
+    public static String removeDefaultMinecraftNamespace(Identifier settingId)
+    {
+        return settingId.getNamespace().equals("minecraft") ? settingId.getPath() : settingId.toString();
     }
 }
