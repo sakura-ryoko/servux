@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.settings;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 
 public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>>
 {
+    private static final Gson GSON = new Gson();
     private String separatorRegex = ",";
 
     public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples, String separatorRegex)
@@ -32,21 +34,23 @@ public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>
 
     public abstract boolean validateStringForElement(String value);
 
+    @SuppressWarnings("unchecked")
     @Override
     public String valutToString(Object value)
     {
-        return ((List<?>) value).stream().map(this::elementToString).collect(Collectors.joining(separatorRegex));
+        JsonArray array = new JsonArray();
+        for (T ele : (List<T>) value)
+        {
+            array.add(this.writeElementToJson(ele));
+        }
+        return GSON.toJson(array);
     }
-
-    public abstract String elementToString(Object value);
 
     @Override
     public List<T> valueFromString(String value)
     {
-        return Arrays.stream(value.split(separatorRegex)).map(this::elementFromString).collect(Collectors.toList());
+        return GSON.fromJson(value, JsonArray.class).asList().stream().map(this::readElementFromJson).toList();
     }
-
-    public abstract T elementFromString(String value);
 
     @Override
     public void readFromJson(JsonElement element)

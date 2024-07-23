@@ -27,18 +27,6 @@ public class ServuxStringListSetting extends ServuxListSetting<String>
     }
 
     @Override
-    public String elementToString(Object value)
-    {
-        return (String) value;
-    }
-
-    @Override
-    public String elementFromString(String value)
-    {
-        return value;
-    }
-
-    @Override
     public String readElementFromJson(JsonElement element)
     {
         return element.getAsString();
