@@ -20,10 +20,10 @@ public class ServuxConfigProvider extends DataProviderBase
 {
     public static final ServuxConfigProvider INSTANCE = new ServuxConfigProvider();
 
-    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting("permission_level", Text.of("Base Permission Level"), Text.of("The base permission level for the mod"), 0, 4, 0);
-    private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting("permission_level_admin", Text.of("Admin Permission Level"), Text.of("The admin permission level for the mod"), 3, 4, 0);
-    private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting("permission_level_easy_place", Text.of("Easy Place Permission Level"), Text.of("The permission level for the Easy Place feature"), 0, 4, 0);
-    private final ServuxBoolSetting debugLog = new ServuxBoolSetting("debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
+    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Base Permission Level"), Text.of("The base permission level for the mod"), 0, 4, 0);
+    private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", Text.of("Admin Permission Level"), Text.of("The admin permission level for the mod"), 3, 4, 0);
+    private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", Text.of("Easy Place Permission Level"), Text.of("The permission level for the Easy Place feature"), 0, 4, 0);
+    private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
     private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.adminPermissionLevel, this.easyPlacePermissionLevel, this.debugLog);
 
     protected ServuxConfigProvider()

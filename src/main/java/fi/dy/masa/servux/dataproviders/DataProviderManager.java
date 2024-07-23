@@ -210,7 +210,7 @@ public class DataProviderManager
         return Optional.ofNullable(this.providers.get(providerName));
     }
 
-    public @Nullable Pair<IDataProvider, IServuxSetting<?>> getSettingByName(String name)
+    public @Nullable IServuxSetting<?> getSettingByName(String name)
     {
         if (name.contains(":"))
         {
@@ -225,7 +225,7 @@ public class DataProviderManager
                 {
                     if (setting.name().equalsIgnoreCase(settingName))
                     {
-                        return Pair.of(provider, setting);
+                        return setting;
                     }
                 }
             }
@@ -238,7 +238,7 @@ public class DataProviderManager
                 {
                     if (setting.name().equalsIgnoreCase(name))
                     {
-                        return Pair.of(provider, setting);
+                        return setting;
                     }
                 }
             }

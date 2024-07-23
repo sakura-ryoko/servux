@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.settings;
 
+import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.Text;
 
 import java.util.List;
@@ -11,8 +12,9 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     private final Text comment;
     private final T defaultValue;
     private final List<String> examples;
+    private final IDataProvider dataProvider;
 
-    public AbstractServuxSetting(String name, Text prettyName, Text comment, T defaultValue, List<String> examples)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples)
     {
         this.name = name;
         this.prettyName = prettyName;
@@ -20,9 +22,10 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
         this.defaultValue = defaultValue;
         this.value = defaultValue;
         this.examples = examples;
+        this.dataProvider = dataProvider;
     }
 
-    public AbstractServuxSetting(String name, Text prettyName, Text comment, T defaultValue)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue)
     {
         this.name = name;
         this.prettyName = prettyName;
@@ -30,6 +33,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
         this.defaultValue = defaultValue;
         this.value = defaultValue;
         this.examples = List.of();
+        this.dataProvider = dataProvider;
     }
 
     private T value;
@@ -55,11 +59,18 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     @Override
     public void setValue(T value)
     {
+        var oldValue = this.value;
         this.value = value;
-        onValueChanged(value);
+        onValueChanged(oldValue, value);
     }
 
-    protected void onValueChanged(T value)
+    @Override
+    public IDataProvider dataProvider()
+    {
+        return dataProvider;
+    }
+
+    protected void onValueChanged(T oldValue, T value)
     {
 
     }

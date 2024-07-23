@@ -36,11 +36,56 @@ public class ServuxCommand
                 }))
             .then(CommandManager.literal("set")
                 .requires(Permissions.require(Reference.MOD_ID + ".commands.set", 4))
-                .then(updateSettingsNode()))
+                .then(settingsNode().then(CommandManager.argument("value", StringArgumentType.greedyString())
+                        .suggests((ctx, builder) -> {
+                            Identifier settingId = ctx.getArgument("setting", Identifier.class);
+                            String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
+                            var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                            if (setting != null)
+                            {
+                                return CommandSource.suggestMatching(setting.examples(), builder);
+                            }
+                            return builder.buildFuture();
+                        })
+                        .executes((ctx) -> {
+                            Identifier settingId = ctx.getArgument("setting", Identifier.class);
+                            String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
+                            var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                            if (setting == null)
+                            {
+                                throw new SimpleCommandExceptionType(Text.of("Unknown setting")).create();
+                            }
+                            String value = ctx.getArgument("value", String.class);
+                            if (!setting.validateString(value))
+                            {
+                                throw new SimpleCommandExceptionType(Text.of("Invalid value")).create();
+                            }
+                            setting.setValueFromString(value);
+                            ctx.getSource().sendFeedback(() -> Text.translatable("Set %s to %s", setting.shortDisplayName(), value), true);
+                            return 1;
+                        }))))
+            .then(CommandManager.literal("info")
+                .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
+                .then(settingsNode().executes((ctx) -> {
+                    Identifier settingId = ctx.getArgument("setting", Identifier.class);
+                    String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
+                    var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                    if (setting == null)
+                    {
+                        throw new SimpleCommandExceptionType(Text.of("Unknown setting")).create();
+                    }
+                    ctx.getSource().sendFeedback(() -> setting.prettyName().copy().append(" (" + setting.qualifiedName() + ")"), false);
+                    ctx.getSource().sendFeedback(() -> setting.comment(), false);
+                    ctx.getSource().sendFeedback(() -> Text.literal("Current value: " + setting.valutToString(setting.getValue())), false);
+                    ctx.getSource().sendFeedback(() -> Text.literal("Default value: " + setting.valutToString(setting.getDefaultValue())), false);
+
+                    // todo
+                    return 1;
+                })))
         );
     }
 
-    private static ArgumentBuilder<ServerCommandSource, ?> updateSettingsNode() {
+    private static ArgumentBuilder<ServerCommandSource, ?> settingsNode() {
         var node = CommandManager.argument("setting", IdentifierArgumentType.identifier());
         node.suggests((ctx, builder) -> {
             if (builder.getRemainingLowerCase().contains(":"))
@@ -62,36 +107,6 @@ public class ServuxCommand
             }
             return builder.buildFuture();
         });
-        node.then(CommandManager.argument("value", StringArgumentType.greedyString())
-                .suggests((ctx, builder) -> {
-                    Identifier settingId = ctx.getArgument("setting", Identifier.class);
-                    String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
-                    var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
-                    if (setting != null)
-                    {
-                        return CommandSource.suggestMatching(setting.right().examples(), builder);
-                    }
-                    return builder.buildFuture();
-                })
-            .executes((ctx) -> {
-                Identifier settingId = ctx.getArgument("setting", Identifier.class);
-                String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
-                var pair = DataProviderManager.INSTANCE.getSettingByName(settingName);
-                if (pair == null)
-                {
-                    throw new SimpleCommandExceptionType(Text.of("Unknown setting")).create();
-                }
-                var setting = pair.right();
-                String value = ctx.getArgument("value", String.class);
-                if (!setting.validateString(value))
-                {
-                    throw new SimpleCommandExceptionType(Text.of("Invalid value")).create();
-                }
-                setting.setValueFromString(value);
-                String qualifiedName = pair.left().getName() + ":" + pair.right().name();
-                ctx.getSource().sendFeedback(() -> Text.of("Set " + qualifiedName + " to " + value), true);
-                return 1;
-            }));
         return node;
     }
 }

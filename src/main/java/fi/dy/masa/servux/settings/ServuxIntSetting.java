@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.settings;
 
+import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.Text;
 
 public class ServuxIntSetting extends AbstractServuxSetting<Integer>
@@ -7,16 +8,16 @@ public class ServuxIntSetting extends AbstractServuxSetting<Integer>
     private final int maxValue;
     private final int minValue;
 
-    public ServuxIntSetting(String name, Text prettyName, Text comment, Integer defaultValue, int maxValue, int minValue)
+    public ServuxIntSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, Integer defaultValue, int maxValue, int minValue)
     {
-        super(name, prettyName, comment, defaultValue);
+        super(dataProvider ,name, prettyName, comment, defaultValue);
         this.maxValue = maxValue;
         this.minValue = minValue;
     }
 
-    public ServuxIntSetting(String name, Text prettyName, Text comment, Integer defaultValue)
+    public ServuxIntSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, Integer defaultValue)
     {
-        this(name, prettyName, comment, defaultValue, Integer.MAX_VALUE, Integer.MIN_VALUE);
+        this(dataProvider, name, prettyName, comment, defaultValue, Integer.MAX_VALUE, Integer.MIN_VALUE);
     }
 
     @Override
@@ -34,9 +35,9 @@ public class ServuxIntSetting extends AbstractServuxSetting<Integer>
     }
 
     @Override
-    public String valutToString(Integer value)
+    public String valutToString(Object value)
     {
-        return value.toString();
+        return ((Integer) value).toString();
     }
 
     @Override

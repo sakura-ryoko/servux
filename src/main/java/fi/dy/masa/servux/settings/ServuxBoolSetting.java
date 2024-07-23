@@ -1,14 +1,15 @@
 package fi.dy.masa.servux.settings;
 
+import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.Text;
 
 import java.util.List;
 
 public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
 {
-    public ServuxBoolSetting(String name, Text prettyName, Text comment, boolean defaultValue)
+    public ServuxBoolSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, boolean defaultValue)
     {
-        super(name, prettyName, comment, defaultValue, List.of("true", "false"));
+        super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"));
     }
 
     @Override
@@ -18,9 +19,9 @@ public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
     }
 
     @Override
-    public String valutToString(Boolean value)
+    public String valutToString(Object value)
     {
-        return value.toString();
+        return ((Boolean) value).toString();
     }
 
     @Override
