@@ -1,10 +1,10 @@
 package fi.dy.masa.servux.dataproviders;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
@@ -25,17 +25,16 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
-import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
-import fi.dy.masa.servux.schematic.selection.Box;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
     protected final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
-    protected int permissionLevel = -1;
-    protected int pastePermissionLevel = -1;
+    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required for the Litematics data provider"), 0, 4, 0);
+    protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", Text.of("Paste Permission Level"), Text.of("The permission level required for the Litematics paste operation"), 0, 4, 0);
+    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel);
 
     protected LitematicsDataProvider()
     {
@@ -49,6 +48,12 @@ public class LitematicsDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return settings;
     }
 
     @Override
@@ -234,26 +239,10 @@ public class LitematicsDataProvider extends DataProviderBase
         }
     }
 
-    protected void setPermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            this.permissionLevel = level;
-        }
-    }
-
-    protected void setPastePermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            this.pastePermissionLevel = level;
-        }
-    }
-
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override
@@ -270,44 +259,6 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public boolean hasPermissionsForPaste(ServerPlayerEntity player)
     {
-        return (this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel > -1 ? this.pastePermissionLevel : this.defaultPerm));
-    }
-
-    @Override
-    public JsonObject toJson()
-    {
-        JsonObject obj = super.toJson();
-
-        if (this.permissionLevel > -1)
-        {
-            obj.add("permission_level", new JsonPrimitive(this.permissionLevel));
-        }
-        else
-        {
-            obj.add("permission_level", new JsonPrimitive(this.defaultPerm));
-        }
-        if (this.pastePermissionLevel > -1)
-        {
-            obj.add("permission_level_paste", new JsonPrimitive(this.pastePermissionLevel));
-        }
-        else
-        {
-            obj.add("permission_level_paste", new JsonPrimitive(this.defaultPerm));
-        }
-
-        return obj;
-    }
-
-    @Override
-    public void fromJson(JsonObject obj)
-    {
-        if (JsonUtils.hasInteger(obj, "permission_level"))
-        {
-            this.setPermissionLevel(JsonUtils.getInteger(obj, "permission_level"));
-        }
-        if (JsonUtils.hasInteger(obj, "permission_level_paste"))
-        {
-            this.setPastePermissionLevel(JsonUtils.getInteger(obj, "permission_level_paste"));
-        }
+        return this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
     }
 }

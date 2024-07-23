@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.util.JsonUtils;
@@ -100,7 +101,7 @@ public abstract class DataProviderBase implements IDataProvider
         JsonObject object = new JsonObject();
         for (IServuxSetting<?> setting : getSettings())
         {
-            object.addProperty(setting.name(), setting.getValue().toString());
+            object.add(setting.name(), setting.writeToJson());
         }
         return object;
     }
@@ -110,9 +111,10 @@ public abstract class DataProviderBase implements IDataProvider
     {
         for (IServuxSetting<?> setting : getSettings())
         {
-            if (JsonUtils.hasString(obj, setting.name()))
+            JsonElement element = obj.get(setting.name());
+            if (element != null)
             {
-                setting.setValueFromString(JsonUtils.getString(obj, setting.name()));
+                setting.readFromJson(element);
             }
         }
     }

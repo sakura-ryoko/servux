@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.settings;
 
+import com.google.gson.JsonElement;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
@@ -23,6 +24,8 @@ public interface IServuxSetting<T>
     boolean validateString(String value);
     String valutToString(Object value);
     T valueFromString(String value);
+    void readFromJson(JsonElement element);
+    JsonElement writeToJson();
 
     default Text shortDisplayName() {
         return prettyName().copy().styled(style ->

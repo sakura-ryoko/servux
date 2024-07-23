@@ -1,5 +1,7 @@
 package fi.dy.masa.servux.settings;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.Text;
 
@@ -44,5 +46,25 @@ public class ServuxIntSetting extends AbstractServuxSetting<Integer>
     public Integer valueFromString(String value)
     {
         return Integer.parseInt(value);
+    }
+
+    @Override
+    public void readFromJson(JsonElement element)
+    {
+        if (element.isJsonPrimitive())
+        {
+            var value = element.getAsJsonPrimitive();
+
+            if (value.isNumber())
+            {
+                this.setValue(value.getAsInt());
+            }
+        }
+    }
+
+    @Override
+    public JsonElement writeToJson()
+    {
+        return new JsonPrimitive(this.getValue());
     }
 }

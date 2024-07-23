@@ -1,5 +1,7 @@
 package fi.dy.masa.servux.settings;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.Text;
 
@@ -28,5 +30,25 @@ public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
     public Boolean valueFromString(String value)
     {
         return Boolean.parseBoolean(value);
+    }
+
+    @Override
+    public void readFromJson(JsonElement element)
+    {
+        if (element.isJsonPrimitive())
+        {
+            var value = element.getAsJsonPrimitive();
+
+            if (value.isBoolean())
+            {
+                this.setValue(value.getAsBoolean());
+            }
+        }
+    }
+
+    @Override
+    public JsonElement writeToJson()
+    {
+        return new JsonPrimitive(this.getValue());
     }
 }
