@@ -6,7 +6,7 @@ public interface IServuxSetting<T>
 {
     String name();
     Text prettyName();
-    String comment();
+    Text comment();
 
     T getDefaultValue();
     T getValue();

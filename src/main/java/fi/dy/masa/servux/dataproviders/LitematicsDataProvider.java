@@ -276,7 +276,7 @@ public class LitematicsDataProvider extends DataProviderBase
     @Override
     public JsonObject toJson()
     {
-        JsonObject obj = new JsonObject();
+        JsonObject obj = super.toJson();
 
         if (this.permissionLevel > -1)
         {

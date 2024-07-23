@@ -3,6 +3,8 @@ package fi.dy.masa.servux.dataproviders;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
+
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -194,5 +196,10 @@ public class DataProviderManager
             this.configDir = Reference.DEFAULT_CONFIG_DIR;
         }
         return new File(this.configDir, "servux.json");
+    }
+
+    public Optional<IDataProvider> getProviderByName(String providerName)
+    {
+        return Optional.ofNullable(this.providers.get(providerName));
     }
 }

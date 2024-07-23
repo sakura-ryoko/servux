@@ -6,13 +6,13 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 {
     private final String name;
     private final Text prettyName;
-    private final String comment;
+    private final Text comment;
     private final T defaultValue;
 
     public AbstractServuxSetting(
         String name,
         Text prettyName,
-        String comment,
+        Text comment,
         T defaultValue
     )
     {
@@ -77,7 +77,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
-    public String comment()
+    public Text comment()
     {
         return comment;
     }

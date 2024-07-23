@@ -4,7 +4,7 @@ import net.minecraft.text.Text;
 
 public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
 {
-    public ServuxBoolSetting(String name, Text prettyName, String comment, boolean defaultValue)
+    public ServuxBoolSetting(String name, Text prettyName, Text comment, boolean defaultValue)
     {
         super(name, prettyName, comment, defaultValue);
     }

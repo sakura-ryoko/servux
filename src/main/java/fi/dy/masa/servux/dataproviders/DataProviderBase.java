@@ -1,6 +1,8 @@
 package fi.dy.masa.servux.dataproviders;
 
+import com.google.gson.JsonObject;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.util.JsonUtils;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -90,5 +92,23 @@ public abstract class DataProviderBase implements IDataProvider
     public List<IServuxSetting<?>> getSettings()
     {
         return List.of();
+    }
+
+    @Override
+    public JsonObject toJson()
+    {
+        return null;
+    }
+
+    @Override
+    public void fromJson(JsonObject obj)
+    {
+        for (IServuxSetting<?> setting : getSettings())
+        {
+            if (JsonUtils.hasString(obj, setting.name()))
+            {
+                setting.setValueFromString(JsonUtils.getString(obj, setting.name()));
+            }
+        }
     }
 }
