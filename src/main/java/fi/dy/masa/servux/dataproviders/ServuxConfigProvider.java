@@ -47,7 +47,6 @@ public class ServuxConfigProvider extends DataProviderBase
     public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
-        DataProviderManager.INSTANCE.writeToConfig();
         source.sendFeedback(() -> Text.of("Reloaded config!"), true);
     }
 
