@@ -65,23 +65,26 @@ public class ServuxCommand
                     var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
                     if (setting != null)
                     {
-                        return CommandSource.suggestMatching(setting.examples(), builder);
+                        return CommandSource.suggestMatching(setting.right().examples(), builder);
                     }
                     return builder.buildFuture();
                 })
             .executes((ctx) -> {
                 String settingName = ctx.getArgument("setting", String.class);
-                var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
-                if (setting == null)
+                var pair = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                if (pair == null)
                 {
                     throw new SimpleCommandExceptionType(Text.of("Unknown setting")).create();
                 }
+                var setting = pair.right();
                 String value = ctx.getArgument("value", String.class);
                 if (!setting.validateString(value))
                 {
                     throw new SimpleCommandExceptionType(Text.of("Invalid value")).create();
                 }
                 setting.setValueFromString(value);
+                String qualifiedName = pair.left().getName() + ":" + pair.right().name();
+                ctx.getSource().sendFeedback(() -> Text.of("Set " + qualifiedName + " to " + value), true);
                 return 1;
             }));
         return node;

@@ -10,6 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -209,7 +210,7 @@ public class DataProviderManager
         return Optional.ofNullable(this.providers.get(providerName));
     }
 
-    public @Nullable IServuxSetting<?> getSettingByName(String name)
+    public @Nullable Pair<IDataProvider, IServuxSetting<?>> getSettingByName(String name)
     {
         if (name.contains(":"))
         {
@@ -224,7 +225,7 @@ public class DataProviderManager
                 {
                     if (setting.name().equalsIgnoreCase(settingName))
                     {
-                        return setting;
+                        return Pair.of(provider, setting);
                     }
                 }
             }
@@ -237,7 +238,7 @@ public class DataProviderManager
                 {
                     if (setting.name().equalsIgnoreCase(name))
                     {
-                        return setting;
+                        return Pair.of(provider, setting);
                     }
                 }
             }
