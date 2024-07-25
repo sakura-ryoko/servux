@@ -22,7 +22,7 @@ public interface IServuxSetting<T>
     void setValue(T value);
     void setValueFromString(String value);
     boolean validateString(String value);
-    String valutToString(Object value);
+    String valueToString(Object value);
     T valueFromString(String value);
     void readFromJson(JsonElement element);
     JsonElement writeToJson();

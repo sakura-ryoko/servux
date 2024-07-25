@@ -1,11 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
-import fi.dy.masa.servux.settings.ServuxIntSetting;
+import java.util.List;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -13,8 +8,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
-
-import java.util.List;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.StringUtils;
 
 public class ServuxConfigProvider extends DataProviderBase
 {
@@ -61,13 +58,13 @@ public class ServuxConfigProvider extends DataProviderBase
     public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
-        source.sendFeedback(() -> Text.of("Reloaded config!"), true);
+        source.sendFeedback(() -> StringUtils.translate("servux.command.config.reloaded"), true);
     }
 
     public void doSaveConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.writeToConfig();
-        source.sendFeedback(() -> Text.of("Saved config!"), true);
+        source.sendFeedback(() -> StringUtils.translate("servux.command.config.saved"), true);
     }
 
     public boolean hasDebugMode()

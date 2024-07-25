@@ -1,15 +1,11 @@
 package fi.dy.masa.servux.dataproviders;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxIntSetting;
+import java.util.List;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -17,16 +13,20 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
-import fi.dy.masa.servux.util.JsonUtils;
-
-import java.util.List;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.StringUtils;
 
 public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
     protected final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required to access the data provider"), 0, 4, 0);
+    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
+            "permission_level",
+            StringUtils.translate("servux.default_permission_level.name"),
+            StringUtils.translate("servux.default_permission_level.comment"),
+            0, 4, 0);
     private List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
 
     protected EntitiesDataProvider()

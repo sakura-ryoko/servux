@@ -1,22 +1,19 @@
 package fi.dy.masa.servux.dataproviders;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
-
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import fi.dy.masa.servux.settings.IServuxSetting;
-import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.util.JsonUtils;
-
-import javax.annotation.Nullable;
 
 public class DataProviderManager
 {
@@ -137,6 +134,47 @@ public class DataProviderManager
         }
     }
 
+    public Optional<IDataProvider> getProviderByName(String providerName)
+    {
+        return Optional.ofNullable(this.providers.get(providerName));
+    }
+
+    public @Nullable IServuxSetting<?> getSettingByName(String name)
+    {
+        if (name.contains(":"))
+        {
+            String[] parts = name.split(":");
+            String providerName = parts[0];
+            String settingName = parts[1];
+            IDataProvider provider = this.providers.get(providerName);
+
+            if (provider != null)
+            {
+                for (IServuxSetting<?> setting : provider.getSettings())
+                {
+                    if (setting.name().equalsIgnoreCase(settingName))
+                    {
+                        return setting;
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (IDataProvider provider : this.providersImmutable)
+            {
+                for (IServuxSetting<?> setting : provider.getSettings())
+                {
+                    if (setting.name().equalsIgnoreCase(name))
+                    {
+                        return setting;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public void readFromConfig()
     {
         JsonElement el = JsonUtils.parseJsonFile(this.getConfigFile());
@@ -203,46 +241,5 @@ public class DataProviderManager
             this.configDir = Reference.DEFAULT_CONFIG_DIR;
         }
         return new File(this.configDir, "servux.json");
-    }
-
-    public Optional<IDataProvider> getProviderByName(String providerName)
-    {
-        return Optional.ofNullable(this.providers.get(providerName));
-    }
-
-    public @Nullable IServuxSetting<?> getSettingByName(String name)
-    {
-        if (name.contains(":"))
-        {
-            String[] parts = name.split(":");
-            String providerName = parts[0];
-            String settingName = parts[1];
-            IDataProvider provider = this.providers.get(providerName);
-
-            if (provider != null)
-            {
-                for (IServuxSetting<?> setting : provider.getSettings())
-                {
-                    if (setting.name().equalsIgnoreCase(settingName))
-                    {
-                        return setting;
-                    }
-                }
-            }
-        }
-        else
-        {
-            for (IDataProvider provider : this.providersImmutable)
-            {
-                for (IServuxSetting<?> setting : provider.getSettings())
-                {
-                    if (setting.name().equalsIgnoreCase(name))
-                    {
-                        return setting;
-                    }
-                }
-            }
-        }
-        return null;
     }
 }

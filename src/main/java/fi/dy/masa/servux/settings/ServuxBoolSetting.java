@@ -21,7 +21,7 @@ public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
     }
 
     @Override
-    public String valutToString(Object value)
+    public String valueToString(Object value)
     {
         return ((Boolean) value).toString();
     }

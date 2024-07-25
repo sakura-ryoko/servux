@@ -36,7 +36,7 @@ public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    public String valutToString(Object value)
+    public String valueToString(Object value)
     {
         JsonArray array = new JsonArray();
         for (T ele : (List<T>) value)

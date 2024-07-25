@@ -37,7 +37,7 @@ public class ServuxIntSetting extends AbstractServuxSetting<Integer>
     }
 
     @Override
-    public String valutToString(Object value)
+    public String valueToString(Object value)
     {
         return ((Integer) value).toString();
     }

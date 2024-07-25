@@ -1,0 +1,21 @@
+{
+    "servux.command.error.unknown_setting": "Unknown setting",
+    "servux.command.error.invalid_value": "Invalid value",
+    "servux.command.info.current_value": "Current value: %s",
+    "servux.command.info.default_value": "Default value: %s",
+    "servux.command.config.set_value": "Set %s to %s",
+    "servux.command.config.reloaded": "Reloaded config!",
+    "servux.command.config.saved": "Saved config!",
+
+    "servux.default_permission_level.name": "Permission Level",
+    "servux.default_permission_level.comment": "The permission level required to access the data provider",
+
+    "servux.litematics.permission_level.name": "Permission Level",
+    "servux.litematics.permission_level.comment": "The permission level required for the Litematics data provider",
+    "servux.litematics.permission_level_paste.name": "Paste Permission Level",
+    "servux.litematics.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
+
+    "servux.litematics.error.insufficent_for_paste": "§cInsufficient Permissions for the Litematic paste operation.§r",
+    "servux.litematics.error.creative_required": "§cCreative Mode is required for the Litematic paste operation.§r",
+    "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%d§rms."
+}

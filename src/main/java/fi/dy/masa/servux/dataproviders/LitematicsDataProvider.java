@@ -32,8 +32,16 @@ public class LitematicsDataProvider extends DataProviderBase
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
     protected final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required for the Litematics data provider"), 0, 4, 0);
-    protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", Text.of("Paste Permission Level"), Text.of("The permission level required for the Litematics paste operation"), 0, 4, 0);
+    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
+            "permission_level",
+            StringUtils.translate("servux.litematics.permission_level.name"),
+            StringUtils.translate("servux.litematics.permission_level.comment"),
+            0, 4, 0);
+    protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this,
+            "permission_level_paste",
+            StringUtils.translate("servux.litematics.permission_level_paste.name"),
+            StringUtils.translate("servux.litematics.permission_level_paste.comment"),
+            0, 4, 0);
     private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel);
 
     protected LitematicsDataProvider()
@@ -217,13 +225,13 @@ public class LitematicsDataProvider extends DataProviderBase
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
-            player.sendMessage(Text.literal("§cInsufficient Permissions for the Litematic paste operation.§r"));
+            player.sendMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
             return;
         }
         if (player.isCreative() == false)
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
-            player.sendMessage(Text.literal("§cCreative Mode is required for the Litematic paste operation.§r"));
+            player.sendMessage(StringUtils.translate("servux.litematics.error.creative_required"));
             return;
         }
 
@@ -235,7 +243,8 @@ public class LitematicsDataProvider extends DataProviderBase
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
             placement.pasteTo(player.getServerWorld(), replaceMode);
             long timeElapsed = System.currentTimeMillis() - timeStart;
-            player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
+            //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
+            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
         }
     }
 
