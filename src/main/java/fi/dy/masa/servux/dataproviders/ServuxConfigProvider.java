@@ -1,6 +1,8 @@
 package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
+
+import fi.dy.masa.servux.settings.ServuxStringSetting;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -20,8 +22,9 @@ public class ServuxConfigProvider extends DataProviderBase
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Base Permission Level"), Text.of("The base permission level for the mod"), 0, 4, 0);
     private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", Text.of("Admin Permission Level"), Text.of("The admin permission level for the mod"), 3, 4, 0);
     private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", Text.of("Easy Place Permission Level"), Text.of("The permission level for the Easy Place feature"), 0, 4, 0);
+    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", Text.of("Default Language"), Text.of("The default language for the mod"), "en_us", List.of("en_us"));
     private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
-    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.adminPermissionLevel, this.easyPlacePermissionLevel, this.debugLog);
+    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.adminPermissionLevel, this.easyPlacePermissionLevel, this.defaultLanguage, this.debugLog);
 
     protected ServuxConfigProvider()
     {

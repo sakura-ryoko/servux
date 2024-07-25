@@ -57,7 +57,7 @@ public class ServuxIntSetting extends AbstractServuxSetting<Integer>
 
             if (value.isNumber())
             {
-                this.setValue(value.getAsInt());
+                this.setValueNoCallback(value.getAsInt());
             }
         }
     }

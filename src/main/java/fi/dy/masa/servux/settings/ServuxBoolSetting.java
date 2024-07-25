@@ -41,7 +41,7 @@ public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
 
             if (value.isBoolean())
             {
-                this.setValue(value.getAsBoolean());
+                this.setValueNoCallback(value.getAsBoolean());
             }
         }
     }

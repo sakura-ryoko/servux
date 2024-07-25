@@ -59,7 +59,7 @@ public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>
         {
             var array = element.getAsJsonArray();
             var list = array.asList().stream().map(this::readElementFromJson).collect(Collectors.toList());
-            this.setValue(list);
+            this.setValueNoCallback(list);
         }
     }
 
