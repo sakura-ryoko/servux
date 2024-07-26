@@ -13,10 +13,12 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
@@ -377,6 +379,7 @@ public class SchematicPlacingUtils
             double x = pos.x + offX;
             double y = pos.y + offY;
             double z = pos.z + offZ;
+            float[] origRot = new float[2];
 
             if (x >= minX && x < maxX && z >= minZ && z < maxZ)
             {
@@ -404,6 +407,10 @@ public class SchematicPlacingUtils
                     tag.putInt("TileZ", (int) p.z);
                 }
 
+                NbtList rotation = tag.getList("Rotation", Constants.NBT.TAG_FLOAT);
+                origRot[0] = rotation.getFloat(0);
+                origRot[1] = rotation.getFloat(1);
+
                 Entity entity = EntityUtils.createEntityAndPassengersFromNBT(tag, world);
 
                 if (entity != null)
@@ -426,19 +433,27 @@ public class SchematicPlacingUtils
                     {
                         Direction right = paintingEntity.getHorizontalFacing().rotateYCounterclockwise();
 
-                        if ((paintingEntity.getVariant().value().width() % 32) == 0 &&
+                        if ((paintingEntity.getVariant().value().width() % 2) == 0 &&
                             right.getDirection() == AxisDirection.POSITIVE)
                         {
                             x -= 1.0 * right.getOffsetX();
                             z -= 1.0 * right.getOffsetZ();
                         }
 
-                        if ((paintingEntity.getVariant().value().height() % 32) == 0)
+                        if ((paintingEntity.getVariant().value().height() % 2) == 0)
                         {
                             y -= 1.0;
                         }
 
                         entity.setPosition(x, y, z);
+                    }
+                    if (entity instanceof ItemFrameEntity frameEntity)
+                    {
+                        if (frameEntity.getYaw() != origRot[0] && (frameEntity.getPitch() == 90.0F || frameEntity.getPitch() == -90.0F))
+                        {
+                            // Fix Yaw only if Pitch is +/- 90.0F (Floor, Ceiling mounted)
+                            frameEntity.setYaw(origRot[0]);
+                        }
                     }
 
                     EntityUtils.spawnEntityAndPassengersInWorld(entity, world);
