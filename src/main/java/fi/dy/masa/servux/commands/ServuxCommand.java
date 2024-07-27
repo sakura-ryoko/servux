@@ -113,8 +113,9 @@ public class ServuxCommand
                     {
                         style = style.withColor(Formatting.GRAY);
                     }
-                    style = style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example));
-                    return style;
+                    return style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", example)));
                 });
                 text.append(optionText).append(" ");
             });

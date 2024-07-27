@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 public class i18nLang
 {
     private static final Gson GSON = new Gson();
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("%(\\d+\\$)?[\\d.]*[df]");
     public static final String DEFAULT_LANG = "en_us";
     public static final String DEFAULT_PATH = "/assets/"+Reference.MOD_ID+"/lang/";
     private static volatile i18nLang instance = create(DEFAULT_PATH+DEFAULT_LANG+".json");
@@ -42,9 +41,7 @@ public class i18nLang
         load(biConsumer, path);
         final Map<String, String> map = builder.build();
 
-        return new i18nLang(map)
-        {
-        };
+         return new i18nLang(map);
     }
 
     public static void load(BiConsumer<String, String> entryConsumer, String path)
@@ -55,7 +52,19 @@ public class i18nLang
 
             try
             {
-                load(inputStream, entryConsumer);
+                if (inputStream != null)
+                {
+                    JsonObject jsonObject = GSON.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), JsonObject.class);
+
+                    for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
+                    {
+                        entryConsumer.accept(entry.getKey(), entry.getValue().getAsString());
+                    }
+                }
+                else
+                {
+                    throw new IOException("Couldn't find the file: " + path);
+                }
             }
             catch (Throwable var6)
             {
@@ -74,25 +83,11 @@ public class i18nLang
                 throw var6;
             }
 
-            if (inputStream != null)
-            {
-                inputStream.close();
-            }
+            inputStream.close();
         }
         catch (JsonParseException | IOException var7)
         {
             Servux.logger.error("Couldn't read strings from {}", path, var7);
-        }
-    }
-
-    public static void load(InputStream inputStream, BiConsumer<String, String> entryConsumer)
-    {
-        JsonObject jsonObject = GSON.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), JsonObject.class);
-
-        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
-        {
-            String string = TOKEN_PATTERN.matcher(JsonHelper.asString(entry.getValue(), entry.getKey())).replaceAll("%$1s");
-            entryConsumer.accept(entry.getKey(), string);
         }
     }
 
