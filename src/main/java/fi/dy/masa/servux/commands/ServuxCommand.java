@@ -14,6 +14,7 @@ import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -54,23 +55,7 @@ public class ServuxCommand
                             }
                             return builder.buildFuture();
                         })
-                        .executes((ctx) -> {
-                            Identifier settingId = ctx.getArgument("setting", Identifier.class);
-                            String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
-                            var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
-                            if (setting == null)
-                            {
-                                throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
-                            }
-                            String value = ctx.getArgument("value", String.class);
-                            if (!setting.validateString(value))
-                            {
-                                throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.invalid_value")).create();
-                            }
-                            setting.setValueFromString(value);
-                            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.config.set_value", setting.shortDisplayName(), value), true);
-                            return 1;
-                        }))))
+                        .executes(ServuxCommand::configModify))))
             .then(CommandManager.literal("info")
                 .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
                 .then(settingsNode().executes(ServuxCommand::configInfo)))
@@ -122,13 +107,13 @@ public class ServuxCommand
                 MutableText optionText = Text.literal(example).styled(style -> {
                     if (example.equals(setting.valueToString(setting.getValue())))
                     {
-                        style.withColor(Formatting.GREEN);
+                        style = style.withColor(Formatting.GREEN);
                     }
                     else
                     {
-                        style.withColor(Formatting.GRAY);
+                        style = style.withColor(Formatting.GRAY);
                     }
-                    style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example));
+                    style = style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example));
                     return style;
                 });
                 text.append(optionText).append(" ");
@@ -136,6 +121,32 @@ public class ServuxCommand
             ctx.getSource().sendFeedback(() -> text, false);
         }
 
+        return 1;
+    }
+
+    private static int configModify(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException
+    {
+        Identifier settingId = ctx.getArgument("setting", Identifier.class);
+        String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
+        var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+        if (setting == null)
+        {
+            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
+        }
+        String value = ctx.getArgument("value", String.class);
+        if (!setting.validateString(value))
+        {
+            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.invalid_value")).create();
+        }
+        setting.setValueFromString(value);
+        ctx.getSource().sendFeedback(() ->
+            StringUtils.translate("servux.command.config.set_value",
+                setting.shortDisplayName().copy().styled(style -> style
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_see_more")))),
+                value),
+            true
+        );
         return 1;
     }
 }
