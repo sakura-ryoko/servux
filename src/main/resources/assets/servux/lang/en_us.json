@@ -10,6 +10,7 @@
     "servux.command.info.click_to_set": "Click to set value: %s",
     "servux.command.info.click_to_see_more": "Click to see more",
     "servux.command.info.click_to_copy": "Click to copy",
+    "servux.command.config.invalid_language": "Invalid language: %s",
 
     "servux.config.servux_main.default_permission_level.name": "Permission Level",
     "servux.config.servux_main.default_permission_level.comment": "The permission level required to access the data provider",

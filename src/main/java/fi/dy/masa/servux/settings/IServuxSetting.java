@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.settings;
 
 import com.google.gson.JsonElement;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
@@ -19,8 +20,13 @@ public interface IServuxSetting<T>
     T getDefaultValue();
     T getValue();
     void setValueNoCallback(T value);
-    void setValue(T value);
-    void setValueFromString(String value);
+    void setValue(T value) throws CommandSyntaxException;
+
+    /**
+     * Set the value from a string representation, this is used when setting the value from commands
+     * @throws CommandSyntaxException if the value is invalid
+     */
+    void setValueFromString(String value) throws CommandSyntaxException;
     boolean validateString(String value);
     String valueToString(Object value);
     T valueFromString(String value);

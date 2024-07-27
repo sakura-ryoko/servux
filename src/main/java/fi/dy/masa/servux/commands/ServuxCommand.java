@@ -141,6 +141,8 @@ public class ServuxCommand
         {
             throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
         }
+
+        ctx.getSource().sendFeedback(Text::empty, false);
         ctx.getSource().sendFeedback(() ->
         {
             MutableText text = setting.prettyName().copy().formatted(Formatting.YELLOW);

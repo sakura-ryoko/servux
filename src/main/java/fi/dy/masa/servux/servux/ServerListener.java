@@ -32,7 +32,7 @@ public class ServerListener implements IServerListener
     {
         DataProviderManager.INSTANCE.writeToConfig();
 
-        i18nLang.setInstance(i18nLang.create(ServuxConfigProvider.INSTANCE.getDefaultLanguage()));
+        i18nLang.tryLoadLanguage(ServuxConfigProvider.INSTANCE.getDefaultLanguage());
     }
 
     @Override

@@ -9,20 +9,22 @@ import java.util.List;
 
 public class ServuxStringSetting extends AbstractServuxSetting<String>
 {
-    public ServuxStringSetting(IDataProvider dataProvider, String name, String defaultValue, List<String> examples)
+    private final boolean strict;
+    public ServuxStringSetting(IDataProvider dataProvider, String name, String defaultValue, List<String> examples, boolean strict)
     {
-        this(dataProvider, name, null, null, defaultValue, examples);
+        this(dataProvider, name, null, null, defaultValue, examples, strict);
     }
 
-    public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples)
+    public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples, boolean strict)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples);
+        this.strict = strict;
     }
 
     @Override
     public boolean validateString(String value)
     {
-        return true;
+        return strict ? this.examples().contains(value) : true;
     }
 
     @Override

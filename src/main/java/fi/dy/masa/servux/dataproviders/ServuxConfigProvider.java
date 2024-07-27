@@ -2,6 +2,8 @@ package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import fi.dy.masa.servux.settings.ServuxStringSetting;
 import fi.dy.masa.servux.util.i18nLang;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -23,13 +25,19 @@ public class ServuxConfigProvider extends DataProviderBase
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", 3, 4, 0);
     private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
-    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", i18nLang.DEFAULT_LANG, List.of("en_us")) {
+    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", i18nLang.DEFAULT_LANG, List.of("en_us"), false) {
         @Override
-        public void setValueNoCallback(String value)
+        public void setValue(String value) throws CommandSyntaxException
         {
             String lowerCase = value.toLowerCase();
-            i18nLang.tryLoadLanguage(lowerCase);
-            super.setValueNoCallback(lowerCase);
+            if (i18nLang.tryLoadLanguage(lowerCase))
+            {
+                super.setValueNoCallback(lowerCase);
+            }
+            else
+            {
+                throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.config.invalid_language", value)).create();
+            }
         }
     };
     private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
@@ -82,11 +90,6 @@ public class ServuxConfigProvider extends DataProviderBase
     public boolean hasDebugMode()
     {
         return this.debugLog.getValue();
-    }
-
-    public void setDebugMode(boolean debugLog)
-    {
-        this.debugLog.setValue(debugLog);
     }
 
     @Override

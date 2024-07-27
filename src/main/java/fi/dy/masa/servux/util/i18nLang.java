@@ -6,16 +6,15 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.JsonHelper;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 
@@ -26,69 +25,73 @@ public class i18nLang
     private static final Gson GSON = new Gson();
     public static final String DEFAULT_LANG = "en_us";
     public static final String DEFAULT_PATH = "/assets/"+Reference.MOD_ID+"/lang/";
-    private static volatile i18nLang instance = create(DEFAULT_PATH+DEFAULT_LANG+".json");
+    private static volatile i18nLang instance = null;
+    static
+    {
+        tryLoadLanguage(DEFAULT_LANG);
+    }
+    private final String languageCode;
     private final Map<String, String> map;
 
-    public i18nLang(Map<String, String> map)
+    public i18nLang(String languageCode, Map<String, String> map)
     {
+        this.languageCode = languageCode;
         this.map = map;
     }
 
-    public static i18nLang create(String path)
+    public static i18nLang create(String languageCode, String path) throws IOException
     {
         ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
         BiConsumer<String, String> biConsumer = builder::put;
         load(biConsumer, path);
         final Map<String, String> map = builder.build();
 
-         return new i18nLang(map);
+         return new i18nLang(languageCode, map);
     }
 
-    public static void load(BiConsumer<String, String> entryConsumer, String path)
+    public static i18nLang create(String languageCode) throws IOException
     {
+        return create(languageCode, DEFAULT_PATH + languageCode + ".json");
+    }
+
+    public static void load(BiConsumer<String, String> entryConsumer, String path) throws IOException
+    {
+        InputStream inputStream = i18nLang.class.getResourceAsStream(path);
+
         try
         {
-            InputStream inputStream = i18nLang.class.getResourceAsStream(path);
-
-            try
+            if (inputStream != null)
             {
-                if (inputStream != null)
-                {
-                    JsonObject jsonObject = GSON.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), JsonObject.class);
+                JsonObject jsonObject = GSON.fromJson(new InputStreamReader(inputStream, StandardCharsets.UTF_8), JsonObject.class);
 
-                    for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
-                    {
-                        entryConsumer.accept(entry.getKey(), entry.getValue().getAsString());
-                    }
-                }
-                else
+                for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
                 {
-                    throw new IOException("Couldn't find the file: " + path);
+                    entryConsumer.accept(entry.getKey(), entry.getValue().getAsString());
                 }
             }
-            catch (Throwable var6)
+            else
             {
-                if (inputStream != null)
-                {
-                    try
-                    {
-                        inputStream.close();
-                    }
-                    catch (Throwable var5)
-                    {
-                        var6.addSuppressed(var5);
-                    }
-                }
-
-                throw var6;
+                throw new IOException("Couldn't find the file: " + path);
             }
-
-            inputStream.close();
         }
-        catch (JsonParseException | IOException var7)
+        catch (Throwable var6)
         {
-            Servux.logger.error("Couldn't read strings from {}", path, var7);
+            if (inputStream != null)
+            {
+                try
+                {
+                    inputStream.close();
+                }
+                catch (Throwable var5)
+                {
+                    var6.addSuppressed(var5);
+                }
+            }
+
+            throw var6;
         }
+
+        inputStream.close();
     }
 
     public static i18nLang getInstance()
@@ -101,15 +104,17 @@ public class i18nLang
         instance = language;
     }
 
-    public static void tryLoadLanguage(String langCode)
+    public static boolean tryLoadLanguage(String langCode)
     {
         try
         {
-            instance = create(DEFAULT_PATH + langCode + ".json");
+            instance = create(langCode);
+            return true;
         }
         catch (Exception e)
         {
             Servux.logger.error("Failed to load language file for '{}'", langCode, e);
+            return false;
         }
     }
 
@@ -122,7 +127,7 @@ public class i18nLang
     {
         if (hasTranslation(key))
         {
-            return Text.translatableWithFallback(key, get(key), args);
+            return Text.translatableWithFallback(key, get(key).formatted(args), args);
         }
         else
         {

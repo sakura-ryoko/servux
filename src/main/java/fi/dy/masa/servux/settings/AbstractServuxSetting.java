@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.settings;
 
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.util.i18nLang;
 import net.minecraft.text.Text;
@@ -58,7 +59,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
-    public void setValue(T value)
+    public void setValue(T value) throws CommandSyntaxException
     {
         var oldValue = this.getValue();
         setValueNoCallback(value);
@@ -77,7 +78,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
-    public void setValueFromString(String value)
+    public void setValueFromString(String value) throws CommandSyntaxException
     {
         if (this.validateString(value))
         {
