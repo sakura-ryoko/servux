@@ -121,4 +121,9 @@ public class ServuxConfigProvider extends DataProviderBase
     {
         // NO-OP
     }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage.getValue();
+    }
 }
