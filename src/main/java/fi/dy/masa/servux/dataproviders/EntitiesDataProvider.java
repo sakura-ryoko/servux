@@ -15,7 +15,6 @@ import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.util.StringUtils;
 
 public class EntitiesDataProvider extends DataProviderBase
 {
@@ -24,8 +23,6 @@ public class EntitiesDataProvider extends DataProviderBase
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
             "permission_level",
-            StringUtils.translate("servux.default_permission_level.name"),
-            StringUtils.translate("servux.default_permission_level.comment"),
             0, 4, 0);
     private List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
 

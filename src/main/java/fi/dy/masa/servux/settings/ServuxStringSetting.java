@@ -11,7 +11,7 @@ public class ServuxStringSetting extends AbstractServuxSetting<String>
 {
     public ServuxStringSetting(IDataProvider dataProvider, String name, String defaultValue, List<String> examples)
     {
-
+        this(dataProvider, name, null, null, defaultValue, examples);
     }
 
     public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples)

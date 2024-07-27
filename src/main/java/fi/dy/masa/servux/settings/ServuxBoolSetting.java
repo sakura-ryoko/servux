@@ -14,6 +14,11 @@ public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
         super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"));
     }
 
+    public ServuxBoolSetting(IDataProvider dataProvider, String name, boolean defaultValue)
+    {
+        super(dataProvider, name, null, null, defaultValue, List.of("true", "false"));
+    }
+
     @Override
     public boolean validateString(String value)
     {

@@ -20,7 +20,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -48,13 +47,13 @@ public class StructureDataProvider extends DataProviderBase
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected int retainDistance;
-    private ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required to access the data provider"), 0, 4, 0);
-    private ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", Text.of("Structures Blacklist Enabled"), Text.of("Enable the structures blacklist"), false);
-    private ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", Text.of("Structures Whitelist Enabled"), Text.of("Enable the structures whitelist"), false);
-    private ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", Text.of("Structures Blacklist"), Text.of("List of structures to blacklist"), List.of());
-    private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", Text.of("Structures Whitelist"), Text.of("List of structures to whitelist"), List.of());
-    private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", Text.of("Update Interval"), Text.of("The update interval in ticks"), 40, 1200, 1);
-    private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", Text.of("Timeout"), Text.of("The timeout in ticks"), 600, 1200, 40);
+    private ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
+    private ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
+    private ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
+    private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
+    private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
+    private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
     private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
     // FIXME --> Move out of structures channel in the future

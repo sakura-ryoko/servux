@@ -13,7 +13,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
@@ -34,13 +33,9 @@ public class LitematicsDataProvider extends DataProviderBase
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
             "permission_level",
-            StringUtils.translate("servux.litematics.permission_level.name"),
-            StringUtils.translate("servux.litematics.permission_level.comment"),
             0, 4, 0);
     protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this,
             "permission_level_paste",
-            StringUtils.translate("servux.litematics.permission_level_paste.name"),
-            StringUtils.translate("servux.litematics.permission_level_paste.comment"),
             0, 4, 0);
     private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel);
 

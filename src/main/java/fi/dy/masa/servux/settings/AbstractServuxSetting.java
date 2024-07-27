@@ -48,6 +48,10 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
+    /**
+     * the value field should not be modified directly, please invoke this method.
+     * override this value to handle all the value changes, even caused by reading config.
+     */
     public void setValueNoCallback(T value)
     {
         this.value = value;

@@ -123,11 +123,11 @@ public class i18nLang
         return map.get(key);
     }
 
-    public Text translate(String key)
+    public Text translate(String key, Object... args)
     {
         if (hasTranslation(key))
         {
-            return Text.translatable(key, get(key));
+            return Text.translatableWithFallback(key, get(key), args);
         }
         else
         {

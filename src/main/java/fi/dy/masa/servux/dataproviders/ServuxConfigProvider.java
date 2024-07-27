@@ -20,10 +20,10 @@ public class ServuxConfigProvider extends DataProviderBase
 {
     public static final ServuxConfigProvider INSTANCE = new ServuxConfigProvider();
 
-    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Base Permission Level"), Text.of("The base permission level for the mod"), 0, 4, 0);
-    private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", Text.of("Admin Permission Level"), Text.of("The admin permission level for the mod"), 3, 4, 0);
-    private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", Text.of("Easy Place Permission Level"), Text.of("The permission level for the Easy Place feature"), 0, 4, 0);
-    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", Text.of("Default Language"), Text.of("The default language for the mod"), i18nLang.DEFAULT_LANG, List.of("en_us")) {
+    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", 3, 4, 0);
+    private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
+    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", i18nLang.DEFAULT_LANG, List.of("en_us")) {
         @Override
         public void setValueNoCallback(String value)
         {
