@@ -1,5 +1,7 @@
 package fi.dy.masa.servux.commands;
 
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -11,14 +13,15 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.StringUtils;
-
-import java.util.stream.Stream;
 
 public class ServuxCommand
 {
@@ -70,22 +73,7 @@ public class ServuxCommand
                         }))))
             .then(CommandManager.literal("info")
                 .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
-                .then(settingsNode().executes((ctx) -> {
-                    Identifier settingId = ctx.getArgument("setting", Identifier.class);
-                    String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
-                    var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
-                    if (setting == null)
-                    {
-                        throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
-                    }
-                    ctx.getSource().sendFeedback(() -> setting.prettyName().copy().append(" (" + setting.qualifiedName() + ")"), false);
-                    ctx.getSource().sendFeedback(() -> setting.comment(), false);
-                    ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())), false);
-                    ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.default_value",setting.valueToString(setting.getDefaultValue())), false);
-
-                    // todo
-                    return 1;
-                })))
+                .then(settingsNode().executes(ServuxCommand::configInfo)))
         );
     }
 
@@ -111,5 +99,43 @@ public class ServuxCommand
             return builder.buildFuture();
         });
         return node;
+    }
+
+    private static int configInfo(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException
+    {
+        Identifier settingId = ctx.getArgument("setting", Identifier.class);
+        String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
+        var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+        if (setting == null)
+        {
+            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
+        }
+        ctx.getSource().sendFeedback(() -> setting.prettyName().copy().append(" (" + setting.qualifiedName() + ")"), false);
+        ctx.getSource().sendFeedback(setting::comment, false);
+        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())), false);
+        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())), false);
+        if (!setting.examples().isEmpty())
+        {
+            MutableText text = StringUtils.translate("servux.command.info.examples");
+            setting.examples().forEach(example ->
+            {
+                MutableText optionText = Text.literal(example).styled(style -> {
+                    if (example.equals(setting.valueToString(setting.getValue())))
+                    {
+                        style.withColor(Formatting.GREEN);
+                    }
+                    else
+                    {
+                        style.withColor(Formatting.GRAY);
+                    }
+                    style.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example));
+                    return style;
+                });
+                text.append(optionText).append(" ");
+            });
+            ctx.getSource().sendFeedback(() -> text, false);
+        }
+
+        return 1;
     }
 }

@@ -6,6 +6,7 @@
     "servux.command.config.set_value": "Set %s to %s",
     "servux.command.config.reloaded": "Reloaded config!",
     "servux.command.config.saved": "Saved config!",
+    "servux.command.info.examples": "Examples: ",
 
     "servux.config.servux_main.default_permission_level.name": "Permission Level",
     "servux.config.servux_main.default_permission_level.comment": "The permission level required to access the data provider",

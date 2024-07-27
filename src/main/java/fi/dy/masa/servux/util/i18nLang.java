@@ -123,7 +123,7 @@ public class i18nLang
         return map.get(key);
     }
 
-    public Text translate(String key, Object... args)
+    public MutableText translate(String key, Object... args)
     {
         if (hasTranslation(key))
         {

@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.util;
 
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -27,9 +28,8 @@ public class StringUtils
      * Can replace I18n
      * @param translationKey (key)
      * @param args (...args)
-     * @return (Translated String)
      */
-    public static Text translate(String translationKey, Object... args)
+    public static MutableText translate(String translationKey, Object... args)
     {
         return i18nLang.getInstance().translate(translationKey, args);
     }
