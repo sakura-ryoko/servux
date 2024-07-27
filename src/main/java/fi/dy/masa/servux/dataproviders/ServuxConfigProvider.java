@@ -25,7 +25,7 @@ public class ServuxConfigProvider extends DataProviderBase
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", 3, 4, 0);
     private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
-    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", i18nLang.DEFAULT_LANG, List.of("en_us"), false) {
+    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", i18nLang.DEFAULT_LANG, List.of("en_us", "zh_cn"), false) {
         @Override
         public void setValue(String value) throws CommandSyntaxException
         {

@@ -127,7 +127,7 @@ public class ServuxCommand
                 MutableText text = Text.empty();
                 text.append(setting.shortDisplayName().copy().styled(style -> style
                         .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_see_more")))));
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, setting.comment()))));
                 text.append(Text.literal(" (" + setting.dataProvider().getName() + ")").formatted(Formatting.GRAY));
                 String value = setting.valueToString(setting.getValue());
                 if (value.length() < 10)
