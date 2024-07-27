@@ -28,10 +28,7 @@ public class ServuxConfigProvider extends DataProviderBase
         public void setValueNoCallback(String value)
         {
             String lowerCase = value.toLowerCase();
-            if (!lowerCase.equals(this.getValue()))
-            {
-                i18nLang.tryLoadLanguage(lowerCase);
-            }
+            i18nLang.tryLoadLanguage(lowerCase);
             super.setValueNoCallback(lowerCase);
         }
     };

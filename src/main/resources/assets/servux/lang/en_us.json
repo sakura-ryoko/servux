@@ -7,13 +7,13 @@
     "servux.command.config.reloaded": "Reloaded config!",
     "servux.command.config.saved": "Saved config!",
 
-    "servux.default_permission_level.name": "Permission Level",
-    "servux.default_permission_level.comment": "The permission level required to access the data provider",
+    "servux.config.servux_main.default_permission_level.name": "Permission Level",
+    "servux.config.servux_main.default_permission_level.comment": "The permission level required to access the data provider",
 
-    "servux.litematics.permission_level.name": "Permission Level",
-    "servux.litematics.permission_level.comment": "The permission level required for the Litematics data provider",
-    "servux.litematics.permission_level_paste.name": "Paste Permission Level",
-    "servux.litematics.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
+    "servux.config.litematic_data.permission_level.name": "Permission Level",
+    "servux.config.litematic_data.permission_level.comment": "The permission level required for the Litematics data provider",
+    "servux.config.litematic_data.permission_level_paste.name": "Paste Permission Level",
+    "servux.config.litematic_data.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
 
     "servux.litematics.error.insufficent_for_paste": "§cInsufficient Permissions for the Litematic paste operation.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode is required for the Litematic paste operation.§r",
