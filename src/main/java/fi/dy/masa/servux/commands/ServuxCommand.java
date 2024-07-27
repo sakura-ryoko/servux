@@ -1,5 +1,7 @@
 package fi.dy.masa.servux.commands;
 
+import fi.dy.masa.servux.dataproviders.IDataProvider;
+import fi.dy.masa.servux.settings.IServuxSetting;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -9,11 +11,14 @@ import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.StringUtils;
+
+import java.util.stream.Stream;
 
 public class ServuxCommand
 {
@@ -98,11 +103,10 @@ public class ServuxCommand
             }
             else
             {
-                DataProviderManager.INSTANCE.getAllProviders().stream()
-                    .flatMap(iDataProvider -> iDataProvider.getSettings().stream())
-                    .forEach(iServuxSetting -> builder.suggest(iServuxSetting.name(), iServuxSetting.prettyName()));
+                CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders().stream()
+                    .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList(), builder, IServuxSetting::name, IServuxSetting::prettyName);
 
-                DataProviderManager.INSTANCE.getAllProviders().forEach(iDataProvider -> builder.suggest(iDataProvider.getName()));
+                CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider")));
             }
             return builder.buildFuture();
         });

@@ -15,11 +15,16 @@
     "servux.config.servux_main.permission_level_easy_place.comment": "The permission level required for the Easy Place operation",
     "servux.config.servux_main.permission_level_admin.name": "Admin Permission Level",
     "servux.config.servux_main.permission_level_admin.comment": "The permission level required for the Admin operation (not used)",
+    "servux.config.servux_main.permission_level.name": "Permission Level",
+    "servux.config.servux_main.permission_level.comment": "The permission level required for the data provider (not used)",
 
     "servux.config.litematic_data.permission_level.name": "Permission Level",
     "servux.config.litematic_data.permission_level.comment": "The permission level required for the Litematics data provider",
     "servux.config.litematic_data.permission_level_paste.name": "Paste Permission Level",
     "servux.config.litematic_data.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
+
+    "servux.config.entity_data.permission_level.name": "Permission Level",
+    "servux.config.entity_data.permission_level.comment": "The permission level required for the Entity data provider, will send entity data to clients with this permission level",
 
     "servux.config.structure_bounding_boxes.permission_level.name": "Permission Level",
     "servux.config.structure_bounding_boxes.permission_level.comment": "The permission level required for the Structure Bounding Boxes data provider",
@@ -38,5 +43,7 @@
 
     "servux.litematics.error.insufficent_for_paste": "§cInsufficient Permissions for the Litematic paste operation.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode is required for the Litematic paste operation.§r",
-    "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%d§rms."
+    "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%d§rms.",
+
+    "servux.suffix.data_provider": " (Data Provider)"
 }
