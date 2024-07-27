@@ -1,9 +1,10 @@
 {
     "servux.command.error.unknown_setting": "Unknown setting",
     "servux.command.error.unknown_data_provider": "Unknown data provider",
+    "servux.command.error.no_settings": "No settings found!",
     "servux.command.error.invalid_value": "Invalid value",
     "servux.command.info.current_value": "Current value: %s",
-    "servux.command.info.default_value": "Default value: %s",
+    "servux.command.info.default_value": "Default: %s",
     "servux.command.config.set_value": "Set %s to %s",
     "servux.command.config.reloaded": "Reloaded config!",
     "servux.command.config.saved": "Saved config!",

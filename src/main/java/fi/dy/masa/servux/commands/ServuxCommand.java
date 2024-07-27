@@ -191,7 +191,7 @@ public class ServuxCommand
         ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())).styled(style -> style
             .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
             .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
-        ).append(StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())).formatted(Formatting.GRAY)), false);
+        ).append(" ").append(StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())).formatted(Formatting.GRAY)), false);
         if (!setting.examples().isEmpty())
         {
             MutableText text = StringUtils.translate("servux.command.info.examples");
