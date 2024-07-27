@@ -24,6 +24,8 @@ import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.StringUtils;
 
+import java.util.List;
+
 public class ServuxCommand
 {
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
@@ -59,7 +61,51 @@ public class ServuxCommand
             .then(CommandManager.literal("info")
                 .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
                 .then(settingsNode().executes(ServuxCommand::configInfo)))
+            .then(CommandManager.literal("list")
+                .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
+                .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getAllProviders().stream()
+                    .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList()))
+                .then(CommandManager.argument("provider", StringArgumentType.string())
+                    .suggests((ctx, builder) -> CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider"))))
+                    .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getProviderByName(StringArgumentType.getString(ctx, "provider")).get().getSettings()))))
+            .then(CommandManager.literal("search")
+                .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
+                .then(CommandManager.argument("query", StringArgumentType.string())
+                    .executes(ctx -> configList(ctx, configSearch(ctx, StringArgumentType.getString(ctx, "query"))))))
         );
+    }
+
+    private static List<IServuxSetting<?>> configSearch(CommandContext<ServerCommandSource> ctx, String query)
+    {
+        return null;
+    }
+
+    private static int configList(CommandContext<ServerCommandSource> ctx, List<IServuxSetting<?>> list)
+    {
+        if (list.isEmpty())
+        {
+            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.error.no_settings"), false);
+            return 0;
+        }
+
+        for (IServuxSetting<?> setting : list)
+        {
+            ctx.getSource().sendFeedback(() ->
+            {
+                MutableText text = Text.empty();
+                text.append(setting.shortDisplayName().copy().styled(style -> style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_see_more")))));
+                text.append(Text.literal(" (" + setting.dataProvider().getName() + ")").formatted(Formatting.GRAY));
+                String value = setting.valueToString(setting.getValue());
+                if (value.length() < 10)
+                {
+                    text.append(": ").append(value);
+                }
+                return text;
+            }, false);
+        }
+        return list.size();
     }
 
     private static ArgumentBuilder<ServerCommandSource, ?> settingsNode() {
@@ -95,8 +141,19 @@ public class ServuxCommand
         {
             throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
         }
-        ctx.getSource().sendFeedback(() -> setting.prettyName().copy().append(" (" + setting.qualifiedName() + ")"), false);
-        ctx.getSource().sendFeedback(setting::comment, false);
+        ctx.getSource().sendFeedback(() ->
+        {
+            MutableText text = setting.prettyName().copy().formatted(Formatting.YELLOW);
+            text.append(" (");
+            text.append(Text.literal(setting.qualifiedName()).styled(style ->
+                style.withColor(Formatting.GRAY)
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_copy")))
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, setting.qualifiedName()))
+            ));
+            text.append(")");
+            return text;
+        }, false);
+        ctx.getSource().sendFeedback(() -> setting.comment().copy().formatted(Formatting.GRAY), false);
         ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())), false);
         ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())), false);
         if (!setting.examples().isEmpty())
