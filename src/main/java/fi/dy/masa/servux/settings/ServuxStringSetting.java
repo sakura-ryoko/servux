@@ -9,6 +9,11 @@ import java.util.List;
 
 public class ServuxStringSetting extends AbstractServuxSetting<String>
 {
+    public ServuxStringSetting(IDataProvider dataProvider, String name, String defaultValue, List<String> examples)
+    {
+
+    }
+
     public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples);

@@ -1,9 +1,11 @@
 package fi.dy.masa.servux.settings;
 
 import fi.dy.masa.servux.dataproviders.IDataProvider;
+import fi.dy.masa.servux.util.i18nLang;
 import net.minecraft.text.Text;
 
 import java.util.List;
+import java.util.Objects;
 
 public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 {
@@ -16,6 +18,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 
     public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples)
     {
+        Objects.requireNonNull(name);
         this.name = name;
         this.prettyName = prettyName;
         this.comment = comment;
@@ -27,13 +30,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 
     public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue)
     {
-        this.name = name;
-        this.prettyName = prettyName;
-        this.comment = comment;
-        this.defaultValue = defaultValue;
-        this.value = defaultValue;
-        this.examples = List.of();
-        this.dataProvider = dataProvider;
+        this(dataProvider, name, prettyName, comment, defaultValue, null);
     }
 
     private T value;
@@ -59,8 +56,8 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     @Override
     public void setValue(T value)
     {
-        var oldValue = this.value;
-        this.value = value;
+        var oldValue = this.getValue();
+        setValueNoCallback(value);
         onValueChanged(oldValue, value);
     }
 
@@ -93,18 +90,30 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     @Override
     public Text prettyName()
     {
+        if (prettyName == null)
+        {
+            return i18nLang.getInstance().translate("servux.config."+dataProvider.getName()+"."+name+".name");
+        }
         return prettyName;
     }
 
     @Override
     public Text comment()
     {
+        if (comment == null)
+        {
+            return i18nLang.getInstance().translate("servux.config."+dataProvider.getName()+"."+name+".comment");
+        }
         return comment;
     }
 
     @Override
     public List<String> examples()
     {
+        if (examples == null)
+        {
+            return List.of();
+        }
         return examples;
     }
 }
