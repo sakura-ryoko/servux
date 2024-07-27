@@ -1,5 +1,6 @@
 {
     "servux.command.error.unknown_setting": "Unknown setting",
+    "servux.command.error.unknown_data_provider": "Unknown data provider",
     "servux.command.error.invalid_value": "Invalid value",
     "servux.command.info.current_value": "Current value: %s",
     "servux.command.info.default_value": "Default value: %s",
@@ -11,6 +12,7 @@
     "servux.command.info.click_to_see_more": "Click to see more",
     "servux.command.info.click_to_copy": "Click to copy",
     "servux.command.config.invalid_language": "Invalid language: %s",
+    "servux.command.config.list.data_provider": "Data provider %s has following settings: ",
 
     "servux.config.servux_main.default_permission_level.name": "Permission Level",
     "servux.config.servux_main.default_permission_level.comment": "The permission level required to access the data provider",

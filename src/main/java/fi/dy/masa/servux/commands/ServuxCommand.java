@@ -25,6 +25,7 @@ import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ServuxCommand
 {
@@ -67,7 +68,16 @@ public class ServuxCommand
                     .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList()))
                 .then(CommandManager.argument("provider", StringArgumentType.string())
                     .suggests((ctx, builder) -> CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider"))))
-                    .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getProviderByName(StringArgumentType.getString(ctx, "provider")).get().getSettings()))))
+                    .executes(ctx -> {
+                        String provider = StringArgumentType.getString(ctx, "provider");
+                        Optional<IDataProvider> dataProvider = DataProviderManager.INSTANCE.getProviderByName(provider);
+                        if (dataProvider.isEmpty())
+                        {
+                            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_data_provider")).create();
+                        }
+                        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.config.list.data_provider", provider), false);
+                        return configList(ctx, dataProvider.get().getSettings());
+                    })))
             .then(CommandManager.literal("search")
                 .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
                 .then(CommandManager.argument("query", StringArgumentType.string())
@@ -77,7 +87,29 @@ public class ServuxCommand
 
     private static List<IServuxSetting<?>> configSearch(CommandContext<ServerCommandSource> ctx, String query)
     {
-        return null;
+        String[] searchParts = query.split(" ");
+        return DataProviderManager.INSTANCE.getAllProviders().stream()
+            .flatMap(iDataProvider -> iDataProvider.getSettings().stream())
+            .filter(iServuxSetting ->
+            {
+                for (String part : searchParts)
+                {
+                    if (iServuxSetting.name().contains(part))
+                    {
+                        continue;
+                    }
+                    if (iServuxSetting.comment().getString().contains(part))
+                    {
+                        continue;
+                    }
+                    if (iServuxSetting.dataProvider().getName().contains(part))
+                    {
+                        continue;
+                    }
+                    return false;
+                }
+                return true;
+            }).toList();
     }
 
     private static int configList(CommandContext<ServerCommandSource> ctx, List<IServuxSetting<?>> list)
@@ -156,8 +188,10 @@ public class ServuxCommand
             return text;
         }, false);
         ctx.getSource().sendFeedback(() -> setting.comment().copy().formatted(Formatting.GRAY), false);
-        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())), false);
-        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())), false);
+        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())).styled(style -> style
+            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
+            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
+        ).append(StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())).formatted(Formatting.GRAY)), false);
         if (!setting.examples().isEmpty())
         {
             MutableText text = StringUtils.translate("servux.command.info.examples");
