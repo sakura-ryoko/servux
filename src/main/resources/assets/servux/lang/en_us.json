@@ -48,7 +48,7 @@
 
     "servux.litematics.error.insufficent_for_paste": "§cInsufficient Permissions for the Litematic paste operation.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode is required for the Litematic paste operation.§r",
-    "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%d§rms.",
+    "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%s§rms.",
 
     "servux.suffix.data_provider": " (Data Provider)"
 }

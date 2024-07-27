@@ -11,8 +11,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import fi.dy.masa.servux.Reference;
@@ -127,7 +125,7 @@ public class i18nLang
     {
         if (hasTranslation(key))
         {
-            return Text.translatableWithFallback(key, get(key).formatted(args), args);
+            return Text.translatableWithFallback(key, get(key), args);
         }
         else
         {
