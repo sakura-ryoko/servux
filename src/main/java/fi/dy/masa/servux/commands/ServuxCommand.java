@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.commands;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -86,8 +86,22 @@ public class ServuxCommand implements IServerCommand
                     })))
             .then(CommandManager.literal("search")
                 .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
-                .then(CommandManager.argument("query", StringArgumentType.string())
-                    .executes(ctx -> configList(ctx, configSearch(ctx, StringArgumentType.getString(ctx, "query"))))))
+                .then(CommandManager.argument("query", StringArgumentType.greedyString())
+                    .executes(ctx ->
+                    {
+                        String query = StringArgumentType.getString(ctx, "query");
+                        var settings = configSearch(ctx, query);
+                        if (settings.isEmpty())
+                        {
+                            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.none", query), false);
+                            return 0;
+                        }
+                        else
+                        {
+                            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.results", settings.size(), query), false);
+                            return configList(ctx, settings);
+                        }
+                    })))
         );
     }
 
@@ -126,15 +140,28 @@ public class ServuxCommand implements IServerCommand
             return 0;
         }
 
+        Set<String> appearedNames = new HashSet<>();
+        Set<String> appearedMultiTimes = new HashSet<>();
+        for (IServuxSetting<?> setting : list)
+        {
+            if (!appearedNames.add(setting.name()))
+            {
+                appearedMultiTimes.add(setting.name());
+            }
+        }
+
         for (IServuxSetting<?> setting : list)
         {
             ctx.getSource().sendFeedback(() ->
             {
                 MutableText text = Text.empty();
                 text.append(setting.shortDisplayName().copy().styled(style -> style
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, setting.comment()))));
-                text.append(Text.literal(" (" + setting.dataProvider().getName() + ")").formatted(Formatting.GRAY));
+                    .withBold(true)
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))));
+                if (appearedMultiTimes.contains(setting.name()))
+                {
+                    text.append(Text.literal(" (").append(Text.of(setting.dataProvider().getName())).append(")").formatted(Formatting.GRAY));
+                }
                 String value = setting.valueToString(setting.getValue());
                 if (value.length() < 10)
                 {
@@ -183,7 +210,9 @@ public class ServuxCommand implements IServerCommand
         ctx.getSource().sendFeedback(Text::empty, false);
         ctx.getSource().sendFeedback(() ->
         {
-            MutableText text = setting.prettyName().copy().formatted(Formatting.YELLOW);
+            MutableText text = Text.empty();
+            text.append(setting.prettyName().copy().styled(style ->
+                style.withColor(Formatting.YELLOW).withBold(true)));
             text.append(" (");
             text.append(Text.literal(setting.qualifiedName()).styled(style ->
                 style.withColor(Formatting.GRAY)
@@ -194,10 +223,28 @@ public class ServuxCommand implements IServerCommand
             return text;
         }, false);
         ctx.getSource().sendFeedback(() -> setting.comment().copy().formatted(Formatting.GRAY), false);
-        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.info.current_value", setting.valueToString(setting.getValue())).styled(style -> style
-            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
-            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
-        ).append(" ").append(StringUtils.translate("servux.command.info.default_value", setting.valueToString(setting.getDefaultValue())).formatted(Formatting.GRAY)), false);
+        ctx.getSource().sendFeedback(() ->
+        {
+            MutableText text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).styled(style -> style
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
+                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
+            ).append(" ");
+            if (Objects.equals(setting.getDefaultValue(), setting.getValue()))
+            {
+                text.append(StringUtils.translate("servux.command.suffix.default_value").formatted(Formatting.GRAY));
+            }
+            else
+            {
+                text.append(StringUtils.translate("servux.command.suffix.modified").formatted(Formatting.GREEN));
+                text.append(" ");
+                text.append(StringUtils.translate("servux.command.info.reset").formatted(Formatting.GRAY)
+                    .styled(style -> style
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + setting.valueToString(setting.getDefaultValue())))
+                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_reset_to", setting.valueToString(setting.getDefaultValue()))))
+                    ));
+            }
+            return text;
+        }, false);
         if (!setting.examples().isEmpty())
         {
             MutableText text = StringUtils.translate("servux.command.info.examples");

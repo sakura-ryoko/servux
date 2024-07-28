@@ -3,6 +3,11 @@
   "servux.command.error.unknown_data_provider": "未知数据源",
   "servux.command.error.no_settings": "未找到设置！",
   "servux.command.error.invalid_value": "无效的值",
+  "servux.command.info.value": "当前值：%s",
+  "servux.command.suffix.default_value": "(默认值)",
+  "servux.command.suffix.modified": "(已修改)",
+  "servux.command.info.reset": "重置",
+  "servux.command.info.click_to_reset_to": "点击重置为默认值：%s",
   "servux.command.info.current_value": "当前值：%s",
   "servux.command.info.default_value": "默认值：%s",
   "servux.command.config.set_value": "成功将 %s 设置为 %s",
@@ -53,5 +58,7 @@
   "servux.litematics.error.creative_required": "§cLitematic 粘贴操作需要创造模式.§r",
   "servux.litematics.success.pasted": "已将 §b%s§r 粘贴到世界 §d%s§r 中，耗时 §a%s§r 毫秒。",
 
-  "servux.suffix.data_provider": "（数据源）"
+  "servux.suffix.data_provider": "（数据源）",
+  "servux.command.search.results": "找到 %s 个关于 '%s' 的设置",
+  "servux.command.search.none": "未找到关于 '%s' 的设置"
 }
