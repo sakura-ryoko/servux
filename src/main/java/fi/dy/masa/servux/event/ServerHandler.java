@@ -6,6 +6,7 @@ import org.jetbrains.annotations.ApiStatus;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.interfaces.IServerListener;
+import fi.dy.masa.servux.interfaces.IServerManager;
 
 /**
  * Interface Handler for Server loading / unloading events --> similar to WorldLoadHandler,

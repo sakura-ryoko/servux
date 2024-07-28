@@ -3,11 +3,11 @@ package fi.dy.masa.servux;
 import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import fi.dy.masa.servux.dataproviders.*;
-import fi.dy.masa.servux.event.PlayerHandler;
-import fi.dy.masa.servux.event.ServerHandler;
-import fi.dy.masa.servux.servux.PlayerListener;
-import fi.dy.masa.servux.servux.ServerListener;
+import fi.dy.masa.servux.commands.CommandProvider;
+import fi.dy.masa.servux.commands.ServuxCommand;
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
+import fi.dy.masa.servux.event.ServerInitHandler;
+import fi.dy.masa.servux.servux.ServuxInitHandler;
 
 public class Servux implements ModInitializer
 {
@@ -16,17 +16,9 @@ public class Servux implements ModInitializer
     @Override
     public void onInitialize()
     {
-        DataProviderManager.INSTANCE.registerDataProvider(ServuxConfigProvider.INSTANCE);
-        DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.registerDataProvider(EntitiesDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
-        //DataProviderManager.INSTANCE.registerDataProvider(TweaksDataProvider.INSTANCE);
-
-        ServerListener serverListener = new ServerListener();
-        ServerHandler.getInstance().registerServerHandler(serverListener);
-
-        PlayerListener playerListener = new PlayerListener();
-        PlayerHandler.getInstance().registerPlayerHandler(playerListener);
+        ServerInitHandler.getInstance().registerServerInitHandler(new ServuxInitHandler());
+        CommandProvider.getInstance().registerCommand(new ServuxCommand());
+        // Command Manager gets called before the Init Manager onServerInit()
     }
 
     public static void debugLog(String msg, Object... args)

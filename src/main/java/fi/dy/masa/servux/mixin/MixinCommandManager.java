@@ -23,6 +23,6 @@ public class MixinCommandManager
     private void servux_injectCommands(CommandManager.RegistrationEnvironment environment,
                                        CommandRegistryAccess registryAccess, CallbackInfo ci)
     {
-        CommandProvider.getInstance().registerCommands(this.dispatcher, registryAccess, environment);
+        ((CommandProvider) CommandProvider.getInstance()).registerCommands(this.dispatcher, registryAccess, environment);
     }
 }

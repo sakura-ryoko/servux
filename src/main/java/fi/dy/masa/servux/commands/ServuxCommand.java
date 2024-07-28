@@ -1,13 +1,13 @@
 package fi.dy.masa.servux.commands;
 
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import fi.dy.masa.servux.dataproviders.IDataProvider;
-import fi.dy.masa.servux.settings.IServuxSetting;
+import java.util.List;
+import java.util.Optional;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -21,15 +21,18 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
+import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
+import fi.dy.masa.servux.interfaces.IServerCommand;
+import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.util.StringUtils;
 
-import java.util.List;
-import java.util.Optional;
-
-public class ServuxCommand
+public class ServuxCommand implements IServerCommand
 {
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher)
+    public static final ServuxCommand INSTANCE = new ServuxCommand();
+
+    @Override
+    public void register(CommandDispatcher<ServerCommandSource> dispatcher)
     {
         dispatcher.register(CommandManager
             .literal(Reference.MOD_ID).requires(Permissions.require(Reference.MOD_ID + ".commands", 4))
@@ -85,7 +88,7 @@ public class ServuxCommand
         );
     }
 
-    private static List<IServuxSetting<?>> configSearch(CommandContext<ServerCommandSource> ctx, String query)
+    private List<IServuxSetting<?>> configSearch(CommandContext<ServerCommandSource> ctx, String query)
     {
         String[] searchParts = query.split(" ");
         return DataProviderManager.INSTANCE.getAllProviders().stream()
@@ -112,7 +115,7 @@ public class ServuxCommand
             }).toList();
     }
 
-    private static int configList(CommandContext<ServerCommandSource> ctx, List<IServuxSetting<?>> list)
+    private int configList(CommandContext<ServerCommandSource> ctx, List<IServuxSetting<?>> list)
     {
         if (list.isEmpty())
         {
@@ -140,7 +143,7 @@ public class ServuxCommand
         return list.size();
     }
 
-    private static ArgumentBuilder<ServerCommandSource, ?> settingsNode() {
+    private ArgumentBuilder<ServerCommandSource, ?> settingsNode() {
         var node = CommandManager.argument("setting", IdentifierArgumentType.identifier());
         node.suggests((ctx, builder) -> {
             if (builder.getRemainingLowerCase().contains(":"))

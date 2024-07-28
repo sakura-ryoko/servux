@@ -1,6 +1,4 @@
-package fi.dy.masa.servux.event;
-
-import fi.dy.masa.servux.interfaces.IServerListener;
+package fi.dy.masa.servux.interfaces;
 
 public interface IServerManager
 {

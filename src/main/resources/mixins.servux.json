@@ -6,6 +6,7 @@
     "mixins": [
         "MixinBlockItem",
         "MixinCommandManager",
+        "MixinMinecraftDedicatedServer",
         "MixinMinecraftServer",
         "MixinPlayerManager",
         "MixinServerChunkLoadingManager",
