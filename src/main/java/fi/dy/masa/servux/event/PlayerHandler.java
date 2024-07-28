@@ -10,6 +10,7 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
+import fi.dy.masa.servux.interfaces.IPlayerManager;
 
 public class PlayerHandler implements IPlayerManager
 {

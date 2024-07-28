@@ -1,6 +1,12 @@
 package fi.dy.masa.servux.dataproviders;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.util.JsonUtils;
 import net.minecraft.util.Identifier;
+
+import java.util.List;
 
 public abstract class DataProviderBase implements IDataProvider
 {
@@ -78,8 +84,38 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public final int getTickRate()
+    public final int getTickInterval()
     {
         return this.tickRate;
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return List.of();
+    }
+
+    @Override
+    public JsonObject toJson()
+    {
+        JsonObject object = new JsonObject();
+        for (IServuxSetting<?> setting : getSettings())
+        {
+            object.add(setting.name(), setting.writeToJson());
+        }
+        return object;
+    }
+
+    @Override
+    public void fromJson(JsonObject obj)
+    {
+        for (IServuxSetting<?> setting : getSettings())
+        {
+            JsonElement element = obj.get(setting.name());
+            if (element != null)
+            {
+                setting.readFromJson(element);
+            }
+        }
     }
 }

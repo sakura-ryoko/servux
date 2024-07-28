@@ -1,8 +1,10 @@
 package fi.dy.masa.servux.dataproviders;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -10,12 +12,16 @@ import com.google.gson.JsonPrimitive;
 import net.minecraft.server.MinecraftServer;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.util.JsonUtils;
 
 public class DataProviderManager
 {
     public static final DataProviderManager INSTANCE = new DataProviderManager();
 
+    /**
+     * lower case name to data provider instances.
+     */
     protected final HashMap<String, IDataProvider> providers = new HashMap<>();
     protected ImmutableList<IDataProvider> providersImmutable = ImmutableList.of();
     protected ArrayList<IDataProvider> providersTicking = new ArrayList<>();
@@ -33,7 +39,7 @@ public class DataProviderManager
      */
     public boolean registerDataProvider(IDataProvider provider)
     {
-        String name = provider.getName();
+        String name = provider.getName().toLowerCase();
 
         if (this.providers.containsKey(name) == false)
         {
@@ -84,7 +90,7 @@ public class DataProviderManager
         {
             for (IDataProvider provider : this.providersTicking)
             {
-                if ((tickCounter % provider.getTickRate()) == 0)
+                if ((tickCounter % provider.getTickInterval()) == 0)
                 {
                     provider.tick(server, tickCounter);
                 }
@@ -126,6 +132,47 @@ public class DataProviderManager
         {
             provider.onTickEndPost();
         }
+    }
+
+    public Optional<IDataProvider> getProviderByName(String providerName)
+    {
+        return Optional.ofNullable(this.providers.get(providerName));
+    }
+
+    public @Nullable IServuxSetting<?> getSettingByName(String name)
+    {
+        if (name.contains(":"))
+        {
+            String[] parts = name.split(":");
+            String providerName = parts[0];
+            String settingName = parts[1];
+            IDataProvider provider = this.providers.get(providerName);
+
+            if (provider != null)
+            {
+                for (IServuxSetting<?> setting : provider.getSettings())
+                {
+                    if (setting.name().equalsIgnoreCase(settingName))
+                    {
+                        return setting;
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (IDataProvider provider : this.providersImmutable)
+            {
+                for (IServuxSetting<?> setting : provider.getSettings())
+                {
+                    if (setting.name().equalsIgnoreCase(name))
+                    {
+                        return setting;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     public void readFromConfig()

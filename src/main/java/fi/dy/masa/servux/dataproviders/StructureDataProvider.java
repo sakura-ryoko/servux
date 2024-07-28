@@ -3,9 +3,10 @@ package fi.dy.masa.servux.dataproviders;
 import javax.annotation.Nullable;
 import java.util.*;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringListSetting;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -46,7 +47,14 @@ public class StructureDataProvider extends DataProviderBase
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
     protected int retainDistance;
-    private StructureDataProviderConfig config = new StructureDataProviderConfig();
+    private ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
+    private ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
+    private ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
+    private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
+    private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
+    private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -65,13 +73,19 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
-        this.metadata.putInt("timeout", config.timeout);
+        this.metadata.putInt("timeout", timeout.getValue());
 
         // TODO --> Move out of structures channel in the future
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return settings;
     }
 
     @Override
@@ -108,7 +122,7 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter)
     {
-        if ((tickCounter % config.updateInterval) == 0)
+        if ((tickCounter % updateInterval.getValue()) == 0)
         {
             //Servux.printDebug("=======================\n");
             //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
@@ -248,7 +262,7 @@ public class StructureDataProvider extends DataProviderBase
 
             //System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
-            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - config.timeout));
+            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout.getValue()));
         }
     }
 
@@ -309,7 +323,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             Timeout timeout = entry.getValue();
 
-            if (timeout.needsUpdate(tickCounter, config.timeout))
+            if (timeout.needsUpdate(tickCounter, this.timeout.getValue()))
             {
                 positionsToUpdate.add(entry.getKey());
             }
@@ -582,18 +596,10 @@ public class StructureDataProvider extends DataProviderBase
         Servux.debugLog("setRefreshSpawnMetadataComplete()");
     }
 
-    protected void setPermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            config.permissionLevel = level;
-        }
-    }
-
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
-        return Permissions.check(player, this.permNode, config.permissionLevel);
+        return Permissions.check(player, this.permNode, permissionLevel.getValue());
     }
 
     @Override
@@ -608,48 +614,17 @@ public class StructureDataProvider extends DataProviderBase
         // NO-OP
     }
 
-    @Override
-    public JsonObject toJson()
-    {
-        return new Gson().toJsonTree(config).getAsJsonObject();
-    }
-
-    public static final class StructureDataProviderConfig
-    {
-        @SerializedName("permission_level")
-        private int permissionLevel = 0;
-        @SerializedName("structures_blacklist")
-        private StructureList structuresBlacklist = new StructureList();
-        @SerializedName("structures_whitelist")
-        private StructureList structuresWhitelist = new StructureList();
-        @SerializedName("update_interval")
-        private int updateInterval = 40;
-        private int timeout = 30 * 20;
-
-        public static class StructureList
-        {
-            public boolean enabled = false;
-            public List<String> structures = List.of();
-        }
-    }
-
     public boolean shouldSendStructure(Identifier identifier)
     {
-        if (config.structuresWhitelist.enabled)
+        if (structureWhitelistEnabled.getValue())
         {
-            return config.structuresWhitelist.structures.contains(identifier.toString());
+            return structureWhitelist.getValue().contains(identifier.toString());
         }
-        if (config.structuresBlacklist.enabled)
+        if (structureBlacklistEnabled.getValue())
         {
-            return !config.structuresBlacklist.structures.contains(identifier.toString());
+            return !structureBlacklist.getValue().contains(identifier.toString());
         }
 
         return true;
-    }
-
-    @Override
-    public void fromJson(JsonObject obj)
-    {
-        config = new Gson().fromJson(obj, StructureDataProviderConfig.class);
     }
 }

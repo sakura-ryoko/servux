@@ -1,8 +1,11 @@
 package fi.dy.masa.servux.dataproviders;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
+import java.util.List;
+
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import fi.dy.masa.servux.settings.ServuxStringSetting;
+import fi.dy.masa.servux.util.i18nLang;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -10,13 +13,44 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
-
-import java.util.List;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.StringUtils;
 
 public class ServuxConfigProvider extends DataProviderBase
 {
     public static final ServuxConfigProvider INSTANCE = new ServuxConfigProvider();
-    ServuxConfig config = new ServuxConfig();
+
+    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", 3, 4, 0);
+    private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
+    private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language", i18nLang.DEFAULT_LANG, List.of("en_us", "zh_cn"), false) {
+        @Override
+        public void setValueNoCallback(String value)
+        {
+            i18nLang.tryLoadLanguage(value.toLowerCase());
+            super.setValueNoCallback(value.toLowerCase());
+        }
+
+        @Override
+        public void setValue(String value) throws CommandSyntaxException
+        {
+            String lowerCase = value.toLowerCase();
+            if (i18nLang.tryLoadLanguage(lowerCase))
+            {
+                var oldValue = this.getValue();
+                super.setValueNoCallback(lowerCase);
+                this.onValueChanged(oldValue, value);
+            }
+            else
+            {
+                throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.config.invalid_language", value)).create();
+            }
+        }
+    };
+    private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
+    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.adminPermissionLevel, this.easyPlacePermissionLevel, this.defaultLanguage, this.debugLog);
 
     protected ServuxConfigProvider()
     {
@@ -24,6 +58,12 @@ public class ServuxConfigProvider extends DataProviderBase
                 Identifier.of("servux:main"),
                 1, 0, Reference.MOD_ID+".main",
                 "The Servux Main configuration data provider");
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return settings;
     }
 
     @Override
@@ -47,47 +87,18 @@ public class ServuxConfigProvider extends DataProviderBase
     public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
-        source.sendFeedback(() -> Text.of("Reloaded config!"), true);
+        source.sendFeedback(() -> StringUtils.translate("servux.command.config.reloaded"), true);
     }
 
     public void doSaveConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.writeToConfig();
-        source.sendFeedback(() -> Text.of("Saved config!"), true);
+        source.sendFeedback(() -> StringUtils.translate("servux.command.config.saved"), true);
     }
 
     public boolean hasDebugMode()
     {
-        return config.debugLog;
-    }
-
-    public void setDebugMode(boolean debugLog)
-    {
-        config.debugLog = debugLog;
-    }
-
-    protected void setBasePermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            config.basePermissionLevel = level;
-        }
-    }
-
-    protected void setAdminPermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            config.adminPermissionLevel = level;
-        }
-    }
-
-    protected void setPermissionLevel_EasyPlace(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            config.easyPlacePermissionLevel = level;
-        }
+        return this.debugLog.getValue();
     }
 
     @Override
@@ -98,7 +109,7 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return Permissions.check(player, Reference.MOD_ID+".main.admin", config.adminPermissionLevel);
+        return Permissions.check(player, Reference.MOD_ID+".main.admin", adminPermissionLevel.getValue());
     }
 
     public boolean hasPermission_EasyPlace(ServerPlayerEntity player)
@@ -108,7 +119,7 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return Permissions.check(player, Reference.MOD_ID+".main.easy_place", config.easyPlacePermissionLevel);
+        return Permissions.check(player, Reference.MOD_ID+".main.easy_place", easyPlacePermissionLevel.getValue());
     }
 
     @Override
@@ -123,27 +134,8 @@ public class ServuxConfigProvider extends DataProviderBase
         // NO-OP
     }
 
-    @Override
-    public JsonObject toJson()
+    public String getDefaultLanguage()
     {
-        return (JsonObject) new Gson().toJsonTree(config);
-    }
-
-    public static final class ServuxConfig
-    {
-        @SerializedName("permission_level")
-        private int basePermissionLevel = 0;
-        @SerializedName("permission_level_admin")
-        private int adminPermissionLevel = 3;
-        @SerializedName("permission_level_easy_place")
-        private int easyPlacePermissionLevel = 0;
-        @SerializedName("debug_log")
-        private boolean debugLog = false;
-    }
-
-    @Override
-    public void fromJson(JsonObject obj)
-    {
-        config = new Gson().fromJson(obj, ServuxConfig.class);
+        return defaultLanguage.getValue();
     }
 }

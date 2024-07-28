@@ -1,7 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import java.util.List;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -14,14 +13,18 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
-import fi.dy.masa.servux.util.JsonUtils;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
 
 public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
     protected final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
-    protected int permissionLevel = -1;
+    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
+            "permission_level",
+            0, 4, 0);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
 
     protected EntitiesDataProvider()
     {
@@ -35,6 +38,12 @@ public class EntitiesDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
+    }
+
+    @Override
+    public List<IServuxSetting<?>> getSettings()
+    {
+        return settings;
     }
 
     @Override
@@ -129,18 +138,10 @@ public class EntitiesDataProvider extends DataProviderBase
         // todo
     }
 
-    protected void setPermissionLevel(int level)
-    {
-        if (!(level < 0 || level > 4))
-        {
-            this.permissionLevel = level;
-        }
-    }
-
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel > -1 ? this.permissionLevel : this.defaultPerm);
+        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override
@@ -153,31 +154,5 @@ public class EntitiesDataProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
-    }
-
-    @Override
-    public JsonObject toJson()
-    {
-        JsonObject obj = new JsonObject();
-
-        if (this.permissionLevel > -1)
-        {
-            obj.add("permission_level", new JsonPrimitive(this.permissionLevel));
-        }
-        else
-        {
-            obj.add("permission_level", new JsonPrimitive(this.defaultPerm));
-        }
-
-        return obj;
-    }
-
-    @Override
-    public void fromJson(JsonObject obj)
-    {
-        if (JsonUtils.hasInteger(obj, "permission_level"))
-        {
-            this.setPermissionLevel(JsonUtils.getInteger(obj, "permission_level"));
-        }
     }
 }
