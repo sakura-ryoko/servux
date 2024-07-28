@@ -9,6 +9,7 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
@@ -32,7 +33,9 @@ public class ServuxCommand implements IServerCommand
     public static final ServuxCommand INSTANCE = new ServuxCommand();
 
     @Override
-    public void register(CommandDispatcher<ServerCommandSource> dispatcher)
+    public void register(CommandDispatcher<ServerCommandSource> dispatcher,
+                         CommandRegistryAccess registryAccess,
+                         CommandManager.RegistrationEnvironment environment)
     {
         dispatcher.register(CommandManager
             .literal(Reference.MOD_ID).requires(Permissions.require(Reference.MOD_ID + ".commands", 4))

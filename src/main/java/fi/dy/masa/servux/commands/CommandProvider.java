@@ -35,6 +35,6 @@ public class CommandProvider implements ICommandProvider
                                  CommandRegistryAccess registryAccess,
                                  CommandManager.RegistrationEnvironment environment)
     {
-        this.commands.forEach((command) -> command.register(dispatcher));
+        this.commands.forEach((command) -> command.register(dispatcher, registryAccess, environment));
     }
 }
