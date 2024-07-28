@@ -25,9 +25,9 @@ public class ServuxStringListSetting extends ServuxListSetting<String>
     }
 
     @Override
-    public boolean validateStringForElement(String value)
+    public boolean validateJsonForElement(JsonElement value)
     {
-        return true;
+        return value instanceof JsonPrimitive primitive && primitive.isString();
     }
 
     @Override

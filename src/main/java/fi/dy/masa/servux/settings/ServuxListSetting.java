@@ -6,19 +6,16 @@ import com.google.gson.JsonElement;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import net.minecraft.text.Text;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>>
 {
     private static final Gson GSON = new Gson();
-    private String separatorRegex = ",";
 
     public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples, String separatorRegex)
     {
         this(dataProvider, name, prettyName, comment, defaultValue, examples);
-        this.separatorRegex = separatorRegex;
     }
 
     public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples)
@@ -29,10 +26,18 @@ public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>
     @Override
     public boolean validateString(String value)
     {
-        return Arrays.stream(value.split(separatorRegex)).allMatch(this::validateStringForElement);
+        JsonArray array = GSON.fromJson(value, JsonArray.class);
+        for (JsonElement element : array)
+        {
+            if (!this.validateJsonForElement(element))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
-    public abstract boolean validateStringForElement(String value);
+    public abstract boolean validateJsonForElement(JsonElement value);
 
     @SuppressWarnings("unchecked")
     @Override

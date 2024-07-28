@@ -79,7 +79,7 @@ public class ServuxCommand implements IServerCommand
                         Optional<IDataProvider> dataProvider = DataProviderManager.INSTANCE.getProviderByName(provider);
                         if (dataProvider.isEmpty())
                         {
-                            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_data_provider")).create();
+                            throw StringUtils.translateError("servux.command.error.unknown_data_provider");
                         }
                         ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.config.list.data_provider", provider), false);
                         return configList(ctx, dataProvider.get().getSettings());
@@ -204,7 +204,7 @@ public class ServuxCommand implements IServerCommand
         var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
         if (setting == null)
         {
-            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
+            throw StringUtils.translateError("servux.command.error.unknown_setting");
         }
 
         ctx.getSource().sendFeedback(Text::empty, false);
@@ -278,19 +278,18 @@ public class ServuxCommand implements IServerCommand
         var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
         if (setting == null)
         {
-            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.unknown_setting")).create();
+            throw StringUtils.translateError("servux.command.error.unknown_setting");
         }
         String value = ctx.getArgument("value", String.class);
         if (!setting.validateString(value))
         {
-            throw new SimpleCommandExceptionType(StringUtils.translate("servux.command.error.invalid_value")).create();
+            throw StringUtils.translateError("servux.command.error.invalid_value");
         }
         setting.setValueFromString(value);
         ctx.getSource().sendFeedback(() ->
             StringUtils.translate("servux.command.config.set_value",
                 setting.shortDisplayName().copy().styled(style -> style
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_see_more")))),
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))),
                 value),
             true
         );
