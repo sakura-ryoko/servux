@@ -4,6 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
@@ -354,7 +355,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxEntitiesPacket.SimpleBlockResponse(input.readBlockPos(), input.readNbt());
+                    return ServuxEntitiesPacket.SimpleBlockResponse(input.readBlockPos(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
@@ -365,7 +366,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxEntitiesPacket.SimpleEntityResponse(input.readVarInt(), input.readNbt());
+                    return ServuxEntitiesPacket.SimpleEntityResponse(input.readVarInt(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
@@ -424,7 +425,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxEntitiesPacket.LitematicaPasteRequest(input.readNbt());
+                    return ServuxEntitiesPacket.LitematicaPasteRequest((NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {

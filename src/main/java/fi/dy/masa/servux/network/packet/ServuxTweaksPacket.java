@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtSizeTracker;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
@@ -316,7 +317,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxTweaksPacket.SimpleBlockResponse(input.readBlockPos(), input.readNbt());
+                    return ServuxTweaksPacket.SimpleBlockResponse(input.readBlockPos(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
@@ -327,7 +328,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxTweaksPacket.SimpleEntityResponse(input.readVarInt(), input.readNbt());
+                    return ServuxTweaksPacket.SimpleEntityResponse(input.readVarInt(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                 }
                 catch (Exception e)
                 {
