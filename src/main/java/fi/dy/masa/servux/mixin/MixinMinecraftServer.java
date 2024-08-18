@@ -3,20 +3,20 @@ package fi.dy.masa.servux.mixin;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
+import com.llamalad7.mixinextras.sugar.Local;
+
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.WorldGenerationProgressListener;
-import net.minecraft.server.world.ServerChunkManager;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.profiler.Profiler;
+
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.ServerHandler;
@@ -37,10 +37,10 @@ public abstract class MixinMinecraftServer
     }
 
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/util/math/MathHelper;square(I)I", shift = At.Shift.BEFORE),
-            locals = LocalCapture.CAPTURE_FAILHARD)
+            target = "Lnet/minecraft/util/math/MathHelper;square(I)I", shift = At.Shift.BEFORE)
+    )
     private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
-                                      ServerWorld serverWorld, BlockPos blockPos, ServerChunkManager serverChunkManager, int i)
+                                             @Local BlockPos blockPos, @Local int i)
     {
         StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
         StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
