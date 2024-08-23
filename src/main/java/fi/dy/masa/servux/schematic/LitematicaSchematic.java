@@ -220,7 +220,7 @@ public class LitematicaSchematic
         }
 
         int bottomY = world.getBottomY();
-        int topY = world.getTopY();
+        int topY = world.getTopYInclusive() + 1;
         int tmp = posMinRel.getY() - regionPos.getY() + regionPosTransformed.getY() + origin.getY();
         int startY = 0;
         int endY = sizeY;
@@ -563,7 +563,7 @@ public class LitematicaSchematic
 
             posUp = posUp.offset(Direction.UP);
 
-            if (posUp.getY() >= world.getTopY())
+            if (posUp.getY() >= world.getTopYInclusive() + 1)
             {
                 break;
             }
