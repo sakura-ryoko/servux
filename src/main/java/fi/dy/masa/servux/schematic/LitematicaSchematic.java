@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.schematic.container.ILitematicaBlockStatePalette;
 import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
@@ -25,6 +26,7 @@ import net.minecraft.nbt.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryEntryLookup;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.text.Text;
 import net.minecraft.util.BlockMirror;
@@ -903,7 +905,8 @@ public class LitematicaSchematic
     {
         final int size = tagList.size();
         List<BlockState> list = new ArrayList<>(size);
-        RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
+        //RegistryEntryLookup<Block> lookup = Registries.createEntryLookup(Registries.BLOCK);
+        RegistryEntryLookup<Block> lookup = DataProviderManager.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
 
         for (int id = 0; id < size; ++id)
         {
@@ -982,7 +985,8 @@ public class LitematicaSchematic
     public static List<BlockState> getStatesFromPaletteTag(NbtList palette)
     {
         List<BlockState> states = new ArrayList<>();
-        RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
+        //RegistryEntryLookup<Block> lookup = Registries.createEntryLookup(Registries.BLOCK);
+        RegistryEntryLookup<Block> lookup = DataProviderManager.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
         final int size = palette.size();
 
         for (int i = 0; i < size; ++i)

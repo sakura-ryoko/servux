@@ -109,7 +109,7 @@ public interface IDataProvider
      * Returns the network packet handler used for this data provider.
      * @return
      */
-    IPluginServerPlayHandler<?> getPacketHandler();
+    default IPluginServerPlayHandler<?> getPacketHandler() { return null; }
 
     /**
      * Determine if Player has permissions to this Data Provider
