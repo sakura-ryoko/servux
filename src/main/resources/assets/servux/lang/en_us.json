@@ -37,6 +37,8 @@
     "servux.config.litematic_data.permission_level.comment": "The permission level required for the Litematics data provider",
     "servux.config.litematic_data.permission_level_paste.name": "Paste Permission Level",
     "servux.config.litematic_data.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
+    "servux.config.litematic_data.fix_rail_rotations.name": "Fix Rail Rotations",
+    "servux.config.litematic_data.fix_rail_rotations.comment": "Enable / Disable the fixing of Rail Rotations when Rails are rotated 180 degrees.",
 
     "servux.config.entity_data.permission_level.name": "Permission Level",
     "servux.config.entity_data.permission_level.comment": "The permission level required for the Entity data provider, will send entity data to clients with this permission level",

@@ -12,6 +12,7 @@
     "MixinMinecraftDedicatedServer",
     "MixinMinecraftServer",
     "MixinPlayerManager",
+    "MixinRailBlocks",
     "MixinServerChunkLoadingManager",
     "MixinServerPlayNetworkHandler",
     "MixinServerWorld",

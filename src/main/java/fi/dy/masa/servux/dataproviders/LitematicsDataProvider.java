@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
 import me.lucko.fabric.api.permissions.v0.Permissions;
@@ -37,7 +38,8 @@ public class LitematicsDataProvider extends DataProviderBase
     protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this,
             "permission_level_paste",
             0, 4, 0);
-    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel);
+    public ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
+    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations);
 
     protected LitematicsDataProvider()
     {

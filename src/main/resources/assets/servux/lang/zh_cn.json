@@ -35,6 +35,8 @@
   "servux.config.litematic_data.permission_level.comment": "Litematics 数据源所需的权限级别",
   "servux.config.litematic_data.permission_level_paste.name": "粘贴权限级别",
   "servux.config.litematic_data.permission_level_paste.comment": "Litematics 粘贴操作所需的权限级别",
+  "servux.config.litematic_data.fix_rail_rotations.name": "修復軌道旋轉",
+  "servux.config.litematic_data.fix_rail_rotations.comment": "當軌道旋轉 180 度時啟用/停用軌道旋轉固定",
 
   "servux.config.entity_data.permission_level.name": "权限级别",
   "servux.config.entity_data.permission_level.comment": "实体数据源所需的权限级别，将向具有该权限级别的玩家端发送实体数据",
