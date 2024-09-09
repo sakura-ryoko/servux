@@ -1,5 +1,5 @@
 {
-    "required": true,
+	"required": true,
     "package": "fi.dy.masa.servux.mixin",
     "compatibilityLevel": "JAVA_17",
     "minVersion": "0.8",
@@ -9,6 +9,7 @@
         "MixinMinecraftDedicatedServer",
         "MixinMinecraftServer",
         "MixinPlayerManager",
+        "MixinRailBlocks",
         "MixinServerChunkLoadingManager",
         "MixinServerPlayNetworkHandler",
         "MixinServerWorld",
