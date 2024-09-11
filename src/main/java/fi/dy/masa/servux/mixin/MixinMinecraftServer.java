@@ -24,16 +24,15 @@ import fi.dy.masa.servux.event.ServerHandler;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer
 {
-    @Shadow private Profiler profiler;
     @Shadow private int ticks;
     @Shadow public abstract ResourceManager getResourceManager();
 
-    @Inject(method = "tick", at = @At("RETURN"))
-    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci)
+    @Inject(method = "tick", at = @At(value = "RETURN", ordinal = 1))
+    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci, @Local Profiler profiler)
     {
-        this.profiler.push("servux_tick");
+        profiler.push("servux_tick");
         DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.ticks);
-        this.profiler.pop();
+        profiler.pop();
     }
 
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE",

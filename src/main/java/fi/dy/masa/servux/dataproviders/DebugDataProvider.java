@@ -428,13 +428,11 @@ public class DebugDataProvider extends DataProviderBase
     {
         Map<MemoryModuleType<?>, Optional<? extends Memory<?>>> map = entity.getBrain().getMemories();
         List<String> list = Lists.newArrayList();
-        Iterator<Map.Entry<MemoryModuleType<?>, Optional<? extends Memory<?>>>> iterator = map.entrySet().iterator();
 
-        while (iterator.hasNext())
+        for (Map.Entry<MemoryModuleType<?>, Optional<? extends Memory<?>>> memoryModuleTypeOptionalEntry : map.entrySet())
         {
-            Map.Entry<MemoryModuleType<?>, Optional<? extends Memory<?>>> entry = (Map.Entry) iterator.next();
-            MemoryModuleType<?> memoryModuleType = entry.getKey();
-            Optional<? extends Memory<?>> optional = entry.getValue();
+            MemoryModuleType<?> memoryModuleType = memoryModuleTypeOptionalEntry.getKey();
+            Optional<? extends Memory<?>> optional = memoryModuleTypeOptionalEntry.getValue();
             String string;
 
             if (optional.isPresent())
@@ -520,11 +518,9 @@ public class DebugDataProvider extends DataProviderBase
             else
             {
                 List<String> list = Lists.newArrayList();
-                Iterator iterator = ((Iterable) object).iterator();
 
-                while (iterator.hasNext())
+                for (Object object2 : (Iterable) object)
                 {
-                    Object object2 = iterator.next();
                     list.add(format(world, object2));
                 }
 
