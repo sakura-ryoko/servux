@@ -57,6 +57,8 @@
     "servux.config.structure_bounding_boxes.timeout.comment": "The timeout in ticks for the Structure Bounding Boxes data provider, will resend the bounding box data after this many ticks",
     "servux.config.structure_bounding_boxes.update_interval.name": "Update Interval",
     "servux.config.structure_bounding_boxes.update_interval.comment": "The update interval in ticks for the Structure Bounding Boxes data provider, will check for new chunks to send bounding box data for this often",
+    "servux.config.structure_bounding_boxes.share_seed.name": "Share World Seed",
+    "servux.config.structure_bounding_boxes.share_seed.comment": "Enable / Disable the sharing of the World Seed with MiniHUD for the Slime Chunk Display",
 
     "servux.litematics.error.insufficent_for_paste": "§cInsufficient Permissions for the Litematic paste operation.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode is required for the Litematic paste operation.§r",

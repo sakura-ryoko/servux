@@ -54,11 +54,13 @@ public class StructureDataProvider extends DataProviderBase
     private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
     private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
     private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
-    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
+    private ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout, this.shareSeed);
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
     private int spawnChunkRadius = -1;
+    private long worldSeed = 0;
     private boolean refreshSpawnMetadata;
 
     protected StructureDataProvider()
@@ -122,7 +124,7 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter)
     {
-        if ((tickCounter % updateInterval.getValue()) == 0)
+        if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
             //Servux.printDebug("=======================\n");
             //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
@@ -135,6 +137,14 @@ public class StructureDataProvider extends DataProviderBase
             if (radius != rule)
             {
                 this.setSpawnChunkRadius(rule);
+            }
+            if (this.worldSeed == 0)
+            {
+                this.checkWorldSeed(server);
+            }
+            else if (this.shareSeed.getValue() == false)
+            {
+                this.setWorldSeed(0);
             }
 
             for (ServerPlayerEntity player : playerList)
@@ -249,7 +259,7 @@ public class StructureDataProvider extends DataProviderBase
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
         // System.out.printf("initialSyncStructuresToPlayerWithinRange: references: %d\n", references.size());
-        this.sendStructures(player, references, tickCounter, false);
+        this.sendStructures(player, references, tickCounter);
     }
 
     protected void addChunkTimeoutIfHasReferences(final UUID uuid, WorldChunk chunk, final int tickCounter)
@@ -358,7 +368,7 @@ public class StructureDataProvider extends DataProviderBase
 
             if (references.isEmpty() == false)
             {
-                this.sendStructures(player, references, tickCounter, true);
+                this.sendStructures(player, references, tickCounter);
             }
         }
     }
@@ -475,13 +485,9 @@ public class StructureDataProvider extends DataProviderBase
         return references;
     }
 
-    /**
-     * New method splits Structure Packets based upon MAX_STRUCTURE_SIZE
-     */
     protected void sendStructures(ServerPlayerEntity player,
                                   Map<Structure, LongSet> references,
-                                  int tickCounter,
-                                  boolean useApi)
+                                  int tickCounter)
     {
         ServerWorld world = player.getServerWorld();
         Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
@@ -520,6 +526,20 @@ public class StructureDataProvider extends DataProviderBase
         return list;
     }
 
+    protected boolean shouldSendStructure(Identifier identifier)
+    {
+        if (structureWhitelistEnabled.getValue())
+        {
+            return structureWhitelist.getValue().contains(identifier.toString());
+        }
+        if (structureBlacklistEnabled.getValue())
+        {
+            return !structureBlacklist.getValue().contains(identifier.toString());
+        }
+
+        return true;
+    }
+
     // TODO --> Move out of structures channel in the future (Some Metadata channel, perhaps)
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
@@ -532,6 +552,11 @@ public class StructureDataProvider extends DataProviderBase
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());
         nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
+
+        if (this.shareSeed.getValue())
+        {
+            nbt.putLong("worldSeed", this.worldSeed);
+        }
 
         HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_SPAWN_METADATA, nbt));
     }
@@ -596,6 +621,41 @@ public class StructureDataProvider extends DataProviderBase
         Servux.debugLog("setRefreshSpawnMetadataComplete()");
     }
 
+    public long getWorldSeed()
+    {
+        return this.worldSeed;
+    }
+
+    public void setWorldSeed(long seed)
+    {
+        if (this.worldSeed != seed)
+        {
+            if (this.shareSeed.getValue())
+            {
+                this.metadata.remove("worldSeed");
+                this.metadata.putLong("worldSeed", seed);
+                this.refreshSpawnMetadata = true;
+            }
+
+            Servux.debugLog("setWorldSeed(): updating World Seed [{}] -> [{}]", this.worldSeed, seed);
+        }
+
+        this.worldSeed = seed;
+    }
+
+    public void checkWorldSeed(MinecraftServer server)
+    {
+        if (this.shareSeed.getValue())
+        {
+            ServerWorld world = server.getOverworld();
+
+            if (world != null)
+            {
+                this.setWorldSeed(world.getSeed());
+            }
+        }
+    }
+
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
@@ -614,17 +674,4 @@ public class StructureDataProvider extends DataProviderBase
         // NO-OP
     }
 
-    public boolean shouldSendStructure(Identifier identifier)
-    {
-        if (structureWhitelistEnabled.getValue())
-        {
-            return structureWhitelist.getValue().contains(identifier.toString());
-        }
-        if (structureBlacklistEnabled.getValue())
-        {
-            return !structureBlacklist.getValue().contains(identifier.toString());
-        }
-
-        return true;
-    }
 }
