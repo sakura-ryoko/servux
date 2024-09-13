@@ -23,7 +23,6 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     private BlockPos pos;
     private NbtCompound nbt;
     private PacketByteBuf buffer;
-    private List<ChunkPos> requestingChunks;
     public static final int PROTOCOL_VERSION = 1;
 
     private ServuxEntitiesPacket(Type type)
