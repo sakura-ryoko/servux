@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.test;
 
 import java.util.Collection;
 import java.util.List;

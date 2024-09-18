@@ -7,7 +7,7 @@
     "IMixinMobEntity",
     "MixinBlockItem",
     "MixinCommandManager",
-    "MixinDebugInfoSender",
+    "test.MixinDebugInfoSender",
     "MixinMain",
     "MixinMinecraftDedicatedServer",
     "MixinMinecraftServer",
