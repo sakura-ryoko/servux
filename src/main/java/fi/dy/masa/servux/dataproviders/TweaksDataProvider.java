@@ -1,25 +1,23 @@
 package fi.dy.masa.servux.dataproviders;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxIntSetting;
+import java.util.List;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
-import fi.dy.masa.servux.util.JsonUtils;
-
-import java.util.List;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
 
 public class TweaksDataProvider extends DataProviderBase
 {
@@ -83,7 +81,7 @@ public class TweaksDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("tweaksDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        Servux.debugLog("tweaksDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)

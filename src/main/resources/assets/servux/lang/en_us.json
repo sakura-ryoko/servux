@@ -42,6 +42,17 @@
 
     "servux.config.entity_data.permission_level.name": "Permission Level",
     "servux.config.entity_data.permission_level.comment": "The permission level required for the Entity data provider, will send entity data to clients with this permission level",
+    "servux.config.entity_data.nbt_query_override.name": "Nbt Query Packet Permissions Override",
+    "servux.config.entity_data.nbt_query_override.comment": "Override the default ops level 2 permissions for NbtQuery packets, and set the permissions using \"nbt_query_permission_level\"",
+    "servux.config.entity_data.nbt_query_permission_level.name": "Nbt Query Permission Level",
+    "servux.config.entity_data.nbt_query_permission_level.comment": "The permission level required for Nbt Query Packets when \"nbt_query_override\" is enabled",
+
+    "servux.config.debug_data.permission_level.name": "Permission Level",
+    "servux.config.debug_data.permission_level.comment": "The permission level required for the Entity data provider, will send entity data to clients with this permission level",
+    "servux.config.debug_data.debug_enabled.name": "Debug Info Sender List",
+    "servux.config.debug_data.debug_enabled.comment": "A configurable list of Debug Info Senders",
+    "servux.config.debug_data.server_development_mode.name": "Server Development Mode",
+    "servux.config.debug_data.server_development_mode.comment": "Enable the Vanilla \"isDevelopmentMode\" flag to on",
 
     "servux.config.structure_bounding_boxes.permission_level.name": "Permission Level",
     "servux.config.structure_bounding_boxes.permission_level.comment": "The permission level required for the Structure Bounding Boxes data provider",

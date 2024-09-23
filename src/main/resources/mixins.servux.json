@@ -7,7 +7,6 @@
     "IMixinMobEntity",
     "MixinBlockItem",
     "MixinCommandManager",
-    "test.MixinDebugInfoSender",
     "MixinMain",
     "MixinMinecraftDedicatedServer",
     "MixinMinecraftServer",
@@ -17,7 +16,9 @@
     "MixinServerPlayNetworkHandler",
     "MixinServerWorld",
     "MixinWorld",
-    "MixinWorldChunk"
+    "MixinWorldChunk",
+    "test.MixinDebugInfoSender",
+    "test.MixinSharedConstants"
   ],
   "injectors": {
     "defaultRequire": 1

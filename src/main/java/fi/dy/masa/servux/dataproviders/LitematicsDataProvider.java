@@ -95,7 +95,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("LitematicsDataProvider#sendMetadata: sendMetadata to player {}", player.getName().getLiteralString());
+        Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)

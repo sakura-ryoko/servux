@@ -46,6 +46,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.mixin.IMixinMobEntity;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringListSetting;
 
@@ -55,7 +56,8 @@ public class DebugDataProvider extends DataProviderBase
 
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     private final ServuxStringListSetting enabledDebugPackets = new ServuxStringListSetting(this, "debug_enabled", List.of("chunk_watcher", "poi", "pathfinding", "neighbor_update", "structures", "goal_selector", "raids", "brain", "bees", "breeze", "game_event"));
-    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.enabledDebugPackets);
+    private final ServuxBoolSetting enableServerDevelopmentMode = new ServuxBoolSetting(this, "server_development_mode", false);
+    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.enabledDebugPackets, this.enableServerDevelopmentMode);
 
     protected DebugDataProvider()
     {
@@ -105,6 +107,11 @@ public class DebugDataProvider extends DataProviderBase
         }
 
         return Permissions.check(player, Reference.MOD_ID + ".debug_data", this.basePermissionLevel.getValue());
+    }
+
+    public boolean isServerDevelopmentMode()
+    {
+        return this.enableServerDevelopmentMode.getValue();
     }
 
     private void sendToAll(ServerWorld world, CustomPayload payload)
