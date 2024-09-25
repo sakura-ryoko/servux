@@ -50,6 +50,7 @@ import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringListSetting;
 
+@SuppressWarnings({"unchecked", "deprecated"})
 public class DebugDataProvider extends DataProviderBase
 {
     public static final DebugDataProvider INSTANCE = new DebugDataProvider();
