@@ -9,6 +9,8 @@ repositories {
 	// maven { url 'https://masa.dy.fi/maven' }
 	// maven { url 'https://maven.terraformersmc.com/releases/' }
 	// maven { url 'https://maven.quiltmc.org/repository/release/' }
+	// flatDir { dirs 'libs' }
+	maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -23,7 +25,8 @@ dependencies {
 	include(modApi(fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)))
 
 	// Lucko Permissions API
-	modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
+	//modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
+	modImplementation "com.github.sakura-ryoko:fabric-permissions-api:${project.fabric_permissions_api_id}"
 }
 
 group = project.group + "." + project.mod_id
