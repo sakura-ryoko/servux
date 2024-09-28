@@ -23,6 +23,7 @@ import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -54,14 +55,23 @@ public class StructureDataProvider extends DataProviderBase
     private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
     private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
     private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
+    private ServuxBoolSetting shareWeatherStatus = new ServuxBoolSetting(this, "share_weather_status", false);
+    private ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     private ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
-    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout, this.shareSeed);
+    private ServuxIntSetting seedPermissionLevel = new ServuxIntSetting(this, "seed_permission_level", 2, 4, 0);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout, this.shareWeatherStatus, this.weatherPermissionLevel, this.shareSeed, this.seedPermissionLevel);
 
     // FIXME --> Move out of structures channel in the future
     private BlockPos spawnPos = BlockPos.ORIGIN;
     private int spawnChunkRadius = -1;
     private long worldSeed = 0;
+    private int weatherTime = -1;
+    private boolean isRaining;
+    private boolean isThundering;
+    private long lastTick;
+    private long lastWeatherTick;
     private boolean refreshSpawnMetadata;
+    private boolean refreshWeatherData;
 
     protected StructureDataProvider()
     {
@@ -122,15 +132,17 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public void tick(MinecraftServer server, int tickCounter)
+    public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
     {
         if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
+            profiler.push(this.getName());
             //Servux.printDebug("=======================\n");
             //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
 
             List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
             this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
+            this.lastTick = tickCounter;
 
             int radius = this.getSpawnChunkRadius();
             int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
@@ -147,11 +159,16 @@ public class StructureDataProvider extends DataProviderBase
                 this.setWorldSeed(0);
             }
 
+            profiler.swap(this.getName() + "_players");
             for (ServerPlayerEntity player : playerList)
             {
                 UUID uuid = player.getUuid();
 
-                if (this.refreshSpawnMetadata())
+                if (this.shouldRefreshWeatherData())
+                {
+                    this.refreshWeatherData(player, null);
+                }
+                if (this.shouldRefreshSpawnMetadata())
                 {
                     this.refreshSpawnMetadata(player, null);
                 }
@@ -170,9 +187,58 @@ public class StructureDataProvider extends DataProviderBase
             }
 
             this.checkForInvalidPlayers(server);
-            if (this.refreshSpawnMetadata())
+            if (this.shouldRefreshWeatherData())
+            {
+                this.lastWeatherTick = tickCounter;
+                this.setRefreshWeatherDataComplete();
+            }
+            if (this.shouldRefreshSpawnMetadata())
             {
                 this.setRefreshSpawnMetadataComplete();
+            }
+
+            profiler.pop();
+        }
+    }
+
+    public void tickWeather(int clearTime, int rainTime, boolean isThunder)
+    {
+        if (rainTime > 1)
+        {
+            if (isThunder)
+            {
+                this.isThundering = true;
+                this.isRaining = false;
+            }
+            else
+            {
+                this.isThundering = false;
+                this.isRaining = true;
+            }
+
+            this.weatherTime = rainTime;
+
+            if ((this.lastTick - this.lastWeatherTick) > this.getTickInterval())
+            {
+                // Don't spam players with weather ticks
+                this.refreshWeatherData = true;
+            }
+        }
+        else if (clearTime > 0 && (this.isRaining || this.isThundering))
+        {
+            this.isThundering = false;
+            this.isRaining = false;
+            this.weatherTime = clearTime;
+            this.refreshWeatherData = true;
+        }
+        else
+        {
+            this.weatherTime = clearTime;
+
+            if ((this.lastTick - this.lastWeatherTick) > (this.getTickInterval() * 4))
+            {
+                // Don't spam players with weather ticks
+                this.refreshWeatherData = true;
             }
         }
     }
@@ -231,9 +297,15 @@ public class StructureDataProvider extends DataProviderBase
                 NbtCompound nbt = new NbtCompound();
                 nbt.copyFrom(this.metadata);
 
+                if (this.hasPermissionsForSeed(player) == false && nbt.contains("worldSeed"))
+                {
+                    nbt.remove("worldSeed");
+                }
+
                 Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().getLiteralString());
 
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
+                this.refreshWeatherData(player, null);
                 this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance()+2, tickCounter);
             }
 
@@ -555,12 +627,44 @@ public class StructureDataProvider extends DataProviderBase
         nbt.putInt("spawnPosZ", spawnPos.getZ());
         nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
 
-        if (this.shareSeed.getValue())
+        if (this.shareSeed.getValue() && this.hasPermissionsForSeed(player))
         {
+            Servux.debugLog("refreshSpawnMetadata() player [{}] has seedPermissions.", player.getName().getLiteralString());
             nbt.putLong("worldSeed", this.worldSeed);
+        }
+        else
+        {
+            Servux.debugLog("refreshSpawnMetadata() player [{}] does not have seedPermissions.", player.getName().getLiteralString());
         }
 
         HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_SPAWN_METADATA, nbt));
+    }
+
+    public void refreshWeatherData(ServerPlayerEntity player, @Nullable NbtCompound data)
+    {
+        NbtCompound nbt = new NbtCompound();
+
+        if (this.hasPermissionsForWeather(player) == false)
+        {
+            return;
+        }
+        nbt.putString("id", getNetworkChannel().toString());
+        nbt.putString("servux", Reference.MOD_STRING);
+
+        if (this.isRaining)
+        {
+            nbt.putInt("SetRaining", this.weatherTime);
+        }
+        else if (this.isThundering)
+        {
+            nbt.putInt("SetThundering", this.weatherTime);
+        }
+        else
+        {
+            nbt.putInt("SetClear", this.weatherTime);
+        }
+
+        HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_WEATHER_DATA, nbt));
     }
 
     public BlockPos getSpawnPos()
@@ -615,12 +719,20 @@ public class StructureDataProvider extends DataProviderBase
         this.spawnChunkRadius = radius;
     }
 
-    public boolean refreshSpawnMetadata() { return this.refreshSpawnMetadata; }
+    public boolean shouldRefreshSpawnMetadata() { return this.refreshSpawnMetadata; }
 
     public void setRefreshSpawnMetadataComplete()
     {
         this.refreshSpawnMetadata = false;
         Servux.debugLog("setRefreshSpawnMetadataComplete()");
+    }
+
+    public boolean shouldRefreshWeatherData() { return this.refreshWeatherData; }
+
+    public void setRefreshWeatherDataComplete()
+    {
+        this.refreshWeatherData = false;
+        Servux.debugLog("setRefreshWeatherDataComplete()");
     }
 
     public long getWorldSeed()
@@ -656,6 +768,16 @@ public class StructureDataProvider extends DataProviderBase
                 this.setWorldSeed(world.getSeed());
             }
         }
+    }
+
+    public boolean hasPermissionsForWeather(ServerPlayerEntity player)
+    {
+        return Permissions.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
+    }
+
+    public boolean hasPermissionsForSeed(ServerPlayerEntity player)
+    {
+        return Permissions.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
     }
 
     @Override

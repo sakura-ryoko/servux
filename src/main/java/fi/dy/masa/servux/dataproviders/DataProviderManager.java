@@ -13,6 +13,8 @@ import com.google.gson.JsonPrimitive;
 
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.profiler.Profiler;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.settings.IServuxSetting;
@@ -88,7 +90,7 @@ public class DataProviderManager
         return false;
     }
 
-    public void tickProviders(MinecraftServer server, int tickCounter)
+    public void tickProviders(MinecraftServer server, int tickCounter, Profiler profiler)
     {
         if (this.providersTicking.isEmpty() == false)
         {
@@ -96,7 +98,7 @@ public class DataProviderManager
             {
                 if ((tickCounter % provider.getTickInterval()) == 0)
                 {
-                    provider.tick(server, tickCounter);
+                    provider.tick(server, tickCounter, profiler);
                 }
             }
         }

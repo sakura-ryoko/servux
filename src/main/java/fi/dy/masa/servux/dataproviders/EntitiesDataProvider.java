@@ -112,7 +112,7 @@ public class EntitiesDataProvider extends DataProviderBase
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
-        NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
+        NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
 
@@ -124,10 +124,13 @@ public class EntitiesDataProvider extends DataProviderBase
         }
 
         //Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
-
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+        NbtCompound nbt = new NbtCompound();
+
+        if (entity != null && entity.saveSelfNbt(nbt))
+        {
+            HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+        }
     }
 
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
