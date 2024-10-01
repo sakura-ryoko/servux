@@ -14,6 +14,7 @@ import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesHandler;
 import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 
 public class EntitiesDataProvider extends DataProviderBase
@@ -24,7 +25,9 @@ public class EntitiesDataProvider extends DataProviderBase
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
             "permission_level",
             0, 4, 0);
-    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
+    protected ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
+    protected ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel);
 
     protected EntitiesDataProvider()
     {
@@ -81,7 +84,7 @@ public class EntitiesDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("entityDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        Servux.debugLog("entityDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -109,7 +112,7 @@ public class EntitiesDataProvider extends DataProviderBase
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
         BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
-        NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
+        NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
 
@@ -121,10 +124,13 @@ public class EntitiesDataProvider extends DataProviderBase
         }
 
         //Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
-
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+        NbtCompound nbt = new NbtCompound();
+
+        if (entity != null && entity.saveSelfNbt(nbt))
+        {
+            HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+        }
     }
 
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
@@ -136,6 +142,21 @@ public class EntitiesDataProvider extends DataProviderBase
 
         Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
         // todo
+    }
+
+    public boolean hasNbtQueryOverride()
+    {
+        return this.nbtQueryOverride.getValue();
+    }
+
+    public boolean hasNbtQueryPermission(ServerPlayerEntity player)
+    {
+        if (this.nbtQueryOverride.getValue())
+        {
+            return Permissions.check(player, this.permNode+".nbt_query_override", this.nbtQueryPermissionLevel.getValue());
+        }
+
+        return player.hasPermissionLevel(2);
     }
 
     @Override

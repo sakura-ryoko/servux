@@ -1,5 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
@@ -9,7 +10,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.profiler.Profiler;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.settings.IServuxSetting;
@@ -31,6 +36,7 @@ public class DataProviderManager
         return this.providersImmutable;
     }
     protected File configDir = null;
+    protected DynamicRegistryManager.Immutable immutable = DynamicRegistryManager.EMPTY;
 
     /**
      * Registers the given data provider, if it's not already registered
@@ -84,7 +90,7 @@ public class DataProviderManager
         return false;
     }
 
-    public void tickProviders(MinecraftServer server, int tickCounter)
+    public void tickProviders(MinecraftServer server, int tickCounter, Profiler profiler)
     {
         if (this.providersTicking.isEmpty() == false)
         {
@@ -92,7 +98,7 @@ public class DataProviderManager
             {
                 if ((tickCounter % provider.getTickInterval()) == 0)
                 {
-                    provider.tick(server, tickCounter);
+                    provider.tick(server, tickCounter, profiler);
                 }
             }
         }
@@ -116,6 +122,16 @@ public class DataProviderManager
         {
             provider.unregisterHandler();
         }
+    }
+
+    public void onCaptureImmutable(@Nonnull DynamicRegistryManager.Immutable immutable)
+    {
+        this.immutable = immutable;
+    }
+
+    public DynamicRegistryManager.Immutable getRegistryManager()
+    {
+        return this.immutable;
     }
 
     public void onServerTickEndPre()

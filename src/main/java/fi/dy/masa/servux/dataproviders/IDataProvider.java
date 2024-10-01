@@ -5,6 +5,8 @@ import fi.dy.masa.servux.settings.IServuxSetting;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.profiler.Profiler;
+
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 
 import java.util.List;
@@ -101,7 +103,7 @@ public interface IDataProvider
      * @param server
      * @param tickCounter The current server tick (since last server start)
      */
-    default void tick(MinecraftServer server, int tickCounter)
+    default void tick(MinecraftServer server, int tickCounter, Profiler profiler)
     {
     }
 
@@ -109,7 +111,7 @@ public interface IDataProvider
      * Returns the network packet handler used for this data provider.
      * @return
      */
-    IPluginServerPlayHandler<?> getPacketHandler();
+    default IPluginServerPlayHandler<?> getPacketHandler() { return null; }
 
     /**
      * Determine if Player has permissions to this Data Provider
