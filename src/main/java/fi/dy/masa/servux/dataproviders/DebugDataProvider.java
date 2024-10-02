@@ -44,7 +44,7 @@ import net.minecraft.world.gen.structure.Structure;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.mixin.IMixinMobEntity;
+import fi.dy.masa.servux.mixin.debug.IMixinMobEntity;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;

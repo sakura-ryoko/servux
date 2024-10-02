@@ -4,7 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "minVersion": "0.8",
   "mixins": [
-    "IMixinMobEntity",
+    "debug.IMixinMobEntity",
     "MixinBlockItem",
     "MixinCommandManager",
     "MixinMain",
@@ -17,8 +17,8 @@
     "MixinServerWorld",
     "MixinWorld",
     "MixinWorldChunk",
-    "test.MixinDebugInfoSender",
-    "test.MixinSharedConstants"
+    "debug.MixinDebugInfoSender",
+    "debug.MixinSharedConstants"
   ],
   "injectors": {
     "defaultRequire": 1

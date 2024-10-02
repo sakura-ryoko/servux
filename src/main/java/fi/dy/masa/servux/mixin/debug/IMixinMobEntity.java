@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.debug;
 
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.mob.MobEntity;

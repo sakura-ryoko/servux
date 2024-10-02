@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin.test;
+package fi.dy.masa.servux.mixin.debug;
 
 import net.minecraft.SharedConstants;
 import org.spongepowered.asm.mixin.Mixin;

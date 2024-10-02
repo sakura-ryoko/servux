@@ -8,17 +8,17 @@ import org.spongepowered.asm.mixin.Unique;
 @Mixin(World.class)
 public class MixinWorld implements IWorldUpdateSuppressor
 {
-    @Unique private boolean litematica_preventBlockUpdates;
+    @Unique private boolean servux_preventBlockUpdates;
 
     @Override
     public boolean litematica_getShouldPreventBlockUpdates()
     {
-        return this.litematica_preventBlockUpdates;
+        return this.servux_preventBlockUpdates;
     }
 
     @Override
     public void litematica_setShouldPreventBlockUpdates(boolean preventUpdates)
     {
-        this.litematica_preventBlockUpdates = preventUpdates;
+        this.servux_preventBlockUpdates = preventUpdates;
     }
 }
