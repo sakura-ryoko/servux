@@ -4,8 +4,8 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
 
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
+import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.interfaces.IServerListener;
 import fi.dy.masa.servux.util.i18nLang;
 
@@ -22,7 +22,7 @@ public class ServerListener implements IServerListener
     {
         DataProviderManager.INSTANCE.writeToConfig();
         DataProviderManager.INSTANCE.onCaptureImmutable(server.getRegistryManager());
-        StructureDataProvider.INSTANCE.checkWorldSeed(server);
+        HudDataProvider.INSTANCE.checkWorldSeed(server);
     }
 
     @Override

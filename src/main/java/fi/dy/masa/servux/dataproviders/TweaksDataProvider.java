@@ -25,7 +25,7 @@ public class TweaksDataProvider extends DataProviderBase
     protected final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required to access the data provider"), 0, 4, 0);
-    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
+    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
 
     protected TweaksDataProvider()
     {
