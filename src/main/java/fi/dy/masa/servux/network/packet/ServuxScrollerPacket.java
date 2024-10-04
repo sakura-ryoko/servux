@@ -1,34 +1,33 @@
 package fi.dy.masa.servux.network.packet;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.network.IServerPayloadData;
 import io.netty.buffer.Unpooled;
-
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.network.IServerPayloadData;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-public class ServuxHudPacket implements IServerPayloadData
+public class ServuxScrollerPacket implements IServerPayloadData
 {
     private Type packetType;
     private NbtCompound nbt;
     private PacketByteBuf buffer;
     public static final int PROTOCOL_VERSION = 1;
 
-    private ServuxHudPacket(Type type)
+    private ServuxScrollerPacket(Type type)
     {
         this.packetType = type;
         this.nbt = new NbtCompound();
         this.clearPacket();
     }
 
-    public static ServuxHudPacket MetadataRequest(@Nullable NbtCompound nbt)
+    public static ServuxScrollerPacket MetadataRequest(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_C2S_METADATA_REQUEST);
+        var packet = new ServuxScrollerPacket(Type.PACKET_C2S_METADATA_REQUEST);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -36,9 +35,9 @@ public class ServuxHudPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxHudPacket MetadataResponse(@Nullable NbtCompound nbt)
+    public static ServuxScrollerPacket MetadataResponse(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_S2C_METADATA);
+        var packet = new ServuxScrollerPacket(Type.PACKET_S2C_METADATA);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -46,9 +45,9 @@ public class ServuxHudPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxHudPacket SpawnRequest(@Nullable NbtCompound nbt)
+    public static ServuxScrollerPacket MassCraftRequest(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_C2S_SPAWN_DATA_REQUEST);
+        var packet = new ServuxScrollerPacket(Type.PACKET_C2S_MASS_CRAFT_REQUEST);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -56,9 +55,9 @@ public class ServuxHudPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxHudPacket SpawnResponse(@Nullable NbtCompound nbt)
+    public static ServuxScrollerPacket MassCraftResponse(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_S2C_SPAWN_DATA);
+        var packet = new ServuxScrollerPacket(Type.PACKET_S2C_MASS_CRAFT_RESPONSE);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -66,19 +65,9 @@ public class ServuxHudPacket implements IServerPayloadData
         return packet;
     }
 
-    public static ServuxHudPacket WeatherTick(@Nullable NbtCompound nbt)
+    public static ServuxScrollerPacket RecipeManagerRequest(@Nullable NbtCompound nbt)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_S2C_WEATHER_TICK);
-        if (nbt != null)
-        {
-            packet.nbt.copyFrom(nbt);
-        }
-        return packet;
-    }
-
-    public static ServuxHudPacket RecipeManagerRequest(@Nullable NbtCompound nbt)
-    {
-        var packet = new ServuxHudPacket(Type.PACKET_C2S_RECIPE_MANAGER_REQUEST);
+        var packet = new ServuxScrollerPacket(Type.PACKET_C2S_RECIPE_MANAGER_REQUEST);
         if (nbt != null)
         {
             packet.nbt.copyFrom(nbt);
@@ -87,16 +76,16 @@ public class ServuxHudPacket implements IServerPayloadData
     }
 
     // Nbt Packet, using Packet Splitter
-    public static ServuxHudPacket ResponseS2CStart(@Nonnull NbtCompound nbt)
+    public static ServuxScrollerPacket ResponseS2CStart(@Nonnull NbtCompound nbt)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_S2C_NBT_RESPONSE_START);
+        var packet = new ServuxScrollerPacket(Type.PACKET_S2C_NBT_RESPONSE_START);
         packet.nbt.copyFrom(nbt);
         return packet;
     }
 
-    public static ServuxHudPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
+    public static ServuxScrollerPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
     {
-        var packet = new ServuxHudPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
+        var packet = new ServuxScrollerPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
         packet.nbt = new NbtCompound();
         return packet;
@@ -184,7 +173,7 @@ public class ServuxHudPacket implements IServerPayloadData
                     Servux.logger.error("ServuxHudPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_SPAWN_DATA_REQUEST, PACKET_S2C_SPAWN_DATA, PACKET_S2C_WEATHER_TICK, PACKET_C2S_RECIPE_MANAGER_REQUEST ->
+            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_MASS_CRAFT_REQUEST, PACKET_S2C_MASS_CRAFT_RESPONSE, PACKET_C2S_RECIPE_MANAGER_REQUEST ->
             {
                 // Write NBT
                 try
@@ -201,7 +190,7 @@ public class ServuxHudPacket implements IServerPayloadData
     }
 
     @Nullable
-    public static ServuxHudPacket fromPacket(PacketByteBuf input)
+    public static ServuxScrollerPacket fromPacket(PacketByteBuf input)
     {
         int i = input.readVarInt();
         Type type = getType(i);
@@ -219,7 +208,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxHudPacket.ResponseS2CData(new PacketByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxScrollerPacket.ResponseS2CData(new PacketByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
@@ -231,7 +220,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 // Read Nbt
                 try
                 {
-                    return ServuxHudPacket.MetadataRequest(input.readNbt());
+                    return ServuxScrollerPacket.MetadataRequest(input.readNbt());
                 }
                 catch (Exception e)
                 {
@@ -243,47 +232,35 @@ public class ServuxHudPacket implements IServerPayloadData
                 // Read Nbt
                 try
                 {
-                    return ServuxHudPacket.MetadataResponse(input.readNbt());
+                    return ServuxScrollerPacket.MetadataResponse(input.readNbt());
                 }
                 catch (Exception e)
                 {
                     Servux.logger.error("ServuxHudPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            case PACKET_C2S_SPAWN_DATA_REQUEST ->
+            case PACKET_C2S_MASS_CRAFT_REQUEST ->
             {
                 // Read Nbt
                 try
                 {
-                    return ServuxHudPacket.SpawnRequest(input.readNbt());
+                    return ServuxScrollerPacket.MassCraftRequest(input.readNbt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Spawn Data Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Mass Craft Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            case PACKET_S2C_SPAWN_DATA ->
+            case PACKET_S2C_MASS_CRAFT_RESPONSE ->
             {
                 // Read Nbt
                 try
                 {
-                    return ServuxHudPacket.SpawnResponse(input.readNbt());
+                    return ServuxScrollerPacket.MassCraftResponse(input.readNbt());
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Spawn Data Response from packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-            case PACKET_S2C_WEATHER_TICK ->
-            {
-                // Read Nbt
-                try
-                {
-                    return ServuxHudPacket.WeatherTick(input.readNbt());
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Weather Tick from packet: [{}]", e.getLocalizedMessage());
+                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Mass Craft Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_RECIPE_MANAGER_REQUEST ->
@@ -291,7 +268,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 // Read Nbt
                 try
                 {
-                    return ServuxHudPacket.RecipeManagerRequest(input.readNbt());
+                    return ServuxScrollerPacket.RecipeManagerRequest(input.readNbt());
                 }
                 catch (Exception e)
                 {
@@ -333,9 +310,8 @@ public class ServuxHudPacket implements IServerPayloadData
     {
         PACKET_S2C_METADATA(1),
         PACKET_C2S_METADATA_REQUEST(2),
-        PACKET_S2C_SPAWN_DATA(3),
-        PACKET_C2S_SPAWN_DATA_REQUEST(4),
-        PACKET_S2C_WEATHER_TICK(5),
+        PACKET_C2S_MASS_CRAFT_REQUEST(3),
+        PACKET_S2C_MASS_CRAFT_RESPONSE(4),
         PACKET_C2S_RECIPE_MANAGER_REQUEST(6),
         // For Packet Splitter (Oversize Packets, S2C)
         PACKET_S2C_NBT_RESPONSE_START(10),
@@ -351,9 +327,9 @@ public class ServuxHudPacket implements IServerPayloadData
         int get() { return this.type; }
     }
 
-    public record Payload(ServuxHudPacket data) implements CustomPayload
+    public record Payload(ServuxScrollerPacket data) implements CustomPayload
     {
-        public static final Id<Payload> ID = new Id<>(ServuxHudHandler.CHANNEL_ID);
+        public static final Id<Payload> ID = new Id<>(ServuxScrollerHandler.CHANNEL_ID);
         public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
         public Payload(PacketByteBuf input)
