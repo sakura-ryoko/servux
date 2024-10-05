@@ -2,27 +2,19 @@ package fi.dy.masa.servux.dataproviders;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import javax.annotation.Nullable;
-import io.netty.buffer.Unpooled;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.nbt.NbtByteArray;
+import com.mojang.serialization.DataResult;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.recipe.Recipe;
 import net.minecraft.recipe.RecipeEntry;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.world.GameRules;
@@ -31,7 +23,8 @@ import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.*;
+import fi.dy.masa.servux.network.packet.ServuxHudHandler;
+import fi.dy.masa.servux.network.packet.ServuxHudPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
@@ -42,7 +35,7 @@ public class HudDataProvider extends DataProviderBase
     protected final static ServuxHudHandler<ServuxHudPacket.Payload> HANDLER = ServuxHudHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
+    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 80, 1200, 20);
     protected ServuxBoolSetting shareWeatherStatus = new ServuxBoolSetting(this, "share_weather_status", false);
     protected ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     protected ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
@@ -204,7 +197,8 @@ public class HudDataProvider extends DataProviderBase
 
             if ((this.lastTick - this.lastWeatherTick) > (this.getTickInterval() * 4))
             {
-                // Don't spam players with weather ticks
+                // Don't spam players with weather ticks,
+                // Clear Weather packets don't need to be sent as often
                 this.refreshWeatherData = true;
             }
         }
@@ -238,8 +232,6 @@ public class HudDataProvider extends DataProviderBase
         {
             HANDLER.sendPlayPayload(player, new ServuxHudPacket.Payload(ServuxHudPacket.MetadataResponse(this.metadata)));
         }
-
-        this.refreshWeatherData(player, null);
     }
 
     public void onPacketFailure(ServerPlayerEntity player)
@@ -311,18 +303,29 @@ public class HudDataProvider extends DataProviderBase
         NbtCompound nbt = new NbtCompound();
         NbtList list = new NbtList();
 
-        // This is ugly
+        if (data != null)
+        {
+            Servux.debugLog("hudDataChannel: received RecipeManager request from {}, client version: {}", player.getName().getLiteralString(), data.getString("version"));
+        }
+
         recipes.forEach((recipeEntry ->
         {
-            RegistryByteBuf buf = new RegistryByteBuf(Unpooled.buffer(), world.getRegistryManager());
-            RecipeEntry.PACKET_CODEC.encode(buf, recipeEntry);
-            list.add(new NbtByteArray(buf.readByteArray()));
+            DataResult<NbtElement> dr = Recipe.CODEC.encodeStart(NbtOps.INSTANCE, recipeEntry.value());
+
+            if (dr.result().isPresent())
+            {
+                NbtCompound entry = new NbtCompound();
+                entry.putString("id_reg", recipeEntry.id().getRegistry().toString());
+                entry.putString("id_value", recipeEntry.id().getValue().toString());
+                entry.put("recipe", dr.result().get());
+                list.add(entry);
+            }
         }));
 
         nbt.put("RecipeManager", list);
 
         // Use Packet Splitter
-        HANDLER.sendPlayPayload(player, new ServuxHudPacket.Payload(ServuxHudPacket.ResponseS2CStart(nbt)));
+        HANDLER.encodeServerData(player, ServuxHudPacket.ResponseS2CStart(nbt));
     }
 
     public BlockPos getSpawnPos()

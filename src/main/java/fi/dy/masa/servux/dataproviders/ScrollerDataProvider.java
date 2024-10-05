@@ -1,5 +1,20 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.Collection;
+import java.util.List;
+import javax.annotation.Nullable;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+
+import com.mojang.serialization.DataResult;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -8,19 +23,6 @@ import fi.dy.masa.servux.network.packet.ServuxScrollerHandler;
 import fi.dy.masa.servux.network.packet.ServuxScrollerPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import io.netty.buffer.Unpooled;
-import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.nbt.NbtByteArray;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.recipe.RecipeEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.List;
 
 public class ScrollerDataProvider extends DataProviderBase
 {
@@ -99,8 +101,6 @@ public class ScrollerDataProvider extends DataProviderBase
         {
             HANDLER.sendPlayPayload(player, new ServuxScrollerPacket.Payload(ServuxScrollerPacket.MetadataResponse(this.metadata)));
         }
-
-        this.refreshRecipeManager(player, null);
     }
 
     public void onPacketFailure(ServerPlayerEntity player)
@@ -130,18 +130,29 @@ public class ScrollerDataProvider extends DataProviderBase
         NbtCompound nbt = new NbtCompound();
         NbtList list = new NbtList();
 
-        // This is ugly
+        if (data != null)
+        {
+            Servux.debugLog("scrollerDataChannel: received RecipeManager request from {}, client version: {}", player.getName().getLiteralString(), data.getString("version"));
+        }
+
         recipes.forEach((recipeEntry ->
         {
-            RegistryByteBuf buf = new RegistryByteBuf(Unpooled.buffer(), world.getRegistryManager());
-            RecipeEntry.PACKET_CODEC.encode(buf, recipeEntry);
-            list.add(new NbtByteArray(buf.readByteArray()));
+            DataResult<NbtElement> dr = Recipe.CODEC.encodeStart(NbtOps.INSTANCE, recipeEntry.value());
+
+            if (dr.result().isPresent())
+            {
+                NbtCompound entry = new NbtCompound();
+                entry.putString("id_reg", recipeEntry.id().getRegistry().toString());
+                entry.putString("id_value", recipeEntry.id().getValue().toString());
+                entry.put("recipe", dr.result().get());
+                list.add(entry);
+            }
         }));
 
         nbt.put("RecipeManager", list);
 
         // Use Packet Splitter
-        HANDLER.sendPlayPayload(player, new ServuxScrollerPacket.Payload(ServuxScrollerPacket.ResponseS2CStart(nbt)));
+        HANDLER.encodeServerData(player, ServuxScrollerPacket.ResponseS2CStart(nbt));
     }
 
     public boolean hasPermissionsForMassCraft(ServerPlayerEntity player)

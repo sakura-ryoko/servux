@@ -11,11 +11,11 @@ public class ServuxInitHandler implements IServerInitHandler
     public void onServerInit()
     {
         DataProviderManager.INSTANCE.registerDataProvider(ServuxConfigProvider.INSTANCE);
+        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
+        DataProviderManager.INSTANCE.registerDataProvider(HudDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(LitematicsDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(EntitiesDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.registerDataProvider(HudDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(ScrollerDataProvider.INSTANCE);
-        DataProviderManager.INSTANCE.registerDataProvider(StructureDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(TweaksDataProvider.INSTANCE);
         //DataProviderManager.INSTANCE.registerDataProvider(DebugDataProvider.INSTANCE);
 

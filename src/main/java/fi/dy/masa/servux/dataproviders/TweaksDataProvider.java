@@ -7,7 +7,6 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 import fi.dy.masa.servux.Reference;
@@ -24,7 +23,7 @@ public class TweaksDataProvider extends DataProviderBase
     public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
     protected final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required to access the data provider"), 0, 4, 0);
+    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
 
     protected TweaksDataProvider()

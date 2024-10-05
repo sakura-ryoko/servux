@@ -36,7 +36,6 @@ public abstract class ServuxScrollerHandler<T extends CustomPayload> implements 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
     private static final int MAX_FAILURES = 4;
-    private final Map<UUID, Long> readingSessionKeys = new HashMap<>();
 
     @Override
     public Identifier getPayloadChannel() { return CHANNEL_ID; }

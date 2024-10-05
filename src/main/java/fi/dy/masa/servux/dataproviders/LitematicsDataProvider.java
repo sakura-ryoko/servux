@@ -70,6 +70,7 @@ public class LitematicsDataProvider extends DataProviderBase
             HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -214,7 +215,7 @@ public class LitematicsDataProvider extends DataProviderBase
             output.put("Entities", entityList);
             output.putInt("chunkX", chunkPos.x);
             output.putInt("chunkZ", chunkPos.z);
-            long timeElapsed = System.currentTimeMillis() - timeStart;
+            //long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
             //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
