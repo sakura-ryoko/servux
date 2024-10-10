@@ -16,7 +16,6 @@ public class PlayerListener implements IPlayerListener
         StructureDataProvider.INSTANCE.register(player);
         EntitiesDataProvider.INSTANCE.sendMetadata(player);
         LitematicsDataProvider.INSTANCE.sendMetadata(player);
-        ScrollerDataProvider.INSTANCE.sendMetadata(player);
         TweaksDataProvider.INSTANCE.sendMetadata(player);
     }
 
