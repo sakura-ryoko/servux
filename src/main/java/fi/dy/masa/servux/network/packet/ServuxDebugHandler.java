@@ -16,7 +16,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DebugDataProvider;
-import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
@@ -75,8 +74,18 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
         switch (packet.getType())
         {
             case PACKET_C2S_METADATA_REQUEST -> DebugDataProvider.INSTANCE.sendMetadata(player);
-            case PACKET_C2S_DEBUG_SERVICE_REGISTER -> DebugDataProvider.INSTANCE.register(player, packet.getCompound());
-            case PACKET_C2S_DEBUG_SERVICE_UNREGISTER -> DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
+            case PACKET_C2S_METADATA_CONFIRM -> DebugDataProvider.INSTANCE.confirmMetadata(player, packet.getCompound());
+            case PACKET_C2S_DEBUG_SERVICE_REGISTER ->
+            {
+                Servux.debugLog("decodeServerData(): received Debug Service Register from player {}", player.getName().getLiteralString());
+                DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
+                DebugDataProvider.INSTANCE.register(player, packet.getCompound());
+            }
+            case PACKET_C2S_DEBUG_SERVICE_UNREGISTER ->
+            {
+                Servux.debugLog("decodeServerData(): received Debug Service Un-Register from player {}", player.getName().getLiteralString());
+                DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
+            }
             default -> Servux.logger.warn("ServuxDebugHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }

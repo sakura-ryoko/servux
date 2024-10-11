@@ -208,6 +208,22 @@ public class DebugDataProvider extends DataProviderBase
         }
     }
 
+    public void confirmMetadata(ServerPlayerEntity player, NbtCompound data)
+    {
+        UUID uuid = player.getUuid();
+
+        if (this.registeredPlayers.containsKey(uuid))
+        {
+            this.registeredPlayers.replace(uuid, data.copy());
+        }
+        else
+        {
+            this.registeredPlayers.put(uuid, data.copy());
+        }
+
+        Servux.debugLog("debugDataChannel: received confirm from player {}", player.getName().getLiteralString());
+    }
+
     private void sendDebugData(ServerWorld world, CustomPayload payload)
     {
         if (this.isEnabled())
@@ -272,7 +288,7 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        ///if (this.enabledDebugPackets.getValue().contains("poi"))
+        //if (this.enabledDebugPackets.getValue().contains("poi"))
         //{
             int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
             this.sendDebugData(world, new DebugPoiTicketCountCustomPayload(pos, tickets));

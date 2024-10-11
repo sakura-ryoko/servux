@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import fi.dy.masa.servux.dataproviders.DebugDataProvider;
 
 @Mixin(value = DebugInfoSender.class)
-public abstract class MixinDebugInfoSender
+public class MixinDebugInfoSender
 {
     @Shadow
     private static List<String> listMemories(LivingEntity entity, long currentTime)
@@ -91,12 +91,6 @@ public abstract class MixinDebugInfoSender
     }
      */
 
-    @Inject(method = "sendRedstoneUpdateOrder", at = @At("HEAD"))
-    private static void servux_onSendRedstoneUpdateOrder(World world, DebugRedstoneUpdateOrderCustomPayload payload, CallbackInfo ci)
-    {
-        // NO-OP
-    }
-
     @Inject(method = "sendNeighborUpdate", at = @At("HEAD"))
     private static void servux_onSendNeighborUpdate(World world, BlockPos pos, CallbackInfo ci)
     {
@@ -104,6 +98,12 @@ public abstract class MixinDebugInfoSender
         {
             DebugDataProvider.INSTANCE.sendNeighborUpdate(serverWorld, pos);
         }
+    }
+
+    @Inject(method = "sendRedstoneUpdateOrder", at = @At("HEAD"))
+    private static void servux_onSendRedstoneUpdateOrder(World world, DebugRedstoneUpdateOrderCustomPayload payload, CallbackInfo ci)
+    {
+        // NO-OP
     }
 
     @Inject(method = "sendStructureStart", at = @At("HEAD"))
