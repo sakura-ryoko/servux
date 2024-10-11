@@ -18,6 +18,7 @@ public abstract class MixinSharedConstants
 
     public MixinSharedConstants() {}
 
+    /*
     @Inject(method = "<clinit>", at = @At("TAIL"))
     private static void servux_enableServerDevelopmentMode(CallbackInfo ci)
     {
@@ -27,4 +28,5 @@ public abstract class MixinSharedConstants
             isDevelopment = true;
         }
     }
+     */
 }

@@ -26,7 +26,7 @@ dependencies {
 
 	// Lucko Permissions API
 	//modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
-	modImplementation "com.github.sakura-ryoko:fabric-permissions-api:${project.fabric_permissions_api_id}"
+	modImplementation include("com.github.sakura-ryoko:fabric-permissions-api:${project.fabric_permissions_api_id}")
 }
 
 group = project.group + "." + project.mod_id

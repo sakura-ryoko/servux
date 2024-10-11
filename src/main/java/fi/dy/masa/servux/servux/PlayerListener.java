@@ -17,6 +17,7 @@ public class PlayerListener implements IPlayerListener
         EntitiesDataProvider.INSTANCE.sendMetadata(player);
         LitematicsDataProvider.INSTANCE.sendMetadata(player);
         TweaksDataProvider.INSTANCE.sendMetadata(player);
+        DebugDataProvider.INSTANCE.sendMetadata(player);
     }
 
     @Override

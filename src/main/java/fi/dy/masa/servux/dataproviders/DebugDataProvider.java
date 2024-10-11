@@ -19,6 +19,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.entity.passive.BeeEntity;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
@@ -28,10 +29,11 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.StructureTags;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.NameGenerator;
 import net.minecraft.util.Nameable;
 import net.minecraft.util.math.*;
@@ -41,10 +43,15 @@ import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.event.listener.GameEventListener;
 import net.minecraft.world.gen.structure.Structure;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 
 import fi.dy.masa.servux.Reference;
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.mixin.debug.IMixinMobEntity;
+import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+import fi.dy.masa.servux.network.ServerPlayHandler;
+import fi.dy.masa.servux.network.packet.ServuxDebugHandler;
+import fi.dy.masa.servux.network.packet.ServuxDebugPacket;
+import fi.dy.masa.servux.network.packet.ServuxHudPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
@@ -55,30 +62,52 @@ public class DebugDataProvider extends DataProviderBase
 {
     public static final DebugDataProvider INSTANCE = new DebugDataProvider();
 
+    protected final static ServuxDebugHandler<ServuxDebugPacket.Payload> HANDLER = ServuxDebugHandler.getInstance();
+    protected final HashMap<UUID, NbtCompound> registeredPlayers = new HashMap<>();
+    protected final NbtCompound metadata = new NbtCompound();
+
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    private final ServuxStringListSetting enabledDebugPackets = new ServuxStringListSetting(this, "debug_enabled", List.of("chunk_watcher", "poi", "pathfinding", "neighbor_update", "structures", "goal_selector", "raids", "brain", "bees", "breeze", "game_event"));
-    private final ServuxBoolSetting enableServerDevelopmentMode = new ServuxBoolSetting(this, "server_development_mode", false);
-    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.enabledDebugPackets, this.enableServerDevelopmentMode);
+    //private final ServuxStringListSetting enabledDebugPackets = new ServuxStringListSetting(this, "debug_enabled", List.of("chunk_watcher", "poi", "pathfinding", "neighbor_update", "structures", "goal_selector", "raids", "brain", "bees", "breeze", "game_event"));
+    //private final ServuxBoolSetting enableServerDevelopmentMode = new ServuxBoolSetting(this, "server_development_mode", false);
+    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel);
 
     protected DebugDataProvider()
     {
         super("debug_data",
-                Identifier.of("servux:debug_data"),
-                1, 0, Reference.MOD_ID + ".provider.debug_data",
-                "Vanilla Debug Data provider.");
+              ServuxDebugHandler.CHANNEL_ID,
+              ServuxDebugPacket.PROTOCOL_VERSION,
+              0, Reference.MOD_ID + ".provider.debug_data",
+              "Vanilla Debug Data provider.");
+
+        this.metadata.putString("name", this.getName());
+        this.metadata.putString("id", this.getNetworkChannel().toString());
+        this.metadata.putInt("version", this.getProtocolVersion());
+        this.metadata.putString("servux", Reference.MOD_STRING);
     }
 
     @Override
     public void registerHandler()
     {
-        PayloadTypeRegistry.playC2S().register(DebugBrainCustomPayload.ID, DebugBrainCustomPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(DebugBrainCustomPayload.ID, DebugBrainCustomPayload.CODEC);
+        ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
+        if (this.isRegistered() == false)
+        {
+            HANDLER.registerPlayPayload(ServuxDebugPacket.Payload.ID, ServuxDebugPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+            this.setRegistered(true);
+        }
+        HANDLER.registerPlayReceiver(ServuxDebugPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
     @Override
     public void unregisterHandler()
     {
-        // NO-OP
+        HANDLER.unregisterPlayReceiver();
+        ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
+    }
+
+    @Override
+    public IPluginServerPlayHandler<ServuxDebugPacket.Payload> getPacketHandler()
+    {
+        return HANDLER;
     }
 
     @Override
@@ -110,12 +139,76 @@ public class DebugDataProvider extends DataProviderBase
         return Permissions.check(player, Reference.MOD_ID + ".debug_data", this.basePermissionLevel.getValue());
     }
 
+    /*
     public boolean isServerDevelopmentMode()
     {
         return this.enableServerDevelopmentMode.getValue();
     }
+     */
 
-    private void sendToAll(ServerWorld world, CustomPayload payload)
+    public boolean register(ServerPlayerEntity player, @Nullable NbtCompound data)
+    {
+        // System.out.printf("register\n");
+        boolean registered = false;
+        MinecraftServer server = player.getServer();
+        UUID uuid = player.getUuid();
+
+        if (this.hasPermission(player) == false)
+        {
+            // No Permission
+            Servux.debugLog("debug_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            return registered;
+        }
+
+        if (this.registeredPlayers.containsKey(uuid) == false)
+        {
+            this.registeredPlayers.put(uuid, data != null ? data : new NbtCompound());
+            this.sendMetadata(player);
+            registered = true;
+        }
+
+        return registered;
+    }
+
+    public boolean unregister(ServerPlayerEntity player, @Nullable NbtCompound nbt)
+    {
+        // System.out.printf("unregister\n");
+        HANDLER.resetFailures(this.getNetworkChannel(), player);
+
+        return this.registeredPlayers.remove(player.getUuid()) != null;
+    }
+
+    public void onPacketFailure(ServerPlayerEntity player)
+    {
+        // Do something if we fail to register the client
+    }
+
+    public void sendMetadata(ServerPlayerEntity player)
+    {
+        if (this.hasPermission(player) == false)
+        {
+            // No Permission
+            Servux.debugLog("debug_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            return;
+        }
+
+        NbtCompound nbt = new NbtCompound();
+        nbt.copyFrom(this.metadata);
+
+        Servux.debugLog("debugDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+
+        // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
+        if (player.networkHandler != null)
+        {
+            HANDLER.sendPlayPayload(player.networkHandler, new ServuxDebugPacket.Payload(ServuxDebugPacket.MetadataResponse(this.metadata)));
+        }
+        else
+        {
+            HANDLER.sendPlayPayload(player, new ServuxDebugPacket.Payload(ServuxDebugPacket.MetadataResponse(this.metadata)));
+        }
+    }
+
+    private void sendDebugData(ServerWorld world, CustomPayload payload)
     {
         if (this.isEnabled())
         {
@@ -123,7 +216,7 @@ public class DebugDataProvider extends DataProviderBase
 
             for (ServerPlayerEntity player : world.getPlayers())
             {
-                if (this.hasPermission(player) &&
+                if (this.registeredPlayers.containsKey(player.getUuid()) &&
                     player.networkHandler.accepts(packet))
                 {
                     player.networkHandler.sendPacket(packet);
@@ -138,10 +231,10 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("chunk_watcher"))
-        {
-            this.sendToAll(world, new DebugWorldgenAttemptCustomPayload(pos.getStartPos().up(100), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
-        }
+        //if (this.enabledDebugPackets.getValue().contains("chunk_watcher"))
+        //{
+            this.sendDebugData(world, new DebugWorldgenAttemptCustomPayload(pos.getStartPos().up(100), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
+        //}
     }
 
     public void sendPoiAdditions(ServerWorld world, BlockPos pos)
@@ -150,15 +243,15 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("poi"))
-        {
+        //if (this.enabledDebugPackets.getValue().contains("poi"))
+        //{
             world.getPointOfInterestStorage().getType(pos).ifPresent((registryEntry) ->
             {
                 int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
                 String name = registryEntry.getIdAsString();
-                this.sendToAll(world, new DebugPoiAddedCustomPayload(pos, name, tickets));
+                this.sendDebugData(world, new DebugPoiAddedCustomPayload(pos, name, tickets));
             });
-        }
+        //}
     }
 
     public void sendPoiRemoval(ServerWorld world, BlockPos pos)
@@ -167,10 +260,10 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("poi"))
-        {
-            this.sendToAll(world, new DebugPoiRemovedCustomPayload(pos));
-        }
+        //if (this.enabledDebugPackets.getValue().contains("poi"))
+        //{
+            this.sendDebugData(world, new DebugPoiRemovedCustomPayload(pos));
+        //}
     }
 
     public void sendPointOfInterest(ServerWorld world, BlockPos pos)
@@ -179,12 +272,11 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("poi"))
-        {
+        ///if (this.enabledDebugPackets.getValue().contains("poi"))
+        //{
             int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
-            this.sendToAll(world, new DebugPoiTicketCountCustomPayload(pos, tickets));
-        }
-
+            this.sendDebugData(world, new DebugPoiTicketCountCustomPayload(pos, tickets));
+        //}
     }
 
     public void sendPoi(ServerWorld world, BlockPos pos)
@@ -193,8 +285,8 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("poi"))
-        {
+        //if (this.enabledDebugPackets.getValue().contains("poi"))
+        //{
             Registry<Structure> registry = world.getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
             ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos);
             Iterator<RegistryEntry<Structure>> iterator = registry.iterateEntries(StructureTags.VILLAGE).iterator();
@@ -204,7 +296,7 @@ public class DebugDataProvider extends DataProviderBase
             {
                 if (!iterator.hasNext())
                 {
-                    this.sendToAll(world, new DebugVillageSectionsCustomPayload(Set.of(), Set.of(chunkSectionPos)));
+                    this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(), Set.of(chunkSectionPos)));
                     return;
                 }
 
@@ -212,8 +304,8 @@ public class DebugDataProvider extends DataProviderBase
             }
             while (world.getStructureAccessor().getStructureStarts(chunkSectionPos, entry.value()).isEmpty());
 
-            this.sendToAll(world, new DebugVillageSectionsCustomPayload(Set.of(chunkSectionPos), Set.of()));
-        }
+            this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(chunkSectionPos), Set.of()));
+        //}
     }
 
     public void sendPathfindingData(ServerWorld world, MobEntity mob, @Nullable Path path, float nodeReachProximity)
@@ -222,13 +314,13 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("pathfinding"))
-        {
+        //if (this.enabledDebugPackets.getValue().contains("pathfinding"))
+        //{
             if (path != null)
             {
-                this.sendToAll(world, new DebugPathCustomPayload(mob.getId(), path, nodeReachProximity));
+                this.sendDebugData(world, new DebugPathCustomPayload(mob.getId(), path, nodeReachProximity));
             }
-        }
+        //}
     }
 
     public void sendNeighborUpdate(ServerWorld world, BlockPos pos)
@@ -237,10 +329,10 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("neighbor_update"))
-        {
-            this.sendToAll(world, new DebugNeighborsUpdateCustomPayload(world.getTime(), pos));
-        }
+        //if (this.enabledDebugPackets.getValue().contains("neighbor_update"))
+        //{
+            this.sendDebugData(world, new DebugNeighborsUpdateCustomPayload(world.getTime(), pos));
+        //}
     }
 
     public void sendStructureStart(StructureWorldAccess world, StructureStart structureStart)
@@ -249,8 +341,8 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("structures"))
-        {
+        //if (this.enabledDebugPackets.getValue().contains("structures"))
+        //{
             List<DebugStructuresCustomPayload.Piece> pieces = new ArrayList<>();
 
             for (int i = 0; i < structureStart.getChildren().size(); ++i)
@@ -259,8 +351,8 @@ public class DebugDataProvider extends DataProviderBase
             }
 
             ServerWorld serverWorld = world.toServerWorld();
-            this.sendToAll(serverWorld, new DebugStructuresCustomPayload(serverWorld.getRegistryKey(), structureStart.getBoundingBox(), pieces));
-        }
+            this.sendDebugData(serverWorld, new DebugStructuresCustomPayload(serverWorld.getRegistryKey(), structureStart.getBoundingBox(), pieces));
+        //}
     }
 
     public void sendGoalSelector(ServerWorld world, MobEntity mob, GoalSelector goalSelector)
@@ -269,13 +361,13 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("goal_selector"))
-        {
+        //if (this.enabledDebugPackets.getValue().contains("goal_selector"))
+        //{
             List<DebugGoalSelectorCustomPayload.Goal> goals = ((IMixinMobEntity) mob).servux_getGoalSelector().getGoals().stream().map((goal) ->
                     new DebugGoalSelectorCustomPayload.Goal(goal.getPriority(), goal.isRunning(), goal.getGoal().toString())).toList();
 
-            this.sendToAll(world, new DebugGoalSelectorCustomPayload(mob.getId(), mob.getBlockPos(), goals));
-        }
+            this.sendDebugData(world, new DebugGoalSelectorCustomPayload(mob.getId(), mob.getBlockPos(), goals));
+        //}
     }
 
     public void sendRaids(ServerWorld world, Collection<Raid> raids)
@@ -284,10 +376,10 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("raids"))
-        {
-            this.sendToAll(world, new DebugRaidsCustomPayload(raids.stream().map(Raid::getCenter).toList()));
-        }
+        //if (this.enabledDebugPackets.getValue().contains("raids"))
+        //{
+            this.sendDebugData(world, new DebugRaidsCustomPayload(raids.stream().map(Raid::getCenter).toList()));
+        //}
     }
 
     public void sendBrainDebugData(ServerWorld serverWorld, LivingEntity livingEntity, List<String> memories)
@@ -296,8 +388,8 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("brain"))
-        {
+        //if (this.enabledDebugPackets.getValue().contains("brain"))
+        //{
             MobEntity entity = (MobEntity) livingEntity;
             int angerLevel;
 
@@ -355,7 +447,7 @@ public class DebugDataProvider extends DataProviderBase
                 wantsGolem = false;
             }
 
-            this.sendToAll(serverWorld, new DebugBrainCustomPayload(new DebugBrainCustomPayload.Brain(
+            this.sendDebugData(serverWorld, new DebugBrainCustomPayload(new DebugBrainCustomPayload.Brain(
                     entity.getUuid(), entity.getId(), entity.getName().getString(),
                     profession, xp, entity.getHealth(), entity.getMaxHealth(),
                     entity.getPos(), inventory, entity.getNavigation().getCurrentPath(),
@@ -365,7 +457,7 @@ public class DebugDataProvider extends DataProviderBase
                     //this.listMemories(entity, serverWorld.getTime()),
                     memories,
                     gossips, pois, potentialPois)));
-        }
+        //}
     }
 
     public void sendBeeDebugData(ServerWorld world, BeeEntity bee)
@@ -374,15 +466,15 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("bees"))
-        {
-            this.sendToAll(world, new DebugBeeCustomPayload(
+        //if (this.enabledDebugPackets.getValue().contains("bees"))
+        //{
+            this.sendDebugData(world, new DebugBeeCustomPayload(
                     new DebugBeeCustomPayload.Bee(bee.getUuid(), bee.getId(), bee.getPos(),
                             bee.getNavigation().getCurrentPath(), bee.getHivePos(), bee.getFlowerPos(), bee.getMoveGoalTicks(),
                             bee.getGoalSelector().getGoals().stream().map((prioritizedGoal) ->
                                     prioritizedGoal.getGoal().toString()).collect(Collectors.toSet()), bee.getPossibleHives())));
 
-        }
+        //}
     }
 
     public void sendBreezeDebugData(ServerWorld world, BreezeEntity breeze)
@@ -391,12 +483,12 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("breeze"))
-        {
-            this.sendToAll(world, new DebugBreezeCustomPayload(new DebugBreezeCustomPayload.BreezeInfo(
+        //if (this.enabledDebugPackets.getValue().contains("breeze"))
+        //{
+            this.sendDebugData(world, new DebugBreezeCustomPayload(new DebugBreezeCustomPayload.BreezeInfo(
                     breeze.getUuid(), breeze.getId(), breeze.getTarget() == null ? null : breeze.getTarget().getId(),
                     breeze.getBrain().getOptionalRegisteredMemory(MemoryModuleType.BREEZE_JUMP_TARGET).orElse(null))));
-        }
+        //}
     }
 
     public void sendGameEvent(ServerWorld world, RegistryEntry<GameEvent> event, Vec3d pos)
@@ -405,10 +497,10 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("game_event"))
-        {
-            event.getKey().ifPresent((key) -> this.sendToAll(world, new DebugGameEventCustomPayload(key, pos)));
-        }
+        //if (this.enabledDebugPackets.getValue().contains("game_event"))
+        //{
+            event.getKey().ifPresent((key) -> this.sendDebugData(world, new DebugGameEventCustomPayload(key, pos)));
+        //}
     }
 
     public void sendGameEventListener(ServerWorld world, GameEventListener eventListener)
@@ -417,10 +509,10 @@ public class DebugDataProvider extends DataProviderBase
         {
             return;
         }
-        if (this.enabledDebugPackets.getValue().contains("game_event"))
-        {
-            this.sendToAll(world, new DebugGameEventListenersCustomPayload(eventListener.getPositionSource(), eventListener.getRange()));
-        }
+        //if (this.enabledDebugPackets.getValue().contains("game_event"))
+        //{
+            this.sendDebugData(world, new DebugGameEventListenersCustomPayload(eventListener.getPositionSource(), eventListener.getRange()));
+        //}
     }
 
     // Tools

@@ -393,7 +393,7 @@ public class HudDataProvider extends DataProviderBase
     public void setRefreshWeatherDataComplete()
     {
         this.refreshWeatherData = false;
-        Servux.debugLog("setRefreshWeatherDataComplete()");
+        //Servux.debugLog("setRefreshWeatherDataComplete()");
     }
 
     public long getWorldSeed()
