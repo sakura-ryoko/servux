@@ -146,6 +146,11 @@ public class DebugDataProvider extends DataProviderBase
     }
      */
 
+    public boolean register(ServerPlayerEntity player)
+    {
+        return this.register(player, null);
+    }
+
     public boolean register(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
         // System.out.printf("register\n");
@@ -168,6 +173,11 @@ public class DebugDataProvider extends DataProviderBase
         }
 
         return registered;
+    }
+
+    public boolean unregister(ServerPlayerEntity player)
+    {
+        return this.unregister(player, null);
     }
 
     public boolean unregister(ServerPlayerEntity player, @Nullable NbtCompound nbt)

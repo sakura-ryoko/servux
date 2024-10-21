@@ -17,12 +17,13 @@ public class PlayerListener implements IPlayerListener
         EntitiesDataProvider.INSTANCE.sendMetadata(player);
         LitematicsDataProvider.INSTANCE.sendMetadata(player);
         TweaksDataProvider.INSTANCE.sendMetadata(player);
-        DebugDataProvider.INSTANCE.sendMetadata(player);
+        DebugDataProvider.INSTANCE.register(player);
     }
 
     @Override
     public void onPlayerLeave(ServerPlayerEntity player)
     {
         StructureDataProvider.INSTANCE.unregister(player);
+        DebugDataProvider.INSTANCE.unregister(player);
     }
 }
