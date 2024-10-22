@@ -66,7 +66,7 @@ public class DebugDataProvider extends DataProviderBase
     protected final HashMap<UUID, NbtCompound> registeredPlayers = new HashMap<>();
     protected final NbtCompound metadata = new NbtCompound();
 
-    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 2, 4, 0);
     //private final ServuxStringListSetting enabledDebugPackets = new ServuxStringListSetting(this, "debug_enabled", List.of("chunk_watcher", "poi", "pathfinding", "neighbor_update", "structures", "goal_selector", "raids", "brain", "bees", "breeze", "game_event"));
     //private final ServuxBoolSetting enableServerDevelopmentMode = new ServuxBoolSetting(this, "server_development_mode", false);
     private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel);
@@ -76,7 +76,7 @@ public class DebugDataProvider extends DataProviderBase
         super("debug_data",
               ServuxDebugHandler.CHANNEL_ID,
               ServuxDebugPacket.PROTOCOL_VERSION,
-              0, Reference.MOD_ID + ".provider.debug_data",
+              2, Reference.MOD_ID + ".provider.debug_data",
               "Vanilla Debug Data provider.");
 
         this.metadata.putString("name", this.getName());
@@ -167,7 +167,7 @@ public class DebugDataProvider extends DataProviderBase
 
         if (this.registeredPlayers.containsKey(uuid) == false)
         {
-            this.registeredPlayers.put(uuid, data != null ? data : new NbtCompound());
+            this.registeredPlayers.put(uuid, data != null ? data.copy() : new NbtCompound());
             this.sendMetadata(player);
             registered = true;
         }
