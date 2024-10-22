@@ -57,7 +57,7 @@ import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringListSetting;
 
-@SuppressWarnings({"unchecked", "deprecated"})
+@SuppressWarnings({"unchecked", "deprecation"})
 public class DebugDataProvider extends DataProviderBase
 {
     public static final DebugDataProvider INSTANCE = new DebugDataProvider();
@@ -408,7 +408,7 @@ public class DebugDataProvider extends DataProviderBase
         //}
     }
 
-    public void sendBrainDebugData(ServerWorld serverWorld, LivingEntity livingEntity, List<String> memories)
+    public void sendBrainDebugData(ServerWorld serverWorld, LivingEntity livingEntity)
     {
         if (this.isEnabled() == false)
         {
@@ -480,8 +480,8 @@ public class DebugDataProvider extends DataProviderBase
                     wantsGolem, angerLevel,
                     entity.getBrain().getPossibleActivities().stream().map(Activity::toString).toList(),
                     entity.getBrain().getRunningTasks().stream().map(Task::getName).toList(),
-                    //this.listMemories(entity, serverWorld.getTime()),
-                    memories,
+                    this.listMemories(entity, serverWorld.getTime()),
+                    //memories,
                     gossips, pois, potentialPois)));
         //}
     }

@@ -3,10 +3,14 @@ package fi.dy.masa.servux.mixin.debug;
 import java.util.Collection;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
+import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.passive.BeeEntity;
 import net.minecraft.network.packet.s2c.custom.DebugRedstoneUpdateOrderCustomPayload;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.DebugInfoSender;
@@ -80,7 +84,6 @@ public class MixinDebugInfoSender
     }
 
     //FIXME (CustomPayload Error)
-    /*
     @Inject(method = "sendPathfindingData", at = @At("HEAD"))
     private static void servux_onSendPathfindingData(World world, MobEntity mob, @Nullable Path path, float nodeReachProximity, CallbackInfo ci)
     {
@@ -89,7 +92,6 @@ public class MixinDebugInfoSender
             DebugDataProvider.INSTANCE.sendPathfindingData(serverWorld, mob, path, nodeReachProximity);
         }
     }
-     */
 
     @Inject(method = "sendNeighborUpdate", at = @At("HEAD"))
     private static void servux_onSendNeighborUpdate(World world, BlockPos pos, CallbackInfo ci)
@@ -128,19 +130,16 @@ public class MixinDebugInfoSender
     }
 
     //FIXME (CustomPayload Error)
-    /*
     @Inject(method = "sendBrainDebugData", at = @At("HEAD"))
     private static void servux_onSendBrainDebugData(LivingEntity living, CallbackInfo ci)
     {
         if (living.getWorld() instanceof ServerWorld world)
         {
-            DebugDataProvider.INSTANCE.sendBrainDebugData(world, living, listMemories(living, world.getTime()));
+            DebugDataProvider.INSTANCE.sendBrainDebugData(world, living);
         }
     }
-     */
 
     //FIXME (CustomPayload Error)
-    /*
     @Inject(method = "sendBeeDebugData", at = @At("HEAD"))
     private static void servux_onSendBeeDebugData(BeeEntity bee, CallbackInfo ci)
     {
@@ -149,7 +148,6 @@ public class MixinDebugInfoSender
             DebugDataProvider.INSTANCE.sendBeeDebugData(world, bee);
         }
     }
-     */
 
     @Inject(method = "sendBreezeDebugData", at = @At("HEAD"))
     private static void servux_onSendBreezeDebugData(BreezeEntity breeze, CallbackInfo ci)
