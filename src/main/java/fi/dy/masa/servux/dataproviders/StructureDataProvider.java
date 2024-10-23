@@ -55,11 +55,7 @@ public class StructureDataProvider extends DataProviderBase
     private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
     private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
     private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
-    private ServuxBoolSetting shareWeatherStatus = new ServuxBoolSetting(this, "share_weather_status", false);
-    private ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
-    private ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
-    private ServuxIntSetting seedPermissionLevel = new ServuxIntSetting(this, "seed_permission_level", 2, 4, 0);
-    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout, this.shareWeatherStatus, this.weatherPermissionLevel, this.shareSeed, this.seedPermissionLevel);
+    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
     protected StructureDataProvider()
     {
@@ -124,7 +120,7 @@ public class StructureDataProvider extends DataProviderBase
 
             List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
             this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
-            this.lastTick = tickCounter;
+            //this.lastTick = tickCounter;
 
             profiler.swap(this.getName() + "_players");
             for (ServerPlayerEntity player : playerList)
@@ -207,7 +203,6 @@ public class StructureDataProvider extends DataProviderBase
                 Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().getLiteralString());
 
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
-                this.refreshWeatherData(player, null);
                 this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance()+2, tickCounter);
             }
 
@@ -514,59 +509,6 @@ public class StructureDataProvider extends DataProviderBase
         }
 
         return true;
-    }
-
-    public boolean shouldRefreshWeatherData() { return this.refreshWeatherData; }
-
-    public void setRefreshWeatherDataComplete()
-    {
-        this.refreshWeatherData = false;
-        //Servux.debugLog("setRefreshWeatherDataComplete()");
-    }
-
-    public long getWorldSeed()
-    {
-        return this.worldSeed;
-    }
-
-    public void setWorldSeed(long seed)
-    {
-        if (this.worldSeed != seed)
-        {
-            if (this.shareSeed.getValue())
-            {
-                this.metadata.remove("worldSeed");
-                this.metadata.putLong("worldSeed", seed);
-                this.refreshSpawnMetadata = true;
-            }
-
-            Servux.debugLog("setWorldSeed(): updating World Seed [{}] -> [{}]", this.worldSeed, seed);
-        }
-
-        this.worldSeed = seed;
-    }
-
-    public void checkWorldSeed(MinecraftServer server)
-    {
-        if (this.shareSeed.getValue())
-        {
-            ServerWorld world = server.getOverworld();
-
-            if (world != null)
-            {
-                this.setWorldSeed(world.getSeed());
-            }
-        }
-    }
-
-    public boolean hasPermissionsForWeather(ServerPlayerEntity player)
-    {
-        return Permissions.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
-    }
-
-    public boolean hasPermissionsForSeed(ServerPlayerEntity player)
-    {
-        return Permissions.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
     }
 
     @Override
