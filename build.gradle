@@ -6,7 +6,7 @@ sourceCompatibility = JavaVersion.VERSION_21
 targetCompatibility = JavaVersion.VERSION_21
 
 repositories {
-	maven { url 'https://jitpack.io' }
+	//maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -21,8 +21,8 @@ dependencies {
 	include(modApi(fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)))
 
 	// Lucko Permissions API
-	//modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
-	modImplementation include("com.github.sakura-ryoko:fabric-permissions-api:${project.fabric_permissions_api_id}")
+	modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
+	//modImplementation include("com.github.sakura-ryoko:fabric-permissions-api:${project.fabric_permissions_api_id}")
 }
 
 group = project.group + "." + project.mod_id
