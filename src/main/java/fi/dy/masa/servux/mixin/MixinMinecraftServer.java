@@ -27,6 +27,7 @@ public abstract class MixinMinecraftServer
 {
     @Shadow private int ticks;
     @Shadow public abstract ResourceManager getResourceManager();
+    @Shadow private Profiler profiler;
 
     @Inject(method = "tick", at = @At(value = "RETURN", ordinal = 1))
     private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci, @Local Profiler profiler)

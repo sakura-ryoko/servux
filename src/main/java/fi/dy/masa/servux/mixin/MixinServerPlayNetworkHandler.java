@@ -34,7 +34,7 @@ public class MixinServerPlayNetworkHandler
         {
             if (EntitiesDataProvider.INSTANCE.hasNbtQueryPermission(this.player))
             {
-                Servux.debugLog("received NbtQueryBlock request from: {}", this.player.getName().getLiteralString());
+                //Servux.debugLog("received NbtQueryBlock request from: {}", this.player.getName().getLiteralString());
                 return 0;
             }
             else
@@ -55,7 +55,7 @@ public class MixinServerPlayNetworkHandler
         {
             if (EntitiesDataProvider.INSTANCE.hasNbtQueryPermission(this.player))
             {
-                Servux.debugLog("received NbtQueryEntity request from: {}", this.player.getName().getLiteralString());
+                //Servux.debugLog("received NbtQueryEntity request from: {}", this.player.getName().getLiteralString());
                 return 0;
             }
             else
