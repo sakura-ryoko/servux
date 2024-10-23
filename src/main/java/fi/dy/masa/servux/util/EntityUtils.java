@@ -5,6 +5,7 @@ import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
@@ -85,7 +86,7 @@ public class EntityUtils
     {
         try
         {
-            Optional<Entity> optional = EntityType.getEntityFromNbt(nbt, world);
+            Optional<Entity> optional = EntityType.getEntityFromNbt(nbt, world, SpawnReason.LOAD);
 
             if (optional.isPresent())
             {
@@ -103,9 +104,9 @@ public class EntityUtils
 
     /**
      * Note: This does NOT spawn any of the entities in the world!
-     * @param nbt
-     * @param world
-     * @return
+     * @param nbt ()
+     * @param world ()
+     * @return ()
      */
     @Nullable
     public static Entity createEntityAndPassengersFromNBT(NbtCompound nbt, World world)

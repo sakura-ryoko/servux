@@ -1,22 +1,22 @@
 package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import fi.dy.masa.servux.settings.ServuxStringSetting;
-import fi.dy.masa.servux.util.i18nLang;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringSetting;
 import fi.dy.masa.servux.util.StringUtils;
+import fi.dy.masa.servux.util.i18nLang;
 
 public class ServuxConfigProvider extends DataProviderBase
 {
@@ -76,12 +76,6 @@ public class ServuxConfigProvider extends DataProviderBase
     public void unregisterHandler()
     {
         // NO-OP
-    }
-
-    @Override
-    public IPluginServerPlayHandler<?> getPacketHandler()
-    {
-        return null;
     }
 
     public void doReloadConfig(ServerCommandSource source)

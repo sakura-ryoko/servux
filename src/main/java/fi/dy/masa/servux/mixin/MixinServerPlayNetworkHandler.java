@@ -10,6 +10,7 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(value = ServerPlayNetworkHandler.class, priority = 1005)
@@ -18,7 +19,7 @@ public class MixinServerPlayNetworkHandler
     @Shadow public ServerPlayerEntity player;
 
     @Redirect(method = "onPlayerInteractBlock", require = 0,
-            at = @At(value = "INVOKE",
+              at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/util/math/Vec3d;subtract(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d servux$removeHitPosCheck(Vec3d hitVec, Vec3d blockCenter)
     {

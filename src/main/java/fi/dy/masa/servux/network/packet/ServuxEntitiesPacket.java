@@ -23,7 +23,6 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     private BlockPos pos;
     private NbtCompound nbt;
     private PacketByteBuf buffer;
-    private List<ChunkPos> requestingChunks;
     public static final int PROTOCOL_VERSION = 1;
 
     private ServuxEntitiesPacket(Type type)
@@ -121,20 +120,6 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
         packet.nbt = new NbtCompound();
-        return packet;
-    }
-
-    private static ServuxEntitiesPacket LitematicaPasteRequest(NbtCompound nbtCompound)
-    {
-        var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_LITEMATICA_PASTE);
-        packet.nbt = nbtCompound;
-        return packet;
-    }
-
-    private static ServuxEntitiesPacket RequestAllEntitiesInChunk(List<ChunkPos> chunkPosList)
-    {
-        var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_REQUEST_ALL_ENTITIES_IN_CHUNK);
-        packet.requestingChunks = chunkPosList;
         return packet;
     }
 
@@ -284,18 +269,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                     Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            case PACKET_C2S_REQUEST_ALL_ENTITIES_IN_CHUNK ->
-            {
-                try
-                {
-                    output.writeCollection(this.requestingChunks, PacketByteBuf::writeChunkPos);
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxEntitiesPacket#toPacket: error writing RequestAllEntitiesInChunk to packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_LITEMATICA_PASTE ->
+            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA ->
             {
                 // Write NBT
                 try
@@ -421,28 +395,6 @@ public class ServuxEntitiesPacket implements IServerPayloadData
                     Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            case PACKET_C2S_LITEMATICA_PASTE ->
-            {
-                try
-                {
-                    return ServuxEntitiesPacket.LitematicaPasteRequest((NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading LitematicaPasteRequest from packet: [{}]", e.getLocalizedMessage());
-                }
-            }
-            case PACKET_C2S_REQUEST_ALL_ENTITIES_IN_CHUNK ->
-            {
-                try
-                {
-                    return ServuxEntitiesPacket.RequestAllEntitiesInChunk(input.readList(PacketByteBuf::readChunkPos));
-                }
-                catch (Exception e)
-                {
-                    Servux.logger.error("ServuxEntitiesPacket#fromPacket: error reading RequestAllEntitiesInChunk from packet: [{}]", e.getLocalizedMessage());
-                }
-            }
             default -> Servux.logger.error("ServuxEntitiesPacket#fromPacket: Unknown packet type!");
         }
 
@@ -490,9 +442,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
         PACKET_S2C_NBT_RESPONSE_DATA(11),
         // For Packet Splitter (Oversize Packets, C2S)
         PACKET_C2S_NBT_RESPONSE_START(12),
-        PACKET_C2S_NBT_RESPONSE_DATA(13),
-        PACKET_C2S_LITEMATICA_PASTE(14),
-        PACKET_C2S_REQUEST_ALL_ENTITIES_IN_CHUNK(15);
+        PACKET_C2S_NBT_RESPONSE_DATA(13);
 
         private final int type;
 

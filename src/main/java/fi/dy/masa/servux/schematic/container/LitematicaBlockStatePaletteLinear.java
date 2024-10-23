@@ -1,15 +1,17 @@
 package fi.dy.masa.servux.schematic.container;
 
+import java.util.List;
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryEntryLookup;
+import net.minecraft.registry.RegistryKeys;
 
-import javax.annotation.Nullable;
-import java.util.List;
+import fi.dy.masa.servux.dataproviders.DataProviderManager;
 
 public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStatePalette
 {
@@ -87,7 +89,10 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
     @Override
     public void readFromNBT(NbtList tagList)
     {
-        RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
+        //RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
+        RegistryEntryLookup<Block> lookup = DataProviderManager.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
+        // Ugly, but it should work, without changing the ILitematicaBlockStatePalette interface.
+
         final int size = tagList.size();
 
         for (int i = 0; i < size; ++i)

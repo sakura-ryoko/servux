@@ -13,6 +13,7 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.PacketSplitter;
@@ -74,13 +75,14 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.register(player);
             }
-            case PACKET_C2S_REQUEST_SPAWN_METADATA -> StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+            // Keep handler here for now, but send it to the HudDataProvider
+            case PACKET_C2S_REQUEST_SPAWN_METADATA -> HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             case PACKET_C2S_STRUCTURES_UNREGISTER ->
             {
                 Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.unregister(player);
-                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
-                StructureDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
+                //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+                //HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
             }
             default -> Servux.logger.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }

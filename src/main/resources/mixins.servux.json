@@ -1,22 +1,27 @@
 {
-    "required": true,
-    "package": "fi.dy.masa.servux.mixin",
-    "compatibilityLevel": "JAVA_17",
-    "minVersion": "0.8",
-    "mixins": [
-        "MixinBlockItem",
-        "MixinCommandManager",
-        "MixinMinecraftDedicatedServer",
-        "MixinMinecraftServer",
-        "MixinPlayerManager",
-        "MixinRailBlocks",
-        "MixinServerChunkLoadingManager",
-        "MixinServerPlayNetworkHandler",
-        "MixinServerWorld",
-        "MixinWorld",
-        "MixinWorldChunk"
-    ],
-    "injectors": {
-        "defaultRequire": 1
-    }
+  "required": true,
+  "package": "fi.dy.masa.servux.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "minVersion": "0.8",
+  "mixins": [
+    "MixinBlockItem",
+    "MixinCommandManager",
+    "MixinMain",
+    "MixinMinecraftDedicatedServer",
+    "MixinMinecraftServer",
+    "MixinPlayerManager",
+    "MixinRailBlocks",
+    "MixinServerChunkLoadingManager",
+    "MixinServerPlayNetworkHandler",
+    "MixinServerWorld",
+    "MixinWorld",
+    "MixinWorldChunk",
+    "debug.IMixinMobEntity",
+    "debug.MixinDebugInfoSender",
+    "debug.MixinPath",
+    "debug.MixinSharedConstants"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }
