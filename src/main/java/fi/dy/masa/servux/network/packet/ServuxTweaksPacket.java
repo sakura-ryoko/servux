@@ -269,6 +269,18 @@ public class ServuxTweaksPacket implements IServerPayloadData
                     Servux.logger.error("ServuxTweaksPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
+            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA ->
+            {
+                // Write NBT
+                try
+                {
+                    output.writeNbt(this.nbt);
+                }
+                catch (Exception e)
+                {
+                    Servux.logger.error("ServuxTweaksPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                }
+            }
             default -> Servux.logger.error("ServuxTweaksPacket#toPacket: Unknown packet type!");
         }
     }
@@ -444,7 +456,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
 
     public record Payload(ServuxTweaksPacket data) implements CustomPayload
     {
-        public static final Id<Payload> ID = new Id<>(ServuxEntitiesHandler.CHANNEL_ID);
+        public static final Id<Payload> ID = new Id<>(ServuxTweaksHandler.CHANNEL_ID);
         public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
 
         public Payload(PacketByteBuf input)

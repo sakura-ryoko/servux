@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 
 @Mixin(ServerWorld.class)
@@ -26,6 +27,8 @@ public abstract class MixinServerWorld
     {
         StructureDataProvider.INSTANCE.setSpawnPos(pos);
         StructureDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
+        HudDataProvider.INSTANCE.setSpawnPos(pos);
+        HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
     }
 
     @Inject(method = "tickWeather()V", at = @At(value = "INVOKE",
@@ -35,5 +38,6 @@ public abstract class MixinServerWorld
                                       @Local(ordinal = 1) boolean bl2)
     {
         StructureDataProvider.INSTANCE.tickWeather(i, bl2 ? j : k, bl2);
+        HudDataProvider.INSTANCE.tickWeather(i, bl2 ? j : k, bl2);
     }
 }

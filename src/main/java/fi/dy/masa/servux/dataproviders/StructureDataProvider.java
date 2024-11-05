@@ -201,6 +201,7 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
+    @Deprecated(forRemoval = true)
     public void tickWeather(int clearTime, int rainTime, boolean isThunder)
     {
         if (rainTime > 1)
@@ -615,6 +616,7 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     // TODO --> Move out of structures channel in the future (Some Metadata channel, perhaps)
+    @Deprecated(forRemoval = true)
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
         NbtCompound nbt = new NbtCompound();
@@ -636,6 +638,7 @@ public class StructureDataProvider extends DataProviderBase
         HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_SPAWN_METADATA, nbt));
     }
 
+    @Deprecated(forRemoval = true)
     public void refreshWeatherData(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
         NbtCompound nbt = new NbtCompound();
@@ -663,6 +666,7 @@ public class StructureDataProvider extends DataProviderBase
         HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_WEATHER_DATA, nbt));
     }
 
+    @Deprecated(forRemoval = true)
     public BlockPos getSpawnPos()
     {
         if (this.spawnPos == null)
@@ -673,6 +677,7 @@ public class StructureDataProvider extends DataProviderBase
         return this.spawnPos;
     }
 
+    @Deprecated(forRemoval = true)
     public void setSpawnPos(BlockPos spawnPos)
     {
         if (this.spawnPos.equals(spawnPos) == false)
@@ -691,6 +696,7 @@ public class StructureDataProvider extends DataProviderBase
         this.spawnPos = spawnPos;
     }
 
+    @Deprecated(forRemoval = true)
     public int getSpawnChunkRadius()
     {
         if (this.spawnChunkRadius < 0)
@@ -701,6 +707,7 @@ public class StructureDataProvider extends DataProviderBase
         return this.spawnChunkRadius;
     }
 
+    @Deprecated(forRemoval = true)
     public void setSpawnChunkRadius(int radius)
     {
         if (this.spawnChunkRadius != radius)
@@ -715,27 +722,33 @@ public class StructureDataProvider extends DataProviderBase
         this.spawnChunkRadius = radius;
     }
 
+    @Deprecated(forRemoval = true)
     public boolean shouldRefreshSpawnMetadata() { return this.refreshSpawnMetadata; }
 
+    @Deprecated(forRemoval = true)
     public void setRefreshSpawnMetadataComplete()
     {
         this.refreshSpawnMetadata = false;
         Servux.debugLog("setRefreshSpawnMetadataComplete()");
     }
 
+    @Deprecated(forRemoval = true)
     public boolean shouldRefreshWeatherData() { return this.refreshWeatherData; }
 
+    @Deprecated(forRemoval = true)
     public void setRefreshWeatherDataComplete()
     {
         this.refreshWeatherData = false;
         //Servux.debugLog("setRefreshWeatherDataComplete()");
     }
 
+    @Deprecated(forRemoval = true)
     public long getWorldSeed()
     {
         return this.worldSeed;
     }
 
+    @Deprecated(forRemoval = true)
     public void setWorldSeed(long seed)
     {
         if (this.worldSeed != seed)
@@ -753,6 +766,7 @@ public class StructureDataProvider extends DataProviderBase
         this.worldSeed = seed;
     }
 
+    @Deprecated(forRemoval = true)
     public void checkWorldSeed(MinecraftServer server)
     {
         if (this.shareSeed.getValue())
@@ -766,11 +780,13 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
+    @Deprecated(forRemoval = true)
     public boolean hasPermissionsForWeather(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
     }
 
+    @Deprecated(forRemoval = true)
     public boolean hasPermissionsForSeed(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
