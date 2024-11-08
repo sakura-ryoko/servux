@@ -42,7 +42,6 @@ public abstract class MixinServerWorld
         this.worldProperties.setRaining(bl3);
          */
 
-        //StructureDataProvider.INSTANCE.tickWeather(i, bl2 ? j : k, bl2);
         HudDataProvider.INSTANCE.tickWeather(i, k, j, bl3, bl2);
     }
 }

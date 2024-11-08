@@ -15,6 +15,7 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.PacketSplitter;
