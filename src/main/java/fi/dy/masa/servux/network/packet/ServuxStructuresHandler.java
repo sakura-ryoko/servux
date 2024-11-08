@@ -4,16 +4,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
 import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.PacketSplitter;
@@ -78,7 +79,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             case PACKET_C2S_REQUEST_SPAWN_METADATA ->
             {
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
-                HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+                //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             }
             case PACKET_C2S_STRUCTURES_UNREGISTER ->
             {
@@ -86,8 +87,8 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
                 StructureDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
-                HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
-                HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
+                //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+                //HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
             }
             default -> Servux.logger.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }

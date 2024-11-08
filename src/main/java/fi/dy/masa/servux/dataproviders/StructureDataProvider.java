@@ -620,19 +620,22 @@ public class StructureDataProvider extends DataProviderBase
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
         NbtCompound nbt = new NbtCompound();
-        BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
+        //BlockPos spawnPos = StructureDataProvider.INSTANCE.getSpawnPos();
+        BlockPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
 
         nbt.putString("id", getNetworkChannel().toString());
         nbt.putString("servux", Reference.MOD_STRING);
         nbt.putInt("spawnPosX", spawnPos.getX());
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());
-        nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
+        //nbt.putInt("spawnChunkRadius", StructureDataProvider.INSTANCE.getSpawnChunkRadius());
+        nbt.putInt("spawnChunkRadius", HudDataProvider.INSTANCE.getSpawnChunkRadius());
 
         if (this.shareSeed.getValue() && this.hasPermissionsForSeed(player))
         {
             //Servux.debugLog("refreshSpawnMetadata() player [{}] has seedPermissions.", player.getName().getLiteralString());
-            nbt.putLong("worldSeed", this.worldSeed);
+            //nbt.putLong("worldSeed", this.worldSeed);
+            nbt.putLong("worldSeed", HudDataProvider.INSTANCE.getWorldSeed());
         }
 
         HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_SPAWN_METADATA, nbt));
@@ -647,9 +650,12 @@ public class StructureDataProvider extends DataProviderBase
         {
             return;
         }
+
+        nbt.copyFrom(HudDataProvider.INSTANCE.cloneWeatherData());
         nbt.putString("id", getNetworkChannel().toString());
         nbt.putString("servux", Reference.MOD_STRING);
 
+        /*
         if (this.isRaining)
         {
             nbt.putInt("SetRaining", this.weatherTime);
@@ -662,6 +668,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             nbt.putInt("SetClear", this.weatherTime);
         }
+         */
 
         HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_WEATHER_DATA, nbt));
     }
@@ -674,7 +681,8 @@ public class StructureDataProvider extends DataProviderBase
             this.setSpawnPos(BlockPos.ORIGIN);
         }
 
-        return this.spawnPos;
+        //return this.spawnPos;
+        return HudDataProvider.INSTANCE.getSpawnPos();
     }
 
     @Deprecated(forRemoval = true)
@@ -704,7 +712,8 @@ public class StructureDataProvider extends DataProviderBase
             this.spawnChunkRadius = 2;
         }
 
-        return this.spawnChunkRadius;
+        //return this.spawnChunkRadius;
+        return HudDataProvider.INSTANCE.getSpawnChunkRadius();
     }
 
     @Deprecated(forRemoval = true)
@@ -745,7 +754,8 @@ public class StructureDataProvider extends DataProviderBase
     @Deprecated(forRemoval = true)
     public long getWorldSeed()
     {
-        return this.worldSeed;
+        //return this.worldSeed;
+        return HudDataProvider.INSTANCE.getWorldSeed();
     }
 
     @Deprecated(forRemoval = true)

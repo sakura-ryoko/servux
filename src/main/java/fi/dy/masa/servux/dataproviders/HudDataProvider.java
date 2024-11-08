@@ -38,7 +38,9 @@ public class HudDataProvider extends DataProviderBase
     private BlockPos spawnPos = BlockPos.ORIGIN;
     private int spawnChunkRadius = -1;
     private long worldSeed = 0;
-    private int weatherTime = -1;
+    private int clearWeatherTime = -1;
+    private int rainWeatherTime = -1;
+    private int thunderWeatherTime = -1;
     private boolean isRaining;
     private boolean isThundering;
     private long lastTick;
@@ -154,46 +156,18 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
-    public void tickWeather(int clearTime, int rainTime, boolean isThunder)
+    public void tickWeather(int clearTime, int rainTime, int thunderTime, boolean isRaining, boolean isThunder)
     {
-        if (rainTime > 1)
-        {
-            if (isThunder)
-            {
-                this.isThundering = true;
-                this.isRaining = false;
-            }
-            else
-            {
-                this.isThundering = false;
-                this.isRaining = true;
-            }
+        this.clearWeatherTime = clearTime;
+        this.rainWeatherTime = rainTime;
+        this.thunderWeatherTime = thunderTime;
+        this.isRaining = isRaining;
+        this.isThundering = isThunder;
 
-            this.weatherTime = rainTime;
-
-            if ((this.lastTick - this.lastWeatherTick) > this.getTickInterval())
-            {
-                // Don't spam players with weather ticks
-                this.refreshWeatherData = true;
-            }
-        }
-        else if (clearTime > 0 && (this.isRaining || this.isThundering))
+        if ((this.lastTick - this.lastWeatherTick) > this.getTickInterval())
         {
-            this.isThundering = false;
-            this.isRaining = false;
-            this.weatherTime = clearTime;
+            // Don't spam players with weather ticks
             this.refreshWeatherData = true;
-        }
-        else
-        {
-            this.weatherTime = clearTime;
-
-            if ((this.lastTick - this.lastWeatherTick) > (this.getTickInterval() * 4))
-            {
-                // Don't spam players with weather ticks,
-                // Clear Weather packets don't need to be sent as often
-                this.refreshWeatherData = true;
-            }
         }
     }
 
@@ -268,20 +242,53 @@ public class HudDataProvider extends DataProviderBase
         nbt.putString("id", getNetworkChannel().toString());
         nbt.putString("servux", Reference.MOD_STRING);
 
-        if (this.isRaining)
+        if (this.isRaining && this.rainWeatherTime > -1)
         {
-            nbt.putInt("SetRaining", this.weatherTime);
-        }
-        else if (this.isThundering)
-        {
-            nbt.putInt("SetThundering", this.weatherTime);
+            nbt.putInt("SetRaining", this.rainWeatherTime);
+            nbt.putBoolean("isRaining", true);
         }
         else
         {
-            nbt.putInt("SetClear", this.weatherTime);
+            nbt.putBoolean("isRaining", false);
+        }
+        if (this.isThundering && this.thunderWeatherTime > -1)
+        {
+            nbt.putInt("SetThundering", this.thunderWeatherTime);
+            nbt.putBoolean("isThundering", true);
+        }
+        else
+        {
+            nbt.putBoolean("isThundering", false);
+        }
+        if (this.clearWeatherTime > -1)
+        {
+            nbt.putInt("SetClear", this.clearWeatherTime);
         }
 
         HANDLER.encodeServerData(player, ServuxHudPacket.WeatherTick(nbt));
+    }
+
+    @Deprecated(forRemoval = true)
+    public NbtCompound cloneWeatherData()
+    {
+        NbtCompound nbt = new NbtCompound();
+
+        if (this.isRaining && this.rainWeatherTime > -1)
+        {
+            nbt.putInt("SetRaining", this.rainWeatherTime);
+            nbt.putBoolean("isRaining", true);
+        }
+        if (this.isThundering && this.thunderWeatherTime > -1)
+        {
+            nbt.putInt("SetThundering", this.thunderWeatherTime);
+            nbt.putBoolean("isThundering", true);
+        }
+        if (this.clearWeatherTime > -1)
+        {
+            nbt.putInt("SetClear", this.clearWeatherTime);
+        }
+
+        return nbt;
     }
 
     // TODO 1.21.2 +

@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.HudDataProvider;
-import fi.dy.masa.servux.dataproviders.StructureDataProvider;
 import fi.dy.masa.servux.event.ServerHandler;
 
 @Mixin(MinecraftServer.class)
@@ -43,8 +42,8 @@ public abstract class MixinMinecraftServer
     private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
                                              @Local BlockPos blockPos, @Local int i)
     {
-        StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
-        StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
+        //StructureDataProvider.INSTANCE.setSpawnPos(blockPos);
+        //StructureDataProvider.INSTANCE.setSpawnChunkRadius(i);
         HudDataProvider.INSTANCE.setSpawnPos(blockPos);
         HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
     }
