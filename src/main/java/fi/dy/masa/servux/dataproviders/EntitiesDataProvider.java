@@ -4,8 +4,11 @@ import java.util.List;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -123,13 +126,28 @@ public class EntitiesDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
+        //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = new NbtCompound();
 
-        if (entity != null && entity.saveSelfNbt(nbt))
+        if (entity != null)
         {
-            HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+            if (entity instanceof PlayerEntity)
+            {
+                Identifier id = EntityType.getId(entity.getType());
+                nbt = entity.writeNbt(nbt);
+
+                if (id != null)
+                {
+                    nbt.putString("id", id.toString());
+                }
+
+                HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+            }
+            else if (entity.saveSelfNbt(nbt))
+            {
+                HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
+            }
         }
     }
 
