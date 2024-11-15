@@ -5,9 +5,11 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
 import fi.dy.masa.servux.Reference;
@@ -24,7 +26,7 @@ public class TweaksDataProvider extends DataProviderBase
     public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
     protected final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", Text.of("Permission Level"), Text.of("The permission level required to access the data provider"), 0, 4, 0);
+    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
 
     protected TweaksDataProvider()
@@ -120,11 +122,29 @@ public class TweaksDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("onEntityRequest(): from player {}", player.getName().getLiteralString());
-
+        //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
-        HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
+        NbtCompound nbt = new NbtCompound();
+
+        if (entity != null)
+        {
+            if (entity instanceof PlayerEntity)
+            {
+                Identifier id = EntityType.getId(entity.getType());
+                nbt = entity.writeNbt(nbt);
+
+                if (id != null)
+                {
+                    nbt.putString("id", id.toString());
+                }
+
+                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
+            }
+            else if (entity.saveSelfNbt(nbt))
+            {
+                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
+            }
+        }
     }
 
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)

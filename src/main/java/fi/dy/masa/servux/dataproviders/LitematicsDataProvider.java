@@ -2,23 +2,23 @@ package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
 import java.util.Set;
-
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
-import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.util.*;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -26,6 +26,10 @@ import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.*;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
@@ -134,14 +138,28 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {}", player.getName().getLiteralString());
-
+        //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
         Entity entity = player.getWorld().getEntityById(entityId);
         NbtCompound nbt = new NbtCompound();
 
-        if (entity != null && entity.saveSelfNbt(nbt))
+        if (entity != null)
         {
-            HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
+            if (entity instanceof PlayerEntity)
+            {
+                Identifier id = EntityType.getId(entity.getType());
+                nbt = entity.writeNbt(nbt);
+
+                if (id != null)
+                {
+                    nbt.putString("id", id.toString());
+                }
+
+                HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
+            }
+            else if (entity.saveSelfNbt(nbt))
+            {
+                HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
+            }
         }
     }
 
