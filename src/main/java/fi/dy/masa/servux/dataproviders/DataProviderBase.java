@@ -1,12 +1,12 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.List;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.util.JsonUtils;
+
 import net.minecraft.util.Identifier;
 
-import java.util.List;
+import fi.dy.masa.servux.settings.IServuxSetting;
 
 public abstract class DataProviderBase implements IDataProvider
 {
@@ -99,10 +99,12 @@ public abstract class DataProviderBase implements IDataProvider
     public JsonObject toJson()
     {
         JsonObject object = new JsonObject();
+
         for (IServuxSetting<?> setting : getSettings())
         {
             object.add(setting.name(), setting.writeToJson());
         }
+
         return object;
     }
 

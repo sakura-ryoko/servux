@@ -69,9 +69,9 @@ public class DataProviderManager
         boolean wasEnabled = provider.isEnabled();
         //enabled = true; // FIXME TODO remove debug
 
+        System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
         if (enabled || wasEnabled != enabled)
         {
-            //System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
             provider.setEnabled(enabled);
             this.updatePacketHandlerRegistration(provider);
 
@@ -216,13 +216,35 @@ public class DataProviderManager
                     provider.fromJson(JsonUtils.getNestedObject(root, name, false));
                 }
             }
-        }
 
-        for (IDataProvider provider : this.providersImmutable)
+            // If reading the config
+            for (IDataProvider provider : this.providersImmutable)
+            {
+                if (obj != null)
+                {
+                    this.setProviderEnabled(provider, JsonUtils.getBooleanOrDefault(obj, provider.getName(), false));
+                }
+                else
+                {
+                    this.setProviderEnabled(provider, false);
+                }
+            }
+        }
+        else
         {
-            String name = provider.getName();
-            boolean enabled = obj != null && JsonUtils.getBooleanOrDefault(obj, name, false);
-            this.setProviderEnabled(provider, enabled);
+            // If writing a new config file (Disable the debug_data by default),
+            // and then respect the config afterward.
+            for (IDataProvider provider : this.providersImmutable)
+            {
+                if (!provider.getName().equals("debug_data"))
+                {
+                    this.setProviderEnabled(provider, true);
+                }
+                else
+                {
+                    this.setProviderEnabled(provider, false);
+                }
+            }
         }
     }
 
