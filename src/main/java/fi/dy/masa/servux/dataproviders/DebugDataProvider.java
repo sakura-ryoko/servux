@@ -304,7 +304,7 @@ public class DebugDataProvider extends DataProviderBase
     {
         if (this.isEnabled())
         {
-            Registry<Structure> registry = world.getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
+            Registry<Structure> registry = world.getRegistryManager().get(RegistryKeys.STRUCTURE);
             ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos);
             Iterator<RegistryEntry<Structure>> iterator = registry.iterateEntries(StructureTags.VILLAGE).iterator();
 
