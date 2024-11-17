@@ -17,6 +17,7 @@ public class ServuxInitHandler implements IServerInitHandler
         DataProviderManager.INSTANCE.registerDataProvider(EntitiesDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(TweaksDataProvider.INSTANCE);
         DataProviderManager.INSTANCE.registerDataProvider(DebugDataProvider.INSTANCE);
+        DataProviderManager.INSTANCE.setProviderEnabled("debug_data", false);
 
         ServerHandler.getInstance().registerServerHandler(new ServerListener());
         PlayerHandler.getInstance().registerPlayerHandler(new PlayerListener());

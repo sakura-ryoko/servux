@@ -153,26 +153,31 @@ public class DebugDataProvider extends DataProviderBase
 
     public boolean register(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
-        // System.out.printf("register\n");
-        boolean registered = false;
-        MinecraftServer server = player.getServer();
-        UUID uuid = player.getUuid();
-
-        if (this.hasPermission(player) == false)
+        if (this.isEnabled())
         {
-            // No Permission
-            Servux.debugLog("debug_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            // System.out.printf("register\n");
+            boolean registered = false;
+            MinecraftServer server = player.getServer();
+            UUID uuid = player.getUuid();
+
+            if (this.hasPermission(player) == false)
+            {
+                // No Permission
+                Servux.debugLog("debug_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+                return registered;
+            }
+
+            if (this.registeredPlayers.containsKey(uuid) == false)
+            {
+                this.registeredPlayers.put(uuid, data != null ? data.copy() : new NbtCompound());
+                this.sendMetadata(player);
+                registered = true;
+            }
+
             return registered;
         }
 
-        if (this.registeredPlayers.containsKey(uuid) == false)
-        {
-            this.registeredPlayers.put(uuid, data != null ? data.copy() : new NbtCompound());
-            this.sendMetadata(player);
-            registered = true;
-        }
-
-        return registered;
+        return false;
     }
 
     public boolean unregister(ServerPlayerEntity player)
@@ -195,43 +200,49 @@ public class DebugDataProvider extends DataProviderBase
 
     public void sendMetadata(ServerPlayerEntity player)
     {
-        if (this.hasPermission(player) == false)
+        if (this.isEnabled())
         {
-            // No Permission
-            Servux.debugLog("debug_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
-            return;
-        }
+            if (this.hasPermission(player) == false)
+            {
+                // No Permission
+                Servux.debugLog("debug_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+                return;
+            }
 
-        NbtCompound nbt = new NbtCompound();
-        nbt.copyFrom(this.metadata);
+            NbtCompound nbt = new NbtCompound();
+            nbt.copyFrom(this.metadata);
 
-        Servux.debugLog("debugDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+            Servux.debugLog("debugDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
-        // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
-        if (player.networkHandler != null)
-        {
-            HANDLER.sendPlayPayload(player.networkHandler, new ServuxDebugPacket.Payload(ServuxDebugPacket.MetadataResponse(this.metadata)));
-        }
-        else
-        {
-            HANDLER.sendPlayPayload(player, new ServuxDebugPacket.Payload(ServuxDebugPacket.MetadataResponse(this.metadata)));
+            // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
+            if (player.networkHandler != null)
+            {
+                HANDLER.sendPlayPayload(player.networkHandler, new ServuxDebugPacket.Payload(ServuxDebugPacket.MetadataResponse(this.metadata)));
+            }
+            else
+            {
+                HANDLER.sendPlayPayload(player, new ServuxDebugPacket.Payload(ServuxDebugPacket.MetadataResponse(this.metadata)));
+            }
         }
     }
 
     public void confirmMetadata(ServerPlayerEntity player, NbtCompound data)
     {
-        UUID uuid = player.getUuid();
-
-        if (this.registeredPlayers.containsKey(uuid))
+        if (this.isEnabled())
         {
-            this.registeredPlayers.replace(uuid, data.copy());
-        }
-        else
-        {
-            this.registeredPlayers.put(uuid, data.copy());
-        }
+            UUID uuid = player.getUuid();
 
-        Servux.debugLog("debugDataChannel: received confirm from player {}", player.getName().getLiteralString());
+            if (this.registeredPlayers.containsKey(uuid))
+            {
+                this.registeredPlayers.replace(uuid, data.copy());
+            }
+            else
+            {
+                this.registeredPlayers.put(uuid, data.copy());
+            }
+
+            Servux.debugLog("debugDataChannel: received confirm from player {}", player.getName().getLiteralString());
+        }
     }
 
     private void sendDebugData(ServerWorld world, CustomPayload payload)
@@ -253,66 +264,46 @@ public class DebugDataProvider extends DataProviderBase
 
     public void sendChunkWatchingChange(ServerWorld world, ChunkPos pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("chunk_watcher"))
-        //{
             this.sendDebugData(world, new DebugWorldgenAttemptCustomPayload(pos.getStartPos().up(100), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
-        //}
+        }
     }
 
     public void sendPoiAdditions(ServerWorld world, BlockPos pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("poi"))
-        //{
             world.getPointOfInterestStorage().getType(pos).ifPresent((registryEntry) ->
             {
                 int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
                 String name = registryEntry.getIdAsString();
                 this.sendDebugData(world, new DebugPoiAddedCustomPayload(pos, name, tickets));
             });
-        //}
+        }
     }
 
     public void sendPoiRemoval(ServerWorld world, BlockPos pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("poi"))
-        //{
             this.sendDebugData(world, new DebugPoiRemovedCustomPayload(pos));
-        //}
+        }
     }
 
     public void sendPointOfInterest(ServerWorld world, BlockPos pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("poi"))
-        //{
             int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
             this.sendDebugData(world, new DebugPoiTicketCountCustomPayload(pos, tickets));
-        //}
+        }
     }
 
     public void sendPoi(ServerWorld world, BlockPos pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("poi"))
-        //{
             Registry<Structure> registry = world.getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
             ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos);
             Iterator<RegistryEntry<Structure>> iterator = registry.iterateEntries(StructureTags.VILLAGE).iterator();
@@ -331,44 +322,32 @@ public class DebugDataProvider extends DataProviderBase
             while (world.getStructureAccessor().getStructureStarts(chunkSectionPos, entry.value()).isEmpty());
 
             this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(chunkSectionPos), Set.of()));
-        //}
+        }
     }
 
     public void sendPathfindingData(ServerWorld world, MobEntity mob, @Nullable Path path, float nodeReachProximity)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("pathfinding"))
-        //{
             if (path != null)
             {
                 this.sendDebugData(world, new DebugPathCustomPayload(mob.getId(), path, nodeReachProximity));
             }
-        //}
+        }
     }
 
     public void sendNeighborUpdate(ServerWorld world, BlockPos pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("neighbor_update"))
-        //{
             this.sendDebugData(world, new DebugNeighborsUpdateCustomPayload(world.getTime(), pos));
-        //}
+        }
     }
 
     public void sendStructureStart(StructureWorldAccess world, StructureStart structureStart)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("structures"))
-        //{
             List<DebugStructuresCustomPayload.Piece> pieces = new ArrayList<>();
 
             for (int i = 0; i < structureStart.getChildren().size(); ++i)
@@ -378,44 +357,32 @@ public class DebugDataProvider extends DataProviderBase
 
             ServerWorld serverWorld = world.toServerWorld();
             this.sendDebugData(serverWorld, new DebugStructuresCustomPayload(serverWorld.getRegistryKey(), structureStart.getBoundingBox(), pieces));
-        //}
+        }
     }
 
     public void sendGoalSelector(ServerWorld world, MobEntity mob, GoalSelector goalSelector)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("goal_selector"))
-        //{
             List<DebugGoalSelectorCustomPayload.Goal> goals = ((IMixinMobEntity) mob).servux_getGoalSelector().getGoals().stream().map((goal) ->
                     new DebugGoalSelectorCustomPayload.Goal(goal.getPriority(), goal.isRunning(), goal.getGoal().toString())).toList();
 
             this.sendDebugData(world, new DebugGoalSelectorCustomPayload(mob.getId(), mob.getBlockPos(), goals));
-        //}
+        }
     }
 
     public void sendRaids(ServerWorld world, Collection<Raid> raids)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("raids"))
-        //{
             this.sendDebugData(world, new DebugRaidsCustomPayload(raids.stream().map(Raid::getCenter).toList()));
-        //}
+        }
     }
 
     public void sendBrainDebugData(ServerWorld serverWorld, LivingEntity livingEntity)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("brain"))
-        //{
             MobEntity entity = (MobEntity) livingEntity;
             int angerLevel;
 
@@ -483,175 +450,172 @@ public class DebugDataProvider extends DataProviderBase
                     this.listMemories(entity, serverWorld.getTime()),
                     //memories,
                     gossips, pois, potentialPois)));
-        //}
+        }
     }
 
     public void sendBeeDebugData(ServerWorld world, BeeEntity bee)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("bees"))
-        //{
             this.sendDebugData(world, new DebugBeeCustomPayload(
                     new DebugBeeCustomPayload.Bee(bee.getUuid(), bee.getId(), bee.getPos(),
                             bee.getNavigation().getCurrentPath(), bee.getHivePos(), bee.getFlowerPos(), bee.getMoveGoalTicks(),
                             bee.getGoalSelector().getGoals().stream().map((prioritizedGoal) ->
                                     prioritizedGoal.getGoal().toString()).collect(Collectors.toSet()), bee.getPossibleHives())));
 
-        //}
+        }
     }
 
     public void sendBreezeDebugData(ServerWorld world, BreezeEntity breeze)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("breeze"))
-        //{
             this.sendDebugData(world, new DebugBreezeCustomPayload(new DebugBreezeCustomPayload.BreezeInfo(
                     breeze.getUuid(), breeze.getId(), breeze.getTarget() == null ? null : breeze.getTarget().getId(),
                     breeze.getBrain().getOptionalRegisteredMemory(MemoryModuleType.BREEZE_JUMP_TARGET).orElse(null))));
-        //}
+        }
     }
 
     public void sendGameEvent(ServerWorld world, RegistryEntry<GameEvent> event, Vec3d pos)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("game_event"))
-        //{
             event.getKey().ifPresent((key) -> this.sendDebugData(world, new DebugGameEventCustomPayload(key, pos)));
-        //}
+        }
     }
 
     public void sendGameEventListener(ServerWorld world, GameEventListener eventListener)
     {
-        if (this.isEnabled() == false)
+        if (this.isEnabled())
         {
-            return;
-        }
-        //if (this.enabledDebugPackets.getValue().contains("game_event"))
-        //{
             this.sendDebugData(world, new DebugGameEventListenersCustomPayload(eventListener.getPositionSource(), eventListener.getRange()));
-        //}
+        }
     }
 
     // Tools
     private void addPoi(Brain<?> brain, MemoryModuleType<GlobalPos> memoryModuleType, Set<BlockPos> set)
     {
-        Optional<BlockPos> opt = brain.getOptionalRegisteredMemory(memoryModuleType).map(GlobalPos::pos);
+        if (this.isEnabled())
+        {
+            Optional<BlockPos> opt = brain.getOptionalRegisteredMemory(memoryModuleType).map(GlobalPos::pos);
 
-        Objects.requireNonNull(set);
-        opt.ifPresent(set::add);
+            Objects.requireNonNull(set);
+            opt.ifPresent(set::add);
+        }
     }
 
     private List<String> listMemories(LivingEntity entity, long currentTime)
     {
-        Map<MemoryModuleType<?>, Optional<? extends Memory<?>>> map = entity.getBrain().getMemories();
-        List<String> list = Lists.newArrayList();
-
-        for (Map.Entry<MemoryModuleType<?>, Optional<? extends Memory<?>>> memoryModuleTypeOptionalEntry : map.entrySet())
+        if (this.isEnabled())
         {
-            MemoryModuleType<?> memoryModuleType = memoryModuleTypeOptionalEntry.getKey();
-            Optional<? extends Memory<?>> optional = memoryModuleTypeOptionalEntry.getValue();
-            String string;
+            Map<MemoryModuleType<?>, Optional<? extends Memory<?>>> map = entity.getBrain().getMemories();
+            List<String> list = Lists.newArrayList();
 
-            if (optional.isPresent())
+            for (Map.Entry<MemoryModuleType<?>, Optional<? extends Memory<?>>> memoryModuleTypeOptionalEntry : map.entrySet())
             {
-                Memory<?> memory = optional.get();
-                Object object = memory.getValue();
+                MemoryModuleType<?> memoryModuleType = memoryModuleTypeOptionalEntry.getKey();
+                Optional<? extends Memory<?>> optional = memoryModuleTypeOptionalEntry.getValue();
+                String string;
 
-                if (memoryModuleType == MemoryModuleType.HEARD_BELL_TIME)
+                if (optional.isPresent())
                 {
-                    long l = currentTime - (Long) object;
-                    string = l + " ticks ago";
-                }
-                else if (memory.isTimed())
-                {
-                    String var10000 = this.format((ServerWorld) entity.getWorld(), object);
-                    string = var10000 + " (ttl: " + memory.getExpiry() + ")";
+                    Memory<?> memory = optional.get();
+                    Object object = memory.getValue();
+
+                    if (memoryModuleType == MemoryModuleType.HEARD_BELL_TIME)
+                    {
+                        long l = currentTime - (Long) object;
+                        string = l + " ticks ago";
+                    }
+                    else if (memory.isTimed())
+                    {
+                        String var10000 = this.format((ServerWorld) entity.getWorld(), object);
+                        string = var10000 + " (ttl: " + memory.getExpiry() + ")";
+                    }
+                    else
+                    {
+                        string = this.format((ServerWorld) entity.getWorld(), object);
+                    }
                 }
                 else
                 {
-                    string = this.format((ServerWorld) entity.getWorld(), object);
+                    string = "-";
                 }
-            }
-            else
-            {
-                string = "-";
+
+                String type = Registries.MEMORY_MODULE_TYPE.getId(memoryModuleType).getPath();
+                list.add(type + ": " + string);
             }
 
-            String type = Registries.MEMORY_MODULE_TYPE.getId(memoryModuleType).getPath();
-            list.add(type + ": " + string);
+            list.sort(String::compareTo);
+            return list;
         }
 
-        list.sort(String::compareTo);
-        return list;
+        return List.of();
     }
 
     private String format(ServerWorld world, @Nullable Object object)
     {
-        if (object == null)
+        if (this.isEnabled())
         {
-            return "-";
-        }
-        else if (object instanceof UUID)
-        {
-            return format(world, world.getEntity((UUID) object));
-        }
-        else
-        {
-            Entity entity;
-            if (object instanceof LivingEntity)
+            if (object == null)
             {
-                entity = (Entity) object;
-                return NameGenerator.name(entity);
+                return "-";
             }
-            else if (object instanceof Nameable)
+            else if (object instanceof UUID)
             {
-                return ((Nameable) object).getName().getString();
-            }
-            else if (object instanceof WalkTarget)
-            {
-                return format(world, ((WalkTarget) object).getLookTarget());
-            }
-            else if (object instanceof EntityLookTarget)
-            {
-                return format(world, ((EntityLookTarget) object).getEntity());
-            }
-            else if (object instanceof GlobalPos)
-            {
-                return format(world, ((GlobalPos) object).pos());
-            }
-            else if (object instanceof BlockPosLookTarget)
-            {
-                return format(world, ((BlockPosLookTarget) object).getBlockPos());
-            }
-            else if (object instanceof DamageSource)
-            {
-                entity = ((DamageSource) object).getAttacker();
-                return entity == null ? object.toString() : format(world, entity);
-            }
-            else if (!(object instanceof Collection))
-            {
-                return object.toString();
+                return format(world, world.getEntity((UUID) object));
             }
             else
             {
-                List<String> list = Lists.newArrayList();
-
-                for (Object object2 : (Iterable) object)
+                Entity entity;
+                if (object instanceof LivingEntity)
                 {
-                    list.add(format(world, object2));
+                    entity = (Entity) object;
+                    return NameGenerator.name(entity);
                 }
+                else if (object instanceof Nameable)
+                {
+                    return ((Nameable) object).getName().getString();
+                }
+                else if (object instanceof WalkTarget)
+                {
+                    return format(world, ((WalkTarget) object).getLookTarget());
+                }
+                else if (object instanceof EntityLookTarget)
+                {
+                    return format(world, ((EntityLookTarget) object).getEntity());
+                }
+                else if (object instanceof GlobalPos)
+                {
+                    return format(world, ((GlobalPos) object).pos());
+                }
+                else if (object instanceof BlockPosLookTarget)
+                {
+                    return format(world, ((BlockPosLookTarget) object).getBlockPos());
+                }
+                else if (object instanceof DamageSource)
+                {
+                    entity = ((DamageSource) object).getAttacker();
+                    return entity == null ? object.toString() : format(world, entity);
+                }
+                else if (!(object instanceof Collection))
+                {
+                    return object.toString();
+                }
+                else
+                {
+                    List<String> list = Lists.newArrayList();
 
-                return list.toString();
+                    for (Object object2 : (Iterable) object)
+                    {
+                        list.add(format(world, object2));
+                    }
+
+                    return list.toString();
+                }
             }
         }
+
+        return "";
     }
 }

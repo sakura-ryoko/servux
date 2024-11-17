@@ -67,7 +67,7 @@ public class DataProviderManager
     public boolean setProviderEnabled(IDataProvider provider, boolean enabled)
     {
         boolean wasEnabled = provider.isEnabled();
-        enabled = true; // FIXME TODO remove debug
+        //enabled = true; // FIXME TODO remove debug
 
         if (enabled || wasEnabled != enabled)
         {
