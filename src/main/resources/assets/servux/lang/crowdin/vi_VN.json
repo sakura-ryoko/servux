@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Bật / Tắt tính năng chia sẻ World Seed với MiniHUD cho Màn hình Slime Chunk",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Quyền sở hữu hạt giống thế giới",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Quyền cần thiết để chia sẻ Hạt giống thế giới",
+    "servux.config.tweaks_data.permission_level.name": "Permission Level",
+    "servux.config.tweaks_data.permission_level.comment": "The permission level required for the Tweaks data provider",
     "servux.litematics.error.insufficent_for_paste": "§cQuyền không đủ cho thao tác dán Litematic.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode là bắt buộc đối với thao tác dán Litematic.§r",
     "servux.litematics.success.pasted": "Dán §b%s§r vào thế giới §d%s§r trong §a%s§rms.",
