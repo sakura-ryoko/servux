@@ -67,9 +67,8 @@ public class DataProviderManager
     public boolean setProviderEnabled(IDataProvider provider, boolean enabled)
     {
         boolean wasEnabled = provider.isEnabled();
-        //enabled = true; // FIXME TODO remove debug
 
-        System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
+        //System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
         if (enabled || wasEnabled != enabled)
         {
             provider.setEnabled(enabled);
