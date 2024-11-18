@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Activa/desactiva l'ús compartit de World Seed amb MiniHUD per a la pantalla Slime Chunk",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Permisos mundials de llavors",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Permisos necessaris per compartir la llavor mundial",
+    "servux.config.tweaks_data.permission_level.name": "Permission Level",
+    "servux.config.tweaks_data.permission_level.comment": "The permission level required for the Tweaks data provider",
     "servux.litematics.error.insufficent_for_paste": "§cPermisos insuficients per a l'operació d'enganxar Litematic.§r",
     "servux.litematics.error.creative_required": "§cEl mode creatiu és necessari per a l'operació d'enganxar Litematic.§r",
     "servux.litematics.success.pasted": "S'ha enganxat §b%s§r al món §d%s§r a §a%s§rms.",
