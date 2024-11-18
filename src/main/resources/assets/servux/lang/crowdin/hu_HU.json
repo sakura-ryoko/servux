@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Engedélyezze/letiltja a World Seed MiniHUD-dal való megosztását a Slime Chunk Display számára",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "World Seed Permissions",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "A World Seed megosztásához engedélyek szükségesek",
+    "servux.config.tweaks_data.permission_level.name": "Permission Level",
+    "servux.config.tweaks_data.permission_level.comment": "The permission level required for the Tweaks data provider",
     "servux.litematics.error.insufficent_for_paste": "§cNem elegendő engedély a Litematic beillesztés művelethez.§r",
     "servux.litematics.error.creative_required": "§cKreatív mód szükséges a Litematic beillesztés művelethez.§r",
     "servux.litematics.success.pasted": "§b%s§r beillesztése §d%s§r világba az §a%s§rms-ben.",
