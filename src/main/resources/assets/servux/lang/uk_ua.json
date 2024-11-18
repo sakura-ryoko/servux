@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Увімкнути / вимкнути обмін фразами світу з MiniHUD для Slime Chunk Display",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Право на сім’ї світу",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Потрібні дозволи для обміну світом сіданням",
+    "servux.config.tweaks_data.permission_level.name": "Рівень дозволу",
+    "servux.config.tweaks_data.permission_level.comment": "Рівень дозволу, необхідний для постачальника даних Tweaks",
     "servux.litematics.error.insufficent_for_paste": "§cНедостатньо прав для Litematic вставлення операції.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode необхідний для популяційної вставки.§r",
     "servux.litematics.success.pasted": "Вставлено §b%s§r по світу §d%s§r в §a%s§rms.",
