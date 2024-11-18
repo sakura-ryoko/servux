@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Включить/отключить обмен семенами мира с MiniHUD для отображения слизня",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Разрешения мира семян",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Разрешения, необходимые для обмена семенами мира",
+    "servux.config.tweaks_data.permission_level.name": "Permission Level",
+    "servux.config.tweaks_data.permission_level.comment": "The permission level required for the Tweaks data provider",
     "servux.litematics.error.insufficent_for_paste": "§cНедостаточно прав для операции вставки.§r",
     "servux.litematics.error.creative_required": "§cДля операции на Litematic paste необходим творческий режим.§r",
     "servux.litematics.success.pasted": "Вставлен §b%s§r в мир §d%s§r в §a%s§rms.",
