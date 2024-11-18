@@ -87,8 +87,6 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Slime Chunk Display를 위해 MiniHUD와 World Seed 공유를 활성화/비활성화합니다.",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "세계 종자 허가",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "월드 시드 공유에 필요한 권한",
-    "servux.config.tweaks_data.permission_level.name": "권한 수준",
-    "servux.config.tweaks_data.permission_level.comment": "Tweaks 데이터 공급자에게 필요한 권한 수준",
     "servux.litematics.error.insufficent_for_paste": "§cLitematic 붙여넣기 작업에 대한 권한이 부족합니다.§r",
     "servux.litematics.error.creative_required": "§cLitematic 붙여넣기 작업에는 Creative Mode가 필요합니다.§r",
     "servux.litematics.success.pasted": "§b%s§r을 §d%s§r의 §a%s§rms에 붙여넣었습니다.",

@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Het delen van de World Seed met MiniHUD voor de Slime Chunk Display in- of uitschakelen",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Wereld Seed Permissies",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Machtigingen vereist voor het delen van de Wereld Seed",
+    "servux.config.tweaks_data.permission_level.name": "Toestemmingsniveau",
+    "servux.config.tweaks_data.permission_level.comment": "Het vereiste toestemmingsniveau voor de Tweaks-gegevensprovider",
     "servux.litematics.error.insufficent_for_paste": "§cOnvoldoende rechten voor de Litematic plakbewerking.§r",
     "servux.litematics.error.creative_required": "§cCreatieve modus is vereist voor de Litematic plakbewerking.§r",
     "servux.litematics.success.pasted": "§b%s§r geplakt in wereld §d%s§r in §a%s§rms.",

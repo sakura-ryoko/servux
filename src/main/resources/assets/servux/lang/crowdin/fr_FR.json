@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Activer/désactiver le partage de la graine mondiale avec MiniHUD pour l'affichage des morceaux de slime",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Autorisations des graines du monde",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Autorisations requises pour partager la graine du monde",
+    "servux.config.tweaks_data.permission_level.name": "Niveau d'autorisation",
+    "servux.config.tweaks_data.permission_level.comment": "Le niveau d'autorisation requis pour le fournisseur de données Tweaks",
     "servux.litematics.error.insufficent_for_paste": "§cAutorisations insuffisantes pour l'opération de collage Litematic.§r",
     "servux.litematics.error.creative_required": "§cLe mode créatif est requis pour l'opération de collage Litematic.§r",
     "servux.litematics.success.pasted": "A collé §b%s§r dans le monde §d%s§r dans §a%s§rms.",

@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Aktivera/inaktivera delning av World Seed med MiniHUD för Slime Chunk Display",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "World Seed Permissions",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Behörigheter krävs för att dela World Seed",
+    "servux.config.tweaks_data.permission_level.name": "Behörighetsnivå",
+    "servux.config.tweaks_data.permission_level.comment": "Den behörighetsnivå som krävs för Tweaks-dataleverantören",
     "servux.litematics.error.insufficent_for_paste": "§cOtillräckliga behörigheter för inklistringsoperationen Litematic.§r",
     "servux.litematics.error.creative_required": "§cKreativt läge krävs för att klistra in Litematic.§r",
     "servux.litematics.success.pasted": "Klistrade in §b%still världen §d%s§r i §a%s§rms.",

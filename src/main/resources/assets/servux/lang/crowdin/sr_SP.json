@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Омогућите/онемогућите дељење Ворлд Сеед-а са МиниХУД-ом за приказ Слиме Цхунк-а",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Ворлд Сеед Пермиссионс",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Потребне су дозволе за дељење Ворлд Сеед-а",
+    "servux.config.tweaks_data.permission_level.name": "Ниво дозволе",
+    "servux.config.tweaks_data.permission_level.comment": "Ниво дозволе потребан за добављача података Твеакс",
     "servux.litematics.error.insufficent_for_paste": "§цНедовољне дозволе за операцију Литематиц пасте.§р",
     "servux.litematics.error.creative_required": "§цЦреативе Моде је неопходан за операцију Литематиц пасте.§р",
     "servux.litematics.success.pasted": "Налепљено §б%s§р у свет §д%s§р у §а%s§рмс.",

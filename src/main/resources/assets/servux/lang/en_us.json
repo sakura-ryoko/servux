@@ -95,6 +95,9 @@
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "World Seed Permissions",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Permissions Required for sharing the World Seed",
 
+    "servux.config.tweaks_data.permission_level.name": "Permission Level",
+    "servux.config.tweaks_data.permission_level.comment": "The permission level required for the Tweaks data provider",
+
     "servux.litematics.error.insufficent_for_paste": "§cInsufficient Permissions for the Litematic paste operation.§r",
     "servux.litematics.error.creative_required": "§cCreative Mode is required for the Litematic paste operation.§r",
     "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%s§rms.",

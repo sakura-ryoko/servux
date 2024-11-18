@@ -87,8 +87,6 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "啟用/停用與 MiniHUD 共享世界種子以用於史萊姆區塊顯示",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "世界種子許可",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "共享世界種子所需的權限",
-    "servux.config.tweaks_data.permission_level.name": "權限等級",
-    "servux.config.tweaks_data.permission_level.comment": "Tweaks 資料提供者所需的權限級別",
     "servux.litematics.error.insufficent_for_paste": "§c Litematic 貼上操作權限不足。",
     "servux.litematics.error.creative_required": "§c Litematic 貼上操作需要創意模式。",
     "servux.litematics.success.pasted": "將 §b%s§r 貼到 §a%s§rms 中的世界 §d%s§r。",

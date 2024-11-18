@@ -87,6 +87,8 @@
     "servux.config.structure_bounding_boxes.share_seed.comment": "Ota käyttöön / poista käytöstä World Seedin jakaminen MiniHUD:n kanssa Slime Chunk Display -näytölle",
     "servux.config.structure_bounding_boxes.seed_permission_level.name": "Maailman siemenluvat",
     "servux.config.structure_bounding_boxes.seed_permission_level.comment": "Tarvitaan oikeudet maailman siementen jakamiseen",
+    "servux.config.tweaks_data.permission_level.name": "Lupataso",
+    "servux.config.tweaks_data.permission_level.comment": "Tweaks-datatoimittajalta vaadittava käyttöoikeustaso",
     "servux.litematics.error.insufficent_for_paste": "§cLitemaattisen liittämisen oikeudet eivät riitä.§r",
     "servux.litematics.error.creative_required": "§cLuovaustila tarvitaan Litematic Paste -toimintoon.§r",
     "servux.litematics.success.pasted": "Liitetty §b%s§r maailmaan §d%s§r §a%s§rms:ssä.",
