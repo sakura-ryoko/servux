@@ -29,7 +29,7 @@
 	],
 
 	"depends": {
-		"minecraft": ">1.21.3",
-		"fabric-networking-api-v1": ">=4.3.5"
+		"minecraft": "1.21.4-beta.1",
+		"fabric-networking-api-v1": ">=4.3.6"
 	}
 }
