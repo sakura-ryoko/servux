@@ -55,10 +55,13 @@ public class StructureDataProvider extends DataProviderBase
     private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
     private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
     private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
+
+    // TODO --> For removal
     private ServuxBoolSetting shareWeatherStatus = new ServuxBoolSetting(this, "share_weather_status", false);
     private ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     private ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
     private ServuxIntSetting seedPermissionLevel = new ServuxIntSetting(this, "seed_permission_level", 2, 4, 0);
+
     private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout, this.shareWeatherStatus, this.weatherPermissionLevel, this.shareSeed, this.seedPermissionLevel);
 
     // FIXME --> Move out of structures channel in the future
