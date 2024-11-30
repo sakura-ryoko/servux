@@ -27,7 +27,7 @@ public class ServuxConfigProvider extends DataProviderBase
     private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
     private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language",
         i18nLang.DEFAULT_LANG,
-        List.of("en_us", "zh_cn", "zh_tw", "ar_sa", "es_es", "hi_in", "ja_jp", "ko_kr", "pl_pl", "ru_ru", "uk_ua"), false)
+        List.of("en_us", "zh_cn"), false)
     {
         @Override
         public void setValueNoCallback(String value)
