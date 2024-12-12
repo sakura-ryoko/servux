@@ -203,8 +203,8 @@ public class LitematicsDataProvider extends DataProviderBase
             for (BlockPos tePos : teSet)
             {
                 if ((tePos.getX() < chunkPos.getStartX() || tePos.getX() > chunkPos.getEndX()) ||
-                        (tePos.getZ() < chunkPos.getStartZ() || tePos.getZ() > chunkPos.getEndZ()) ||
-                        (tePos.getY() < minY || tePos.getY() > maxY))
+                    (tePos.getZ() < chunkPos.getStartZ() || tePos.getZ() > chunkPos.getEndZ()) ||
+                    (tePos.getY() < minY || tePos.getY() > maxY))
                 {
                     continue;
                 }
