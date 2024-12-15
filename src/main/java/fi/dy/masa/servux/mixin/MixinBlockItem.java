@@ -15,7 +15,10 @@ import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.PlacementHandler;
 import fi.dy.masa.servux.util.PlacementHandler.UseContext;
 
-@Mixin(BlockItem.class)
+/**
+ * Should override Carpet-Extra's version with a higher priority
+ */
+@Mixin(value = BlockItem.class, priority = 1010)
 public abstract class MixinBlockItem extends Item
 {
     private MixinBlockItem(Settings builder)
