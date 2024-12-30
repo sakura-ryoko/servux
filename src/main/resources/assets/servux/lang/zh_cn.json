@@ -37,6 +37,8 @@
   "servux.config.litematic_data.permission_level_paste.comment": "Litematics 粘贴操作所需的权限级别",
   "servux.config.litematic_data.fix_rail_rotations.name": "Fix Rail Rotations",
   "servux.config.litematic_data.fix_rail_rotations.comment": "Enable / Disable the fixing of Rail Rotations when Rails are rotated 180 degrees.",
+  "servux.config.litematic_data.fix_stairs_mirror.name": "Fix Stairs Mirroring",
+  "servux.config.litematic_data.fix_stairs_mirror.comment": "Enable / Disable the fixing of Stair Mirroring when Stairs are Mirrored.",
   "servux.config.entity_data.permission_level.name": "权限级别",
   "servux.config.entity_data.permission_level.comment": "实体数据源所需的权限级别，将向具有该权限级别的玩家端发送实体数据",
   "servux.config.entity_data.nbt_query_override.name": "Nbt Query Packet Permissions Override",
