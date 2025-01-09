@@ -3,11 +3,8 @@ plugins {
 	id 'maven-publish'
 }
 
-//sourceCompatibility = JavaVersion.VERSION_21
-//targetCompatibility = JavaVersion.VERSION_21
-
 repositories {
-	//maven { url 'https://jitpack.io' }
+	//maven { url = 'https://jitpack.io' }
 }
 
 dependencies {
@@ -23,15 +20,16 @@ dependencies {
 
 	// Lucko Permissions API
 	modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
-	//modImplementation include("com.github.sakura-ryoko:fabric-permissions-api:${project.fabric_permissions_api_id}")
 }
 
-group = project.group + "." + project.mod_id
-base.archivesName = project.mod_file_name + '-' + project.minecraft_version_out
-version = project.mod_version
+base {
+	group = project.group + "." + project.mod_id
+	archivesName = project.mod_file_name + '-' + project.minecraft_version_out
+	version = project.mod_version
 
-if (version.endsWith('-dev')) {
-	version += "." + new Date().format('yyyyMMdd.HHmmss')
+	if (version.endsWith('-dev')) {
+		version += "." + new Date().format('yyyyMMdd.HHmmss')
+	}
 }
 
 processResources {
@@ -76,7 +74,7 @@ publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			// How to introduce archivesName here without it breaking?
-			artifactId base.archivesName.get()
+			artifactId = base.archivesName.get()
 
 			// add all the jars that should be included when publishing to maven
 			//artifact(jar)             { builtBy remapJar }
@@ -86,7 +84,7 @@ publishing {
 
 	repositories {
 		maven {
-			url "$projectDir/../../CommonMaven"
+			url = "$projectDir/../../CommonMaven"
 		}
 	}
 }

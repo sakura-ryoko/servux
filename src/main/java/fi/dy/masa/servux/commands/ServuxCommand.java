@@ -1,14 +1,13 @@
 package fi.dy.masa.servux.commands;
 
 import java.util.*;
-
 import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -20,6 +19,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
@@ -157,7 +157,8 @@ public class ServuxCommand implements IServerCommand
                 MutableText text = Text.empty();
                 text.append(setting.shortDisplayName().copy().styled(style -> style
                     .withBold(true)
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))));
+                    //.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))));
+                    .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))));
                 if (appearedMultiTimes.contains(setting.name()))
                 {
                     text.append(Text.literal(" (").append(Text.of(setting.dataProvider().getName())).append(")").formatted(Formatting.GRAY));
@@ -216,8 +217,10 @@ public class ServuxCommand implements IServerCommand
             text.append(" (");
             text.append(Text.literal(setting.qualifiedName()).styled(style ->
                 style.withColor(Formatting.GRAY)
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_copy")))
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, setting.qualifiedName()))
+                    //.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_copy")))
+                    //.withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, setting.qualifiedName()))
+                    .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_copy")))
+                    .withClickEvent(new ClickEvent.CopyToClipboard(setting.qualifiedName()))
             ));
             text.append(")");
             return text;
@@ -226,8 +229,10 @@ public class ServuxCommand implements IServerCommand
         ctx.getSource().sendFeedback(() ->
         {
             MutableText text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).styled(style -> style
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
-                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
+                //.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
+                //.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
+                .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
+                .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " "))
             ).append(" ");
             if (Objects.equals(setting.getDefaultValue(), setting.getValue()))
             {
@@ -239,8 +244,10 @@ public class ServuxCommand implements IServerCommand
                 text.append(" ");
                 text.append(StringUtils.translate("servux.command.info.reset").formatted(Formatting.GRAY)
                     .styled(style -> style
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + setting.valueToString(setting.getDefaultValue())))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_reset_to", setting.valueToString(setting.getDefaultValue()))))
+                        //.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + setting.valueToString(setting.getDefaultValue())))
+                        //.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_reset_to", setting.valueToString(setting.getDefaultValue()))))
+                        .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " " + setting.valueToString(setting.getDefaultValue())))
+                        .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_reset_to", setting.valueToString(setting.getDefaultValue()))))
                     ));
             }
             return text;
@@ -260,8 +267,10 @@ public class ServuxCommand implements IServerCommand
                         style = style.withColor(Formatting.GRAY);
                     }
                     return style
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", example)));
+                        //.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " " + example))
+                        //.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", example)));
+                        .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " " + example))
+                        .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_set", example)));
                 });
                 text.append(optionText).append(" ");
             });
@@ -289,7 +298,8 @@ public class ServuxCommand implements IServerCommand
         ctx.getSource().sendFeedback(() ->
             StringUtils.translate("servux.command.config.set_value",
                 setting.shortDisplayName().copy().styled(style -> style
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))),
+                    //.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))),
+                    .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))),
                 value),
             true
         );
