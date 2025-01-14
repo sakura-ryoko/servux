@@ -28,8 +28,6 @@ public class PlacementHandler
     public static final ImmutableSet<Property<?>> WHITELISTED_PROPERTIES = ImmutableSet.of(
             Properties.INVERTED,
             Properties.OPEN,
-            Properties.POWERED,
-            Properties.LOCKED,
             Properties.ATTACHMENT,
             Properties.AXIS,
             Properties.BLOCK_HALF,
@@ -49,6 +47,14 @@ public class PlacementHandler
             Properties.DELAY,
             Properties.NOTE,
             Properties.ROTATION
+    );
+
+    /**
+     * BlackList for Block States.  Entries here will be reset to their default value.
+     */
+    public static final ImmutableSet<Property<?>> BLACKLISTED_PROPERTIES = ImmutableSet.of(
+            Properties.WATERLOGGED,
+            Properties.POWERED
     );
 
     public static <T extends Comparable<T>> BlockState applyPlacementProtocolV3(BlockState state, UseContext context)
@@ -103,6 +109,18 @@ public class PlacementHandler
                 if ((property.isPresent() && !property.get().equals(p)) ||
                     (property.isEmpty()) &&
                     WHITELISTED_PROPERTIES.contains(p))
+                    //WHITELISTED_PROPERTIES.contains(p) &&
+                    //!BLACKLISTED_PROPERTIES.contains(p))
+
+                /*
+                if (property.isPresent() && property.get().equals(p))
+                {
+                    //System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
+                    continue;
+                }
+                else if (WHITELISTED_PROPERTIES.contains(p) &&
+                        !BLACKLISTED_PROPERTIES.contains(p))
+                 */
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
@@ -144,6 +162,20 @@ public class PlacementHandler
         catch (Exception e)
         {
             Servux.logger.warn("Exception trying to apply placement protocol value", e);
+        }
+
+        // Strip Blacklisted properties, and use the Block's default state.
+        // This needs to be done after the initial loop, or it breaks compatibility
+        for (Property<?> p : BLACKLISTED_PROPERTIES)
+        {
+            if (state.contains(p))
+            {
+                @SuppressWarnings("unchecked")
+                Property<T> prop = (Property<T>) p;
+                BlockState def = state.getBlock().getDefaultState();
+                state = state.with(prop, def.get(prop));
+                //System.out.printf("[PHv3] blacklisted state [%s] found, setting default value\n", prop.getName());
+            }
         }
 
         if (state.canPlaceAt(context.getWorld(), context.getPos()))
