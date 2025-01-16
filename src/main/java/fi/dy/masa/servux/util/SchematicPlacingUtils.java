@@ -6,6 +6,10 @@ import fi.dy.masa.servux.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -394,12 +398,12 @@ public class SchematicPlacingUtils
                     id.equals("minecraft:leash_knot") ||
                     id.equals("minecraft:painting"))
                 {
-                    Vec3d p = NBTUtils.readEntityPositionFromTag(tag);
+                    Vec3d p = NbtUtils.readEntityPositionFromTag(tag);
 
                     if (p == null)
                     {
                         p = new Vec3d(x, y, z);
-                        NBTUtils.writeEntityPositionToTag(p, tag);
+                        NbtUtils.writeEntityPositionToTag(p, tag);
                     }
 
                     tag.putInt("TileX", (int) p.x);

@@ -3,7 +3,7 @@ package fi.dy.masa.servux.schematic.selection;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.util.JsonUtils;
-import fi.dy.masa.servux.util.PositionUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 

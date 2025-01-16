@@ -30,6 +30,8 @@ import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
@@ -221,7 +223,7 @@ public class LitematicsDataProvider extends DataProviderBase
                 if (entity.saveNbt(entTag))
                 {
                     Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
-                    NBTUtils.writeEntityPositionToTag(posVec, entTag);
+                    NbtUtils.writeEntityPositionToTag(posVec, entTag);
                     entTag.putInt("entityId", entity.getId());
                     entityList.add(entTag);
                 }

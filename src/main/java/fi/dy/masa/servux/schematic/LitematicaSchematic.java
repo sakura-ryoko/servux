@@ -32,6 +32,10 @@ import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import fi.dy.masa.servux.schematic.selection.Box;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
+
 import net.minecraft.world.World;
 import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
@@ -457,7 +461,7 @@ public class LitematicaSchematic
                             tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
                         }
 
-                        NBTUtils.writeEntityPositionToTag(posVec, tag);
+                        NbtUtils.writeEntityPositionToTag(posVec, tag);
                         list.add(new EntityInfo(posVec, tag));
                         existingEntities.add(uuid);
                     }
@@ -680,10 +684,10 @@ public class LitematicaSchematic
                 }
 
                 BlockPos pos = this.subRegionPositions.get(regionName);
-                tag.put("Position", NBTUtils.createBlockPosTag(pos));
+                tag.put("Position", NbtUtils.createBlockPosTag(pos));
 
                 pos = this.subRegionSizes.get(regionName);
-                tag.put("Size", NBTUtils.createBlockPosTag(pos));
+                tag.put("Size", NbtUtils.createBlockPosTag(pos));
 
                 wrapper.put(regionName, tag);
             }
@@ -799,8 +803,8 @@ public class LitematicaSchematic
             if (tag.get(regionName).getType() == Constants.NBT.TAG_COMPOUND)
             {
                 NbtCompound regionTag = tag.getCompound(regionName);
-                BlockPos regionPos = NBTUtils.readBlockPos(regionTag.getCompound("Position"));
-                BlockPos regionSize = NBTUtils.readBlockPos(regionTag.getCompound("Size"));
+                BlockPos regionPos = NbtUtils.readBlockPos(regionTag.getCompound("Position"));
+                BlockPos regionSize = NbtUtils.readBlockPos(regionTag.getCompound("Size"));
                 Map<BlockPos, NbtCompound> tiles = null;
 
                 if (regionPos != null && regionSize != null)
@@ -1007,7 +1011,7 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound entityData = tagList.getCompound(i);
-            Vec3d posVec = NBTUtils.readEntityPositionFromTag(entityData);
+            Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
 
             if (posVec != null && entityData.isEmpty() == false)
             {
@@ -1026,7 +1030,7 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound tag = tagList.getCompound(i);
-            BlockPos pos = NBTUtils.readBlockPos(tag);
+            BlockPos pos = NbtUtils.readBlockPos(tag);
 
             if (pos != null && tag.isEmpty() == false)
             {
@@ -1086,13 +1090,13 @@ public class LitematicaSchematic
         for (int i = 0; i < size; ++i)
         {
             NbtCompound tag = tagList.getCompound(i);
-            Vec3d posVec = NBTUtils.readVec3d(tag);
+            Vec3d posVec = NbtUtils.readVec3d(tag);
             NbtCompound entityData = tag.getCompound("EntityData");
 
             if (posVec != null && entityData.isEmpty() == false)
             {
                 // Update the correct position to the TileEntity NBT, where it is stored in version 2
-                NBTUtils.writeEntityPositionToTag(posVec, entityData);
+                NbtUtils.writeEntityPositionToTag(posVec, entityData);
                 entityList.add(new EntityInfo(posVec, entityData));
             }
         }
@@ -1111,12 +1115,12 @@ public class LitematicaSchematic
             NbtCompound tileNbt = tag.getCompound("TileNBT");
 
             // Note: This within-schematic relative position is not inside the tile tag!
-            BlockPos pos = NBTUtils.readBlockPos(tag);
+            BlockPos pos = NbtUtils.readBlockPos(tag);
 
             if (pos != null && tileNbt.isEmpty() == false)
             {
                 // Update the correct position to the entity NBT, where it is stored in version 2
-                NBTUtils.writeBlockPosToTag(pos, tileNbt);
+                NbtUtils.writeBlockPosToTag(pos, tileNbt);
                 tileMap.put(pos, tileNbt);
             }
         }
