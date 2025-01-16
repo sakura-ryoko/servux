@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.position;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -6,6 +6,8 @@ import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.servux.schematic.selection.AreaSelection;
 import fi.dy.masa.servux.schematic.selection.Box;
+import fi.dy.masa.servux.util.IntBoundingBox;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;

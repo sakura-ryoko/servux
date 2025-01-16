@@ -2,6 +2,9 @@ package fi.dy.masa.servux.util;
 
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.position.PositionUtils;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;

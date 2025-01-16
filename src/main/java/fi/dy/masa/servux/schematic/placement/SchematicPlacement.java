@@ -7,7 +7,7 @@ import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.IntBoundingBox;
-import fi.dy.masa.servux.util.PositionUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
 import fi.dy.masa.servux.util.ReplaceBehavior;
 import fi.dy.masa.servux.util.SchematicPlacingUtils;
 import net.minecraft.nbt.NbtCompound;

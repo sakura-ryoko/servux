@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.nbt;
 
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtDouble;
@@ -9,7 +9,9 @@ import net.minecraft.util.math.Vec3i;
 
 import javax.annotation.Nullable;
 
-public class NBTUtils
+import fi.dy.masa.servux.util.data.Constants;
+
+public class NbtUtils
 {
     public static NbtCompound createBlockPosTag(Vec3i pos)
     {
@@ -28,9 +30,9 @@ public class NBTUtils
     public static BlockPos readBlockPos(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-                tag.contains("x", Constants.NBT.TAG_INT) &&
-                tag.contains("y", Constants.NBT.TAG_INT) &&
-                tag.contains("z", Constants.NBT.TAG_INT))
+            tag.contains("x", Constants.NBT.TAG_INT) &&
+            tag.contains("y", Constants.NBT.TAG_INT) &&
+            tag.contains("z", Constants.NBT.TAG_INT))
         {
             return new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
         }
@@ -83,6 +85,20 @@ public class NBTUtils
             {
                 return new Vec3d(tagList.getDouble(0), tagList.getDouble(1), tagList.getDouble(2));
             }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static Vec3i readVec3iFromTag(@Nullable NbtCompound tag)
+    {
+        if (tag != null &&
+            tag.contains("x", Constants.NBT.TAG_INT) &&
+            tag.contains("y", Constants.NBT.TAG_INT) &&
+            tag.contains("z", Constants.NBT.TAG_INT))
+        {
+            return new Vec3i(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
         }
 
         return null;
