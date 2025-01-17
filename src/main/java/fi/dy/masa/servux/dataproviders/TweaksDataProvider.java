@@ -147,6 +147,7 @@ public class TweaksDataProvider extends DataProviderBase
         }
     }
 
+    /*
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         if (this.hasPermission(player) == false)
@@ -155,7 +156,6 @@ public class TweaksDataProvider extends DataProviderBase
         }
 
         Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
-        // todo
     }
 
     public void handleClientBulkData(ServerPlayerEntity player, int transactionId, NbtCompound nbtCompound)
@@ -166,8 +166,8 @@ public class TweaksDataProvider extends DataProviderBase
         }
 
         Servux.logger.warn("handleClientBulkData(): from player {} -- Not Implemented!", player.getName().getLiteralString());
-        // todo
     }
+     */
 
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
