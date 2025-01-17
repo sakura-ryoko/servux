@@ -40,7 +40,7 @@ public class DataProviderManager
 
     /**
      * Registers the given data provider, if it's not already registered
-     * @param provider
+     * @param provider ()
      * @return true if the provider did not exist yet and was successfully registered
      */
     public boolean registerDataProvider(IDataProvider provider)
@@ -51,7 +51,12 @@ public class DataProviderManager
         {
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
-            //System.out.printf("registerDataProvider: %s\n", provider);
+
+            if (Reference.DEV_DEBUG)
+            {
+                System.out.printf("registerDataProvider: %s\n", provider);
+            }
+
             return true;
         }
 
@@ -68,7 +73,11 @@ public class DataProviderManager
     {
         boolean wasEnabled = provider.isEnabled();
 
-        //System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
+        if (Reference.DEV_DEBUG)
+        {
+            System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
+        }
+
         if (enabled || wasEnabled != enabled)
         {
             provider.setEnabled(enabled);
@@ -235,14 +244,7 @@ public class DataProviderManager
             // and then respect the config afterward.
             for (IDataProvider provider : this.providersImmutable)
             {
-                if (!provider.getName().equals("debug_data"))
-                {
-                    this.setProviderEnabled(provider, true);
-                }
-                else
-                {
-                    this.setProviderEnabled(provider, false);
-                }
+                this.setProviderEnabled(provider, !provider.getName().equals("debug_data"));
             }
         }
     }

@@ -16,6 +16,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.random.Random;
+
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -93,7 +95,10 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                //Servux.debugLog("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.logger.info("ServuxEntitiesHandler#decodeServerData(): received Entity Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                }
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
@@ -171,7 +176,10 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                //Servux.logger.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.logger.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                }
                 EntitiesDataProvider.INSTANCE.onPacketFailure(player);
             }
             else
