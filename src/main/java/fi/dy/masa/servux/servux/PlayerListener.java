@@ -24,6 +24,7 @@ public class PlayerListener implements IPlayerListener
     public void onPlayerLeave(ServerPlayerEntity player)
     {
         StructureDataProvider.INSTANCE.unregister(player);
+        HudDataProvider.INSTANCE.removePlayer(player);
         DebugDataProvider.INSTANCE.unregister(player);
     }
 }
