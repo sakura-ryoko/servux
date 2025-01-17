@@ -1,7 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -297,29 +296,6 @@ public class HudDataProvider extends DataProviderBase
         }
 
         HANDLER.encodeServerData(player, ServuxHudPacket.WeatherTick(nbt));
-    }
-
-    @Deprecated(forRemoval = true)
-    public NbtCompound cloneWeatherData()
-    {
-        NbtCompound nbt = new NbtCompound();
-
-        if (this.isRaining && this.rainWeatherTime > -1)
-        {
-            nbt.putInt("SetRaining", this.rainWeatherTime);
-            nbt.putBoolean("isRaining", true);
-        }
-        if (this.isThundering && this.thunderWeatherTime > -1)
-        {
-            nbt.putInt("SetThundering", this.thunderWeatherTime);
-            nbt.putBoolean("isThundering", true);
-        }
-        if (this.clearWeatherTime > -1)
-        {
-            nbt.putInt("SetClear", this.clearWeatherTime);
-        }
-
-        return nbt;
     }
 
     // TODO 1.21.2 +
