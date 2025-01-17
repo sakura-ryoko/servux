@@ -37,7 +37,7 @@ public class ServuxStructuresPacket implements IServerPayloadData
     {
         this.packetType = type;
         this.nbt = new NbtCompound();
-        this.buffer = packet;
+        this.buffer = new PacketByteBuf(packet.copy());
     }
 
     @Override

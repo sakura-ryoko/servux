@@ -87,7 +87,7 @@ public class ServuxDebugPacket implements IServerPayloadData
     public static ServuxDebugPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxDebugPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
-        packet.buffer = buffer;
+        packet.buffer = new PacketByteBuf(buffer.copy());
         packet.nbt = new NbtCompound();
         return packet;
     }

@@ -117,7 +117,7 @@ public class ServuxEntitiesPacket implements IServerPayloadData
     public static ServuxEntitiesPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
     {
         var packet = new ServuxEntitiesPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
-        packet.buffer = buffer;
+        packet.buffer = new PacketByteBuf(buffer.copy());
         packet.nbt = new NbtCompound();
         return packet;
     }
