@@ -77,17 +77,19 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.register(player);
             }
+            /*
             case PACKET_C2S_REQUEST_SPAWN_METADATA ->
             {
                 StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             }
+             */
             case PACKET_C2S_STRUCTURES_UNREGISTER ->
             {
                 Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.unregister(player);
-                StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
-                StructureDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
+                //StructureDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
+                //StructureDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
             }
