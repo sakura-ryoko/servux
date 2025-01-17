@@ -16,6 +16,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.random.Random;
+
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.TweaksDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -93,7 +95,11 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
                     readingSessionKey = this.readingSessionKeys.get(uuid);
                 }
 
-                //Servux.debugLog("ServuxTweaksHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.debugLog("ServuxTweaksHandler#decodeServerData(): received Tweaks Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                }
+
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
@@ -105,7 +111,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
                     }
                     catch (Exception e)
                     {
-                        Servux.logger.error("ServuxTweaksHandler#decodeServerData(): Litematic Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
+                        Servux.logger.error("ServuxTweaksHandler#decodeServerData(): Tweaks Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
                     }
                 }
             }
@@ -171,7 +177,11 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
             }
             else if (this.failures.get(id) > MAX_FAILURES)
             {
-                //Servux.logger.info("Unregistering Entities Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.logger.info("Unregistering Tweaks Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                }
+
                 TweaksDataProvider.INSTANCE.onPacketFailure(player);
             }
             else
