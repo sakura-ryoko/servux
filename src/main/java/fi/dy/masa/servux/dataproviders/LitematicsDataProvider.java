@@ -191,6 +191,8 @@ public class LitematicsDataProvider extends DataProviderBase
         if ((req.contains("Task") && req.getString("Task").equals("BulkEntityRequest")) ||
             req.contains("Task") == false)
         {
+            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos [{}] to player {}", chunkPos.toString(), player.getName().getLiteralString());
+
             long timeStart = System.currentTimeMillis();
             NbtList tileList = new NbtList();
             NbtList entityList = new NbtList();
@@ -257,9 +259,10 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("LitematicsDataProvider#handleClientPasteRequest(): from player {}", player.getName().getLiteralString());
         if (tags.getString("Task").equals("LitematicaPaste"))
         {
+            Servux.debugLog("litematic_data: Servux Paste request from player {}", player.getName().getLiteralString());
+
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));

@@ -78,13 +78,13 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
             case PACKET_C2S_METADATA_CONFIRM -> DebugDataProvider.INSTANCE.confirmMetadata(player, packet.getCompound());
             case PACKET_C2S_DEBUG_SERVICE_REGISTER ->
             {
-                Servux.debugLog("decodeServerData(): received Debug Service Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("ServuxDebugHandler#decodeServerData(): received Debug Service Register from player {}", player.getName().getLiteralString());
                 DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
                 DebugDataProvider.INSTANCE.register(player, packet.getCompound());
             }
             case PACKET_C2S_DEBUG_SERVICE_UNREGISTER ->
             {
-                Servux.debugLog("decodeServerData(): received Debug Service Un-Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("ServuxDebugHandler#decodeServerData(): received Debug Service Un-Register from player {}", player.getName().getLiteralString());
                 DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
             }
             default -> Servux.logger.warn("ServuxDebugHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());

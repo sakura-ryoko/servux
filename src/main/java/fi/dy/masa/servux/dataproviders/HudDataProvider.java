@@ -1,6 +1,9 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
@@ -47,6 +50,7 @@ public class HudDataProvider extends DataProviderBase
     private long lastWeatherTick;
     private boolean refreshSpawnMetadata;
     private boolean refreshWeatherData;
+    private List<UUID> invalidPlayers = new ArrayList<>();
 
     protected HudDataProvider()
     {
@@ -132,6 +136,8 @@ public class HudDataProvider extends DataProviderBase
             profiler.swap(this.getName() + "_players");
             for (ServerPlayerEntity player : playerList)
             {
+                if (this.isPlayerInvalid(player)) continue;
+
                 if (this.shouldRefreshWeatherData())
                 {
                     this.refreshWeatherData(player, null);
@@ -154,6 +160,24 @@ public class HudDataProvider extends DataProviderBase
 
             profiler.pop();
         }
+    }
+
+    private void setPlayerInvalid(ServerPlayerEntity player)
+    {
+        if (!this.invalidPlayers.contains(player.getUuid()))
+        {
+            this.invalidPlayers.add(player.getUuid());
+        }
+    }
+
+    private boolean isPlayerInvalid(ServerPlayerEntity player)
+    {
+        return this.invalidPlayers.contains(player.getUuid());
+    }
+
+    private void removeInvalidPlayer(ServerPlayerEntity player)
+    {
+        this.invalidPlayers.remove(player.getUuid());
     }
 
     public void tickWeather(int clearTime, int rainTime, int thunderTime, boolean isRaining, boolean isThunder)
@@ -180,6 +204,8 @@ public class HudDataProvider extends DataProviderBase
             return;
         }
 
+        this.removeInvalidPlayer(player);
+
         NbtCompound nbt = new NbtCompound();
         nbt.copyFrom(this.metadata);
 
@@ -203,7 +229,12 @@ public class HudDataProvider extends DataProviderBase
 
     public void onPacketFailure(ServerPlayerEntity player)
     {
-        // Do something when packets fail, if required
+        this.setPlayerInvalid(player);;
+    }
+
+    public void removePlayer(ServerPlayerEntity player)
+    {
+        this.removeInvalidPlayer(player);
     }
 
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)

@@ -151,6 +151,7 @@ public class EntitiesDataProvider extends DataProviderBase
         }
     }
 
+    /*
     public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
         if (this.hasPermission(player) == false)
@@ -159,8 +160,8 @@ public class EntitiesDataProvider extends DataProviderBase
         }
 
         Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
-        // todo
     }
+     */
 
     public boolean hasNbtQueryOverride()
     {
