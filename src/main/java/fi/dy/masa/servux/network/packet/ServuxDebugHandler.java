@@ -150,7 +150,7 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("Unregistering Entities Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.logger.info("Unregistering Debug Service Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 }
                 DebugDataProvider.INSTANCE.onPacketFailure(player);
             }
