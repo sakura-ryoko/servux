@@ -2,7 +2,6 @@ package fi.dy.masa.servux.network.packet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 import io.netty.buffer.Unpooled;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtSizeTracker;
@@ -10,7 +9,6 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
 
@@ -22,7 +20,6 @@ public class ServuxTweaksPacket implements IServerPayloadData
     private BlockPos pos;
     private NbtCompound nbt;
     private PacketByteBuf buffer;
-    private List<ChunkPos> requestingChunks;
     public static final int PROTOCOL_VERSION = 1;
 
     private ServuxTweaksPacket(Type type)
@@ -119,7 +116,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
-        packet.nbt = new NbtCompound();
+        packet.buffer = new PacketByteBuf(buffer.copy());
         return packet;
     }
 
