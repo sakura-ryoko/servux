@@ -95,7 +95,7 @@ public class ServuxConfigProvider extends DataProviderBase
 
     public boolean hasDebugMode()
     {
-        return this.debugLog.getValue();
+        return this.debugLog.getValue() || Reference.DEV_DEBUG;
     }
 
     @Override
