@@ -192,6 +192,8 @@ public class LitematicsDataProvider extends DataProviderBase
         if ((req.contains("Task") && req.getString("Task").equals("BulkEntityRequest")) ||
             req.contains("Task") == false)
         {
+            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos [{}] to player {}", chunkPos.toString(), player.getName().getLiteralString());
+
             long timeStart = System.currentTimeMillis();
             NbtList tileList = new NbtList();
             NbtList entityList = new NbtList();
@@ -236,7 +238,7 @@ public class LitematicsDataProvider extends DataProviderBase
             output.put("Entities", entityList);
             output.putInt("chunkX", chunkPos.x);
             output.putInt("chunkZ", chunkPos.z);
-            //long timeElapsed = System.currentTimeMillis() - timeStart;
+            long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
             //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
@@ -258,9 +260,10 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        //Servux.logger.warn("LitematicsDataProvider#handleClientPasteRequest(): from player {}", player.getName().getLiteralString());
         if (tags.getString("Task").equals("LitematicaPaste"))
         {
+            Servux.debugLog("litematic_data: Servux Paste request from player {}", player.getName().getLiteralString());
+
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
