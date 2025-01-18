@@ -56,7 +56,7 @@ public class HudDataProvider extends DataProviderBase
     private long lastWeatherTick;
     private boolean refreshSpawnMetadata;
     private boolean refreshWeatherData;
-    private List<UUID> invalidPlayers = new ArrayList<>();
+    private final List<UUID> invalidPlayers = new ArrayList<>();
 
     protected HudDataProvider()
     {
@@ -110,6 +110,12 @@ public class HudDataProvider extends DataProviderBase
     }
 
     @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return !this.isPlayerInvalid(player);
+    }
+
+    @Override
     public boolean shouldTick()
     {
         return this.enabled;
@@ -118,6 +124,8 @@ public class HudDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
     {
+        if (!this.isEnabled()) return;
+
         if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
             profiler.push(this.getName());
@@ -188,6 +196,8 @@ public class HudDataProvider extends DataProviderBase
 
     public void tickWeather(int clearTime, int rainTime, int thunderTime, boolean isRaining, boolean isThunder)
     {
+        if (!this.isEnabled()) return;
+
         this.clearWeatherTime = clearTime;
         this.rainWeatherTime = rainTime;
         this.thunderWeatherTime = thunderTime;
@@ -203,6 +213,8 @@ public class HudDataProvider extends DataProviderBase
 
     public void sendMetadata(ServerPlayerEntity player)
     {
+        if (!this.isEnabled()) return;
+
         if (this.hasPermission(player) == false)
         {
             // No Permission
@@ -245,6 +257,8 @@ public class HudDataProvider extends DataProviderBase
 
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
+        if (!this.isEnabled()) return;
+
         NbtCompound nbt = new NbtCompound();
         BlockPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
 
@@ -272,7 +286,7 @@ public class HudDataProvider extends DataProviderBase
     {
         NbtCompound nbt = new NbtCompound();
 
-        if (this.hasPermissionsForWeather(player) == false)
+        if (this.hasPermissionsForWeather(player) == false || !this.isEnabled())
         {
             return;
         }

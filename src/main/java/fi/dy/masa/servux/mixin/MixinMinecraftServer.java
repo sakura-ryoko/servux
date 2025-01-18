@@ -41,8 +41,11 @@ public abstract class MixinMinecraftServer
     private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
                                              @Local BlockPos blockPos, @Local int i)
     {
-        HudDataProvider.INSTANCE.setSpawnPos(blockPos);
-        HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
+        if (HudDataProvider.INSTANCE.isEnabled())
+        {
+            HudDataProvider.INSTANCE.setSpawnPos(blockPos);
+            HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
+        }
     }
 
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"), method = "runServer")

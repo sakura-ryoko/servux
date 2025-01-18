@@ -154,6 +154,8 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!EntitiesDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxEntitiesPacket packet = (ServuxEntitiesPacket) data;
 
         // Send Response Data via Packet Splitter

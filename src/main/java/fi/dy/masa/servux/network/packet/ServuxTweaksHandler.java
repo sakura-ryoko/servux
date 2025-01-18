@@ -155,6 +155,8 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!TweaksDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxTweaksPacket packet = (ServuxTweaksPacket) data;
 
         // Send Response Data via Packet Splitter

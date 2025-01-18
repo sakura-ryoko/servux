@@ -24,8 +24,11 @@ public abstract class MixinServerWorld
     @Inject(method = "setSpawnPos", at = @At("TAIL"))
     private void servux_onSetSpawnPos(BlockPos pos, float angle, CallbackInfo ci)
     {
-        HudDataProvider.INSTANCE.setSpawnPos(pos);
-        HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
+        if (HudDataProvider.INSTANCE.isEnabled())
+        {
+            HudDataProvider.INSTANCE.setSpawnPos(pos);
+            HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
+        }
     }
 
     @Inject(method = "tickWeather()V", at = @At(value = "INVOKE",
@@ -42,6 +45,9 @@ public abstract class MixinServerWorld
         this.worldProperties.setRaining(bl3);
          */
 
-        HudDataProvider.INSTANCE.tickWeather(i, k, j, bl3, bl2);
+        if (HudDataProvider.INSTANCE.isEnabled())
+        {
+            HudDataProvider.INSTANCE.tickWeather(i, k, j, bl3, bl2);
+        }
     }
 }
