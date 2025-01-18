@@ -109,9 +109,16 @@ public interface IDataProvider
 
     /**
      * Returns the network packet handler used for this data provider.
-     * @return
+     * @return ()
      */
     default IPluginServerPlayHandler<?> getPacketHandler() { return null; }
+
+    /**
+     * Return if this player is registered to use this Data Provider
+     * @param player (Player to be checked)
+     * @return (True|False)
+     */
+    boolean isPlayerRegistered(ServerPlayerEntity player);
 
     /**
      * Determine if Player has permissions to this Data Provider

@@ -28,7 +28,8 @@ public abstract class MixinStairsBlock extends Block
     @Inject(method = "mirror", at = @At(value = "HEAD"), cancellable = true)
     private void litematica_fixStairsMirror(BlockState state, BlockMirror mirror, CallbackInfoReturnable<BlockState> cir)
     {
-        if (LitematicsDataProvider.INSTANCE.fixStairMirror.getValue())
+        if (LitematicsDataProvider.INSTANCE.isEnabled() &&
+            LitematicsDataProvider.INSTANCE.fixStairMirror.getValue())
         {
             Direction direction = state.get(FACING);
             StairShape stairShape = state.get(SHAPE);
