@@ -21,7 +21,8 @@ public abstract class MixinRailBlocks extends AbstractRailBlock
     @Inject(method = "rotate", at = @At("HEAD"), cancellable = true)
     private void fixRailRotation(BlockState state, BlockRotation rot, CallbackInfoReturnable<BlockState> cir)
     {
-        if (LitematicsDataProvider.INSTANCE.fixRaiLRotations.getValue() &&
+        if (LitematicsDataProvider.INSTANCE.isEnabled() &&
+            LitematicsDataProvider.INSTANCE.fixRaiLRotations.getValue() &&
             rot == BlockRotation.CLOCKWISE_180)
         {
             RailShape shape = null;

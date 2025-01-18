@@ -21,7 +21,11 @@ public class ServerListener implements IServerListener
     {
         DataProviderManager.INSTANCE.writeToConfig();
         DataProviderManager.INSTANCE.onCaptureImmutable(server.getRegistryManager());
-        HudDataProvider.INSTANCE.checkWorldSeed(server);
+
+        if (HudDataProvider.INSTANCE.isEnabled())
+        {
+            HudDataProvider.INSTANCE.checkWorldSeed(server);
+        }
     }
 
     @Override

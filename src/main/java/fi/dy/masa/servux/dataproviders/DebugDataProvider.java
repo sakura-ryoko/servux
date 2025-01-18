@@ -30,7 +30,6 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.StructureTags;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureStart;
@@ -51,11 +50,8 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxDebugHandler;
 import fi.dy.masa.servux.network.packet.ServuxDebugPacket;
-import fi.dy.masa.servux.network.packet.ServuxHudPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.settings.ServuxStringListSetting;
 
 @SuppressWarnings({"unchecked", "deprecation"})
 public class DebugDataProvider extends DataProviderBase
@@ -108,6 +104,12 @@ public class DebugDataProvider extends DataProviderBase
     public IPluginServerPlayHandler<ServuxDebugPacket.Payload> getPacketHandler()
     {
         return HANDLER;
+    }
+
+    @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return this.registeredPlayers.containsKey(player.getUuid());
     }
 
     @Override

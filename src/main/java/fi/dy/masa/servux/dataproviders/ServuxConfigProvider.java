@@ -81,6 +81,12 @@ public class ServuxConfigProvider extends DataProviderBase
         // NO-OP
     }
 
+    @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return true;
+    }
+
     public void doReloadConfig(ServerCommandSource source)
     {
         DataProviderManager.INSTANCE.readFromConfig();

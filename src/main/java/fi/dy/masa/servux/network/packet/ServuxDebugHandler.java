@@ -128,6 +128,8 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!DebugDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxDebugPacket packet = (ServuxDebugPacket) data;
 
         // Send Response Data via Packet Splitter

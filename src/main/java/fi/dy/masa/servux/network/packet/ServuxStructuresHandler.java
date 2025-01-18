@@ -133,6 +133,8 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
 
     public void encodeStructuresPacket(ServerPlayerEntity player, ServuxStructuresPacket packet)
     {
+        if (!StructureDataProvider.INSTANCE.isEnabled()) return;
+
         if (packet.getType().equals(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START))
         {
             // Send Structure Data via Packet Splitter

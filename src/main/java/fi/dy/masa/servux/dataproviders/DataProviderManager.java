@@ -236,6 +236,12 @@ public class DataProviderManager
                 {
                     this.setProviderEnabled(provider, false);
                 }
+
+                // servux_main should never be disabled, because it provides the config management.
+                if (provider.getName().equals("servux_main") && !provider.isEnabled())
+                {
+                    this.setProviderEnabled(provider, true);
+                }
             }
         }
         else

@@ -103,6 +103,12 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return this.registeredPlayers.containsKey(player.getUuid());
+    }
+
+    @Override
     public boolean shouldTick()
     {
         return this.enabled;
@@ -111,6 +117,8 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
     {
+        if (!this.isEnabled()) return;
+
         if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
             profiler.push(this.getName());
@@ -119,40 +127,12 @@ public class StructureDataProvider extends DataProviderBase
 
             List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
             this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
-            /*
-            this.lastTick = tickCounter;
-
-            int radius = this.getSpawnChunkRadius();
-            int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
-            if (radius != rule)
-            {
-                this.setSpawnChunkRadius(rule);
-            }
-            if (this.worldSeed == 0)
-            {
-                this.checkWorldSeed(server);
-            }
-            else if (this.shareSeed.getValue() == false)
-            {
-                this.setWorldSeed(0);
-            }
-             */
-
             profiler.swap(this.getName() + "_players");
+
             for (ServerPlayerEntity player : playerList)
             {
                 UUID uuid = player.getUuid();
 
-                /*
-                if (this.shouldRefreshWeatherData())
-                {
-                    this.refreshWeatherData(player, null);
-                }
-                if (this.shouldRefreshSpawnMetadata())
-                {
-                    this.refreshSpawnMetadata(player, null);
-                }
-                 */
                 if (this.registeredPlayers.containsKey(uuid))
                 {
                     if (this.hasPermission(player) == false)
@@ -168,18 +148,6 @@ public class StructureDataProvider extends DataProviderBase
             }
 
             this.checkForInvalidPlayers(server);
-            /*
-            if (this.shouldRefreshWeatherData())
-            {
-                this.lastWeatherTick = tickCounter;
-                this.setRefreshWeatherDataComplete();
-            }
-            if (this.shouldRefreshSpawnMetadata())
-            {
-                this.setRefreshSpawnMetadataComplete();
-            }
-             */
-
             profiler.pop();
         }
     }
@@ -215,6 +183,8 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean register(ServerPlayerEntity player)
     {
+        if (!this.isEnabled()) return false;
+
         // System.out.printf("register\n");
         boolean registered = false;
         MinecraftServer server = player.getServer();
@@ -238,17 +208,8 @@ public class StructureDataProvider extends DataProviderBase
                 NbtCompound nbt = new NbtCompound();
                 nbt.copyFrom(this.metadata);
 
-                /*
-                if (this.hasPermissionsForSeed(player) == false && nbt.contains("worldSeed"))
-                {
-                    nbt.remove("worldSeed");
-                }
-                 */
-
                 Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().getLiteralString());
-
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
-                //this.refreshWeatherData(player, null);
                 this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance()+2, tickCounter);
             }
 

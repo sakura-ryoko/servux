@@ -122,6 +122,8 @@ public abstract class ServuxHudHandler<T extends CustomPayload> implements IPlug
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!HudDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxHudPacket packet = (ServuxHudPacket) data;
 
         // Send Response Data via Packet Splitter
