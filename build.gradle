@@ -4,9 +4,9 @@ plugins {
 }
 
 repositories {
-	// maven { url = 'https://masa.dy.fi/maven' }
+	maven { url = 'https://masa.dy.fi/maven' }
 	maven { url = 'https://maven.fallenbreath.me/releases' }
-	// maven { url = 'https://jitpack.io' }
+	maven { url = 'https://jitpack.io' }
 }
 
 dependencies {
@@ -22,7 +22,7 @@ dependencies {
 
 	// Lucko Permissions API
 	modImplementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
-	modRuntimeOnly 'me.fallenbreath:mixin-auditor:0.1.0'
+//	modRuntimeOnly 'me.fallenbreath:mixin-auditor:0.1.0'
 }
 
 base {
@@ -36,16 +36,16 @@ base {
 }
 
 loom {
-	def commonVmArgs = ['-Dmixin.debug.export=true', '-Dmixin.debug.countInjections=true']
-	// [FEATURE] MIXIN_AUDITOR
-	runs {
-		def auditVmArgs = [*commonVmArgs, '-DmixinAuditor.audit=true']
-		serverMixinAudit {
-			server()
-			vmArgs auditVmArgs
-			ideConfigGenerated false
-		}
-	}
+//	def commonVmArgs = ['-Dmixin.debug.export=true', '-Dmixin.debug.countInjections=true']
+//	// [FEATURE] MIXIN_AUDITOR
+//	runs {
+//		def auditVmArgs = [*commonVmArgs, '-DmixinAuditor.audit=true']
+//		serverMixinAudit {
+//			server()
+//			vmArgs auditVmArgs
+//			ideConfigGenerated false
+//		}
+//	}
 }
 
 processResources {
