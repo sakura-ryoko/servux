@@ -107,6 +107,12 @@ public class DebugDataProvider extends DataProviderBase
     }
 
     @Override
+    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    {
+        return this.registeredPlayers.containsKey(player.getUuid());
+    }
+
+    @Override
     public void onTickEndPre()
     {
         // NO-OP

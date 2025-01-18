@@ -12,19 +12,68 @@ public class PlayerListener implements IPlayerListener
     @Override
     public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
     {
-        HudDataProvider.INSTANCE.sendMetadata(player);
-        StructureDataProvider.INSTANCE.register(player);
-        EntitiesDataProvider.INSTANCE.sendMetadata(player);
-        LitematicsDataProvider.INSTANCE.sendMetadata(player);
-        TweaksDataProvider.INSTANCE.sendMetadata(player);
-        DebugDataProvider.INSTANCE.register(player);
+        if (HudDataProvider.INSTANCE.isEnabled())
+        {
+            HudDataProvider.INSTANCE.sendMetadata(player);
+        }
+
+        if (StructureDataProvider.INSTANCE.isEnabled())
+        {
+            StructureDataProvider.INSTANCE.register(player);
+        }
+
+        if (EntitiesDataProvider.INSTANCE.isEnabled())
+        {
+            EntitiesDataProvider.INSTANCE.sendMetadata(player);
+        }
+
+        if (LitematicsDataProvider.INSTANCE.isEnabled())
+        {
+            LitematicsDataProvider.INSTANCE.sendMetadata(player);
+        }
+
+        if (TweaksDataProvider.INSTANCE.isEnabled())
+        {
+            TweaksDataProvider.INSTANCE.sendMetadata(player);
+        }
+
+        if (DebugDataProvider.INSTANCE.isEnabled())
+        {
+            DebugDataProvider.INSTANCE.register(player);
+        }
     }
 
     @Override
     public void onPlayerLeave(ServerPlayerEntity player)
     {
-        StructureDataProvider.INSTANCE.unregister(player);
-        HudDataProvider.INSTANCE.removePlayer(player);
-        DebugDataProvider.INSTANCE.unregister(player);
+        if (HudDataProvider.INSTANCE.isEnabled())
+        {
+            HudDataProvider.INSTANCE.removePlayer(player);
+        }
+
+        if (StructureDataProvider.INSTANCE.isEnabled())
+        {
+            StructureDataProvider.INSTANCE.unregister(player);
+        }
+
+        if (EntitiesDataProvider.INSTANCE.isEnabled())
+        {
+            EntitiesDataProvider.INSTANCE.removePlayer(player);
+        }
+
+        if (LitematicsDataProvider.INSTANCE.isEnabled())
+        {
+            LitematicsDataProvider.INSTANCE.removePlayer(player);
+        }
+
+        if (TweaksDataProvider.INSTANCE.isEnabled())
+        {
+            TweaksDataProvider.INSTANCE.removePlayer(player);
+        }
+
+        if (DebugDataProvider.INSTANCE.isEnabled())
+        {
+            DebugDataProvider.INSTANCE.unregister(player);
+        }
     }
 }

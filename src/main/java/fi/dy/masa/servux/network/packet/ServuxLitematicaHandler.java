@@ -156,6 +156,8 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
     @Override
     public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
     {
+        if (!LitematicsDataProvider.INSTANCE.isEnabled()) return;
+
         ServuxLitematicaPacket packet = (ServuxLitematicaPacket) data;
 
         // Send Response Data via Packet Splitter
