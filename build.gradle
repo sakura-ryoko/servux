@@ -72,3 +72,43 @@ tasks.withType(JavaCompile).configureEach {
 	// Minecraft 1.20.5 (24w14a) upwards uses Java 21.
 	it.options.release = 21
 }
+
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = true
+	//reproducibleFileOrder = true
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+}
+
+jar {
+	from("LICENSE") {
+		rename { "${it}_${base.archivesName}"}
+	}
+}
+
+tasks.publish.dependsOn build
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			// How to introduce archivesName here without it breaking?
+			artifactId = base.archivesName.get()
+
+			// add all the jars that should be included when publishing to maven
+			//artifact(jar)             { builtBy remapJar }
+			from components.java
+		}
+	}
+
+	repositories {
+		maven {
+			url = "$projectDir/../../CommonMaven"
+		}
+	}
+}
