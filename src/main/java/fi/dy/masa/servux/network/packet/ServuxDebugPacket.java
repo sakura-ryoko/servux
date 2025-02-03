@@ -167,8 +167,12 @@ public class ServuxDebugPacket implements IServerPayloadData
                 // Write Packet Buffer (Slice)
                 try
                 {
+                    /*
                     PacketByteBuf serverReplay = new PacketByteBuf(this.buffer.copy());
                     output.writeBytes(serverReplay.readBytes(serverReplay.readableBytes()));
+                     */
+
+                    output.writeBytes(this.buffer.copy());
                 }
                 catch (Exception e)
                 {
