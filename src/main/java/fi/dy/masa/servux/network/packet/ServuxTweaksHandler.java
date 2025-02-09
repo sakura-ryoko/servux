@@ -114,7 +114,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
                 }
             }
              */
-            default -> Servux.logger.warn("ServuxTweaksHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("ServuxTweaksHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -180,7 +180,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("Unregistering Tweaks Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Tweaks Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 }
 
                 TweaksDataProvider.INSTANCE.onPacketFailure(player);

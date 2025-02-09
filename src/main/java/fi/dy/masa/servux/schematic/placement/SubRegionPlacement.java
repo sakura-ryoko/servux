@@ -47,7 +47,7 @@ public class SubRegionPlacement
             return this.isEnabled();
         }
 
-        Servux.logger.warn("RequiredEnabled.RENDERING_ENABLED is not supported on server side!");
+        Servux.LOGGER.warn("RequiredEnabled.RENDERING_ENABLED is not supported on server side!");
         return false;
     }
 

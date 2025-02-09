@@ -113,7 +113,7 @@ public class i18nLang
         }
         catch (Exception e)
         {
-            Servux.logger.error("Failed to load language file for '{}'", langCode, e);
+            Servux.LOGGER.error("Failed to load language file for '{}'", langCode, e);
             return false;
         }
     }

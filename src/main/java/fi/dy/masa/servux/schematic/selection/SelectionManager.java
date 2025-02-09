@@ -1,12 +1,12 @@
 package fi.dy.masa.servux.schematic.selection;
 
-import com.google.gson.JsonElement;
-import fi.dy.masa.servux.util.JsonUtils;
-
-import javax.annotation.Nullable;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
+import com.google.gson.JsonElement;
+
+import fi.dy.masa.servux.util.JsonUtils;
 
 public class SelectionManager
 {
@@ -37,13 +37,13 @@ public class SelectionManager
     @Nullable
     private AreaSelection tryLoadSelectionFromFile(String selectionId)
     {
-        return tryLoadSelectionFromFile(new File(selectionId));
+        return tryLoadSelectionFromFile(Path.of(selectionId));
     }
 
     @Nullable
-    public static AreaSelection tryLoadSelectionFromFile(File file)
+    public static AreaSelection tryLoadSelectionFromFile(Path file)
     {
-        JsonElement el = JsonUtils.parseJsonFile(file);
+        JsonElement el = JsonUtils.parseJsonFileAsPath(file);
 
         if (el != null && el.isJsonObject())
         {

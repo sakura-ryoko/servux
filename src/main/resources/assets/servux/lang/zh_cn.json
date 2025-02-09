@@ -93,6 +93,18 @@
   "servux.config.tweaks_data.permission_level.comment": "The permission level required for the Tweaks data provider",
   "servux.litematics.error.insufficent_for_paste": "§cLitematic 粘贴操作权限不足.§r",
   "servux.litematics.error.creative_required": "§cLitematic 粘贴操作需要创造模式.§r",
+  "servux.litematics.error.schematic_load.cant_read_file": "无法读取原理图文件「%s」（文件不存在或权限问题）",
+  "servux.litematics.error.schematic_load.no_schematic_version_information": "该原理图没有版本信息，无法被安全加载",
+  "servux.litematics.error.schematic_load.unsupported_schematic_version": "不支持的或将来版本的原理图「%d」",
+  "servux.litematics.error.schematic_load.unsupported_type": "未知或不支持的文件类型「%s」",
+  "servux.litematics.error.schematic_read_from_file_failed.cant_read": "无法从文件「%s」中读取原理图",
+  "servux.litematics.error.schematic_read_from_file_failed.exception": "从文件「%s」中读取原理图时出现异常",
+  "servux.litematics.error.schematic_read_from_file_failed.no_file": "无法从文件中读取原理图：没有可用的文件（可能是您将原理图保存在内存中？）",
+  "servux.litematics.error.schematic_write_to_file_failed.directory_creation_failed": "未能创建原理图目录「%s」",
+  "servux.litematics.error.schematic_write_to_file_failed.exception": "未能将原理图写入文件「%s」（错误）",
+  "servux.litematics.error.schematic_write_to_file_failed.exists": "未能将结构写入文件「%s」，文件已存在",
+  "servux.litematics.error.structure_write_to_file_failed.exception": "未能将结构写入文件「%s」（错误）",
+  "servux.litematics.error.structure_write_to_file_failed.exists": "未能将结构写入文件「%s」，文件已存在",
   "servux.litematics.success.pasted": "已将 §b%s§r 粘贴到世界 §d%s§r 中，耗时 §a%s§r 毫秒。",
   "servux.suffix.data_provider": "（数据源）"
 }
