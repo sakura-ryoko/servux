@@ -1,0 +1,31 @@
+package fi.dy.masa.servux.mixin;
+
+import java.util.function.Supplier;
+
+import net.minecraft.block.Block;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import fi.dy.masa.servux.util.WorldUtils;
+
+@Mixin(Block.class)
+public class MixinBlock
+{
+    @Inject(method = "dropStack(Lnet/minecraft/world/World;Ljava/util/function/Supplier;Lnet/minecraft/item/ItemStack;)V",
+            at = @At("HEAD"), cancellable = true)
+    private static void servux_preventItemDrops(World world,
+                                                    Supplier<ItemEntity> itemEntitySupplier,
+                                                    ItemStack stack,
+                                                    CallbackInfo ci)
+    {
+        if (WorldUtils.shouldPreventBlockUpdates(world))
+        {
+            ci.cancel();
+        }
+    }
+}

@@ -84,14 +84,14 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             }
             catch (IllegalArgumentException e)
             {
-                Servux.logger.error("registerPlayPayload: channel ID [{}] is is already registered", this.getPayloadChannel());
+                Servux.LOGGER.error("registerPlayPayload: channel ID [{}] is is already registered", this.getPayloadChannel());
             }
 
             this.setPlayRegistered(this.getPayloadChannel());
             return;
         }
 
-        Servux.logger.error("registerPlayPayload: channel ID [{}] is invalid, or it is already registered", this.getPayloadChannel());
+        Servux.LOGGER.error("registerPlayPayload: channel ID [{}] is invalid, or it is already registered", this.getPayloadChannel());
     }
 
     /**
@@ -114,11 +114,11 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
             }
             catch (IllegalArgumentException e)
             {
-                Servux.logger.error("registerPlayReceiver: Channel ID [{}] payload has not been registered", this.getPayloadChannel());
+                Servux.LOGGER.error("registerPlayReceiver: Channel ID [{}] payload has not been registered", this.getPayloadChannel());
             }
         }
 
-        Servux.logger.error("registerPlayReceiver: Channel ID [{}] is invalid, or not registered", this.getPayloadChannel());
+        Servux.LOGGER.error("registerPlayReceiver: Channel ID [{}] is invalid, or not registered", this.getPayloadChannel());
         return false;
     }
 
@@ -202,7 +202,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
         }
         else
         {
-            Servux.logger.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.LOGGER.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
 
         return false;
@@ -228,7 +228,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
         }
         else
         {
-            Servux.logger.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.LOGGER.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
         }
 
         return false;

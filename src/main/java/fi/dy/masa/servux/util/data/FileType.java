@@ -1,6 +1,7 @@
 package fi.dy.masa.servux.util.data;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public enum FileType
 {
@@ -12,7 +13,8 @@ public enum FileType
     SPONGE_SCHEMATIC,
     VANILLA_STRUCTURE;
 
-    public static FileType fromName(String fileName) {
+    public static FileType fromName(String fileName)
+    {
         if (fileName.endsWith(".litematic"))
             {
                 return LITEMATICA_SCHEMATIC;
@@ -37,11 +39,11 @@ public enum FileType
             return UNKNOWN;
     }
 
-    public static FileType fromFile(File file)
+    public static FileType fromFile(Path file)
     {
-        if (file.isFile() && file.canRead())
+        if (Files.exists(file) && Files.isReadable(file))
         {
-            return fromName(file.getName());   
+            return fromName(file.getFileName().toString());
         }
         else
         {

@@ -163,7 +163,7 @@ public class PlacementHandler
         }
         catch (Exception e)
         {
-            Servux.logger.warn("Exception trying to apply placement protocol value", e);
+            Servux.LOGGER.warn("Exception trying to apply placement protocol value", e);
         }
 
         // Strip Blacklisted properties, and use the Block's default state.
