@@ -11,13 +11,13 @@ public class MixinWorld implements IWorldUpdateSuppressor
     @Unique private boolean servux_preventBlockUpdates;
 
     @Override
-    public boolean litematica_getShouldPreventBlockUpdates()
+    public boolean servux_getShouldPreventBlockUpdates()
     {
         return this.servux_preventBlockUpdates;
     }
 
     @Override
-    public void litematica_setShouldPreventBlockUpdates(boolean preventUpdates)
+    public void servux_setShouldPreventBlockUpdates(boolean preventUpdates)
     {
         this.servux_preventBlockUpdates = preventUpdates;
     }

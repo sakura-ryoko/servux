@@ -98,7 +98,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
 
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
+                    Servux.LOGGER.info("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
                 }
                 PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
@@ -111,11 +111,11 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     }
                     catch (Exception e)
                     {
-                        Servux.logger.error("ServuxLitematicaHandler#decodeServerData(): Litematic Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
+                        Servux.LOGGER.error("ServuxLitematicaHandler#decodeServerData(): Litematic Data: error reading fullBuffer [{}]", e.getLocalizedMessage());
                     }
                 }
             }
-            default -> Servux.logger.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -181,7 +181,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("Unregistering Litematic Client {} after {} failures (Litematica not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Litematic Client {} after {} failures (Litematica not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 }
 
                 LitematicsDataProvider.INSTANCE.onPacketFailure(player);

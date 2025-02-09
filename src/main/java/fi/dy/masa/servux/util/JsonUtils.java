@@ -1,10 +1,11 @@
 package fi.dy.masa.servux.util;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import com.google.gson.Gson;
@@ -404,19 +405,19 @@ public class JsonUtils
     }
 
     @Nullable
-    public static JsonElement parseJsonFile(File file)
+    public static JsonElement parseJsonFileAsPath(Path file)
     {
-        if (file != null && file.exists() && file.isFile() && file.canRead())
+        if (file != null && Files.exists(file) && Files.isReadable(file))
         {
-            String fileName = file.getAbsolutePath();
+            String fileName = file.toString();
 
-            try (FileReader reader = new FileReader(file))
+            try (InputStreamReader reader = new InputStreamReader(Files.newInputStream(file), StandardCharsets.UTF_8))
             {
                 return JsonParser.parseReader(reader);
             }
             catch (Exception e)
             {
-                Servux.logger.error("Failed to parse the JSON file '{}'", fileName, e);
+                Servux.LOGGER.error("parseJson: Failed to parse the JSON file '{}'", fileName, e);
             }
         }
 
@@ -433,40 +434,45 @@ public class JsonUtils
         return gson.toJson(element);
     }
 
-    public static boolean writeJsonToFile(JsonElement root, File file)
+    public static boolean writeJsonToFileAsPath(JsonObject root, Path file)
     {
-        return writeJsonToFile(GSON, root, file);
-    }
+        Path fileTemp = Path.of(file.toString() + ".tmp");
 
-    public static boolean writeJsonToFile(Gson gson, JsonElement root, File file)
-    {
-        FileWriter writer = null;
-
-        try
+        if (Files.exists(fileTemp))
         {
-            writer = new FileWriter(file);
-            writer.write(gson.toJson(root));
+            fileTemp = Path.of(file.toString() + UUID.randomUUID() + ".tmp");
+        }
+
+        try (OutputStreamWriter writer = new OutputStreamWriter(Files.newOutputStream(fileTemp), StandardCharsets.UTF_8))
+        {
+            writer.write(GSON.toJson(root));
             writer.close();
 
-            return true;
-        }
-        catch (IOException e)
-        {
-            Servux.logger.warn("Failed to write JSON data to file '{}'", file.getAbsolutePath(), e);
-        }
-        finally
-        {
-            try
+            if (Files.exists(file))
             {
-                if (writer != null)
+                try
                 {
-                    writer.close();
+                    Files.delete(file);
+                }
+                catch (Exception err)
+                {
+                    Servux.LOGGER.warn("writeJson: Failed to delete file '{}'", file.toString());
                 }
             }
-            catch (Exception e)
+
+            try
             {
-                Servux.logger.warn("Failed to close JSON file", e);
+                Files.move(fileTemp, file);
+                return true;
             }
+            catch (Exception err)
+            {
+                Servux.LOGGER.warn("writeJson: Failed to move file '{}'", file.toString());
+            }
+        }
+        catch (Exception e)
+        {
+            Servux.LOGGER.warn("writeJson: Failed to write JSON data to file '{}'", fileTemp.toString(), e);
         }
 
         return false;

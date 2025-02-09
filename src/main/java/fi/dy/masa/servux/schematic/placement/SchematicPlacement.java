@@ -223,7 +223,7 @@ public class SchematicPlacement
 
             if (areaSize == null)
             {
-                Servux.logger.warn("SchematicPlacement.getSubRegionBoxes(): Size for sub-region '{}' not found in the schematic '{}'", name, this.schematic.getMetadata().getName());
+                Servux.LOGGER.warn("SchematicPlacement.getSubRegionBoxes(): Size for sub-region '{}' not found in the schematic '{}'", name, this.schematic.getMetadata().getName());
                 continue;
             }
 
@@ -268,7 +268,7 @@ public class SchematicPlacement
                     builder.put(regionName, new Box(boxOriginAbsolute, pos2, regionName));
                 } else
                 {
-                    Servux.logger.warn("SchematicPlacement.getSubRegionBoxFor(): Size for sub-region '{}' not found in the schematic '{}'", regionName, this.schematic.getMetadata().getName());
+                    Servux.LOGGER.warn("SchematicPlacement.getSubRegionBoxFor(): Size for sub-region '{}' not found in the schematic '{}'", regionName, this.schematic.getMetadata().getName());
                 }
             }
         }

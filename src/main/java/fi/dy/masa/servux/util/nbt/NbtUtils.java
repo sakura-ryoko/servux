@@ -1,14 +1,18 @@
 package fi.dy.masa.servux.util.nbt;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtDouble;
-import net.minecraft.nbt.NbtList;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import net.minecraft.nbt.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.data.Constants;
 
 public class NbtUtils
@@ -102,5 +106,58 @@ public class NbtUtils
         }
 
         return null;
+    }
+
+    @Nullable
+    public static NbtCompound readNbtFromFileAsPath(@Nonnull Path file)
+    {
+        return readNbtFromFileAsPath(file, NbtSizeTracker.ofUnlimitedBytes());
+    }
+
+    @Nullable
+    public static NbtCompound readNbtFromFileAsPath(@Nonnull Path file, NbtSizeTracker tracker)
+    {
+        if (!Files.exists(file) || !Files.isReadable(file))
+        {
+            return null;
+        }
+
+        try
+        {
+            return NbtIo.readCompressed(Files.newInputStream(file), tracker);
+        }
+        catch (Exception e)
+        {
+            Servux.LOGGER.warn("readNbtFromFileAsPath: Failed to read NBT data from file '{}'", file.toString());
+        }
+
+        return null;
+    }
+
+    /**
+     * Write the compound tag, gzipped, to the output stream.
+     */
+    public static void writeCompressed(@Nonnull NbtCompound tag, @Nonnull OutputStream outputStream)
+    {
+        try
+        {
+            NbtIo.writeCompressed(tag, outputStream);
+        }
+        catch (Exception err)
+        {
+            Servux.LOGGER.warn("writeCompressed: Failed to write NBT data to output stream");
+        }
+    }
+
+    public static void writeCompressed(@Nonnull NbtCompound tag, @Nonnull Path file)
+    {
+        try
+        {
+            NbtIo.writeCompressed(tag, file);
+        }
+        catch (Exception err)
+        {
+            Servux.LOGGER.warn("writeCompressed: Failed to write NBT data to file");
+        }
     }
 }
