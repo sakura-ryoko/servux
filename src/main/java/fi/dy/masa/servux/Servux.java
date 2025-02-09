@@ -11,7 +11,7 @@ import fi.dy.masa.servux.servux.ServuxInitHandler;
 
 public class Servux implements ModInitializer
 {
-    public static final Logger logger = LogManager.getLogger(Reference.MOD_ID);
+    public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
 
     @Override
     public void onInitialize()
@@ -25,7 +25,7 @@ public class Servux implements ModInitializer
     {
         if (ServuxConfigProvider.INSTANCE.hasDebugMode())
         {
-            logger.info(msg, args);
+            LOGGER.info(msg, args);
         }
     }
 }

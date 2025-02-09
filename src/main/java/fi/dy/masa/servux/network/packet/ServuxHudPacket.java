@@ -186,7 +186,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_SPAWN_DATA_REQUEST, PACKET_S2C_SPAWN_DATA, PACKET_S2C_WEATHER_TICK, PACKET_C2S_RECIPE_MANAGER_REQUEST ->
@@ -198,10 +198,10 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            default -> Servux.logger.error("ServuxHudPacket#toPacket: Unknown packet type!");
+            default -> Servux.LOGGER.error("ServuxHudPacket#toPacket: Unknown packet type!");
         }
     }
 
@@ -214,7 +214,7 @@ public class ServuxHudPacket implements IServerPayloadData
         if (type == null)
         {
             // Invalid Type
-            Servux.logger.warn("ServuxHudPacket#fromPacket: invalid packet type received");
+            Servux.LOGGER.warn("ServuxHudPacket#fromPacket: invalid packet type received");
             return null;
         }
         switch (type)
@@ -228,7 +228,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading S2C Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading S2C Bulk Response Buffer from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_METADATA_REQUEST ->
@@ -240,7 +240,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading Metadata Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_METADATA ->
@@ -252,7 +252,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading Metadata Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_SPAWN_DATA_REQUEST ->
@@ -264,7 +264,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Spawn Data Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading Spawn Data Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_SPAWN_DATA ->
@@ -276,7 +276,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Spawn Data Response from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading Spawn Data Response from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_S2C_WEATHER_TICK ->
@@ -288,7 +288,7 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Weather Tick from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading Weather Tick from packet: [{}]", e.getLocalizedMessage());
                 }
             }
             case PACKET_C2S_RECIPE_MANAGER_REQUEST ->
@@ -300,10 +300,10 @@ public class ServuxHudPacket implements IServerPayloadData
                 }
                 catch (Exception e)
                 {
-                    Servux.logger.error("ServuxHudPacket#fromPacket: error reading Recipe Request from packet: [{}]", e.getLocalizedMessage());
+                    Servux.LOGGER.error("ServuxHudPacket#fromPacket: error reading Recipe Request from packet: [{}]", e.getLocalizedMessage());
                 }
             }
-            default -> Servux.logger.error("ServuxHudPacket#fromPacket: Unknown packet type!");
+            default -> Servux.LOGGER.error("ServuxHudPacket#fromPacket: Unknown packet type!");
         }
 
         return null;

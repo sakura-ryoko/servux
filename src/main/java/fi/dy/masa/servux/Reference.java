@@ -1,8 +1,10 @@
 package fi.dy.masa.servux;
 
-import java.io.File;
-import net.fabricmc.loader.api.FabricLoader;
+import java.nio.file.Path;
+
 import net.minecraft.MinecraftVersion;
+import net.fabricmc.loader.api.FabricLoader;
+
 import fi.dy.masa.servux.util.StringUtils;
 
 public class Reference
@@ -15,6 +17,6 @@ public class Reference
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
     public static final boolean DEV_DEBUG = false;
 
-    public static final File DEFAULT_RUN_DIR = FabricLoader.getInstance().getGameDir().toFile();
-    public static final File DEFAULT_CONFIG_DIR = FabricLoader.getInstance().getConfigDir().toFile();
+    public static final Path DEFAULT_RUN_DIR = FabricLoader.getInstance().getGameDir();
+    public static final Path DEFAULT_CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
 }

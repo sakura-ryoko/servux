@@ -87,7 +87,7 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
                 Servux.debugLog("ServuxDebugHandler#decodeServerData(): received Debug Service Un-Register from player {}", player.getName().getLiteralString());
                 DebugDataProvider.INSTANCE.unregister(player, packet.getCompound());
             }
-            default -> Servux.logger.warn("ServuxDebugHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("ServuxDebugHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -152,7 +152,7 @@ public abstract class ServuxDebugHandler<T extends CustomPayload> implements IPl
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("Unregistering Debug Service Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Debug Service Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 }
                 DebugDataProvider.INSTANCE.onPacketFailure(player);
             }

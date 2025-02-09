@@ -1,11 +1,12 @@
 package fi.dy.masa.servux.dataproviders;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Optional;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -35,7 +36,7 @@ public class DataProviderManager
     {
         return this.providersImmutable;
     }
-    protected File configDir = null;
+    protected Path configDir = null;
     protected DynamicRegistryManager.Immutable immutable = DynamicRegistryManager.EMPTY;
 
     /**
@@ -201,7 +202,7 @@ public class DataProviderManager
 
     public void readFromConfig()
     {
-        JsonElement el = JsonUtils.parseJsonFile(this.getConfigFile());
+        JsonElement el = JsonUtils.parseJsonFileAsPath(this.getConfigFile());
         JsonObject obj = null;
 
         Servux.debugLog("DataProviderManager#readFromConfig()");
@@ -276,15 +277,28 @@ public class DataProviderManager
             root.add(name, provider.toJson());
         }
 
-        JsonUtils.writeJsonToFile(root, this.getConfigFile());
+        JsonUtils.writeJsonToFileAsPath(root, this.getConfigFile());
     }
 
-    protected File getConfigFile()
+    protected Path getConfigFile()
     {
         if (this.configDir == null)
         {
             this.configDir = Reference.DEFAULT_CONFIG_DIR;
         }
-        return new File(this.configDir, "servux.json");
+
+        if (!Files.exists(this.configDir))
+        {
+            try
+            {
+                Files.createDirectory(this.configDir);
+            }
+            catch (Exception err)
+            {
+                Servux.LOGGER.error("getConfigFile: Error creating config directory '{}'; {}", this.configDir.toAbsolutePath(), err.getMessage());
+            }
+        }
+
+        return this.configDir.resolve("servux.json");
     }
 }

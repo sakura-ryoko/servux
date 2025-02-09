@@ -93,7 +93,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
                 //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
                 //HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
             }
-            default -> Servux.logger.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
     }
 
@@ -155,7 +155,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.logger.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
                 }
 
                 StructureDataProvider.INSTANCE.unregister(player);
