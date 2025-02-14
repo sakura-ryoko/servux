@@ -3,9 +3,12 @@ package fi.dy.masa.servux.util.nbt;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.UUID;
 
 import net.minecraft.nbt.*;
+import net.minecraft.util.Uuids;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 
@@ -17,6 +20,155 @@ import fi.dy.masa.servux.util.data.Constants;
 
 public class NbtUtils
 {
+    /**
+     * Get the Entity's UUID from NBT.
+     *
+     * @param nbt ()
+     * @return ()
+     */
+    public static @Nullable UUID getUUIDCodec(@Nonnull NbtCompound nbt)
+    {
+        return getUUIDCodec(nbt, "UUID");
+    }
+
+    /**
+     * Get the Entity's UUID from NBT.
+     *
+     * @param nbt ()
+     * @param key ()
+     * @return ()
+     */
+    public static @Nullable UUID getUUIDCodec(@Nonnull NbtCompound nbt, String key)
+    {
+        if (nbt.contains(key))
+        {
+            return nbt.get(key, Uuids.INT_STREAM_CODEC).orElse(null);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the Entity's UUID from NBT.
+     *
+     * @param nbtIn ()
+     * @param key   ()
+     * @param uuid  ()
+     * @return ()
+     */
+    public static NbtCompound putUUIDCodec(@Nonnull NbtCompound nbtIn, @Nonnull UUID uuid, String key)
+    {
+        nbtIn.method_68082(key, Uuids.INT_STREAM_CODEC, uuid);
+        return nbtIn;
+    }
+
+    public static @Nonnull NbtCompound putVec2fCodec(@Nonnull NbtCompound tag, @Nonnull Vec2f pos, String key)
+    {
+        tag.put(key, Vec2f.field_56695, pos);
+        return tag;
+    }
+
+    public static @Nonnull NbtCompound putVec3iCodec(@Nonnull NbtCompound tag, @Nonnull Vec3i pos, String key)
+    {
+        tag.put(key, Vec3i.CODEC, pos);
+        return tag;
+    }
+
+    public static @Nonnull NbtCompound putVec3dCodec(@Nonnull NbtCompound tag, @Nonnull Vec3d pos, String key)
+    {
+        tag.put(key, Vec3d.CODEC, pos);
+        return tag;
+    }
+
+    public static @Nonnull NbtCompound putPosCodec(@Nonnull NbtCompound tag, @Nonnull BlockPos pos, String key)
+    {
+        tag.put(key, BlockPos.CODEC, pos);
+        return tag;
+    }
+
+    public static Vec2f getVec2fCodec(@Nonnull NbtCompound tag, String key)
+    {
+        return tag.get(key, Vec2f.field_56695).orElse(Vec2f.ZERO);
+    }
+
+    public static Vec3i getVec3iCodec(@Nonnull NbtCompound tag, String key)
+    {
+        return tag.get(key, Vec3i.CODEC).orElse(Vec3i.ZERO);
+    }
+
+    public static Vec3d getVec3dCodec(@Nonnull NbtCompound tag, String key)
+    {
+        return tag.get(key, Vec3d.CODEC).orElse(Vec3d.ZERO);
+    }
+
+    public static BlockPos getPosCodec(@Nonnull NbtCompound tag, String key)
+    {
+        return tag.get(key, BlockPos.CODEC).orElse(BlockPos.ORIGIN);
+    }
+
+    @Nonnull
+    public static NbtCompound writeVec3iToArray(@Nonnull Vec3i pos, @Nonnull NbtCompound tag, String tagName)
+    {
+        return writeBlockPosToArrayTag(pos, tag, tagName);
+    }
+
+    @Nonnull
+    public static NbtCompound writeVec3iToArrayTag(@Nonnull Vec3i pos, @Nonnull NbtCompound tag, String tagName)
+    {
+        return writeBlockPosToArrayTag(pos, tag, tagName);
+    }
+
+    @Nonnull
+    public static NbtCompound writeBlockPosToArrayTag(@Nonnull Vec3i pos, @Nonnull NbtCompound tag, String tagName)
+    {
+        int[] arr = new int[]{pos.getX(), pos.getY(), pos.getZ()};
+        tag.putIntArray(tagName, arr);
+        return tag;
+    }
+
+    @Nullable
+    public static BlockPos readBlockPosFromIntArray(@Nonnull NbtCompound nbt, String key)
+    {
+        return readBlockPosFromArrayTag(nbt, key);
+    }
+
+    @Nullable
+    public static BlockPos readBlockPosFromArrayTag(@Nonnull NbtCompound tag, String tagName)
+    {
+        if (tag.contains(tagName, NbtElement.INT_ARRAY_TYPE))
+        {
+            int[] pos = tag.getIntArray(tagName);
+
+            if (pos.length == 3)
+            {
+                return new BlockPos(pos[0], pos[1], pos[2]);
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static Vec3i readVec3iFromIntArray(@Nonnull NbtCompound nbt, String key)
+    {
+        return readVec3iFromIntArrayTag(nbt, key);
+    }
+
+    @Nullable
+    public static Vec3i readVec3iFromIntArrayTag(@Nonnull NbtCompound tag, String tagName)
+    {
+        if (tag.contains(tagName, NbtElement.INT_ARRAY_TYPE))
+        {
+            int[] pos = tag.getIntArray(tagName);
+            if (pos.length == 3)
+            {
+                return new Vec3i(pos[0], pos[1], pos[2]);
+            }
+        }
+
+        return null;
+    }
+
     public static NbtCompound createBlockPosTag(Vec3i pos)
     {
         return writeBlockPosToTag(pos, new NbtCompound());
@@ -34,9 +186,9 @@ public class NbtUtils
     public static BlockPos readBlockPos(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-            tag.contains("x", Constants.NBT.TAG_INT) &&
-            tag.contains("y", Constants.NBT.TAG_INT) &&
-            tag.contains("z", Constants.NBT.TAG_INT))
+                tag.contains("x", Constants.NBT.TAG_INT) &&
+                tag.contains("y", Constants.NBT.TAG_INT) &&
+                tag.contains("z", Constants.NBT.TAG_INT))
         {
             return new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
         }
@@ -98,9 +250,9 @@ public class NbtUtils
     public static Vec3i readVec3iFromTag(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-            tag.contains("x", Constants.NBT.TAG_INT) &&
-            tag.contains("y", Constants.NBT.TAG_INT) &&
-            tag.contains("z", Constants.NBT.TAG_INT))
+                tag.contains("x", Constants.NBT.TAG_INT) &&
+                tag.contains("y", Constants.NBT.TAG_INT) &&
+                tag.contains("z", Constants.NBT.TAG_INT))
         {
             return new Vec3i(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
         }
