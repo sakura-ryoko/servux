@@ -108,6 +108,14 @@ public class PlacementHandler
             {
                 //System.out.printf("[PHv3] check property [%s], whitelisted [%s], blacklisted [%s]\n", p.getName(), WHITELISTED_PROPERTIES.contains(p), BLACKLISTED_PROPERTIES.contains(p));
 
+                /*
+                if ((property.isPresent() && !property.get().equals(p)) ||
+                    (property.isEmpty()) &&
+                    WHITELISTED_PROPERTIES.contains(p))
+                    //WHITELISTED_PROPERTIES.contains(p) &&
+                    //!BLACKLISTED_PROPERTIES.contains(p))
+                 */
+
                 if (property.isPresent() && property.get().equals(p))
                 {
                     //System.out.printf("[PHv3] skipping prot val: 0x%08X [Property %s]\n", protocolValue, p.getName());
