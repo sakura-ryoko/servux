@@ -122,7 +122,6 @@ public class PlacementHandler
                 }
                 else if (WHITELISTED_PROPERTIES.contains(p) &&
                         !BLACKLISTED_PROPERTIES.contains(p))
-                 */
                 {
                     @SuppressWarnings("unchecked")
                     Property<T> prop = (Property<T>) p;
