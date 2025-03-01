@@ -135,9 +135,9 @@ public class NbtUtils
     @Nullable
     public static BlockPos readBlockPosFromArrayTag(@Nonnull NbtCompound tag, String tagName)
     {
-        if (tag.contains(tagName, NbtElement.INT_ARRAY_TYPE))
+        if (tag.contains(tagName))
         {
-            int[] pos = tag.getIntArray(tagName);
+            int[] pos = tag.getIntArray(tagName).orElse(new int[0]);
 
             if (pos.length == 3)
             {
@@ -157,9 +157,10 @@ public class NbtUtils
     @Nullable
     public static Vec3i readVec3iFromIntArrayTag(@Nonnull NbtCompound tag, String tagName)
     {
-        if (tag.contains(tagName, NbtElement.INT_ARRAY_TYPE))
+        if (tag.contains(tagName))
         {
-            int[] pos = tag.getIntArray(tagName);
+            int[] pos = tag.getIntArray(tagName).orElse(new int[0]);
+
             if (pos.length == 3)
             {
                 return new Vec3i(pos[0], pos[1], pos[2]);
@@ -186,11 +187,11 @@ public class NbtUtils
     public static BlockPos readBlockPos(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-                tag.contains("x", Constants.NBT.TAG_INT) &&
-                tag.contains("y", Constants.NBT.TAG_INT) &&
-                tag.contains("z", Constants.NBT.TAG_INT))
+            tag.contains("x") &&
+            tag.contains("y") &&
+            tag.contains("z"))
         {
-            return new BlockPos(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
+            return new BlockPos(tag.getInt("x", 0), tag.getInt("y", 0), tag.getInt("z", 0));
         }
 
         return null;
@@ -220,11 +221,11 @@ public class NbtUtils
     public static Vec3d readVec3d(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-                tag.contains("dx", Constants.NBT.TAG_DOUBLE) &&
-                tag.contains("dy", Constants.NBT.TAG_DOUBLE) &&
-                tag.contains("dz", Constants.NBT.TAG_DOUBLE))
+                tag.contains("dx") &&
+                tag.contains("dy") &&
+                tag.contains("dz"))
         {
-            return new Vec3d(tag.getDouble("dx"), tag.getDouble("dy"), tag.getDouble("dz"));
+            return new Vec3d(tag.getDouble("dx", 0d), tag.getDouble("dy", 0d), tag.getDouble("dz", 0d));
         }
 
         return null;
@@ -233,13 +234,13 @@ public class NbtUtils
     @Nullable
     public static Vec3d readEntityPositionFromTag(@Nullable NbtCompound tag)
     {
-        if (tag != null && tag.contains("Pos", Constants.NBT.TAG_LIST))
+        if (tag != null && tag.contains("Pos"))
         {
-            NbtList tagList = tag.getList("Pos", Constants.NBT.TAG_DOUBLE);
+            NbtList tagList = tag.getOrCreateList("Pos");
 
-            if (tagList.getHeldType() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
+            if (tagList.getType() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
             {
-                return new Vec3d(tagList.getDouble(0), tagList.getDouble(1), tagList.getDouble(2));
+                return new Vec3d(tagList.getDouble(0, 0d), tagList.getDouble(1, 0d), tagList.getDouble(2, 0d));
             }
         }
 
@@ -250,11 +251,11 @@ public class NbtUtils
     public static Vec3i readVec3iFromTag(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-                tag.contains("x", Constants.NBT.TAG_INT) &&
-                tag.contains("y", Constants.NBT.TAG_INT) &&
-                tag.contains("z", Constants.NBT.TAG_INT))
+            tag.contains("x") &&
+            tag.contains("y") &&
+            tag.contains("z"))
         {
-            return new Vec3i(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
+            return new Vec3i(tag.getInt("x", 0), tag.getInt("y", 0), tag.getInt("z", 0));
         }
 
         return null;

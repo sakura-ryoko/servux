@@ -1,14 +1,9 @@
 package fi.dy.masa.servux.util;
 
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.schematic.LitematicaSchematic;
-import fi.dy.masa.servux.schematic.LitematicaSchematic.EntityInfo;
-import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
-import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
-import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.servux.util.data.Constants;
-import fi.dy.masa.servux.util.nbt.NbtUtils;
-import fi.dy.masa.servux.util.position.PositionUtils;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -32,10 +27,14 @@ import net.minecraft.world.World;
 import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.WorldTickScheduler;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.schematic.LitematicaSchematic;
+import fi.dy.masa.servux.schematic.LitematicaSchematic.EntityInfo;
+import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
+import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class SchematicPlacingUtils
 {
@@ -388,7 +387,7 @@ public class SchematicPlacingUtils
             if (x >= minX && x < maxX && z >= minZ && z < maxZ)
             {
                 NbtCompound tag = info.nbt.copy();
-                String id = tag.getString("id");
+                String id = tag.getString("id", "");
 
                 // Avoid warning about invalid hanging position.
                 // Note that this position isn't technically correct, but it only needs to be within 16 blocks
@@ -411,9 +410,9 @@ public class SchematicPlacingUtils
                     tag.putInt("TileZ", (int) p.z);
                 }
 
-                NbtList rotation = tag.getList("Rotation", Constants.NBT.TAG_FLOAT);
-                origRot[0] = rotation.getFloat(0);
-                origRot[1] = rotation.getFloat(1);
+                NbtList rotation = tag.getOrCreateList("Rotation");
+                origRot[0] = rotation.getFloat(0, 0f);
+                origRot[1] = rotation.getFloat(1, 0f);
 
                 Entity entity = EntityUtils.createEntityAndPassengersFromNBT(tag, world);
 

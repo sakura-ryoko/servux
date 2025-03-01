@@ -232,8 +232,8 @@ public class LitematicsDataProvider extends DataProviderBase
             long timeStart = System.currentTimeMillis();
             NbtList tileList = new NbtList();
             NbtList entityList = new NbtList();
-            int minY = req.getInt("minY");
-            int maxY = req.getInt("maxY");
+            int minY = req.getInt("minY", -64);
+            int maxY = req.getInt("maxY", 319);
             BlockPos pos1 = new BlockPos(chunkPos.getStartX(), minY, chunkPos.getStartZ());
             BlockPos pos2 = new BlockPos(chunkPos.getEndX(), maxY, chunkPos.getEndZ());
             net.minecraft.util.math.Box bb = PositionUtils.createEnclosingAABB(pos1, pos2);
@@ -303,7 +303,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
-            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
+            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode", ReplaceBehavior.NONE.name()));
             placement.pasteTo(player.getServerWorld(), replaceMode);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
