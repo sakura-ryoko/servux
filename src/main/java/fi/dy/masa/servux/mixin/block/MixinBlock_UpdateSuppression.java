@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import fi.dy.masa.servux.util.WorldUtils;
 
 @Mixin(Block.class)
-public class MixinBlock
+public class MixinBlock_UpdateSuppression
 {
     @Inject(method = "dropStack(Lnet/minecraft/world/World;Ljava/util/function/Supplier;Lnet/minecraft/item/ItemStack;)V",
             at = @At("HEAD"), cancellable = true)

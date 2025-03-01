@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(World.class)
-public class MixinWorld implements IWorldUpdateSuppressor
+public class MixinWorld_UpdateSuppression implements IWorldUpdateSuppressor
 {
     @Unique
     private boolean servux_preventBlockUpdates;
