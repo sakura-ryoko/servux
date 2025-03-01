@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.world;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 

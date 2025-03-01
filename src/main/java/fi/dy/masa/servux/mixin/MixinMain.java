@@ -17,7 +17,7 @@ public class MixinMain
     @Inject(method = "main", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/world/level/storage/LevelStorage$Session;backupLevelDataFile(Lnet/minecraft/registry/DynamicRegistryManager;Lnet/minecraft/world/SaveProperties;)V",
             shift = At.Shift.AFTER))
-    private static void servux_captureImmutable(String[] args, CallbackInfo ci, @Local DynamicRegistryManager.Immutable immutable)
+    private static void servux_onCaptureImmutable(String[] args, CallbackInfo ci, @Local DynamicRegistryManager.Immutable immutable)
     {
         DataProviderManager.INSTANCE.onCaptureImmutable(immutable);
     }

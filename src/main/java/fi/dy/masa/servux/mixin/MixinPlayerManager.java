@@ -30,25 +30,25 @@ public abstract class MixinPlayerManager
     public MixinPlayerManager() { super(); }
 
     @Inject(method = "checkCanJoin", at = @At("RETURN"))
-    private void eventOnClientConnect(SocketAddress address, GameProfile profile, CallbackInfoReturnable<Text> cir)
+    private void servux_onClientConnect(SocketAddress address, GameProfile profile, CallbackInfoReturnable<Text> cir)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onClientConnect(address, profile, cir.getReturnValue());
     }
 
     @Inject(method = "onPlayerConnect", at = @At("TAIL"))
-    private void eventOnPlayerJoin(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci)
+    private void servux_onPlayerJoin(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerJoin(connection.getAddress(), clientData.gameProfile(), player);
     }
 
     @Inject(method = "respawnPlayer", at = @At("RETURN"))
-    private void eventOnPlayerRespawn(ServerPlayerEntity player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayerEntity> cir)
+    private void servux_onPlayerRespawn(ServerPlayerEntity player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayerEntity> cir)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerRespawn(cir.getReturnValue(), player);
     }
 
     @Inject(method = "addToOperators", at = @At("HEAD"))
-    private void captureGameProfileOp(GameProfile profile, CallbackInfo ci)
+    private void servux_onCaptureGameProfileOp(GameProfile profile, CallbackInfo ci)
     {
         this.profileTemp = profile;
     }
@@ -56,7 +56,7 @@ public abstract class MixinPlayerManager
     @Redirect(method = "addToOperators",
             at = @At(value = "INVOKE",
                     target ="Lnet/minecraft/server/PlayerManager;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/network/ServerPlayerEntity;"))
-    private ServerPlayerEntity eventOnPlayerOp(PlayerManager instance, UUID uuid)
+    private ServerPlayerEntity servux_onPlayerOp(PlayerManager instance, UUID uuid)
     {
         ServerPlayerEntity player = instance.getPlayer(uuid);
 
@@ -71,7 +71,7 @@ public abstract class MixinPlayerManager
     }
 
     @Inject(method = "removeFromOperators", at = @At("HEAD"))
-    private void captureGameProfileDeOp(GameProfile profile, CallbackInfo ci)
+    private void servux_onGameProfileDeOp(GameProfile profile, CallbackInfo ci)
     {
         this.profileTemp = profile;
     }
@@ -79,7 +79,7 @@ public abstract class MixinPlayerManager
     @Redirect(method = "removeFromOperators",
             at = @At(value = "INVOKE",
                     target="Lnet/minecraft/server/PlayerManager;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/network/ServerPlayerEntity;"))
-    private ServerPlayerEntity eventOnPlayerDeOp(PlayerManager instance, UUID uuid)
+    private ServerPlayerEntity servux_onPlayerDeOp(PlayerManager instance, UUID uuid)
     {
         ServerPlayerEntity player = instance.getPlayer(uuid);
 
@@ -94,7 +94,7 @@ public abstract class MixinPlayerManager
     }
 
     @Inject(method = "remove", at = @At("HEAD"))
-    private void eventOnPlayerLeave(ServerPlayerEntity player, CallbackInfo ci)
+    private void servux_onPlayerLeave(ServerPlayerEntity player, CallbackInfo ci)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerLeave(player);
     }
