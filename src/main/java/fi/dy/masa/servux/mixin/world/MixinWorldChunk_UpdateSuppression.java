@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin(WorldChunk.class)
-public abstract class MixinWorldChunk
+public abstract class MixinWorldChunk_UpdateSuppression
 {
     @Redirect(method = "setBlockState",
                 slice = @Slice(from = @At(value = "INVOKE",
