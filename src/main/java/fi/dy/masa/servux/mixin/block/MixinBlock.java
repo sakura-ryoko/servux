@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.block;
 
 import java.util.function.Supplier;
 
