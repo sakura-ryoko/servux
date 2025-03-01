@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.item;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,9 +19,9 @@ import fi.dy.masa.servux.util.PlacementHandler.UseContext;
  * Should override Carpet-Extra's version with a higher priority
  */
 @Mixin(value = BlockItem.class, priority = 1010)
-public abstract class MixinBlockItem extends Item
+public abstract class MixinBlockItem_EasyPlace extends Item
 {
-    private MixinBlockItem(Settings builder)
+    private MixinBlockItem_EasyPlace(Settings builder)
     {
         super(builder);
     }
