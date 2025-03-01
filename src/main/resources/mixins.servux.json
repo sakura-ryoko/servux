@@ -9,7 +9,7 @@
     "MixinMinecraftDedicatedServer",
     "MixinMinecraftServer",
     "MixinPlayerManager",
-    "block.MixinBlock",
+    "block.MixinBlock_UpdateSuppression",
     "block.MixinRailBlocks",
     "block.MixinStairsBlock",
     "debug.IMixinMobEntity",
@@ -22,8 +22,8 @@
     "world.IMixinWorldTickScheduler",
     "world.MixinServerChunkLoadingManager",
     "world.MixinServerWorld",
-    "world.MixinWorld",
-    "world.MixinWorldChunk"
+    "world.MixinWorld_UpdateSuppression",
+    "world.MixinWorldChunk_UpdateSuppression"
   ],
   "injectors": {
     "defaultRequire": 1
