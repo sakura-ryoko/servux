@@ -1,30 +1,18 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.network;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(value = ServerPlayNetworkHandler.class, priority = 1005)
-public class MixinServerPlayNetworkHandler
+public class MixinServerPlayNetworkHandler_QueryNbt
 {
     @Shadow public ServerPlayerEntity player;
-
-    @Redirect(method = "onPlayerInteractBlock", require = 0,
-            at = @At(value = "INVOKE",
-                    target = "Lnet/minecraft/util/math/Vec3d;subtract(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d servux$removeHitPosCheck(Vec3d hitVec, Vec3d blockCenter)
-    {
-        return Vec3d.ZERO;
-        //return hitVec.subtract(blockCenter);
-    }
 
     @ModifyConstant(method = "onQueryBlockNbt", constant = @Constant(intValue = 2))
     private int servux_onQueryBlockNbt(int constant)

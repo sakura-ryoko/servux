@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.world;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import org.jetbrains.annotations.NotNull;

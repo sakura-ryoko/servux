@@ -5,7 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
-import fi.dy.masa.servux.mixin.IMixinWorldTickScheduler;
+import fi.dy.masa.servux.mixin.world.IMixinWorldTickScheduler;
 import fi.dy.masa.servux.schematic.container.ILitematicaBlockStatePalette;
 import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
