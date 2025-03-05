@@ -410,7 +410,7 @@ public class SchematicPlacingUtils
                     tag.putInt("TileZ", (int) p.z);
                 }
 
-                NbtList rotation = tag.getOrCreateList("Rotation");
+                NbtList rotation = tag.getListOrEmpty("Rotation");
                 origRot[0] = rotation.getFloat(0, 0f);
                 origRot[1] = rotation.getFloat(1, 0f);
 

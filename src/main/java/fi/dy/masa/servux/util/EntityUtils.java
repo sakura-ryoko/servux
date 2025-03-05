@@ -123,7 +123,7 @@ public class EntityUtils
         {
             if (nbt.contains("Passengers"))
             {
-                NbtList taglist = nbt.getOrCreateList("Passengers");
+                NbtList taglist = nbt.getListOrEmpty("Passengers");
 
                 for (int i = 0; i < taglist.size(); ++i)
                 {

@@ -347,7 +347,7 @@ public class SchematicMetadata
 
         if (nbt.contains("EnclosingSize"))
         {
-            Vec3i size = NbtUtils.readVec3iFromTag(nbt.getOrCreateCompound("EnclosingSize"));
+            Vec3i size = NbtUtils.readVec3iFromTag(nbt.getCompoundOrEmpty("EnclosingSize"));
 
             if (size != null)
             {

@@ -59,13 +59,13 @@ public class SchematicPlacement
     {
         try
         {
-            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getOrCreateCompound("Schematics")), NbtUtils.readBlockPosFromIntArray(tags, "Origin"), tags.getString("Name", "?"), false);
+            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getCompoundOrEmpty("Schematics")), NbtUtils.readBlockPosFromIntArray(tags, "Origin"), tags.getString("Name", "?"), false);
             placement.mirror = BlockMirror.values()[tags.getInt("Mirror", 0)];
             placement.rotation = BlockRotation.values()[tags.getInt("Rotation", 0)];
 
-            for (String name : tags.getOrCreateCompound("SubRegions").getKeys())
+            for (String name : tags.getCompoundOrEmpty("SubRegions").getKeys())
             {
-                NbtCompound compound = tags.getOrCreateCompound("SubRegions").getOrCreateCompound(name);
+                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(name);
                 var sub = new SubRegionPlacement(NbtUtils.readBlockPosFromIntArray(compound, "Pos"), compound.getString("Name", "?"));
                 sub.mirror = BlockMirror.values()[compound.getInt("Mirror", 0)];
                 sub.rotation = BlockRotation.values()[compound.getInt("Rotation", 0)];

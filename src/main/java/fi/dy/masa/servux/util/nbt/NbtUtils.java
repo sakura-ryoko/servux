@@ -236,7 +236,7 @@ public class NbtUtils
     {
         if (tag != null && tag.contains("Pos"))
         {
-            NbtList tagList = tag.getOrCreateList("Pos");
+            NbtList tagList = tag.getListOrEmpty("Pos");
 
             if (tagList.getType() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
             {
