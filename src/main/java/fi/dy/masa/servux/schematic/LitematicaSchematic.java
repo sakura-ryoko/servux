@@ -1094,7 +1094,7 @@ public class LitematicaSchematic
 
         for (int id = 0; id < size; ++id)
         {
-            NbtCompound tag = tagList.getOrCreateCompound(id);
+            NbtCompound tag = tagList.getCompoundOrEmpty(id);
             BlockState state = NbtHelper.toBlockState(lookup, tag);
             list.add(state);
         }
@@ -1116,7 +1116,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = palette.getOrCreateCompound(i);
+            NbtCompound tag = palette.getCompoundOrEmpty(i);
             BlockState state = NbtHelper.toBlockState(lookup, tag);
 
             if (i > 0 || state != LitematicaBlockStateContainer.AIR_BLOCK_STATE)
@@ -1135,7 +1135,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound entityData = tagList.getOrCreateCompound(i);
+            NbtCompound entityData = tagList.getCompoundOrEmpty(i);
             Vec3d posVec = NbtUtils.readEntityPositionFromTag(entityData);
 
             if (posVec != null && entityData.isEmpty() == false)
@@ -1154,7 +1154,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getOrCreateCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
             BlockPos pos = NbtUtils.readBlockPos(tag);
 
             if (pos != null && tag.isEmpty() == false)
@@ -1174,7 +1174,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getOrCreateCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
 
             if (tag.contains("Time")) // XXX these were accidentally saved as longs in version 3
             {
@@ -1214,7 +1214,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getOrCreateCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
             Vec3d posVec = NbtUtils.readVec3d(tag);
             NbtCompound entityData = tag.getCompoundOrEmpty("EntityData");
 
@@ -1236,7 +1236,7 @@ public class LitematicaSchematic
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getOrCreateCompound(i);
+            NbtCompound tag = tagList.getCompoundOrEmpty(i);
             NbtCompound tileNbt = tag.getCompoundOrEmpty("TileNBT");
 
             // Note: This within-schematic relative position is not inside the tile tag!
