@@ -15,7 +15,7 @@ public class Reference
     public static final String MC_VERSION = MinecraftVersion.CURRENT.getName();
     public static final String MOD_TYPE = "fabric";
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
-    public static final boolean DEV_DEBUG = true;
+    public static final boolean DEV_DEBUG = false;
 
     public static final Path DEFAULT_RUN_DIR = FabricLoader.getInstance().getGameDir();
     public static final Path DEFAULT_CONFIG_DIR = FabricLoader.getInstance().getConfigDir();
