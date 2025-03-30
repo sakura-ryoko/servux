@@ -35,7 +35,9 @@ public interface IServuxSetting<T>
 
     default Text shortDisplayName() {
         return prettyName().copy().styled(style ->
-            style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, comment().copy()
+            //style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, comment().copy()
+                    //.append(Text.literal("\n(%s)".formatted(qualifiedName())).formatted(Formatting.DARK_GRAY))))
+            style.withHoverEvent(new HoverEvent.ShowText(comment().copy()
                     .append(Text.literal("\n(%s)".formatted(qualifiedName())).formatted(Formatting.DARK_GRAY))))
                 .withColor(Formatting.YELLOW)
         );

@@ -1,9 +1,10 @@
 package fi.dy.masa.servux.util;
 
-import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
-import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
-import fi.dy.masa.servux.util.data.Constants;
-import fi.dy.masa.servux.util.position.PositionUtils;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -18,11 +19,9 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Predicate;
+import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
+import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class EntityUtils
 {
@@ -122,13 +121,13 @@ public class EntityUtils
         }
         else
         {
-            if (nbt.contains("Passengers", Constants.NBT.TAG_LIST))
+            if (nbt.contains("Passengers"))
             {
-                NbtList taglist = nbt.getList("Passengers", Constants.NBT.TAG_COMPOUND);
+                NbtList taglist = nbt.getListOrEmpty("Passengers");
 
                 for (int i = 0; i < taglist.size(); ++i)
                 {
-                    Entity passenger = createEntityAndPassengersFromNBT(taglist.getCompound(i), world);
+                    Entity passenger = createEntityAndPassengersFromNBT(taglist.getCompoundOrEmpty(i), world);
 
                     if (passenger != null)
                     {
@@ -161,17 +160,17 @@ public class EntityUtils
     public static void setEntityRotations(Entity entity, float yaw, float pitch)
     {
         entity.setYaw(yaw);
-        entity.prevYaw = yaw;
+        entity.lastYaw = yaw;
 
         entity.setPitch(pitch);
-        entity.prevPitch = pitch;
+        entity.lastPitch = pitch;
 
         if (entity instanceof LivingEntity livingBase)
         {
             livingBase.headYaw = yaw;
             livingBase.bodyYaw = yaw;
-            livingBase.prevHeadYaw = yaw;
-            livingBase.prevBodyYaw = yaw;
+            livingBase.lastHeadYaw = yaw;
+            livingBase.lastBodyYaw = yaw;
             //livingBase.renderYawOffset = yaw;
             //livingBase.prevRenderYawOffset = yaw;
         }

@@ -1,14 +1,14 @@
 package fi.dy.masa.servux.schematic;
 
-import fi.dy.masa.servux.util.data.Constants;
-import fi.dy.masa.servux.util.data.FileType;
-import fi.dy.masa.servux.util.data.Schema;
-import fi.dy.masa.servux.util.nbt.NbtUtils;
+import javax.annotation.Nullable;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 
-import javax.annotation.Nullable;
+import fi.dy.masa.servux.util.data.FileType;
+import fi.dy.masa.servux.util.data.Schema;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
 
 public class SchematicMetadata
 {
@@ -328,26 +328,26 @@ public class SchematicMetadata
 
     public void readFromNBT(NbtCompound nbt)
     {
-        this.name = nbt.getString("Name");
-        this.author = nbt.getString("Author");
-        this.description = nbt.getString("Description");
-        this.regionCount = nbt.getInt("RegionCount");
-        this.timeCreated = nbt.getLong("TimeCreated");
-        this.timeModified = nbt.getLong("TimeModified");
+        this.name = nbt.getString("Name", "?");
+        this.author = nbt.getString("Author", "?");
+        this.description = nbt.getString("Description", "");
+        this.regionCount = nbt.getInt("RegionCount", -1);
+        this.timeCreated = nbt.getLong("TimeCreated", -1L);
+        this.timeModified = nbt.getLong("TimeModified", -1L);
 
-        if (nbt.contains("TotalVolume", Constants.NBT.TAG_ANY_NUMERIC))
+        if (nbt.contains("TotalVolume"))
         {
-            this.totalVolume = nbt.getInt("TotalVolume");
+            this.totalVolume = nbt.getInt("TotalVolume", -1);
         }
 
-        if (nbt.contains("TotalBlocks", Constants.NBT.TAG_ANY_NUMERIC))
+        if (nbt.contains("TotalBlocks"))
         {
-            this.totalBlocks = nbt.getInt("TotalBlocks");
+            this.totalBlocks = nbt.getInt("TotalBlocks", -1);
         }
 
-        if (nbt.contains("EnclosingSize", Constants.NBT.TAG_COMPOUND))
+        if (nbt.contains("EnclosingSize"))
         {
-            Vec3i size = NbtUtils.readVec3iFromTag(nbt.getCompound("EnclosingSize"));
+            Vec3i size = NbtUtils.readVec3iFromTag(nbt.getCompoundOrEmpty("EnclosingSize"));
 
             if (size != null)
             {
@@ -355,9 +355,9 @@ public class SchematicMetadata
             }
         }
 
-        if (nbt.contains("PreviewImageData", Constants.NBT.TAG_INT_ARRAY))
+        if (nbt.contains("PreviewImageData"))
         {
-            this.thumbnailPixelData = nbt.getIntArray("PreviewImageData");
+            this.thumbnailPixelData = nbt.getIntArray("PreviewImageData").orElse(null);
         }
         else
         {

@@ -6,17 +6,19 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.BiConsumer;
-
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.text.*;
+
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
-
-import javax.annotation.Nullable;
 
 public class i18nLang
 {
@@ -129,7 +131,10 @@ public class i18nLang
         }
         else
         {
-            return Text.literal(key).styled((style) -> style.withColor(Formatting.RED).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Missing translation: "+key))));
+            return Text.literal(key).styled((style) ->
+                                                    style.withColor(Formatting.RED)
+                                                     //.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Missing translation: "+key))));
+                                                     .withHoverEvent(new HoverEvent.ShowText(Text.of("Missing translation: "+key))));
         }
     }
 

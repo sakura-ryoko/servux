@@ -7,11 +7,11 @@ import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.IntBoundingBox;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
 import fi.dy.masa.servux.util.ReplaceBehavior;
 import fi.dy.masa.servux.util.SchematicPlacingUtils;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
@@ -59,17 +59,18 @@ public class SchematicPlacement
     {
         try
         {
-            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getCompound("Schematics")), NbtHelper.toBlockPos(tags, "Origin").orElseThrow(), tags.getString("Name"), false);
-            placement.mirror = BlockMirror.values()[tags.getInt("Mirror")];
-            placement.rotation = BlockRotation.values()[tags.getInt("Rotation")];
-            for (String name : tags.getCompound("SubRegions").getKeys())
+            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getCompoundOrEmpty("Schematics")), NbtUtils.readBlockPosFromIntArray(tags, "Origin"), tags.getString("Name", "?"), false);
+            placement.mirror = BlockMirror.values()[tags.getInt("Mirror", 0)];
+            placement.rotation = BlockRotation.values()[tags.getInt("Rotation", 0)];
+
+            for (String name : tags.getCompoundOrEmpty("SubRegions").getKeys())
             {
-                NbtCompound compound = tags.getCompound("SubRegions").getCompound(name);
-                var sub = new SubRegionPlacement(NbtHelper.toBlockPos(compound, "Pos").orElseThrow(), compound.getString("Name"));
-                sub.mirror = BlockMirror.values()[compound.getInt("Mirror")];
-                sub.rotation = BlockRotation.values()[compound.getInt("Rotation")];
-                sub.ignoreEntities = compound.getBoolean("IgnoreEntities");
-                sub.enabled = compound.getBoolean("Enabled");
+                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(name);
+                var sub = new SubRegionPlacement(NbtUtils.readBlockPosFromIntArray(compound, "Pos"), compound.getString("Name", "?"));
+                sub.mirror = BlockMirror.values()[compound.getInt("Mirror", 0)];
+                sub.rotation = BlockRotation.values()[compound.getInt("Rotation", 0)];
+                sub.ignoreEntities = compound.getBoolean("IgnoreEntities", false);
+                sub.enabled = compound.getBoolean("Enabled", true);
                 placement.relativeSubRegionPlacements.put(name, sub);
             }
             return placement;
