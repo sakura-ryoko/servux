@@ -84,8 +84,6 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             {
                 Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
                 StructureDataProvider.INSTANCE.unregister(player);
-                //HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
-                //HudDataProvider.INSTANCE.refreshWeatherData(player, packet.getCompound());
             }
             default -> Servux.LOGGER.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
         }
