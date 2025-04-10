@@ -6,11 +6,10 @@ import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.servux.schematic.selection.Box;
-import fi.dy.masa.servux.util.IntBoundingBox;
+import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
-import fi.dy.masa.servux.util.ReplaceBehavior;
-import fi.dy.masa.servux.util.SchematicPlacingUtils;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.BlockMirror;
@@ -547,10 +546,10 @@ public class SchematicPlacement
         return null;
     }
 
-    public void pasteTo(ServerWorld serverWorld, ReplaceBehavior replaceBehavior)
+    public void pasteTo(ServerWorld serverWorld, ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
     {
         this.getEnclosingBox().toVanilla().streamChunkPos().forEach(chunkPos ->
-                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos, this, replaceBehavior, false));
+                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos, this, replaceBehavior, layerBehavior, layerRange, false));
         // todo
     }
 }

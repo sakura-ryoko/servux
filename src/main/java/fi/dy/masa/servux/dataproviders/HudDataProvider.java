@@ -333,7 +333,7 @@ public class HudDataProvider extends DataProviderBase
 
         if (data != null)
         {
-            Servux.debugLog("hudDataChannel: received RecipeManager request from {}, client version: {}", player.getName().getLiteralString(), data.getString("version"));
+            Servux.debugLog("hudDataChannel: received RecipeManager request from {}, client version: {}", player.getName().getLiteralString(), data.getString("version", "?"));
         }
 
         recipes.forEach((recipeEntry ->

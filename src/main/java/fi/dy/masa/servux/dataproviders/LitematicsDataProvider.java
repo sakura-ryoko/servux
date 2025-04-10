@@ -224,8 +224,8 @@ public class LitematicsDataProvider extends DataProviderBase
 
         // TODO --> Split out the task this way (I should have done this under 0.3.0),
         //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
-        if ((req.contains("Task") && req.getString("Task").equals("BulkEntityRequest")) ||
-            req.contains("Task") == false)
+        if ((req.contains("Task") && req.getString("Task", "").equals("BulkEntityRequest")) ||
+            !req.contains("Task"))
         {
             Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos [{}] to player {}", chunkPos.toString(), player.getName().getLiteralString());
 
@@ -297,14 +297,16 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        if (tags.getString("Task").equals("LitematicaPaste"))
+        if (tags.getString("Task", "").equals("LitematicaPaste"))
         {
             Servux.debugLog("litematic_data: Servux Paste request from player {}", player.getName().getLiteralString());
 
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode", ReplaceBehavior.NONE.name()));
-            placement.pasteTo(player.getServerWorld(), replaceMode);
+            PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
+            LayerRange layerRange = tags.get("RenderLayerRange", LayerRange.CODEC).orElse(null);
+            placement.pasteTo(player.getServerWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
             player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);

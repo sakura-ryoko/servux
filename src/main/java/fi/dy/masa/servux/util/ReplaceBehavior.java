@@ -1,15 +1,21 @@
 package fi.dy.masa.servux.util;
 
-public enum ReplaceBehavior
+import com.google.common.collect.ImmutableList;
+
+import net.minecraft.util.StringIdentifiable;
+
+public enum ReplaceBehavior implements StringIdentifiable
 {
     NONE            ("none",            "litematica.gui.label.replace_behavior.none"),
     ALL             ("all",             "litematica.gui.label.replace_behavior.all"),
     WITH_NON_AIR    ("with_non_air",    "litematica.gui.label.replace_behavior.with_non_air");
 
+    public static final StringIdentifiable.EnumCodec<ReplaceBehavior> CODEC = StringIdentifiable.createCodec(ReplaceBehavior::values);
+    public static final ImmutableList<ReplaceBehavior> VALUES = ImmutableList.copyOf(values());
     private final String configString;
     private final String translationKey;
 
-    private ReplaceBehavior(String configString, String translationKey)
+    ReplaceBehavior(String configString, String translationKey)
     {
         this.configString = configString;
         this.translationKey = translationKey;
@@ -17,7 +23,7 @@ public enum ReplaceBehavior
 
     public static ReplaceBehavior fromStringStatic(String name)
     {
-        for (ReplaceBehavior val : ReplaceBehavior.values())
+        for (ReplaceBehavior val : VALUES)
         {
             if (val.configString.equalsIgnoreCase(name))
             {
@@ -26,5 +32,11 @@ public enum ReplaceBehavior
         }
 
         return ReplaceBehavior.NONE;
+    }
+
+    @Override
+    public String asString()
+    {
+        return this.configString;
     }
 }
