@@ -1,7 +1,15 @@
 package fi.dy.masa.servux.util;
 
 import javax.annotation.Nullable;
+
+import io.netty.buffer.ByteBuf;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.nbt.NbtIntArray;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -10,6 +18,42 @@ import net.minecraft.world.World;
 
 public class IntBoundingBox
 {
+    public static final Codec<IntBoundingBox> CODEC = RecordCodecBuilder.create(
+            inst -> inst.group(
+                    PrimitiveCodec.INT.fieldOf("minX").forGetter(get -> get.minX),
+                    PrimitiveCodec.INT.fieldOf("minY").forGetter(get -> get.minY),
+                    PrimitiveCodec.INT.fieldOf("minZ").forGetter(get -> get.minZ),
+                    PrimitiveCodec.INT.fieldOf("maxX").forGetter(get -> get.maxX),
+                    PrimitiveCodec.INT.fieldOf("maxY").forGetter(get -> get.maxY),
+                    PrimitiveCodec.INT.fieldOf("maxZ").forGetter(get -> get.maxZ)
+            ).apply(inst, IntBoundingBox::new)
+    );
+    public static final PacketCodec<ByteBuf, IntBoundingBox> PACKET_CODEC = new PacketCodec<>()
+    {
+        @Override
+        public void encode(ByteBuf buf, IntBoundingBox value)
+        {
+            PacketCodecs.INTEGER.encode(buf, value.minX);
+            PacketCodecs.INTEGER.encode(buf, value.minY);
+            PacketCodecs.INTEGER.encode(buf, value.minZ);
+            PacketCodecs.INTEGER.encode(buf, value.maxX);
+            PacketCodecs.INTEGER.encode(buf, value.maxY);
+            PacketCodecs.INTEGER.encode(buf, value.maxZ);
+        }
+
+        @Override
+        public IntBoundingBox decode(ByteBuf buf)
+        {
+            return new IntBoundingBox(
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf),
+                    PacketCodecs.INTEGER.decode(buf)
+            );
+        }
+    };
     public final int minX;
     public final int minY;
     public final int minZ;
@@ -30,11 +74,11 @@ public class IntBoundingBox
     public boolean containsPos(Vec3i pos)
     {
         return pos.getX() >= this.minX &&
-                pos.getX() <= this.maxX &&
-                pos.getZ() >= this.minZ &&
-                pos.getZ() <= this.maxZ &&
-                pos.getY() >= this.minY &&
-                pos.getY() <= this.maxY;
+               pos.getX() <= this.maxX &&
+               pos.getZ() >= this.minZ &&
+               pos.getZ() <= this.maxZ &&
+               pos.getY() >= this.minY &&
+               pos.getY() <= this.maxY;
     }
 
     public boolean containsPos(long pos)
@@ -44,17 +88,17 @@ public class IntBoundingBox
         int z = BlockPos.unpackLongZ(pos);
 
         return x >= this.minX && y >= this.minY && z >= this.minZ &&
-                x <= this.maxX && y <= this.maxY && z <= this.maxZ;
+               x <= this.maxX && y <= this.maxY && z <= this.maxZ;
     }
 
     public boolean intersects(IntBoundingBox box)
     {
         return this.maxX >= box.minX &&
-                this.minX <= box.maxX &&
-                this.maxZ >= box.minZ &&
-                this.minZ <= box.maxZ &&
-                this.maxY >= box.minY &&
-                this.minY <= box.maxY;
+               this.minX <= box.maxX &&
+               this.maxZ >= box.minZ &&
+               this.minZ <= box.maxZ &&
+               this.maxY >= box.minY &&
+               this.minY <= box.maxY;
     }
 
     public int getMinValueForAxis(Direction.Axis axis)
@@ -137,7 +181,7 @@ public class IntBoundingBox
     public IntBoundingBox expand(int x, int y, int z)
     {
         return new IntBoundingBox(this.minX - x, this.minY - y, this.minZ - z,
-                this.maxX + x, this.maxY + y, this.maxZ + z);
+                                  this.maxX + x, this.maxY + y, this.maxZ + z);
     }
 
     public IntBoundingBox shrink(int x, int y, int z)
@@ -175,10 +219,10 @@ public class IntBoundingBox
         IntBoundingBox other = (IntBoundingBox) obj;
 
         return this.maxX == other.maxX &&
-                this.maxY == other.maxY &&
-                this.maxZ == other.maxZ &&
-                this.minX == other.minX &&
-                this.minY == other.minY &&
-                this.minZ == other.minZ;
+               this.maxY == other.maxY &&
+               this.maxZ == other.maxZ &&
+               this.minX == other.minX &&
+               this.minY == other.minY &&
+               this.minZ == other.minZ;
     }
 }
