@@ -90,3 +90,9 @@ Servux New Features (0.3.7+)
   }
 }
 ```
+
+## Future plans:
+* Add Syncmatica-like protocol for Litematica. (new data provider)
+* Add Shulker Box stacking (tweaks_data)
+* Add Mob Caps Data (hud_data)
+* Add TPS / MSPT data (hud_data)
