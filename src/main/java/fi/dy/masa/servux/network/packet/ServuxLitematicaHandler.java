@@ -104,6 +104,11 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
 
                 if (fullPacket != null)
                 {
+                    if (Reference.DEV_DEBUG)
+                    {
+                        Servux.LOGGER.info("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Full Packet of size {} (in bytes) // reading session key [{}]", fullPacket.readableBytes(), readingSessionKey);
+                    }
+
                     try
                     {
                         this.readingSessionKeys.remove(uuid);

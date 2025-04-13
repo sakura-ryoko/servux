@@ -6,12 +6,14 @@ import java.util.Set;
 import java.util.UUID;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -303,8 +305,28 @@ public class LitematicsDataProvider extends DataProviderBase
 
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
+
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
-            placement.pasteTo(player.getServerWorld(), replaceMode);
+            PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior"));
+            LayerRange layerRange = null;
+
+            if (tags.contains("RenderLayerRange"))
+            {
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.LOGGER.warn("RenderLayerRange IN: [{}]", tags.getCompound("RenderLayerRange").toString());
+                }
+                layerRange = LayerRange.CODEC.decode(NbtOps.INSTANCE, tags.get("RenderLayerRange")).resultOrPartial().orElse(Pair.of(null, null)).getFirst();
+            }
+
+            if (Reference.DEV_DEBUG)
+            {
+                Servux.LOGGER.warn("ReplaceMode OUT: [{}]", replaceMode != null ? replaceMode.asString() : "<NULL>");
+                Servux.LOGGER.warn("PasteLayerBehavior OUT: [{}]", layerBehavior != null ? layerBehavior.asString() : "<NULL>");
+                Servux.LOGGER.warn("RenderLayerRange OUT: [{}]", layerRange != null ? layerRange.toJson() : "<NULL>");
+            }
+
+            placement.pasteTo(player.getServerWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
             player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
