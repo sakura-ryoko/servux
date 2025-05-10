@@ -49,6 +49,8 @@
     "servux.config.litematic_data.fix_rail_rotations.name": "修正铁轨旋转",
     "servux.config.litematic_data.fix_stairs_mirror.comment": "启用/禁用楼梯镜像时的方向修正",
     "servux.config.litematic_data.fix_stairs_mirror.name": "修正楼梯镜像",
+    "servux.config.litematic_data.fix_chest_mirror.comment": "Enable / Disable the fixing of Chest Mirroring when Chests are Mirrored.",
+    "servux.config.litematic_data.fix_chest_mirror.name": "Fix Chest Mirroring",
     "servux.config.litematic_data.permission_level.comment": "Litematic数据提供者所需权限等级",
     "servux.config.litematic_data.permission_level.name": "权限等级",
     "servux.config.litematic_data.permission_level_paste.comment": "Litematic粘贴操作所需权限等级",
