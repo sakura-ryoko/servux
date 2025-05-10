@@ -8,7 +8,9 @@ import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ChestBlock;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.enums.ChestType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.decoration.DisplayEntity;
@@ -28,6 +30,7 @@ import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.WorldTickScheduler;
 
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
@@ -200,6 +203,7 @@ public class SchematicPlacingUtils
 
                     posMutable.set(x, y, z);
                     NbtCompound teNBT = blockEntityMap.get(posMutable);
+                    BlockPos origPos = posMutable.toImmutable();
 
                     posMutable.set(posMinRelMinusRegX + x,
                                    posMinRelMinusRegY + y,
@@ -220,6 +224,31 @@ public class SchematicPlacingUtils
                         (replace == ReplaceBehavior.WITH_NON_AIR && state.isAir() == true))
                     {
                         continue;
+                    }
+
+                    // Fix inventory of adjacent chest sides
+                    if (state.hasBlockEntity() && state.isOf(Blocks.CHEST) &&
+                        !ignoreInventories && mirrorMain != BlockMirror.NONE &&
+                        !(state.get(ChestBlock.CHEST_TYPE) == ChestType.SINGLE) &&
+                        LitematicsDataProvider.INSTANCE.isEnabled() &&
+                        LitematicsDataProvider.INSTANCE.fixChestMirror.getValue())
+                    {
+                        Direction facing = state.get(ChestBlock.FACING);
+                        Direction.Axis axis = facing.getAxis();
+                        ChestType type = state.get(ChestBlock.CHEST_TYPE).getOpposite();
+
+                        if (mirrorMain == BlockMirror.FRONT_BACK && axis == Direction.Axis.Z)
+                        {
+                            Direction facingAdj = type == ChestType.LEFT ? facing.rotateCounterclockwise(Direction.Axis.Y) : facing.rotateClockwise(Direction.Axis.Y);
+                            BlockPos posAdj = origPos.offset(facingAdj);
+                            teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
+                        }
+                        else if (mirrorMain == BlockMirror.LEFT_RIGHT && axis == Direction.Axis.Z)
+                        {
+                            Direction facingAdj = type == ChestType.LEFT ? facing.rotateCounterclockwise(Direction.Axis.Y) : facing.rotateClockwise(Direction.Axis.Y);
+                            BlockPos posAdj = origPos.offset(facingAdj);
+                            teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
+                        }
                     }
 
                     if (mirrorMain != BlockMirror.NONE) { state = state.mirror(mirrorMain); }
