@@ -26,7 +26,7 @@ public abstract class MixinStairsBlock extends Block
     }
 
     @Inject(method = "mirror", at = @At(value = "HEAD"), cancellable = true)
-    private void litematica_fixStairsMirror(BlockState state, BlockMirror mirror, CallbackInfoReturnable<BlockState> cir)
+    private void servux_fixStairsMirror(BlockState state, BlockMirror mirror, CallbackInfoReturnable<BlockState> cir)
     {
         if (LitematicsDataProvider.INSTANCE.isEnabled() &&
             LitematicsDataProvider.INSTANCE.fixStairMirror.getValue())

@@ -1,31 +1,32 @@
 {
-  "required": true,
-  "package": "fi.dy.masa.servux.mixin",
-  "compatibilityLevel": "JAVA_21",
-  "minVersion": "0.8",
-  "mixins": [
-    "MixinCommandManager",
-    "MixinMain",
-    "MixinMinecraftDedicatedServer",
-    "MixinMinecraftServer",
-    "MixinPlayerManager",
-    "block.MixinBlock_UpdateSuppression",
-    "block.MixinRailBlocks",
-    "block.MixinStairsBlock",
-    "debug.IMixinMobEntity",
-    "debug.MixinDebugInfoSender",
-    "debug.MixinPath",
-    "debug.MixinSharedConstants",
-    "item.MixinBlockItem_EasyPlace",
-    "network.MixinServerPlayNetworkHandler_EasyPlace",
-    "network.MixinServerPlayNetworkHandler_QueryNbt",
-    "world.IMixinWorldTickScheduler",
-    "world.MixinServerChunkLoadingManager",
-    "world.MixinServerWorld",
-    "world.MixinWorld_UpdateSuppression",
-    "world.MixinWorldChunk_UpdateSuppression"
-  ],
-  "injectors": {
-    "defaultRequire": 1
+    "required": true,
+    "package": "fi.dy.masa.servux.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "minVersion": "0.8",
+    "mixins": [
+        "MixinCommandManager",
+        "MixinMain",
+        "MixinMinecraftDedicatedServer",
+        "MixinMinecraftServer",
+        "MixinPlayerManager",
+        "block.MixinBlock_UpdateSuppression",
+        "block.MixinChestBlock",
+        "block.MixinRailBlocks",
+        "block.MixinStairsBlock",
+        "debug.IMixinMobEntity",
+        "debug.MixinDebugInfoSender",
+        "debug.MixinPath",
+        "debug.MixinSharedConstants",
+        "item.MixinBlockItem_EasyPlace",
+        "network.MixinServerPlayNetworkHandler_EasyPlace",
+        "network.MixinServerPlayNetworkHandler_QueryNbt",
+        "world.IMixinWorldTickScheduler",
+        "world.MixinServerChunkLoadingManager",
+        "world.MixinServerWorld",
+        "world.MixinWorld_UpdateSuppression",
+        "world.MixinWorldChunk_UpdateSuppression"
+    ],
+    "injectors": {
+        "defaultRequire": 1
   }
 }
