@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
 import net.minecraft.block.enums.ChestType;
-import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
@@ -39,8 +38,8 @@ public class BlockUtils
      * type blockstate property in the given state, if any.
      * If there are no PropertyDirection properties, then null is returned.
      *
-     * @param state
-     * @return
+     * @param state ()
+     * @return ()
      */
     public static Optional<Direction> getFirstPropertyFacingValue(BlockState state)
     {
