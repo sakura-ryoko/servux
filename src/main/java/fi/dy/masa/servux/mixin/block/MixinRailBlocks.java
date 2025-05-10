@@ -19,7 +19,7 @@ public abstract class MixinRailBlocks extends AbstractRailBlock
     }
 
     @Inject(method = "rotate", at = @At("HEAD"), cancellable = true)
-    private void fixRailRotation(BlockState state, BlockRotation rot, CallbackInfoReturnable<BlockState> cir)
+    private void servux_fixRailRotation(BlockState state, BlockRotation rot, CallbackInfoReturnable<BlockState> cir)
     {
         if (LitematicsDataProvider.INSTANCE.isEnabled() &&
             LitematicsDataProvider.INSTANCE.fixRaiLRotations.getValue() &&
