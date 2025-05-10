@@ -4,9 +4,13 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ChestBlock;
+import net.minecraft.block.enums.ChestType;
+import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.state.property.Property;
+import net.minecraft.util.BlockMirror;
 import net.minecraft.util.math.Direction;
 
 public class BlockUtils
@@ -48,5 +52,32 @@ public class BlockUtils
     public static Direction getPropertyFacingValue(BlockState state)
     {
         return state.contains(Properties.FACING) ? state.get(Properties.FACING) : null;
+    }
+
+    public static BlockState fixMirrorDoubleChest(BlockState state, BlockMirror mirror, ChestType type)
+    {
+        Direction facing = state.get(ChestBlock.FACING);
+        Direction.Axis axis = facing.getAxis();
+
+        if (mirror == BlockMirror.FRONT_BACK) // x
+        {
+            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+
+            if (axis == Direction.Axis.X)
+            {
+                state = state.with(ChestBlock.FACING, facing.getOpposite());
+            }
+        }
+        else if (mirror == BlockMirror.LEFT_RIGHT) // z
+        {
+            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+
+            if (axis == Direction.Axis.Z)
+            {
+                state = state.with(ChestBlock.FACING, facing.getOpposite());
+            }
+        }
+
+        return state;
     }
 }

@@ -49,6 +49,8 @@
     "servux.config.litematic_data.fix_rail_rotations.name": "Fix Rail Rotations",
     "servux.config.litematic_data.fix_stairs_mirror.comment": "Enable / Disable the fixing of Stair Mirroring when Stairs are Mirrored.",
     "servux.config.litematic_data.fix_stairs_mirror.name": "Fix Stairs Mirroring",
+    "servux.config.litematic_data.fix_chest_mirror.comment": "Enable / Disable the fixing of Chest Mirroring when Chests are Mirrored.",
+    "servux.config.litematic_data.fix_chest_mirror.name": "Fix Chest Mirroring",
     "servux.config.litematic_data.permission_level.comment": "The permission level required for the Litematics data provider",
     "servux.config.litematic_data.permission_level.name": "Permission Level",
     "servux.config.litematic_data.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
