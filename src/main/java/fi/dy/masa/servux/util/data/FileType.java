@@ -2,8 +2,11 @@ package fi.dy.masa.servux.util.data;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.google.common.collect.ImmutableList;
 
-public enum FileType
+import net.minecraft.util.StringIdentifiable;
+
+public enum FileType implements StringIdentifiable
 {
     INVALID,
     UNKNOWN,
@@ -12,6 +15,9 @@ public enum FileType
     SCHEMATICA_SCHEMATIC,
     SPONGE_SCHEMATIC,
     VANILLA_STRUCTURE;
+
+    public static final StringIdentifiable.EnumCodec<FileType> CODEC = StringIdentifiable.createCodec(FileType::values);
+    public static final ImmutableList<FileType> VALUES = ImmutableList.copyOf(values());
 
     public static FileType fromName(String fileName)
     {
@@ -51,6 +57,20 @@ public enum FileType
         }
     }
 
+    public static String getFileExt(FileType type)
+    {
+        return switch (type)
+        {
+            case LITEMATICA_SCHEMATIC -> ".litematic";
+            case SCHEMATICA_SCHEMATIC -> ".schematic";
+            case SPONGE_SCHEMATIC -> ".schem";
+            case VANILLA_STRUCTURE -> ".nbt";
+            case JSON -> ".json";
+            case INVALID -> ".invalid";
+            case UNKNOWN -> ".unknown";
+        };
+    }
+
     public static String getString(FileType type)
     {
         return switch (type)
@@ -63,5 +83,11 @@ public enum FileType
             case INVALID                -> "invalid";
             case UNKNOWN                -> "unknown";
         };
+    }
+
+    @Override
+    public String asString()
+    {
+        return getString(this);
     }
 }

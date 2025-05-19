@@ -58,22 +58,60 @@ public class SchematicPlacement
     {
         try
         {
-            SchematicPlacement placement = new SchematicPlacement(new LitematicaSchematic(tags.getCompoundOrEmpty("Schematics")), NbtUtils.readBlockPosFromIntArray(tags, "Origin"), tags.getString("Name", "?"), false);
+            LitematicaSchematic schematic = new LitematicaSchematic(tags.getCompoundOrEmpty("Schematics"));
+            BlockPos origin = NbtUtils.readBlockPosFromIntArray(tags, "Origin");
+            String name = tags.getString("Name", "?");
+            SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false);
             placement.mirror = BlockMirror.values()[tags.getInt("Mirror", 0)];
             placement.rotation = BlockRotation.values()[tags.getInt("Rotation", 0)];
 
-            for (String name : tags.getCompoundOrEmpty("SubRegions").getKeys())
+            for (String entry : tags.getCompoundOrEmpty("SubRegions").getKeys())
             {
-                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(name);
-                var sub = new SubRegionPlacement(NbtUtils.readBlockPosFromIntArray(compound, "Pos"), compound.getString("Name", "?"));
+                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
+                origin = NbtUtils.readBlockPosFromIntArray(compound, "Pos");
+                name = compound.getString("Name", "?");
+                SubRegionPlacement sub = new SubRegionPlacement(origin, name);
                 sub.mirror = BlockMirror.values()[compound.getInt("Mirror", 0)];
                 sub.rotation = BlockRotation.values()[compound.getInt("Rotation", 0)];
                 sub.ignoreEntities = compound.getBoolean("IgnoreEntities", false);
                 sub.enabled = compound.getBoolean("Enabled", true);
-                placement.relativeSubRegionPlacements.put(name, sub);
+                placement.relativeSubRegionPlacements.put(entry, sub);
             }
+
             return placement;
-        } catch (CommandSyntaxException e)
+        }
+        catch (CommandSyntaxException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static SchematicPlacement createFromNbt(LitematicaSchematic schematic, NbtCompound tags)
+    {
+        try
+        {
+            BlockPos origin = NbtUtils.readBlockPosFromIntArray(tags, "Origin");
+            String name = tags.getString("Name", "?");
+            SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false);
+            placement.mirror = BlockMirror.values()[tags.getInt("Mirror", 0)];
+            placement.rotation = BlockRotation.values()[tags.getInt("Rotation", 0)];
+
+            for (String entry : tags.getCompoundOrEmpty("SubRegions").getKeys())
+            {
+                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
+                origin = NbtUtils.readBlockPosFromIntArray(compound, "Pos");
+                name = compound.getString("Name", "?");
+                SubRegionPlacement sub = new SubRegionPlacement(origin, name);
+                sub.mirror = BlockMirror.values()[compound.getInt("Mirror", 0)];
+                sub.rotation = BlockRotation.values()[compound.getInt("Rotation", 0)];
+                sub.ignoreEntities = compound.getBoolean("IgnoreEntities", false);
+                sub.enabled = compound.getBoolean("Enabled", true);
+                placement.relativeSubRegionPlacements.put(entry, sub);
+            }
+
+            return placement;
+        }
+        catch (Exception e)
         {
             throw new RuntimeException(e);
         }
