@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
+import org.apache.commons.lang3.tuple.Pair;
+
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -23,6 +25,7 @@ import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
+import fi.dy.masa.servux.schematic.LitematicaSchematic;
 
 @Environment(EnvType.SERVER)
 public abstract class ServuxLitematicaHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
@@ -112,7 +115,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
+                        this.handleBulkData(player, fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
                     }
                     catch (Exception e)
                     {
@@ -121,6 +124,27 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                 }
             }
             default -> Servux.LOGGER.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+        }
+    }
+
+    private void handleBulkData(ServerPlayerEntity player, final int type, NbtCompound nbt)
+    {
+        String task = nbt.contains("Task") ? nbt.getString("Task") : "LitematicaPaste";
+
+        switch (task)
+        {
+            // File-Transmit support
+            case "Litematic-TransmitStart", "Litematic-TransmitCancel", "Litematic-TransmitData", "Litematic-TransmitEnd" ->
+            {
+                Pair<LitematicaSchematic, NbtCompound> schemPair = LitematicaSchematic.receiveFileTransmit(nbt, player);
+
+                if (schemPair != null && schemPair.getLeft().getFile() != null)
+                {
+                    Servux.debugLog("handleBulkData(): Received litematic '{}' from player {}", schemPair.getLeft().getFile().toAbsolutePath().toString(), player.getName().getLiteralString());
+                    LitematicsDataProvider.INSTANCE.handleClientPasteRequestPair(player, type, schemPair);
+                }
+            }
+            default -> LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, type, nbt);
         }
     }
 

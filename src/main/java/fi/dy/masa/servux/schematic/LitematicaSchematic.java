@@ -5,14 +5,22 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.mixin.world.IMixinWorldTickScheduler;
+import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
+import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.container.ILitematicaBlockStatePalette;
 import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
+import fi.dy.masa.servux.schematic.conversion.SchematicConversionMaps;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.servux.schematic.selection.AreaSelection;
+import fi.dy.masa.servux.schematic.transmit.SchematicBuffer;
+import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.util.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import org.apache.commons.lang3.tuple.Pair;
+
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -30,6 +38,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryEntryLookup;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.BlockMirror;
@@ -39,6 +48,7 @@ import net.minecraft.util.math.*;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.FileType;
+import fi.dy.masa.servux.util.data.Schema;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
@@ -48,6 +58,7 @@ import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.TickPriority;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -77,7 +88,7 @@ public class LitematicaSchematic
 
     public LitematicaSchematic(NbtCompound nbtCompound) throws CommandSyntaxException
     {
-        this.readFromNBT(nbtCompound);
+        this.readFromNBT(nbtCompound, false);
         this.schematicFile = Path.of("/");
         this.schematicType = FileType.LITEMATICA_SCHEMATIC;
     }
@@ -844,7 +855,7 @@ public class LitematicaSchematic
         return this.pendingFluidTicks.get(regionName);
     }
 
-    private NbtCompound writeToNBT()
+    public NbtCompound writeToNBT()
     {
         NbtCompound nbt = new NbtCompound();
 
@@ -964,7 +975,146 @@ public class LitematicaSchematic
         return tagList;
     }
 
-    private boolean readFromNBT(NbtCompound nbt) throws CommandSyntaxException
+    public void sendTransmitFile(NbtCompound nbtIn, final long sessionKey, ServerPlayerEntity player)
+    {
+        Path file = this.getFile();
+        NbtCompound output = new NbtCompound();
+
+        output.putString("Task", "Litematic-TransmitStart");
+        output.putString("FileName", file.getFileName().toString());
+        //output.put("FileType", FileType.CODEC, this.schematicType);
+        NbtCompound finalOutput = output.copy();
+        FileType.CODEC.encodeStart(NbtOps.INSTANCE, this.schematicType)
+                      .resultOrPartial()
+                      .ifPresent(result -> finalOutput.put("FileType", result)
+                      );
+        output.putLong("SliceKey", sessionKey);
+
+        if (!nbtIn.isEmpty())
+        {
+            output.put("PlacementData", nbtIn);
+        }
+
+        ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
+
+        // File Stream
+        final int bufferSize = SchematicBuffer.BUFFER_SIZE;
+        byte[] buffer = new byte[bufferSize];
+        int totalBytes = 0;
+        int totalSlices = 0;
+        output.putLong("SliceKey", sessionKey);
+
+        try (InputStream is = Files.newInputStream(file))
+        {
+            int bytesRead = 0;
+            output.putString("Task", "Litematic-TransmitData");
+
+            while (bytesRead != -1)
+            {
+                output.remove("Slice");
+                output.remove("Size");
+                output.remove("Data");
+
+                bytesRead = is.read(buffer, 0, bufferSize);
+                output.putInt("Slice", totalSlices);
+                output.putInt("Size", bytesRead);
+                output.putByteArray("Data", buffer);
+                ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
+                totalBytes += bytesRead;
+                totalSlices++;
+            }
+        }
+        catch (Exception err)
+        {
+            output = new NbtCompound();
+            output.putLong("SliceKey", sessionKey);
+            output.putString("Task", "Litematic-TransmitCancel");
+            ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
+            Servux.LOGGER.error("sliceForServux: Exception reading file; {}", err.getLocalizedMessage());
+            return;
+        }
+
+        // End Slice
+        output.remove("Slice");
+        output.remove("Size");
+        output.remove("Data");
+
+        output.putInt("TotalSize", totalBytes);
+        output.putInt("TotalSlices", totalSlices);
+        output.putString("Task", "Litematic-TransmitEnd");
+        ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
+    }
+
+    public static @Nullable Pair<LitematicaSchematic, NbtCompound> receiveFileTransmit(NbtCompound nbt, ServerPlayerEntity player)
+    {
+        SchematicBufferManager manager = LitematicsDataProvider.INSTANCE.getBufferManager();
+        String task = nbt.getString("Task");
+        final long key = nbt.getLong("SliceKey");
+
+        if (task.isEmpty() || key == -1L)
+        {
+            Servux.LOGGER.error("receiveFileTransmit: Invalid sessionKey or Task received.");
+            return null;
+        }
+
+        switch (task)
+        {
+            case "Litematic-TransmitStart" ->
+            {
+                //FileType type = nbt.get("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
+                FileType type = FileType.CODEC.parse(NbtOps.INSTANCE, nbt.get("FileType")).getPartialOrThrow();
+                String name = nbt.getString("FileName");
+
+                manager.createBuffer(name, type, key, nbt.getCompound("PlacementData"), player);
+            }
+            case "Litematic-TransmitData" ->
+            {
+                final int slice = nbt.getInt("Slice");
+                final int size = nbt.getInt("Size");
+                final byte[] data = nbt.getByteArray("Data");
+
+                if (slice < 0 || size < 0 || data.length == 0)
+                {
+                    Servux.LOGGER.error("receiveFileTransmit: Invalid Slice Data received for session key [{}]", key);
+                    return null;
+                }
+
+                manager.receiveSlice(key, slice, data, size);
+            }
+            case "Litematic-TransmitCancel" ->
+            {
+                Servux.LOGGER.warn("receiveFileTransmit: Cancel received for session key [{}]", key);
+                manager.cancelBuffer(key);
+            }
+            case "Litematic-TransmitEnd" ->
+            {
+                final int totalSize = nbt.getInt("TotalSize");
+                final int totalSlices = nbt.getInt("TotalSlices");
+                Path dir = LitematicsDataProvider.INSTANCE.getTransmitDir();
+                NbtCompound optional = manager.getOptionalNbt(key);
+                LitematicaSchematic schematic = manager.finishBuffer(key, dir);
+                manager.removePlayer(player);
+
+                if (schematic == null)
+                {
+                    Servux.LOGGER.warn("receiveFileTransmit: Failed to create Schematic for finishing session key [{}]", key);
+                    return null;
+                }
+
+                // Successful transmission
+                Servux.debugLog("receiveFileTransmit: Received file '{}', [tS: {}, tB: {}]", schematic.getFile().toAbsolutePath().toString(), totalSlices, totalSize);
+                return Pair.of(schematic, optional);
+            }
+            default ->
+            {
+                Servux.LOGGER.error("receiveFileTransmit: Invalid sessionKey or Task received.");
+            }
+        }
+
+        return null;
+    }
+
+    private boolean readFromNBT(NbtCompound nbt, boolean enableFixers) throws CommandSyntaxException
     {
         this.blockContainers.clear();
         this.tileEntities.clear();
@@ -985,7 +1135,7 @@ public class LitematicaSchematic
                 this.metadata.setSchematicVersion(version);
                 this.metadata.setMinecraftDataVersion(minecraftDataVersion);
                 this.metadata.setFileType(FileType.LITEMATICA_SCHEMATIC);
-                this.readSubRegionsFromNBT(nbt.getCompound("Regions"), version, minecraftDataVersion);
+                this.readSubRegionsFromNBT(nbt.getCompound("Regions"), version, minecraftDataVersion, enableFixers);
 
                 return true;
             }
@@ -1011,7 +1161,7 @@ public class LitematicaSchematic
         throw new SimpleCommandExceptionType(Text.translatable(s)).create();
     }
 
-    private void readSubRegionsFromNBT(NbtCompound tag, int version, int minecraftDataVersion)
+    private void readSubRegionsFromNBT(NbtCompound tag, int version, int minecraftDataVersion, boolean enableFixers)
     {
         for (String regionName : tag.getKeys())
         {
@@ -1030,9 +1180,17 @@ public class LitematicaSchematic
                     if (version >= 2)
                     {
                         tiles = this.readTileEntitiesFromNBT(regionTag.getList("TileEntities", Constants.NBT.TAG_COMPOUND));
+                        if (enableFixers)
+                        {
+                            tiles = this.convertTileEntities_to_1_20_5(tiles, minecraftDataVersion);
+                        }
                         this.tileEntities.put(regionName, tiles);
 
                         NbtList entities = regionTag.getList("Entities", Constants.NBT.TAG_COMPOUND);
+                        if (enableFixers)
+                        {
+                            entities = this.convertEntities_to_1_20_5(entities, minecraftDataVersion);
+                        }
                         this.entities.put(regionName, this.readEntitiesFromNBT(entities));
                     }
                     else if (version == 1)
@@ -1067,9 +1225,15 @@ public class LitematicaSchematic
                         BlockPos posMax = PositionUtils.getMaxCorner(regionPos, posEndRel);
                         BlockPos size = posMax.subtract(posMin).add(1, 1, 1);
 
+                        if (enableFixers)
+                        {
+//                            palette = this.convertBlockStatePalette_1_12_to_1_13_2(palette, version, minecraftDataVersion);
+                            palette = this.convertBlockStatePalette_to_1_20_5(palette, minecraftDataVersion);
+                        }
+
                         LitematicaBlockStateContainer container = LitematicaBlockStateContainer.createFrom(palette, blockStateArr, size);
 
-                        if (minecraftDataVersion < MINECRAFT_DATA_VERSION)
+                        if (minecraftDataVersion < MINECRAFT_DATA_VERSION && enableFixers)
                         {
                             this.postProcessContainerIfNeeded(palette, container, tiles);
                         }
@@ -1086,6 +1250,38 @@ public class LitematicaSchematic
         return size != null && size.getX() > 0 && size.getY() > 0 && size.getZ() > 0;
     }
 
+    @Nullable
+    private static Vec3i readSizeFromTagImpl(NbtCompound tag)
+    {
+        if (tag.contains("size", Constants.NBT.TAG_LIST))
+        {
+            NbtList tagList = tag.getList("size", Constants.NBT.TAG_INT);
+
+            if (tagList.size() == 3)
+            {
+                return new Vec3i(tagList.getInt(0), tagList.getInt(1), tagList.getInt(2));
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static BlockPos readBlockPosFromNbtList(NbtCompound tag, String tagName)
+    {
+        if (tag.contains(tagName, Constants.NBT.TAG_LIST))
+        {
+            NbtList tagList = tag.getList(tagName, Constants.NBT.TAG_INT);
+
+            if (tagList.size() == 3)
+            {
+                return new BlockPos(tagList.getInt(0), tagList.getInt(1), tagList.getInt(2));
+            }
+        }
+
+        return null;
+    }
+
     protected boolean readPaletteFromLitematicaFormatTag(NbtList tagList, ILitematicaBlockStatePalette palette)
     {
         final int size = tagList.size();
@@ -1100,6 +1296,506 @@ public class LitematicaSchematic
         }
 
         return palette.setMapping(list);
+    }
+
+    public static boolean isValidSpongeSchematic(NbtCompound tag)
+    {
+        // v2 Sponge Schematic
+        if (tag.contains("Width") &&
+            tag.contains("Height") &&
+            tag.contains("Length") &&
+            tag.contains("Version") &&
+            tag.contains("Palette") &&
+            tag.contains("BlockData"))
+        {
+            return isSizeValid(readSizeFromTagSponge(tag));
+        }
+
+        return false;
+    }
+
+    public static boolean isValidSpongeSchematicv3(NbtCompound tag)
+    {
+        // v3 Sponge Schematic
+        if (tag.contains("Schematic", Constants.NBT.TAG_COMPOUND))
+        {
+            NbtCompound nbtV3 = tag.getCompound("Schematic");
+
+            if (nbtV3.contains("Width", Constants.NBT.TAG_ANY_NUMERIC) &&
+                nbtV3.contains("Height", Constants.NBT.TAG_ANY_NUMERIC) &&
+                nbtV3.contains("Length", Constants.NBT.TAG_ANY_NUMERIC) &&
+                nbtV3.contains("Version", Constants.NBT.TAG_INT) &&
+                nbtV3.getInt("Version") >= 3 &&
+                nbtV3.contains("Blocks") &&
+                nbtV3.contains("DataVersion"))
+            {
+                return isSizeValid(readSizeFromTagSponge(nbtV3));
+            }
+        }
+
+        return false;
+    }
+
+    public static Vec3i readSizeFromTagSponge(NbtCompound tag)
+    {
+        return new Vec3i(tag.getInt("Width"), tag.getInt("Height"), tag.getInt("Length"));
+    }
+
+    protected boolean readSpongePaletteFromTag(NbtCompound tag, ILitematicaBlockStatePalette palette)
+    {
+        final int size = tag.getKeys().size();
+        List<BlockState> list = new ArrayList<>(size);
+        BlockState air = Blocks.AIR.getDefaultState();
+
+        for (int i = 0; i < size; ++i)
+        {
+            list.add(air);
+        }
+
+        for (String key : tag.getKeys())
+        {
+            int id = tag.getInt(key);
+            Optional<BlockState> stateOptional = BlockUtils.getBlockStateFromString(key);
+            BlockState state;
+
+            if (stateOptional.isPresent())
+            {
+                state = stateOptional.get();
+            }
+            else
+            {
+                Servux.LOGGER.warn("Unknown block in the Sponge schematic palette: '{}'", key);
+                state = LitematicaBlockStateContainer.AIR_BLOCK_STATE;
+            }
+
+            if (id < 0 || id >= size)
+            {
+                Servux.LOGGER.error("Invalid ID in the Sponge schematic palette: '{}'", id);
+                return false;
+            }
+
+            list.set(id, state);
+        }
+
+        return palette.setMapping(list);
+    }
+
+    protected boolean readSpongeBlocksFromTag(NbtCompound tag, String schematicName, Vec3i size, int minecraftDataVersion, int spongeVersion)
+    {NbtCompound blocksTag = new NbtCompound();
+        NbtCompound paletteTag;
+        byte[] blockData;
+        int paletteSize;
+
+        if (spongeVersion >= 3 && tag.contains("Blocks"))
+        {
+            blocksTag = tag.getCompound("Blocks");
+
+            if (blocksTag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
+                blocksTag.contains("Data", Constants.NBT.TAG_BYTE_ARRAY))
+            {
+                paletteTag = blocksTag.getCompound("Palette");
+                blockData = blocksTag.getByteArray("Data");
+                paletteSize = paletteTag.getKeys().size();
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            if (tag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
+                tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
+            {
+                paletteTag = tag.getCompound("Palette");
+                blockData = tag.getByteArray("BlockData");
+                paletteSize = paletteTag.getKeys().size();
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        LitematicaBlockStateContainer container = LitematicaBlockStateContainer.createContainer(paletteSize, blockData, size);
+
+        if (container == null)
+        {
+            Servux.LOGGER.error("Failed to read blocks from Sponge schematic");
+            return false;
+        }
+
+        this.blockContainers.put(schematicName, container);
+
+        if (this.readSpongePaletteFromTag(paletteTag, container.getPalette()) == false)
+        {
+            return false;
+        }
+
+        if (spongeVersion >= 3)
+        {
+            if (blocksTag.isEmpty() == false)
+            {
+                // tileEntities list moved to "Blocks" tag for V3
+                Map<BlockPos, NbtCompound> tileEntities = this.readSpongeBlockEntitiesFromTag(blocksTag, spongeVersion);
+//                tileEntities = this.convertTileEntities_to_1_20_5(tileEntities, minecraftDataVersion);
+                this.tileEntities.put(schematicName, tileEntities);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    protected Map<BlockPos, NbtCompound> readSpongeBlockEntitiesFromTag(NbtCompound tag, int spongeVersion)
+    {
+        Map<BlockPos, NbtCompound> blockEntities = new HashMap<>();
+        String tagName = spongeVersion == 1 ? "TileEntities" : "BlockEntities";
+
+        if (tag.contains(tagName) == false)
+        {
+            return blockEntities;
+        }
+
+        NbtList tagList = tag.getList(tagName, Constants.NBT.TAG_COMPOUND);
+
+        final int size = tagList.size();
+
+        for (int i = 0; i < size; ++i)
+        {
+            NbtCompound beTag = tagList.getCompound(i);
+            BlockPos pos = NbtUtils.readBlockPosFromArrayTag(beTag, "Pos");
+
+            if (pos != null && beTag.isEmpty() == false)
+            {
+                beTag.putString("id", beTag.getString("Id"));
+
+                // Remove the Sponge tags from the data that is kept in memory
+                beTag.remove("Id");
+                beTag.remove("Pos");
+
+                if (spongeVersion == 1)
+                {
+                    beTag.remove("ContentVersion");
+                }
+
+                if (spongeVersion >= 3)
+                {
+                    NbtCompound beData = beTag.getCompound("Data");
+                    blockEntities.put(pos, beData);
+                }
+                else
+                {
+                    blockEntities.put(pos, beTag);
+                }
+            }
+        }
+
+        return blockEntities;
+    }
+
+    protected List<EntityInfo> readSpongeEntitiesFromTag(NbtCompound tag, Vec3i offset, int spongeVersion)
+    {
+        List<EntityInfo> entities = new ArrayList<>();
+        NbtList tagList = tag.getList("Entities", Constants.NBT.TAG_COMPOUND);
+        final int size = tagList.size();
+
+        for (int i = 0; i < size; ++i)
+        {
+            NbtCompound entityEntry = tagList.getCompound(i);
+            Vec3d pos = NbtUtils.readVec3dFromListTag(entityEntry);
+
+            if (pos != null && entityEntry.isEmpty() == false)
+            {
+                entityEntry.putString("id", entityEntry.getString("Id"));
+
+                // Remove the Sponge tags from the data that is kept in memory
+                entityEntry.remove("Id");
+
+                if (spongeVersion >= 3)
+                {
+                    NbtCompound entityData = entityEntry.getCompound("Data");
+
+                    if (entityData.contains("id", Constants.NBT.TAG_STRING) == false)
+                    {
+                        entityData.putString("id", entityEntry.getString("id"));
+                    }
+                    entities.add(new EntityInfo(pos, entityData));
+                }
+                else
+                {
+                    pos = new Vec3d(pos.x - offset.getX(), pos.y - offset.getY(), pos.z - offset.getZ());
+                    entities.add(new EntityInfo(pos, entityEntry));
+                }
+            }
+        }
+
+        return entities;
+    }
+
+    public boolean readFromSpongeSchematic(String name, NbtCompound tag)
+    {
+        if (isValidSpongeSchematicv3(tag))
+        {
+            // Probably not the "best" solution, but it works
+            NbtCompound spongeTag = tag.getCompound("Schematic");
+            tag.remove("Schematic");
+            tag.copyFrom(spongeTag);
+        }
+        else if (isValidSpongeSchematic(tag) == false)
+        {
+            return false;
+        }
+
+        final int spongeVersion = tag.contains("Version") ? tag.getInt("Version") : -1;
+        final int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion") : MINECRAFT_DATA_VERSION_1_12;
+        Vec3i size = readSizeFromTagSponge(tag);
+
+        // Can't really use the Data Fixer for the Block State Palette in this format,
+        // so we're just going to ignore it, as long as we fix the Tile/Entities.
+        if (this.readSpongeBlocksFromTag(tag, name, size, minecraftDataVersion, spongeVersion) == false)
+        {
+            return false;
+        }
+
+        Vec3i offset = NbtUtils.readVec3iFromIntArray(tag, "Offset");
+
+        if (offset == null)
+        {
+            offset = Vec3i.ZERO;
+        }
+
+        if (spongeVersion < 3)
+        {
+            Map<BlockPos, NbtCompound> tileEntities = this.readSpongeBlockEntitiesFromTag(tag, spongeVersion);
+//            tileEntities = this.convertTileEntities_to_1_20_5(tileEntities, minecraftDataVersion);
+            this.tileEntities.put(name, tileEntities);
+        }
+
+        List<EntityInfo> entities = this.readSpongeEntitiesFromTag(tag, offset, spongeVersion);
+//        entities = this.convertSpongeEntities_to_1_20_5(entities, minecraftDataVersion);
+        this.entities.put(name, entities);
+
+        if (tag.contains("Metadata"))
+        {
+            NbtCompound metadata = tag.getCompound("Metadata");
+
+            this.metadata.setName(metadata.contains("Name") ? metadata.getString("Name") : name);
+            this.metadata.setAuthor(metadata.contains("Author") ? metadata.getString("Author") : "unknown");
+            this.metadata.setTimeCreated(metadata.contains("Date") ? metadata.getLong("Date") : System.currentTimeMillis());
+        }
+        else
+        {
+            this.metadata.setAuthor("unknown");
+            this.metadata.setName(name);
+            this.metadata.setTimeCreated(System.currentTimeMillis());
+        }
+        if (tag.contains("author"))
+        {
+            this.metadata.setAuthor(tag.getString("author"));
+        }
+
+        this.subRegionPositions.put(name, BlockPos.ORIGIN);
+        this.subRegionSizes.put(name, new BlockPos(size));
+        this.metadata.setRegionCount(1);
+        this.metadata.setTotalVolume(size.getX() * size.getY() * size.getZ());
+        this.metadata.setEnclosingSize(size);
+        this.metadata.setTimeModified(this.metadata.getTimeCreated());
+        this.metadata.setTotalBlocks(this.totalBlocksReadFromWorld);
+        this.metadata.setSchematicVersion(spongeVersion);
+        this.metadata.setMinecraftDataVersion(minecraftDataVersion);
+        this.metadata.setFileType(FileType.SPONGE_SCHEMATIC);
+
+        return true;
+    }
+
+    public boolean readFromVanillaStructure(String name, NbtCompound tag)
+    {
+        Vec3i size = readSizeFromTagImpl(tag);
+
+        if (tag.contains("palette", Constants.NBT.TAG_LIST) &&
+            tag.contains("blocks", Constants.NBT.TAG_LIST) &&
+            isSizeValid(size))
+        {
+            NbtList paletteTag = tag.getList("palette", Constants.NBT.TAG_COMPOUND);
+            int minecraftDataVersion = tag.contains("DataVersion") ? tag.getInt("DataVersion") : MINECRAFT_DATA_VERSION_1_12;
+
+
+            Map<BlockPos, NbtCompound> tileMap = new HashMap<>();
+            this.tileEntities.put(name, tileMap);
+
+            BlockState air = Blocks.AIR.getDefaultState();
+            int paletteSize = paletteTag.size();
+            List<BlockState> list = new ArrayList<>(paletteSize);
+            RegistryEntryLookup<Block> lookup = DataProviderManager.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
+
+            if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+            {
+                Servux.LOGGER.info("VanillaStructure: executing Vanilla DataFixer for Block State Palette DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+            }
+            for (int id = 0; id < paletteSize; ++id)
+            {
+                NbtCompound t = paletteTag.getCompound(id);
+                if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+                {
+                    t = SchematicConversionMaps.updateBlockStates(t, minecraftDataVersion);
+                }
+                BlockState state = NbtHelper.toBlockState(lookup, t);
+                list.add(state);
+            }
+
+            BlockState zeroState = list.get(0);
+            int airId = -1;
+
+            // If air is not ID 0, then we need to re-map the palette such that air is ID 0,
+            // due to how it's currently handled in the Litematica container.
+            for (int i = 0; i < paletteSize; ++i)
+            {
+                if (list.get(i) == air)
+                {
+                    airId = i;
+                    break;
+                }
+            }
+
+            if (airId != 0)
+            {
+                // No air in the palette, insert it
+                if (airId == -1)
+                {
+                    list.add(0, air);
+                    ++paletteSize;
+                }
+                // Air as some other ID, swap the entries
+                else
+                {
+                    list.set(0, air);
+                    list.set(airId, zeroState);
+                }
+            }
+
+            int bits = Math.max(2, Integer.SIZE - Integer.numberOfLeadingZeros(paletteSize - 1));
+            LitematicaBlockStateContainer container = new LitematicaBlockStateContainer(size.getX(), size.getY(), size.getZ(), bits, null);
+            ILitematicaBlockStatePalette palette = container.getPalette();
+            palette.setMapping(list);
+            this.blockContainers.put(name, container);
+
+            if (tag.contains("author", Constants.NBT.TAG_STRING))
+            {
+                this.getMetadata().setAuthor(tag.getString("author"));
+            }
+
+            this.subRegionPositions.put(name, BlockPos.ORIGIN);
+            this.subRegionSizes.put(name, new BlockPos(size));
+            this.metadata.setName(name);
+            this.metadata.setRegionCount(1);
+            this.metadata.setTotalVolume(size.getX() * size.getY() * size.getZ());
+            this.metadata.setEnclosingSize(size);
+            this.metadata.setTimeCreated(System.currentTimeMillis());
+            this.metadata.setTimeModified(this.metadata.getTimeCreated());
+            this.metadata.setSchematicVersion(0);
+            this.metadata.setMinecraftDataVersion(minecraftDataVersion);
+            this.metadata.setFileType(FileType.VANILLA_STRUCTURE);
+
+            NbtList blockList = tag.getList("blocks", Constants.NBT.TAG_COMPOUND);
+            final int count = blockList.size();
+            int totalBlocks = 0;
+
+            for (int i = 0; i < count; ++i)
+            {
+                NbtCompound blockTag = blockList.getCompound(i);
+                BlockPos pos = readBlockPosFromNbtList(blockTag, "pos");
+
+                if (pos == null)
+                {
+                    Servux.LOGGER.error("Failed to read block position for vanilla structure");
+                    return false;
+                }
+
+                int id = blockTag.getInt("state");
+                BlockState state;
+
+                // Air was inserted as ID 0, so the other IDs need to shift
+                if (airId == -1)
+                {
+                    state = palette.getBlockState(id + 1);
+                }
+                else if (airId != 0)
+                {
+                    // re-mapping air and ID 0 state
+                    if (id == 0)
+                    {
+                        state = zeroState;
+                    }
+                    else if (id == airId)
+                    {
+                        state = air;
+                    }
+                    else
+                    {
+                        state = palette.getBlockState(id);
+                    }
+                }
+                else
+                {
+                    state = palette.getBlockState(id);
+                }
+
+                if (state == null)
+                {
+                    state = air;
+                }
+                else if (state != air)
+                {
+                    ++totalBlocks;
+                }
+
+                container.set(pos.getX(), pos.getY(), pos.getZ(), state);
+
+                if (blockTag.contains("nbt", Constants.NBT.TAG_COMPOUND))
+                {
+                    tileMap.put(pos, blockTag.getCompound("nbt"));
+                }
+            }
+
+            this.metadata.setTotalBlocks(totalBlocks);
+            this.entities.put(name, this.readEntitiesFromVanillaStructure(tag, minecraftDataVersion));
+
+            return true;
+        }
+
+        return false;
+    }
+
+    protected List<EntityInfo> readEntitiesFromVanillaStructure(NbtCompound tag, int minecraftDataVersion)
+    {
+        List<EntityInfo> entities = new ArrayList<>();
+        NbtList tagList = tag.getList("entities", Constants.NBT.TAG_COMPOUND);
+        final int size = tagList.size();
+
+        if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+        {
+            Servux.LOGGER.info("VanillaStructure: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+        }
+        for (int i = 0; i < size; ++i)
+        {
+            NbtCompound entityData = tagList.getCompound(i);
+            if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+            {
+                entityData = SchematicConversionMaps.updateEntity(entityData, minecraftDataVersion);
+            }
+            Vec3d pos = NbtUtils.readVec3dFromListTag(entityData, "pos");
+
+            if (pos != null && entityData.contains("nbt", Constants.NBT.TAG_COMPOUND))
+            {
+                entities.add(new EntityInfo(pos, entityData.getCompound("nbt")));
+            }
+        }
+
+        return entities;
     }
 
     private void postProcessContainerIfNeeded(NbtList palette, LitematicaBlockStateContainer container, @Nullable Map<BlockPos, NbtCompound> tiles)
@@ -1205,6 +1901,100 @@ public class LitematicaSchematic
         }
 
         return tickMap;
+    }
+
+    private NbtList convertBlockStatePalette_to_1_20_5(NbtList oldPalette, int minecraftDataVersion)
+    {
+        if (minecraftDataVersion < MINECRAFT_DATA_VERSION_1_12)
+        {
+            minecraftDataVersion = MINECRAFT_DATA_VERSION_1_12;
+        }
+        if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+        {
+            NbtList newPalette = new NbtList();
+            final int count = oldPalette.size();
+            Servux.LOGGER.info("LitematicaSchematic: executing Vanilla DataFixer for Block State Palette DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+
+            for (int i = 0; i < count; ++i)
+            {
+                newPalette.add(SchematicConversionMaps.updateBlockStates(oldPalette.getCompound(i), minecraftDataVersion));
+            }
+
+            return newPalette;
+        }
+
+        return oldPalette;
+    }
+
+    private Map<BlockPos, NbtCompound> convertTileEntities_to_1_20_5(Map<BlockPos, NbtCompound> oldTE, int minecraftDataVersion)
+    {
+        if (minecraftDataVersion < MINECRAFT_DATA_VERSION_1_12)
+        {
+            minecraftDataVersion = MINECRAFT_DATA_VERSION_1_12;
+        }
+        if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+        {
+            Map<BlockPos, NbtCompound> newTE = new HashMap<>();
+
+            Servux.LOGGER.info("LitematicaSchematic: executing Vanilla DataFixer for Tile Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+
+            for (BlockPos key : oldTE.keySet())
+            {
+                newTE.put(key, SchematicConversionMaps.updateBlockEntity(SchematicConversionMaps.checkForIdTag(oldTE.get(key)), minecraftDataVersion));
+            }
+
+            return newTE;
+        }
+
+        return oldTE;
+    }
+
+    private NbtList convertEntities_to_1_20_5(NbtList oldEntitiesList, int minecraftDataVersion)
+    {
+        if (minecraftDataVersion < MINECRAFT_DATA_VERSION_1_12)
+        {
+            minecraftDataVersion = MINECRAFT_DATA_VERSION_1_12;
+        }
+        if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+        {
+            NbtList newEntitiesList = new NbtList();
+            final int size = oldEntitiesList.size();
+
+            Servux.LOGGER.info("LitematicaSchematic: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+
+            for (int i = 0; i < size; i++)
+            {
+                newEntitiesList.add(SchematicConversionMaps.updateEntity(oldEntitiesList.getCompound(i), minecraftDataVersion));
+            }
+
+            return newEntitiesList;
+        }
+
+        return oldEntitiesList;
+    }
+
+    private List<EntityInfo> convertSpongeEntities_to_1_20_5(List<EntityInfo> oldEntitiesList, int minecraftDataVersion)
+    {
+        if (minecraftDataVersion < MINECRAFT_DATA_VERSION_1_12)
+        {
+            minecraftDataVersion = MINECRAFT_DATA_VERSION_1_12;
+        }
+
+        if (minecraftDataVersion < LitematicaSchematic.MINECRAFT_DATA_VERSION)
+        {
+            List<EntityInfo> newEntitiesList = new ArrayList<>();
+
+            Servux.LOGGER.info("SpongeSchematic: executing Vanilla DataFixer for Entities DataVersion {} -> {}", minecraftDataVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION);
+
+            for (EntityInfo oldEntityInfo : oldEntitiesList)
+            {
+                newEntitiesList.add(new EntityInfo(oldEntityInfo.posVec, SchematicConversionMaps.updateEntity(oldEntityInfo.nbt, minecraftDataVersion)));
+            }
+
+            return newEntitiesList;
+        }
+
+        return oldEntitiesList;
     }
 
     private List<EntityInfo> readEntitiesFromNBT_v1(NbtList tagList)
@@ -1316,9 +2106,19 @@ public class LitematicaSchematic
 
             if (nbt != null)
             {
-                if (schematicType == FileType.LITEMATICA_SCHEMATIC)
+                if (schematicType == FileType.SPONGE_SCHEMATIC)
                 {
-                    return this.readFromNBT(nbt);
+                    String name = FileUtils.getNameWithoutExtension(this.schematicFile.getFileName().toString()) + " (Converted Sponge)";
+                    return this.readFromSpongeSchematic(name, nbt);
+                }
+                else if (schematicType == FileType.VANILLA_STRUCTURE)
+                {
+                    String name = FileUtils.getNameWithoutExtension(this.schematicFile.getFileName().toString()) + " (Converted Structure)";
+                    return this.readFromVanillaStructure(name, nbt);
+                }
+                else if (schematicType == FileType.LITEMATICA_SCHEMATIC)
+                {
+                    return this.readFromNBT(nbt, true);
                 }
             }
         }
