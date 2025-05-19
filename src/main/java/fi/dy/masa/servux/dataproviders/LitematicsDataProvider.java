@@ -1,10 +1,14 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import org.apache.commons.lang3.tuple.Pair;
 
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
@@ -12,6 +16,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -27,7 +32,9 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
+import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
+import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
@@ -52,6 +59,8 @@ public class LitematicsDataProvider extends DataProviderBase
     private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations, this.fixStairMirror, this.fixChestMirror);
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
+    private final SchematicBufferManager bufferManager = new SchematicBufferManager();
+    private final Path transmitDir;
 
     protected LitematicsDataProvider()
     {
@@ -65,6 +74,7 @@ public class LitematicsDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
+        this.transmitDir = this.getTransmitDir();
     }
 
     @Override
@@ -96,6 +106,44 @@ public class LitematicsDataProvider extends DataProviderBase
     public IPluginServerPlayHandler<?> getPacketHandler()
     {
         return HANDLER;
+    }
+
+    public SchematicBufferManager getBufferManager()
+    {
+        return this.bufferManager;
+    }
+
+    public Path getTransmitDir()
+    {
+        Path dir = this.transmitDir != null ? this.transmitDir : Reference.DEFAULT_RUN_DIR.resolve("schematics").normalize();
+
+        if (!Files.exists(dir) || !Files.isDirectory(dir))
+        {
+            try
+            {
+                if (Files.exists(dir))
+                {
+                    Files.delete(dir);
+                }
+
+                Files.createDirectory(dir);
+                Servux.LOGGER.warn("getTransmitDir(): Created schematic transmit directory '{}'", dir.toAbsolutePath().toString());
+            }
+            catch (IOException err)
+            {
+                Servux.LOGGER.error("getTransmitDir(): Fatal exception creating schematic transmit dir '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+                throw new RuntimeException(err);
+            }
+        }
+
+        if (!Files.isWritable(dir))
+        {
+            Servux.LOGGER.error("Schematic transmit directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
+        }
+
+        Servux.debugLog("getTransmitDir(): Schematic transmit directory debug '{}'", dir.toAbsolutePath().toString());
+
+        return dir;
     }
 
     @Override
@@ -303,8 +351,63 @@ public class LitematicsDataProvider extends DataProviderBase
 
             long timeStart = System.currentTimeMillis();
             SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
+
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
-            placement.pasteTo(player.getServerWorld(), replaceMode);
+            PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior"));
+            LayerRange layerRange = null;
+
+            if (tags.contains("RenderLayerRange"))
+            {
+                if (Reference.DEV_DEBUG)
+                {
+                    Servux.LOGGER.warn("RenderLayerRange IN: [{}]", tags.getCompound("RenderLayerRange").toString());
+                }
+                layerRange = LayerRange.CODEC.parse(NbtOps.INSTANCE, tags.get("RenderLayerRange")).resultOrPartial().orElse(null);
+            }
+
+            if (Reference.DEV_DEBUG)
+            {
+                Servux.LOGGER.warn("ReplaceMode OUT: [{}]", replaceMode != null ? replaceMode.asString() : "<NULL>");
+                Servux.LOGGER.warn("PasteLayerBehavior OUT: [{}]", layerBehavior != null ? layerBehavior.asString() : "<NULL>");
+                Servux.LOGGER.warn("RenderLayerRange OUT: [{}]", layerRange != null ? layerRange.toJson() : "<NULL>");
+            }
+
+            placement.pasteTo(player.getServerWorld(), replaceMode, layerBehavior, layerRange);
+            long timeElapsed = System.currentTimeMillis() - timeStart;
+            //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
+            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
+        }
+    }
+
+    public void handleClientPasteRequestPair(ServerPlayerEntity player, int transactionId, Pair<LitematicaSchematic, NbtCompound> schemPair)
+    {
+        if (!this.isEnabled()) return;
+
+        if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
+        {
+            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            player.sendMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
+            return;
+        }
+        if (player.isCreative() == false)
+        {
+            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
+            player.sendMessage(StringUtils.translate("servux.litematics.error.creative_required"));
+            return;
+        }
+
+        if (schemPair.getLeft() != null)
+        {
+            Servux.debugLog("litematic_data: Servux Paste (Pair) request from player {}", player.getName().getLiteralString());
+
+            long timeStart = System.currentTimeMillis();
+            NbtCompound tags = schemPair.getRight();
+            SchematicPlacement placement = SchematicPlacement.createFromNbt(schemPair.getLeft(), tags);
+            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode"));
+            PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior"));
+//            LayerRange layerRange = tags.get("RenderLayerRange", LayerRange.CODEC).orElse(null);
+            LayerRange layerRange = LayerRange.CODEC.parse(NbtOps.INSTANCE, tags.get("RenderLayerRange")).resultOrPartial().orElse(null);
+            placement.pasteTo(player.getServerWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
             player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);

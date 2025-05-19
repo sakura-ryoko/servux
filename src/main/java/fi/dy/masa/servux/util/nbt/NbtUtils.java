@@ -68,9 +68,9 @@ public class NbtUtils
     public static Vec3d readVec3d(@Nullable NbtCompound tag)
     {
         if (tag != null &&
-                tag.contains("dx", Constants.NBT.TAG_DOUBLE) &&
-                tag.contains("dy", Constants.NBT.TAG_DOUBLE) &&
-                tag.contains("dz", Constants.NBT.TAG_DOUBLE))
+            tag.contains("dx", Constants.NBT.TAG_DOUBLE) &&
+            tag.contains("dy", Constants.NBT.TAG_DOUBLE) &&
+            tag.contains("dz", Constants.NBT.TAG_DOUBLE))
         {
             return new Vec3d(tag.getDouble("dx"), tag.getDouble("dy"), tag.getDouble("dz"));
         }
@@ -103,6 +103,72 @@ public class NbtUtils
             tag.contains("z", Constants.NBT.TAG_INT))
         {
             return new Vec3i(tag.getInt("x"), tag.getInt("y"), tag.getInt("z"));
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static BlockPos readBlockPosFromIntArray(@Nonnull NbtCompound nbt, String key)
+    {
+        return readBlockPosFromArrayTag(nbt, key);
+    }
+
+    @Nullable
+    public static BlockPos readBlockPosFromArrayTag(@Nonnull NbtCompound tag, String tagName)
+    {
+        if (tag.contains(tagName, Constants.NBT.TAG_INT_ARRAY))
+        {
+            int[] pos = tag.getIntArray(tagName);
+
+            if (pos.length == 3)
+            {
+                return new BlockPos(pos[0], pos[1], pos[2]);
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static Vec3i readVec3iFromIntArray(@Nonnull NbtCompound nbt, String key)
+    {
+        return readVec3iFromIntArrayTag(nbt, key);
+    }
+
+    @Nullable
+    public static Vec3i readVec3iFromIntArrayTag(@Nonnull NbtCompound tag, String tagName)
+    {
+        if (tag.contains(tagName, Constants.NBT.TAG_INT_ARRAY))
+        {
+            int[] pos = tag.getIntArray(tagName);
+
+            if (pos.length == 3)
+            {
+                return new Vec3i(pos[0], pos[1], pos[2]);
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static Vec3d readVec3dFromListTag(@Nullable NbtCompound tag)
+    {
+        return readVec3dFromListTag(tag, NbtKeys.POS);
+    }
+
+    @Nullable
+    public static Vec3d readVec3dFromListTag(@Nullable NbtCompound tag, String tagName)
+    {
+        if (tag != null && tag.contains(tagName, Constants.NBT.TAG_LIST))
+        {
+            NbtList tagList = tag.getList(tagName, Constants.NBT.TAG_DOUBLE);
+
+            if (tagList.getHeldType() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
+            {
+                return new Vec3d(tagList.getDouble(0), tagList.getDouble(1), tagList.getDouble(2));
+            }
         }
 
         return null;
