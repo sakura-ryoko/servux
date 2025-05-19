@@ -46,6 +46,8 @@ public class SchematicPlacingUtils
                                                   ChunkPos chunkPos,
                                                   SchematicPlacement schematicPlacement,
                                                   ReplaceBehavior replace,
+                                                  PasteLayerBehavior layerBehavior,
+                                                  @Nullable LayerRange layerRange,
                                                   boolean notifyNeighbors)
     {
         LitematicaSchematic schematic = schematicPlacement.getSchematic();
@@ -80,7 +82,7 @@ public class SchematicPlacingUtils
 
                     if (placeBlocksWithinChunk(world, chunkPos, regionName, container, blockEntityMap,
                                                origin, schematicPlacement, placement, scheduledBlockTicks,
-                                               scheduledFluidTicks, replace, notifyNeighbors) == false)
+                                               scheduledFluidTicks, replace, layerBehavior, layerRange, notifyNeighbors) == false)
                     {
                         allSuccess = false;
                         Servux.LOGGER.warn("Invalid/missing schematic data in schematic '{}' for sub-region '{}'", schematic.getMetadata().getName(), regionName);
@@ -91,7 +93,7 @@ public class SchematicPlacingUtils
                     if (schematicPlacement.ignoreEntities() == false &&
                         placement.ignoreEntities() == false && entityList != null)
                     {
-                        placeEntitiesToWorldWithinChunk(world, chunkPos, entityList, origin, schematicPlacement, placement);
+                        placeEntitiesToWorldWithinChunk(world, chunkPos, entityList, origin, schematicPlacement, placement, layerBehavior, layerRange);
                     }
                 }
             }
@@ -112,7 +114,10 @@ public class SchematicPlacingUtils
                                                  SubRegionPlacement placement,
                                                  @Nullable Map<BlockPos, OrderedTick<Block>> scheduledBlockTicks,
                                                  @Nullable Map<BlockPos, OrderedTick<Fluid>> scheduledFluidTicks,
-                                                 ReplaceBehavior replace, boolean notifyNeighbors)
+                                                 ReplaceBehavior replace,
+                                                 PasteLayerBehavior layerBehavior,
+                                                 @Nullable LayerRange layerRange,
+                                                 boolean notifyNeighbors)
     {
         IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
         Vec3i regionSize = schematicPlacement.getSchematic().getAreaSize(regionName);
@@ -207,6 +212,12 @@ public class SchematicPlacingUtils
 
                     BlockPos pos = PositionUtils.getTransformedPlacementPosition(posMutable, schematicPlacement, placement);
                     pos = pos.add(regionPosTransformed).add(origin);
+
+                    if (!shouldPasteBlock(pos, layerBehavior, layerRange))
+                    {
+//                        Servux.LOGGER.error("placeBlocksWithinChunk(): Skipping block at pos [{}]", pos.toShortString());
+                        continue;
+                    }
 
                     BlockState stateOld = world.getBlockState(pos);
 
@@ -369,7 +380,9 @@ public class SchematicPlacingUtils
                                                        List<EntityInfo> entityList,
                                                        BlockPos origin,
                                                        SchematicPlacement schematicPlacement,
-                                                       SubRegionPlacement placement)
+                                                       SubRegionPlacement placement,
+                                                       PasteLayerBehavior layerBehavior,
+                                                       @Nullable LayerRange layerRange)
     {
         BlockPos regionPos = placement.getPos();
 
@@ -408,6 +421,12 @@ public class SchematicPlacingUtils
             double z = pos.z + offZ;
             float[] origRot = new float[2];
 
+            if (!shouldPasteEntity(new Vec3d(x, y, z), layerBehavior, layerRange))
+            {
+//                Servux.LOGGER.error("placeEntitiesToWorldWithinChunk(): Skipping Entity at pos [{}]", pos.toString());
+                continue;
+            }
+
             if (x >= minX && x < maxX && z >= minZ && z < maxZ)
             {
                 NbtCompound tag = info.nbt.copy();
@@ -427,6 +446,7 @@ public class SchematicPlacingUtils
                     {
                         p = new Vec3d(x, y, z);
                         NbtUtils.writeEntityPositionToTag(p, tag);
+//                        NbtUtils.putVec3dCodec(tag, p, "Pos");
                     }
 
                     tag.putInt("TileX", (int) p.x);
@@ -505,5 +525,26 @@ public class SchematicPlacingUtils
 
         entity.refreshPositionAndAngles(x, y, z, rotationYaw, entity.getPitch());
         EntityUtils.setEntityRotations(entity, rotationYaw, entity.getPitch());
+    }
+
+
+    public static boolean shouldPasteBlock(BlockPos pos, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
+    {
+        if (layerBehavior == PasteLayerBehavior.ALL || layerRange == null)
+        {
+            return true;
+        }
+
+        return layerRange.isPositionWithinRange(pos);
+    }
+
+    public static boolean shouldPasteEntity(Vec3d pos, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
+    {
+        if (layerBehavior == PasteLayerBehavior.ALL || layerRange == null)
+        {
+            return true;
+        }
+
+        return layerRange.isPositionWithinRange((int) pos.getX(), (int) pos.getY(), (int) pos.getZ());
     }
 }

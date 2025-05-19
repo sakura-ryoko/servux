@@ -138,7 +138,12 @@ public class PacketSplitter
                 this.received = new PacketByteBuf(Unpooled.buffer(this.expectedSize));
             }
 
-            this.received.writeBytes(data.readBytes(data.readableBytes()));
+            if (this.received == null)
+            {
+                throw new RuntimeException("Receive Buffer is empty");
+            }
+
+            this.received.writeBytes(data.copy());
 
             if (this.received.writerIndex() >= this.expectedSize)
             {
