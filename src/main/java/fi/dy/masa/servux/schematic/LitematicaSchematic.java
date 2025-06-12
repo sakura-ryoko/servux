@@ -28,6 +28,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.CarpetBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.AbstractDecorationEntity;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
@@ -50,6 +51,7 @@ import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.FileType;
 import fi.dy.masa.servux.util.data.Schema;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 import net.minecraft.world.World;
@@ -67,7 +69,7 @@ public class LitematicaSchematic
 {
     public static final String FILE_EXTENSION = ".litematic";
     public static final int MINECRAFT_DATA_VERSION_1_12   = 1139; // MC 1.12
-    public static final int MINECRAFT_DATA_VERSION = SharedConstants.getGameVersion().getSaveVersion().getId();
+    public static final int MINECRAFT_DATA_VERSION = SharedConstants.getGameVersion().dataVersion().id();
     public static final int SCHEMATIC_VERSION = 7;
     // This is basically a "sub-version" for the schematic version,
     // intended to help with possible data fix needs that are discovered.
@@ -401,7 +403,8 @@ public class LitematicaSchematic
 
                             try
                             {
-                                te.read(teNBT, world.getRegistryManager());
+                                NbtView view = NbtView.getReader(teNBT, world.getRegistryManager());
+                                te.read(view.getReader());
 
                                 if (ignoreInventories && te instanceof Inventory)
                                 {
@@ -517,11 +520,17 @@ public class LitematicaSchematic
 
             for (Entity entity : entities)
             {
-                NbtCompound tag = new NbtCompound();
+                NbtView view = NbtView.getWriter(world.getRegistryManager());
 
-                if (entity.saveNbt(tag))
+                entity.saveData(view.getWriter());
+                NbtCompound tag = view.readNbt();
+                Identifier id = EntityType.getId(entity.getType());
+
+                if (tag != null && id != null)
                 {
                     Vec3d posVec = new Vec3d(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
+
+                    tag.putString("id", id.toString());
 //                    NbtUtils.writeEntityPositionToTag(posVec, tag);
                     NbtUtils.putVec3dCodec(tag, posVec, "Pos");
                     list.add(new EntityInfo(posVec, tag));
@@ -561,11 +570,17 @@ public class LitematicaSchematic
                 */
                 if (existingEntities.contains(uuid) == false)
                 {
-                    NbtCompound tag = new NbtCompound();
+                    NbtView view = NbtView.getWriter(world.getRegistryManager());
 
-                    if (entity.saveNbt(tag))
+                    entity.saveData(view.getWriter());
+                    NbtCompound tag = view.readNbt();
+                    Identifier id = EntityType.getId(entity.getType());
+
+                    if (tag != null && id != null)
                     {
                         Vec3d posVec = new Vec3d(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
+
+                        tag.putString("id", id.toString());
 
                         // Annoying special case for any hanging/decoration entities, to avoid the console
                         // warning about invalid hanging position when loading the entity from NBT
@@ -644,7 +659,7 @@ public class LitematicaSchematic
                             {
                                 // TODO Add a TileEntity NBT cache from the Chunk packets, to get the original synced data (too)
                                 BlockPos pos = new BlockPos(x, y, z);
-                                NbtCompound tag = te.createNbtWithId(world.getRegistryManager());
+                                NbtCompound tag = te.createNbtWithIdentifyingData(world.getRegistryManager());
                                 NbtUtils.writeBlockPosToTag(pos, tag);
                                 tileEntityMap.put(pos, tag);
                             }
@@ -1123,7 +1138,7 @@ public class LitematicaSchematic
         if (nbt.contains("Version"))
         {
             final int version = nbt.getInt("Version", -1);
-            final int minecraftDataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion", MINECRAFT_DATA_VERSION_1_12) : SharedConstants.getGameVersion().getSaveVersion().getId();
+            final int minecraftDataVersion = nbt.contains("MinecraftDataVersion") ? nbt.getInt("MinecraftDataVersion", MINECRAFT_DATA_VERSION_1_12) : SharedConstants.getGameVersion().dataVersion().id();
 
             if (version >= 1 && version <= SCHEMATIC_VERSION)
             {

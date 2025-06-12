@@ -39,6 +39,7 @@ import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
@@ -213,7 +214,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
         //Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
+        BlockEntity be = player.getWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleBlockResponse(pos, nbt));
     }
@@ -227,24 +228,18 @@ public class LitematicsDataProvider extends DataProviderBase
 
         //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = new NbtCompound();
 
         if (entity != null)
         {
-            if (entity instanceof PlayerEntity)
-            {
-                Identifier id = EntityType.getId(entity.getType());
-                nbt = entity.writeNbt(nbt);
+            NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+            Identifier id = EntityType.getId(entity.getType());
 
-                if (id != null)
-                {
-                    nbt.putString("id", id.toString());
-                }
+            entity.writeData(view.getWriter());
+            NbtCompound nbt = view.readNbt();
 
-                HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
-            }
-            else if (entity.saveSelfNbt(nbt))
+            if (nbt != null && id != null)
             {
+                nbt.putString("id", id.toString());
                 HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
             }
         }
@@ -262,7 +257,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         Chunk chunk = world != null ? world.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, false) : null;
 
         if (chunk == null)
@@ -304,11 +299,17 @@ public class LitematicsDataProvider extends DataProviderBase
 
             for (Entity entity : entities)
             {
-                NbtCompound entTag = new NbtCompound();
+                NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+                Identifier id = EntityType.getId(entity.getType());
 
-                if (entity.saveNbt(entTag))
+                entity.writeData(view.getWriter());
+                NbtCompound entTag = view.readNbt();
+
+                if (entTag != null && id != null)
                 {
                     Vec3d posVec = new Vec3d(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
+                    entTag.putString("id", id.toString());
+
                     NbtUtils.writeEntityPositionToTag(posVec, entTag);
                     entTag.putInt("entityId", entity.getId());
                     entityList.add(entTag);
@@ -354,10 +355,10 @@ public class LitematicsDataProvider extends DataProviderBase
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode", ReplaceBehavior.NONE.name()));
             PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
             LayerRange layerRange = tags.get("RenderLayerRange", LayerRange.CODEC).orElse(null);
-            placement.pasteTo(player.getServerWorld(), replaceMode, layerBehavior, layerRange);
+            placement.pasteTo(player.getWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
+            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
         }
     }
 
@@ -388,10 +389,10 @@ public class LitematicsDataProvider extends DataProviderBase
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode", ReplaceBehavior.NONE.name()));
             PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
             LayerRange layerRange = tags.get("RenderLayerRange", LayerRange.CODEC).orElse(null);
-            placement.pasteTo(player.getServerWorld(), replaceMode, layerBehavior, layerRange);
+            placement.pasteTo(player.getWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getServerWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
+            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
         }
     }
 

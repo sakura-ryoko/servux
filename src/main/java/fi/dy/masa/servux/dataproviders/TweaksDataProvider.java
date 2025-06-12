@@ -8,7 +8,6 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -22,6 +21,7 @@ import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.nbt.NbtView;
 
 public class TweaksDataProvider extends DataProviderBase
 {
@@ -145,7 +145,7 @@ public class TweaksDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
+        BlockEntity be = player.getWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleBlockResponse(pos, nbt));
     }
@@ -159,25 +159,19 @@ public class TweaksDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = new NbtCompound();
 
         if (entity != null)
         {
-            if (entity instanceof PlayerEntity)
-            {
-                Identifier id = EntityType.getId(entity.getType());
-                nbt = entity.writeNbt(nbt);
+            NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+            Identifier id = EntityType.getId(entity.getType());
 
-                if (id != null)
-                {
-                    nbt.putString("id", id.toString());
-                }
+            entity.writeData(view.getWriter());
+            NbtCompound nbt = view.readNbt();
 
-                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
-            }
-            else if (entity.saveSelfNbt(nbt))
+            if (nbt != null && id != null)
             {
-                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
+                nbt.putString("id", id.toString());
+                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt.copy()));
             }
         }
     }

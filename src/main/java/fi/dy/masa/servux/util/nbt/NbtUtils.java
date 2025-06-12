@@ -3,6 +3,7 @@ package fi.dy.masa.servux.util.nbt;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.UUID;
 
 import net.minecraft.nbt.*;
@@ -14,6 +15,10 @@ import net.minecraft.util.math.Vec3i;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.data.Constants;
@@ -312,5 +317,45 @@ public class NbtUtils
         {
             Servux.LOGGER.warn("writeCompressed: Failed to write NBT data to file");
         }
+    }
+
+    /**
+     * Reads in a Flat Map from NBT -- this way we don't need Mojang's code complexity
+     * @param <T> ()
+     * @param nbt ()
+     * @param mapCodec ()
+     * @return ()
+     */
+    public static <T> Optional<T> readFlatMap(@Nonnull NbtCompound nbt, MapCodec<T> mapCodec)
+    {
+        DynamicOps<NbtElement> ops = NbtOps.INSTANCE;
+
+        return switch (ops.getMap(nbt).flatMap(map -> mapCodec.decode(ops, map)))
+        {
+            case DataResult.Success<T> result -> Optional.of(result.value());
+            case DataResult.Error<T> error -> error.partialValue();
+            default -> Optional.empty();
+        };
+    }
+
+    /**
+     * Writes a Flat Map to NBT -- this way we don't need Mojang's code complexity
+     * @param <T> ()
+     * @param mapCodec ()
+     * @param value ()
+     * @return ()
+     */
+    public static <T> NbtCompound writeFlatMap(MapCodec<T> mapCodec, T value)
+    {
+        DynamicOps<NbtElement> ops = NbtOps.INSTANCE;
+        NbtCompound nbt = new NbtCompound();
+
+        switch (mapCodec.encoder().encodeStart(ops, value))
+        {
+            case DataResult.Success<NbtElement> result -> nbt.copyFrom((NbtCompound) result.value());
+            case DataResult.Error<NbtElement> error -> error.partialValue().ifPresent(partial -> nbt.copyFrom((NbtCompound) partial));
+        }
+
+        return nbt;
     }
 }

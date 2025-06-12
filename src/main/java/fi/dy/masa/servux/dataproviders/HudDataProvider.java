@@ -326,7 +326,7 @@ public class HudDataProvider extends DataProviderBase
             return;
         }
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         Collection<RecipeEntry<?>> recipes = world.getRecipeManager().values();
         NbtCompound nbt = new NbtCompound();
         NbtList list = new NbtList();

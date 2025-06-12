@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -21,6 +22,7 @@ import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.nbt.NbtView;
 
 public class EntitiesDataProvider extends DataProviderBase
 {
@@ -148,7 +150,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
+        BlockEntity be = player.getWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
@@ -162,24 +164,18 @@ public class EntitiesDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
         Entity entity = player.getWorld().getEntityById(entityId);
-        NbtCompound nbt = new NbtCompound();
 
         if (entity != null)
         {
-            if (entity instanceof PlayerEntity)
-            {
-                Identifier id = EntityType.getId(entity.getType());
-                nbt = entity.writeNbt(nbt);
+            NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+            Identifier id = EntityType.getId(entity.getType());
 
-                if (id != null)
-                {
-                    nbt.putString("id", id.toString());
-                }
+            entity.writeData(view.getWriter());
+            NbtCompound nbt = view.readNbt();
 
-                HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
-            }
-            else if (entity.saveSelfNbt(nbt))
+            if (nbt != null && id != null)
             {
+                nbt.putString("id", id.toString());
                 HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
             }
         }

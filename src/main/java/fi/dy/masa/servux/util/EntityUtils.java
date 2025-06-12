@@ -21,6 +21,7 @@ import net.minecraft.world.World;
 
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class EntityUtils
@@ -88,7 +89,8 @@ public class EntityUtils
     {
         try
         {
-            Optional<Entity> optional = EntityType.getEntityFromNbt(nbt, world, SpawnReason.LOAD);
+            NbtView view = NbtView.getReader(nbt, world.getRegistryManager());
+            Optional<Entity> optional = EntityType.getEntityFromData(view.getReader(), world, SpawnReason.LOAD);
 
             if (optional.isPresent())
             {

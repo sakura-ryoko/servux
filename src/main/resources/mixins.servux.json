@@ -18,6 +18,8 @@
         "debug.MixinPath",
         "debug.MixinSharedConstants",
         "item.MixinBlockItem_EasyPlace",
+        "nbt.IMixinNbtReadView",
+        "nbt.IMixinNbtWriteView",
         "network.MixinServerPlayNetworkHandler_EasyPlace",
         "network.MixinServerPlayNetworkHandler_QueryNbt",
         "world.IMixinWorldTickScheduler",
