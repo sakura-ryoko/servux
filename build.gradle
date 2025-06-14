@@ -6,6 +6,8 @@ plugins {
 repositories {
 	// maven { url = 'https://masa.dy.fi/maven' }
 	maven { url = 'https://maven.fallenbreath.me/releases' }
+	//	maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+	maven { url = 'https://maven.nucleoid.xyz/' }
 	// maven { url = 'https://jitpack.io' }
 }
 
