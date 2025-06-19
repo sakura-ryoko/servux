@@ -4,6 +4,8 @@ import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
@@ -13,7 +15,7 @@ import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.storage.*;
 import net.minecraft.util.ErrorReporter;
 
-import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.mixin.nbt.IMixinNbtReadView;
 import fi.dy.masa.servux.mixin.nbt.IMixinNbtWriteView;
 
@@ -23,7 +25,8 @@ import fi.dy.masa.servux.mixin.nbt.IMixinNbtWriteView;
  */
 public class NbtView
 {
-    private static final ErrorReporter log = ErrorReporter.EMPTY;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Reference.MOD_ID+"-NbtView");
+    private static final ErrorReporter log = new ErrorReporter.Logging(LOGGER);
     private ReadView reader;
     private WriteView writer;
 
@@ -56,7 +59,7 @@ public class NbtView
         return wrapper;
     }
 
-    public ErrorReporter getLogger()
+    public ErrorReporter getErrorReporter()
     {
         return log;
     }
@@ -80,6 +83,7 @@ public class NbtView
             return ((IMixinNbtReadView) this.reader).servux_getContext();
         }
 
+        LOGGER.error("getReaderContext(): Called from a Writer Context");
         return null;
     }
 
@@ -90,6 +94,7 @@ public class NbtView
             return ((IMixinNbtWriteView) this.writer).servux_getOps();
         }
 
+        LOGGER.error("getWriterOps(): Called from a Reader Context");
         return null;
     }
 
@@ -108,6 +113,7 @@ public class NbtView
             return ((IMixinNbtWriteView) this.writer).servux_getNbt();
         }
 
+        LOGGER.error("readNbt(): General failure");
         return null;
     }
 
@@ -120,6 +126,7 @@ public class NbtView
     {
         if (this.isReader())
         {
+            LOGGER.error("writeNbt(): Called from a Reader Context");
             return null;
         }
 
@@ -141,10 +148,11 @@ public class NbtView
     {
         if (this.isWriter())
         {
+            LOGGER.error("readFlatMap(): Called from a Writer Context");
             return Optional.empty();
         }
 
-       return NbtUtils.readFlatMap(Objects.requireNonNullElse(this.readNbt(), new NbtCompound()), mapCodec);
+        return NbtUtils.readFlatMap(Objects.requireNonNullElse(this.readNbt(), new NbtCompound()), mapCodec);
     }
 
     /**
@@ -158,6 +166,7 @@ public class NbtView
     {
         if (this.isWriter())
         {
+            LOGGER.error("readCodec(): Called from a Writer Context");
             return Optional.empty();
         }
 
@@ -167,7 +176,7 @@ public class NbtView
         }
         catch (Exception err)
         {
-            Servux.LOGGER.warn("NbtView#readCodec: Exception reading from key '{}'; {}", key, err.getLocalizedMessage());
+            LOGGER.warn("readCodec(): Exception reading from key '{}'; {}", key, err.getLocalizedMessage());
             return Optional.empty();
         }
     }
@@ -183,6 +192,7 @@ public class NbtView
     {
         if (this.isReader())
         {
+            LOGGER.error("writeFlatMap(): Called from a Reader Context");
             return new NbtCompound();
         }
 
@@ -202,6 +212,7 @@ public class NbtView
     {
         if (this.isReader())
         {
+            LOGGER.error("writeCodec(): Called from a Reader Context");
             return new NbtCompound();
         }
 
@@ -212,7 +223,7 @@ public class NbtView
         }
         catch (Exception err)
         {
-            Servux.LOGGER.warn("NbtView#writeCodec: Exception writing to key '{}'; {}", key, err.getLocalizedMessage());
+            LOGGER.warn("writeCodec(): Exception writing to key '{}'; {}", key, err.getLocalizedMessage());
             return new NbtCompound();
         }
     }
