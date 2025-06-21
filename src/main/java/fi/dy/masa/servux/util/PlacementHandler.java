@@ -179,6 +179,14 @@ public class PlacementHandler
             }
         }
 
+        if (oldState.contains(Properties.WATERLOGGED) &&
+            oldState.get(Properties.WATERLOGGED) &&
+            BLACKLISTED_PROPERTIES.contains(Properties.WATERLOGGED))
+        {
+            // Revert only if original state was waterlogged already
+            state.with(Properties.WATERLOGGED, true);
+        }
+
         if (state.canPlaceAt(context.getWorld(), context.getPos()))
         {
             //System.out.printf("validator passed for \"%s\"\n", state);
