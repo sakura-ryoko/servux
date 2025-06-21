@@ -11,6 +11,7 @@ import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
@@ -179,11 +180,12 @@ public class PlacementHandler
             }
         }
 
-        if (oldState.contains(Properties.WATERLOGGED) &&
-            oldState.get(Properties.WATERLOGGED) &&
-            BLACKLISTED_PROPERTIES.contains(Properties.WATERLOGGED))
+        if (state.contains(Properties.WATERLOGGED) && (
+            oldState.contains(Properties.WATERLOGGED) && oldState.get(Properties.WATERLOGGED) ||
+            (oldState.getFluidState() != null && oldState.getFluidState().getFluid().matchesType(Fluids.WATER))
+        ))
         {
-            // Revert only if original state was waterlogged already
+            // Revert only if original state was waterlogged / Still Water already
             state.with(Properties.WATERLOGGED, true);
         }
 
