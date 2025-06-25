@@ -84,15 +84,22 @@ public class PlacementHandler
                 return null;
             }
 
-            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+            if (ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled())
             {
-                //System.out.printf("validator passed for \"%s\"\n", property.getName());
-                oldState = state;
+                if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                {
+                    //System.out.printf("validator passed for \"%s\"\n", property.getName());
+                    oldState = state;
+                }
+                else
+                {
+                    //System.out.printf("validator failed for \"%s\"\n", property.getName());
+                    state = oldState;
+                }
             }
             else
             {
-                //System.out.printf("validator failed for \"%s\"\n", property.getName());
-                state = oldState;
+                oldState = state;
             }
 
             // Consume the bits used for the facing
@@ -146,15 +153,22 @@ public class PlacementHandler
                             //System.out.printf("applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
 
-                            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                            if (ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled())
                             {
-                                //System.out.printf("validator passed for \"%s\"\n", prop.getName());
-                                oldState = state;
+                                if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                                {
+                                    //System.out.printf("validator passed for \"%s\"\n", prop.getName());
+                                    oldState = state;
+                                }
+                                else
+                                {
+                                    //System.out.printf("validator failed for \"%s\"\n", prop.getName());
+                                    state = oldState;
+                                }
                             }
                             else
                             {
-                                //System.out.printf("validator failed for \"%s\"\n", prop.getName());
-                                state = oldState;
+                                oldState = state;
                             }
                         }
 
