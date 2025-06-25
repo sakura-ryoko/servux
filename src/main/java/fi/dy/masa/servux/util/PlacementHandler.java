@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import com.google.common.collect.ImmutableSet;
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.BlockHalf;
 import net.minecraft.block.enums.ComparatorMode;
@@ -190,16 +191,22 @@ public class PlacementHandler
             state = state.with(Properties.WATERLOGGED, true);
         }
 
-        if (state.canPlaceAt(context.getWorld(), context.getPos()))
+        if (ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled())
         {
-            //System.out.printf("validator passed for \"%s\"\n", state);
-            return state;
+            // This validates that the player can legally place this block state; such as in air.
+            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+            {
+                //System.out.printf("validator passed for \"%s\"\n", state);
+                return state;
+            }
+            else
+            {
+                //System.out.printf("validator failed for \"%s\"\n", state);
+                return null;
+            }
         }
-        else
-        {
-            //System.out.printf("validator failed for \"%s\"\n", state);
-            return null;
-        }
+
+        return state;
     }
 
     private static BlockState applyDirectionProperty(BlockState state, UseContext context,

@@ -1,0 +1,21 @@
+package fi.dy.masa.servux.loggers;
+
+import com.mojang.serialization.Codec;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.MinecraftServer;
+
+public class DataLoggerTPS extends DataLoggerBase<NbtCompound>
+{
+    public static final Codec<NbtCompound> CODEC = NbtCompound.CODEC;
+
+    public DataLoggerTPS(DataLogger type)
+    {
+        super(type);
+    }
+
+    @Override
+    public NbtCompound getResult(MinecraftServer server)
+    {
+        return new NbtCompound();
+    }
+}

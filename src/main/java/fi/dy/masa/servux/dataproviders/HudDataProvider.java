@@ -1,10 +1,11 @@
 package fi.dy.masa.servux.dataproviders;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import fi.dy.masa.servux.loggers.DataLogger;
+import fi.dy.masa.servux.loggers.DataLoggerBase;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import com.mojang.serialization.DataResult;
@@ -42,7 +43,13 @@ public class HudDataProvider extends DataProviderBase
     protected ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     protected ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
     protected ServuxIntSetting seedPermissionLevel = new ServuxIntSetting(this, "seed_permission_level", 2, 4, 0);
-    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.updateInterval, this.shareWeatherStatus, this.weatherPermissionLevel, this.shareSeed, this.seedPermissionLevel);
+    protected ServuxIntSetting loggerPermissionLevel = new ServuxIntSetting(this, "logger_permission_level", 0, 4, 0);
+    protected List<IServuxSetting<?>> settings = List.of(
+            this.permissionLevel, this.updateInterval,
+            this.shareWeatherStatus, this.weatherPermissionLevel,
+            this.shareSeed, this.seedPermissionLevel,
+            this.loggerPermissionLevel
+    );
 
     private BlockPos spawnPos = BlockPos.ORIGIN;
     private int spawnChunkRadius = -1;
@@ -57,6 +64,11 @@ public class HudDataProvider extends DataProviderBase
     private boolean refreshSpawnMetadata;
     private boolean refreshWeatherData;
     private final List<UUID> invalidPlayers = new ArrayList<>();
+
+    private final String LOGGER_KEY = "Loggers";
+    private final HashMap<UUID, List<DataLogger>> loggerPlayers = new HashMap<>();
+    private final HashMap<DataLogger, DataLoggerBase<?>> LOGGERS = new HashMap<>();
+    private final HashMap<DataLogger, NbtElement> DATA = new HashMap<>();
 
     protected HudDataProvider()
     {
@@ -76,6 +88,10 @@ public class HudDataProvider extends DataProviderBase
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
+
+        // Loggers
+        this.metadata.put(LOGGER_KEY, this.putEnabledLoggers());
+        this.initializeLoggers();
     }
 
     @Override
@@ -211,6 +227,69 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
+    private NbtCompound putEnabledLoggers()
+    {
+        NbtCompound nbt = new NbtCompound();
+
+        for (DataLogger type : DataLogger.VALUES)
+        {
+            nbt.putBoolean(type.asString(), true);      // TODO configurable
+        }
+
+        return nbt;
+    }
+
+    private void initializeLoggers()
+    {
+        if (this.LOGGERS.isEmpty())
+        {
+            for (DataLogger type : DataLogger.VALUES)
+            {
+                DataLoggerBase<?> entry = type.init();
+
+                if (entry != null)
+                {
+                    this.LOGGERS.put(type, entry);
+                }
+            }
+        }
+    }
+
+    private void tickLoggerData(MinecraftServer server)
+    {
+        this.DATA.clear();
+
+        this.LOGGERS.forEach(
+                (type, logger) ->
+                        this.DATA.put(type, (NbtElement) (logger.getResult(server)))
+        );
+    }
+
+    private void tickLoggerPlayer(ServerPlayerEntity player)
+    {
+        UUID uuid = player.getUuid();
+
+        if (this.loggerPlayers.containsKey(uuid))
+        {
+            List<DataLogger> list = this.loggerPlayers.get(uuid);
+
+            if (!list.isEmpty())
+            {
+                NbtCompound nbt = new NbtCompound();
+
+                for (DataLogger type : list)
+                {
+                    if (this.DATA.containsKey(type))
+                    {
+                        nbt.put(type.asString(), this.DATA.get(type));
+                    }
+                }
+
+                // ENCODE
+            }
+        }
+    }
+
     public void sendMetadata(ServerPlayerEntity player)
     {
         if (!this.isEnabled()) return;
@@ -245,14 +324,60 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
+    private void registerLoggers(ServerPlayerEntity player, @Nonnull NbtCompound nbt)
+    {
+        if (!this.hasPermissionsForLoggers(player))
+        {
+            return;
+        }
+
+        if (nbt.contains(LOGGER_KEY))
+        {
+            NbtCompound loggers = nbt.getCompoundOrEmpty(LOGGER_KEY);
+
+            if (!loggers.isEmpty())
+            {
+                List<DataLogger> list = new ArrayList<>();
+                UUID uuid = player.getUuid();
+
+                for (String key : loggers.getKeys())
+                {
+                    DataLogger type = DataLogger.fromStringStatic(key);
+                    boolean enable = loggers.getBoolean(key, false);
+
+                    if (type != null)
+                    {
+                        if (this.hasPermissionsForLogger(player, key) && enable)
+                        {
+                            list.add(type);
+                        }
+                        else
+                        {
+                            // NO PERMISSIONS
+                        }
+                    }
+                }
+
+                this.loggerPlayers.put(uuid, list);
+            }
+        }
+    }
+
     public void onPacketFailure(ServerPlayerEntity player)
     {
-        this.setPlayerInvalid(player);;
+        this.setPlayerInvalid(player);
+        this.removePlayerLoggers(player);
     }
 
     public void removePlayer(ServerPlayerEntity player)
     {
         this.removeInvalidPlayer(player);
+        this.removePlayerLoggers(player);
+    }
+
+    private void removePlayerLoggers(ServerPlayerEntity player)
+    {
+        this.loggerPlayers.remove(player.getUuid());
     }
 
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
@@ -467,6 +592,16 @@ public class HudDataProvider extends DataProviderBase
     public boolean hasPermissionsForSeed(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
+    }
+
+    public boolean hasPermissionsForLoggers(ServerPlayerEntity player)
+    {
+        return Permissions.check(player, this.permNode + ".logger", this.loggerPermissionLevel.getValue());
+    }
+
+    public boolean hasPermissionsForLogger(ServerPlayerEntity player, String type)
+    {
+        return Permissions.check(player, this.permNode + ".logger."+type, this.loggerPermissionLevel.getValue());
     }
 
     @Override

@@ -2,6 +2,7 @@ package fi.dy.masa.servux.servux;
 
 import java.net.SocketAddress;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 import fi.dy.masa.servux.dataproviders.*;

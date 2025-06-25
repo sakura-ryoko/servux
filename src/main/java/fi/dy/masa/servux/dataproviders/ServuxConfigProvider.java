@@ -25,6 +25,7 @@ public class ServuxConfigProvider extends DataProviderBase
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", 3, 4, 0);
     private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
+    private final ServuxBoolSetting easyPlaceValidatorEnabled = new ServuxBoolSetting(this, "easy_place_validator_enabled", true);
     private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language",
         i18nLang.DEFAULT_LANG,
         List.of("en_us", "zh_cn"), false)
@@ -53,7 +54,11 @@ public class ServuxConfigProvider extends DataProviderBase
         }
     };
     private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
-    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel, this.adminPermissionLevel, this.easyPlacePermissionLevel, this.defaultLanguage, this.debugLog);
+    private final List<IServuxSetting<?>> settings = List.of(
+            this.basePermissionLevel, this.adminPermissionLevel,
+            this.easyPlacePermissionLevel, this.easyPlaceValidatorEnabled,
+            this.defaultLanguage, this.debugLog
+    );
 
     protected ServuxConfigProvider()
     {
@@ -123,6 +128,11 @@ public class ServuxConfigProvider extends DataProviderBase
         }
 
         return Permissions.check(player, Reference.MOD_ID+".main.easy_place", easyPlacePermissionLevel.getValue());
+    }
+
+    public boolean isEasyPlaceValidatorEnabled()
+    {
+        return this.easyPlaceValidatorEnabled.getValue();
     }
 
     @Override
