@@ -23,6 +23,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 
 public class PlacementHandler
 {
@@ -83,15 +84,22 @@ public class PlacementHandler
                 return null;
             }
 
-            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+            if (ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled())
             {
-                //System.out.printf("validator passed for \"%s\"\n", property.getName());
-                oldState = state;
+                if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                {
+                    //System.out.printf("validator passed for \"%s\"\n", property.getName());
+                    oldState = state;
+                }
+                else
+                {
+                    //System.out.printf("validator failed for \"%s\"\n", property.getName());
+                    state = oldState;
+                }
             }
             else
             {
-                //System.out.printf("validator failed for \"%s\"\n", property.getName());
-                state = oldState;
+                oldState = state;
             }
 
             // Consume the bits used for the facing
@@ -145,15 +153,22 @@ public class PlacementHandler
                             //System.out.printf("applying \"%s\": %s\n", prop.getName(), value);
                             state = state.with(prop, value);
 
-                            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                            if (ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled())
                             {
-                                //System.out.printf("validator passed for \"%s\"\n", prop.getName());
-                                oldState = state;
+                                if (state.canPlaceAt(context.getWorld(), context.getPos()))
+                                {
+                                    //System.out.printf("validator passed for \"%s\"\n", prop.getName());
+                                    oldState = state;
+                                }
+                                else
+                                {
+                                    //System.out.printf("validator failed for \"%s\"\n", prop.getName());
+                                    state = oldState;
+                                }
                             }
                             else
                             {
-                                //System.out.printf("validator failed for \"%s\"\n", prop.getName());
-                                state = oldState;
+                                oldState = state;
                             }
                         }
 
@@ -190,16 +205,21 @@ public class PlacementHandler
             state = state.with(Properties.WATERLOGGED, true);
         }
 
-        if (state.canPlaceAt(context.getWorld(), context.getPos()))
+        if (ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled())
         {
-            //System.out.printf("validator passed for \"%s\"\n", state);
-            return state;
+            if (state.canPlaceAt(context.getWorld(), context.getPos()))
+            {
+                //System.out.printf("validator passed for \"%s\"\n", state);
+                return state;
+            }
+            else
+            {
+                //System.out.printf("validator failed for \"%s\"\n", state);
+                return null;
+            }
         }
-        else
-        {
-            //System.out.printf("validator failed for \"%s\"\n", state);
-            return null;
-        }
+
+        return state;
     }
 
     private static BlockState applyDirectionProperty(BlockState state, UseContext context,
