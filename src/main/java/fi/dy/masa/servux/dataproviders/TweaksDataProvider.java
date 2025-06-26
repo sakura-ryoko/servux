@@ -138,6 +138,18 @@ public class TweaksDataProvider extends DataProviderBase
             this.metadata.putBoolean("stackingShulkers", this.shouldEmptyShulkersStack());
             this.metadata.putInt("stackingShulkersMax", this.stackableShulkersSize.getValue());
         }
+        else
+        {
+            if (this.metadata.contains("stackingShulkers"))
+            {
+                this.metadata.remove("stackingShulkers");
+            }
+
+            if (this.metadata.contains("stackingShulkersMax"))
+            {
+                this.metadata.remove("stackingShulkersMax");
+            }
+        }
     }
 
     public void updateAllTweaks(MinecraftServer server)
