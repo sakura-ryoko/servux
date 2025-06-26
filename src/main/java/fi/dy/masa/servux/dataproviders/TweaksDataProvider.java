@@ -131,8 +131,13 @@ public class TweaksDataProvider extends DataProviderBase
 
     private void checkTweaksMetadata()
     {
-        this.metadata.putBoolean("stackingShulkers", this.shouldEmptyShulkersStack());
-        this.metadata.putInt("stackingShulkersMax", this.stackableShulkersSize.getValue());
+        // Only send the config when the Tweak is enabled;
+        // (ie; don't turn it off in case they are using Carpet)
+        if (this.shouldEmptyShulkersStack())
+        {
+            this.metadata.putBoolean("stackingShulkers", this.shouldEmptyShulkersStack());
+            this.metadata.putInt("stackingShulkersMax", this.stackableShulkersSize.getValue());
+        }
     }
 
     public void updateAllTweaks(MinecraftServer server)
