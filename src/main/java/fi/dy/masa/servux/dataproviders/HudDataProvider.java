@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import fi.dy.masa.servux.loggers.DataLogger;
 import fi.dy.masa.servux.loggers.DataLoggerBase;
+import fi.dy.masa.servux.util.StringUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import com.mojang.serialization.DataResult;
@@ -38,7 +39,7 @@ public class HudDataProvider extends DataProviderBase
     protected final static ServuxHudHandler<ServuxHudPacket.Payload> HANDLER = ServuxHudHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 80, 1200, 20);
+    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 20, 120, 10);
     protected ServuxBoolSetting shareWeatherStatus = new ServuxBoolSetting(this, "share_weather_status", false);
     protected ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     protected ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
@@ -65,7 +66,6 @@ public class HudDataProvider extends DataProviderBase
     private boolean refreshWeatherData;
     private final List<UUID> invalidPlayers = new ArrayList<>();
 
-    private final String LOGGER_KEY = "Loggers";
     private final HashMap<UUID, List<DataLogger>> loggerPlayers = new HashMap<>();
     private final HashMap<DataLogger, DataLoggerBase<?>> LOGGERS = new HashMap<>();
     private final HashMap<DataLogger, NbtElement> DATA = new HashMap<>();
@@ -90,7 +90,7 @@ public class HudDataProvider extends DataProviderBase
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
 
         // Loggers
-        this.metadata.put(LOGGER_KEY, this.putEnabledLoggers());
+        this.metadata.put("Loggers", this.putEnabledLoggers());
         this.initializeLoggers();
     }
 
@@ -147,7 +147,13 @@ public class HudDataProvider extends DataProviderBase
             profiler.push(this.getName());
             List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
             this.lastTick = tickCounter;
-
+            
+            // Update Logger Data
+            if (Reference.DEV_DEBUG)
+            {
+                this.tickLoggers(server);
+            }
+            
             int radius = this.getSpawnChunkRadius();
             int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
             if (radius != rule)
@@ -175,6 +181,11 @@ public class HudDataProvider extends DataProviderBase
                 if (this.shouldRefreshSpawnMetadata())
                 {
                     this.refreshSpawnMetadata(player, null);
+                }
+                
+                if (Reference.DEV_DEBUG)
+                {
+                    this.tickLoggerPlayer(player);
                 }
             }
 
@@ -255,7 +266,7 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
-    private void tickLoggerData(MinecraftServer server)
+    private void tickLoggers(MinecraftServer server)
     {
         this.DATA.clear();
 
@@ -285,7 +296,7 @@ public class HudDataProvider extends DataProviderBase
                     }
                 }
 
-                // ENCODE
+                HANDLER.encodeServerData(player, ServuxHudPacket.DataLoggerTick(nbt));
             }
         }
     }
@@ -324,41 +335,48 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
-    private void registerLoggers(ServerPlayerEntity player, @Nonnull NbtCompound nbt)
+    public void refreshLoggers(ServerPlayerEntity player, @Nonnull NbtCompound nbt)
     {
         if (!this.hasPermissionsForLoggers(player))
         {
+            player.sendMessage(StringUtils.translate("servux.hud_data.error.insufficient_for_loggers", "any"));
             return;
         }
 
-        if (nbt.contains(LOGGER_KEY))
+        if (!nbt.isEmpty())
         {
-            NbtCompound loggers = nbt.getCompoundOrEmpty(LOGGER_KEY);
+            List<DataLogger> list = new ArrayList<>();
+            UUID uuid = player.getUuid();
 
-            if (!loggers.isEmpty())
+            for (String key : nbt.getKeys())
             {
-                List<DataLogger> list = new ArrayList<>();
-                UUID uuid = player.getUuid();
+                DataLogger type = DataLogger.fromStringStatic(key);
+                boolean enable = nbt.getBoolean(key, false);
 
-                for (String key : loggers.getKeys())
+                if (type != null)
                 {
-                    DataLogger type = DataLogger.fromStringStatic(key);
-                    boolean enable = loggers.getBoolean(key, false);
-
-                    if (type != null)
+                    if (this.hasPermissionsForLogger(player, key) && enable)
                     {
-                        if (this.hasPermissionsForLogger(player, key) && enable)
-                        {
-                            list.add(type);
-                        }
-                        else
-                        {
-                            // NO PERMISSIONS
-                        }
+                        list.add(type);
+                    }
+                    else if (!enable)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        player.sendMessage(StringUtils.translate("servux.hud_data.error.insufficient_for_loggers", key));
                     }
                 }
+            }
 
+            if (!list.isEmpty())
+            {
                 this.loggerPlayers.put(uuid, list);
+            }
+            else
+            {
+                this.loggerPlayers.remove(uuid);
             }
         }
     }
@@ -389,6 +407,7 @@ public class HudDataProvider extends DataProviderBase
 
         nbt.putString("id", getNetworkChannel().toString());
         nbt.putString("servux", Reference.MOD_STRING);
+        nbt.putInt("version", this.getProtocolVersion());
         nbt.putInt("spawnPosX", spawnPos.getX());
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());

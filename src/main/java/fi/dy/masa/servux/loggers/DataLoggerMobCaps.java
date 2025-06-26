@@ -16,6 +16,8 @@ public class DataLoggerMobCaps extends DataLoggerBase<NbtCompound>
     @Override
     public NbtCompound getResult(MinecraftServer server)
     {
-        return new NbtCompound();
+        NbtCompound nbt = new NbtCompound();
+        nbt.putString("MobCaps", "Test");
+        return nbt;
     }
 }

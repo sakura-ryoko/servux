@@ -97,6 +97,7 @@
     "servux.config.structure_bounding_boxes.weather_permission_level.name": "天气数据权限",
     "servux.config.tweaks_data.permission_level.comment": "调整项数据提供者所需权限等级",
     "servux.config.tweaks_data.permission_level.name": "权限等级",
+    "servux.hud_data.error.insufficient_for_loggers": "§cInsufficient Permissions for Data Logger '%s'.§r",
     "servux.litematics.error.creative_required": "§cLitematic粘贴操作需要创造模式。§r",
     "servux.litematics.error.insufficent_for_paste": "§cLitematic粘贴操作权限不足。§r",
     "servux.litematics.error.schematic_load.cant_read_file": "无法读取原理图文件「%s」（文件不存在或权限问题）",
