@@ -3,10 +3,6 @@ package fi.dy.masa.servux.dataproviders;
 import java.util.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import fi.dy.masa.servux.loggers.DataLogger;
-import fi.dy.masa.servux.loggers.DataLoggerBase;
-import fi.dy.masa.servux.util.StringUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import com.mojang.serialization.DataResult;
@@ -25,13 +21,14 @@ import net.minecraft.world.GameRules;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.loggers.DataLogger;
+import fi.dy.masa.servux.loggers.DataLoggerBase;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxHudHandler;
 import fi.dy.masa.servux.network.packet.ServuxHudPacket;
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
-import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.*;
+import fi.dy.masa.servux.util.StringUtils;
 
 public class HudDataProvider extends DataProviderBase
 {
@@ -44,12 +41,14 @@ public class HudDataProvider extends DataProviderBase
     protected ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     protected ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
     protected ServuxIntSetting seedPermissionLevel = new ServuxIntSetting(this, "seed_permission_level", 2, 4, 0);
+    protected ServuxBoolSetting loggersEnabled = new ServuxBoolSetting(this, "loggers_enabled", false, new BoolCallback());
+    protected ServuxStringListSetting loggersEnableList = new ServuxStringListSetting(this, "loggers_enable_list", this.getDefaultLoggers(), new StringListCallback());
     protected ServuxIntSetting loggerPermissionLevel = new ServuxIntSetting(this, "logger_permission_level", 0, 4, 0);
     protected List<IServuxSetting<?>> settings = List.of(
             this.permissionLevel, this.updateInterval,
             this.shareWeatherStatus, this.weatherPermissionLevel,
             this.shareSeed, this.seedPermissionLevel,
-            this.loggerPermissionLevel
+            this.loggersEnabled, this.loggersEnableList, this.loggerPermissionLevel
     );
 
     private BlockPos spawnPos = BlockPos.ORIGIN;
@@ -90,9 +89,33 @@ public class HudDataProvider extends DataProviderBase
         this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
 
         // Loggers
-        this.metadata.put("Loggers", this.putEnabledLoggers());
-        this.setTickRate(15);       // Faster for Data Loggers
-        this.initializeLoggers();
+        this.checkIfLoggersAreInitialized();
+    }
+
+    private List<String> getDefaultLoggers()
+    {
+        List<String> list = new ArrayList<>();
+
+        for (DataLogger type : DataLogger.VALUES)
+        {
+            list.add(type.asString());
+        }
+
+        return list;
+    }
+
+    private void resetLoggersFromConfig()
+    {
+        if (this.isLoggersEnabled())
+        {
+            this.loggersEnabled.setValueNoCallback(false);
+            this.checkIfLoggersAreInitialized();
+            this.loggersEnabled.setValueNoCallback(true);
+        }
+        else
+        {
+            this.checkIfLoggersAreInitialized();
+        }
     }
 
     @Override
@@ -193,16 +216,21 @@ public class HudDataProvider extends DataProviderBase
             profiler.pop();
         }
 
-        // Update Logger Data
-        profiler.push(this.getName()+"_tick_loggers");
-        this.tickLoggers(server);
+        this.checkIfLoggersAreInitialized();
 
-        profiler.swap(this.getName() + "_logger_players");
-        for (ServerPlayerEntity player : playerList)
+        if (this.isLoggersEnabled())
         {
-            this.tickLoggerPlayer(player);
+            // Update Logger Data
+            profiler.push(this.getName() + "_tick_loggers");
+            this.tickLoggers(server);
+
+            profiler.swap(this.getName() + "_logger_players");
+            for (ServerPlayerEntity player : playerList)
+            {
+                this.tickLoggerPlayer(player);
+            }
+            profiler.pop();
         }
-        profiler.pop();
     }
 
     private void setPlayerInvalid(ServerPlayerEntity player)
@@ -240,16 +268,87 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
+    private void checkIfLoggersAreInitialized()
+    {
+        if (this.isLoggersEnabled())
+        {
+            if (!this.metadata.contains("Loggers"))
+            {
+                this.metadata.put("Loggers", this.putEnabledLoggers());
+            }
+
+            this.setTickRate(15);
+
+            if (this.LOGGERS.isEmpty())
+            {
+                this.initializeLoggers();
+            }
+        }
+        else
+        {
+            if (this.metadata.contains("Loggers"))
+            {
+                this.metadata.remove("Loggers");
+            }
+
+            if (!this.LOGGERS.isEmpty())
+            {
+                this.LOGGERS.clear();
+            }
+
+            this.setTickRate(40);
+
+            if (!this.DATA.isEmpty())
+            {
+                this.DATA.clear();
+            }
+        }
+    }
+
     private NbtCompound putEnabledLoggers()
     {
         NbtCompound nbt = new NbtCompound();
 
+        this.validateLoggerListConfig();
+
         for (DataLogger type : DataLogger.VALUES)
         {
-            nbt.putBoolean(type.asString(), true);      // TODO configurable
+            nbt.putBoolean(type.asString(), this.isLoggerTypeEnabled(type));
         }
 
         return nbt;
+    }
+
+    private void validateLoggerListConfig()
+    {
+        List<String> list = this.loggersEnableList.getValue();
+        List<String> safeList = new ArrayList<>();
+        boolean dirty = false;
+
+        for (String entry : list)
+        {
+            DataLogger type = DataLogger.fromStringStatic(entry);
+
+            if (type == null)
+            {
+                Servux.LOGGER.warn("validateLoggerListConfig: Removing invalid logger type: '{}'", entry);
+                dirty = true;
+            }
+            else
+            {
+                safeList.add(entry);
+            }
+        }
+
+        if (dirty)
+        {
+            this.loggersEnableList.setValueNoCallback(safeList);
+        }
+    }
+
+    private boolean isLoggerTypeEnabled(DataLogger type)
+    {
+        return this.loggersEnableList.getValue().contains(type.asString());
     }
 
     private void initializeLoggers()
@@ -258,11 +357,14 @@ public class HudDataProvider extends DataProviderBase
         {
             for (DataLogger type : DataLogger.VALUES)
             {
-                DataLoggerBase<?> entry = type.init();
-
-                if (entry != null)
+                if (this.isLoggerTypeEnabled(type))
                 {
-                    this.LOGGERS.put(type, entry);
+                    DataLoggerBase<?> entry = type.init();
+
+                    if (entry != null)
+                    {
+                        this.LOGGERS.put(type, entry);
+                    }
                 }
             }
         }
@@ -271,6 +373,7 @@ public class HudDataProvider extends DataProviderBase
     private void tickLoggers(MinecraftServer server)
     {
         this.DATA.clear();
+        if (!this.isLoggersEnabled()) return;
 
         this.LOGGERS.forEach(
                 (type, logger) ->
@@ -280,6 +383,8 @@ public class HudDataProvider extends DataProviderBase
 
     private void tickLoggerPlayer(ServerPlayerEntity player)
     {
+        if (!this.isLoggersEnabled()) return;
+
         UUID uuid = player.getUuid();
 
         if (this.loggerPlayers.containsKey(uuid))
@@ -605,6 +710,8 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
+    public boolean isLoggersEnabled() { return this.loggersEnabled.getValue(); }
+
     public boolean hasPermissionsForWeather(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
@@ -641,5 +748,23 @@ public class HudDataProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
+    }
+
+    public static class BoolCallback implements IServuxSettingCallback<Boolean>
+    {
+        @Override
+        public void onValueChanged(IServuxSetting<Boolean> setting, Boolean oldValue, Boolean value)
+        {
+            HudDataProvider.INSTANCE.resetLoggersFromConfig();
+        }
+    }
+
+    public static class StringListCallback implements IServuxSettingCallback<List<String>>
+    {
+        @Override
+        public void onValueChanged(IServuxSetting<List<String>> setting, List<String> oldValue, List<String> value)
+        {
+            HudDataProvider.INSTANCE.resetLoggersFromConfig();
+        }
     }
 }
