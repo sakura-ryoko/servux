@@ -70,6 +70,8 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
         this.metadata.putInt("timeout", timeout.getValue());
+
+        this.setTickRate(40);
     }
 
     @Override

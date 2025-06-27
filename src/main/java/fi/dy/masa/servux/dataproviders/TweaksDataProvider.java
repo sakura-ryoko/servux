@@ -64,6 +64,7 @@ public class TweaksDataProvider extends DataProviderBase
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
 
+        this.setTickRate(40);
         this.checkTweaksMetadata();
     }
 
