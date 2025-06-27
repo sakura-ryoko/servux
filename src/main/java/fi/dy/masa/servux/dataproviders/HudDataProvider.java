@@ -39,7 +39,7 @@ public class HudDataProvider extends DataProviderBase
     protected final static ServuxHudHandler<ServuxHudPacket.Payload> HANDLER = ServuxHudHandler.getInstance();
     protected final NbtCompound metadata = new NbtCompound();
     protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 20, 120, 10);
+    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 300, 20);
     protected ServuxBoolSetting shareWeatherStatus = new ServuxBoolSetting(this, "share_weather_status", false);
     protected ServuxIntSetting weatherPermissionLevel = new ServuxIntSetting(this, "weather_permission_level", 0, 4, 0);
     protected ServuxBoolSetting shareSeed = new ServuxBoolSetting(this, "share_seed", false);
@@ -91,6 +91,7 @@ public class HudDataProvider extends DataProviderBase
 
         // Loggers
         this.metadata.put("Loggers", this.putEnabledLoggers());
+        this.setTickRate(15);       // Faster for Data Loggers
         this.initializeLoggers();
     }
 
@@ -142,17 +143,12 @@ public class HudDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
+        List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
+
         if ((tickCounter % this.updateInterval.getValue()) == 0)
         {
-            profiler.push(this.getName());
-            List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
+            profiler.push(this.getName()+"_tick_weather");
             this.lastTick = tickCounter;
-            
-            // Update Logger Data
-            if (Reference.DEV_DEBUG)
-            {
-                this.tickLoggers(server);
-            }
             
             int radius = this.getSpawnChunkRadius();
             int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
@@ -169,7 +165,7 @@ public class HudDataProvider extends DataProviderBase
                 this.setWorldSeed(0);
             }
 
-            profiler.swap(this.getName() + "_players");
+            profiler.swap(this.getName() + "_weather_players");
             for (ServerPlayerEntity player : playerList)
             {
                 if (this.isPlayerInvalid(player)) continue;
@@ -181,11 +177,6 @@ public class HudDataProvider extends DataProviderBase
                 if (this.shouldRefreshSpawnMetadata())
                 {
                     this.refreshSpawnMetadata(player, null);
-                }
-                
-                if (Reference.DEV_DEBUG)
-                {
-                    this.tickLoggerPlayer(player);
                 }
             }
 
@@ -201,6 +192,17 @@ public class HudDataProvider extends DataProviderBase
 
             profiler.pop();
         }
+
+        // Update Logger Data
+        profiler.push(this.getName()+"_tick_loggers");
+        this.tickLoggers(server);
+
+        profiler.swap(this.getName() + "_logger_players");
+        for (ServerPlayerEntity player : playerList)
+        {
+            this.tickLoggerPlayer(player);
+        }
+        profiler.pop();
     }
 
     private void setPlayerInvalid(ServerPlayerEntity player)

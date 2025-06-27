@@ -1,6 +1,5 @@
 package fi.dy.masa.servux.loggers;
 
-import com.mojang.serialization.Codec;
 import net.minecraft.server.MinecraftServer;
 
 public abstract class DataLoggerBase<T>
