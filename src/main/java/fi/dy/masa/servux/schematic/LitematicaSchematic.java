@@ -88,7 +88,7 @@ public class LitematicaSchematic
 
     public LitematicaSchematic(NbtCompound nbtCompound) throws CommandSyntaxException
     {
-        this.readFromNBT(nbtCompound);
+        this.readFromNBT(nbtCompound, false);
         this.schematicFile = Path.of("/");
         this.schematicType = FileType.LITEMATICA_SCHEMATIC;
     }
@@ -1110,7 +1110,7 @@ public class LitematicaSchematic
         return null;
     }
 
-    private boolean readFromNBT(NbtCompound nbt) throws CommandSyntaxException
+    private boolean readFromNBT(NbtCompound nbt, boolean enableFixers) throws CommandSyntaxException
     {
         this.blockContainers.clear();
         this.tileEntities.clear();
@@ -1131,7 +1131,7 @@ public class LitematicaSchematic
                 this.metadata.setSchematicVersion(version);
                 this.metadata.setMinecraftDataVersion(minecraftDataVersion);
                 this.metadata.setFileType(FileType.LITEMATICA_SCHEMATIC);
-                this.readSubRegionsFromNBT(nbt.getCompoundOrEmpty("Regions"), version, minecraftDataVersion);
+                this.readSubRegionsFromNBT(nbt.getCompoundOrEmpty("Regions"), version, minecraftDataVersion, enableFixers);
 
                 return true;
             }
@@ -1157,7 +1157,7 @@ public class LitematicaSchematic
         throw new SimpleCommandExceptionType(Text.translatable(s)).create();
     }
 
-    private void readSubRegionsFromNBT(NbtCompound tag, int version, int minecraftDataVersion)
+    private void readSubRegionsFromNBT(NbtCompound tag, int version, int minecraftDataVersion, boolean enableFixers)
     {
         for (String regionName : tag.getKeys())
         {
@@ -1176,11 +1176,17 @@ public class LitematicaSchematic
                     if (version >= 2)
                     {
                         tiles = this.readTileEntitiesFromNBT(regionTag.getListOrEmpty("TileEntities"));
-                        tiles = this.convertTileEntities_to_1_20_5(tiles, minecraftDataVersion);
+                        if (enableFixers)
+                        {
+                            tiles = this.convertTileEntities_to_1_20_5(tiles, minecraftDataVersion);
+                        }
                         this.tileEntities.put(regionName, tiles);
 
                         NbtList entities = regionTag.getListOrEmpty("Entities");
-                        entities = this.convertEntities_to_1_20_5(entities, minecraftDataVersion);
+                        if (enableFixers)
+                        {
+                            entities = this.convertEntities_to_1_20_5(entities, minecraftDataVersion);
+                        }
                         this.entities.put(regionName, this.readEntitiesFromNBT(entities));
                     }
                     else if (version == 1)
@@ -1216,11 +1222,14 @@ public class LitematicaSchematic
                         BlockPos size = posMax.subtract(posMin).add(1, 1, 1);
 
 //                        palette = this.convertBlockStatePalette_1_12_to_1_13_2(palette, version, minecraftDataVersion);
-                        palette = this.convertBlockStatePalette_to_1_20_5(palette, minecraftDataVersion);
+                        if (enableFixers)
+                        {
+                            palette = this.convertBlockStatePalette_to_1_20_5(palette, minecraftDataVersion);
+                        }
 
                         LitematicaBlockStateContainer container = LitematicaBlockStateContainer.createFrom(palette, blockStateArr, size);
 
-                        if (minecraftDataVersion < MINECRAFT_DATA_VERSION)
+                        if (minecraftDataVersion < MINECRAFT_DATA_VERSION && enableFixers)
                         {
                             this.postProcessContainerIfNeeded(palette, container, tiles);
                         }
@@ -2125,7 +2134,7 @@ public class LitematicaSchematic
                 }
                 else if (schematicType == FileType.LITEMATICA_SCHEMATIC)
                 {
-                    return this.readFromNBT(nbt);
+                    return this.readFromNBT(nbt, true);
                 }
             }
         }
