@@ -22,7 +22,9 @@ public enum Schema implements StringIdentifiable
     // TODO --> Add Schema Versions to this as versions get released
     // Minecraft Data Versions
     SCHEMA_FUTURE  (9999, "FUTURE"),
-    SCHEMA_1_21_06 (4435, "1.21.6"),    // pre4
+    SCHEMA_1_21_08 (4440, "1.21.8"),
+    SCHEMA_1_21_07 (4438, "1.21.7"),
+    SCHEMA_1_21_06 (4435, "1.21.6"),
     SCHEMA_25W21A  (4429, "25w21a"),
     SCHEMA_25W16A  (4423, "25w16a"),
     SCHEMA_1_21_05 (4325, "1.21.5"),
