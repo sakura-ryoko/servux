@@ -17,7 +17,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.world.GameRules;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -86,7 +85,7 @@ public class HudDataProvider extends DataProviderBase
         this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
         this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
         this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
-        this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
+//        this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
 
         // Loggers
         this.checkIfLoggersAreInitialized();
@@ -173,12 +172,12 @@ public class HudDataProvider extends DataProviderBase
             profiler.push(this.getName()+"_tick_weather");
             this.lastTick = tickCounter;
             
-            int radius = this.getSpawnChunkRadius();
-            int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
-            if (radius != rule)
-            {
-                this.setSpawnChunkRadius(rule);
-            }
+//            int radius = this.getSpawnChunkRadius();
+//            int rule = server.getGameRules().getInt(GameRules.SPAWN_CHUNK_RADIUS);
+//            if (radius != rule)
+//            {
+//                this.setSpawnChunkRadius(rule);
+//            }
             if (this.worldSeed == 0)
             {
                 this.checkWorldSeed(server);
@@ -518,7 +517,7 @@ public class HudDataProvider extends DataProviderBase
         nbt.putInt("spawnPosX", spawnPos.getX());
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());
-        nbt.putInt("spawnChunkRadius", HudDataProvider.INSTANCE.getSpawnChunkRadius());
+//        nbt.putInt("spawnChunkRadius", HudDataProvider.INSTANCE.getSpawnChunkRadius());
 
         if (this.shareSeed.getValue() && this.hasPermissionsForSeed(player))
         {
@@ -577,7 +576,7 @@ public class HudDataProvider extends DataProviderBase
             return;
         }
 
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         Collection<RecipeEntry<?>> recipes = world.getRecipeManager().values();
         NbtCompound nbt = new NbtCompound();
         NbtList list = new NbtList();
@@ -635,29 +634,29 @@ public class HudDataProvider extends DataProviderBase
         this.spawnPos = spawnPos;
     }
 
-    public int getSpawnChunkRadius()
-    {
-        if (this.spawnChunkRadius < 0)
-        {
-            this.spawnChunkRadius = 2;
-        }
-
-        return this.spawnChunkRadius;
-    }
-
-    public void setSpawnChunkRadius(int radius)
-    {
-        if (this.spawnChunkRadius != radius)
-        {
-            this.metadata.remove("spawnChunkRadius");
-            this.metadata.putInt("spawnChunkRadius", radius);
-            this.refreshSpawnMetadata = true;
-
-            Servux.debugLog("setSpawnPos(): updating Spawn Chunk Radius [{}] -> [{}]", this.spawnChunkRadius, radius);
-        }
-
-        this.spawnChunkRadius = radius;
-    }
+//    public int getSpawnChunkRadius()
+//    {
+//        if (this.spawnChunkRadius < 0)
+//        {
+//            this.spawnChunkRadius = 2;
+//        }
+//
+//        return this.spawnChunkRadius;
+//    }
+//
+//    public void setSpawnChunkRadius(int radius)
+//    {
+//        if (this.spawnChunkRadius != radius)
+//        {
+//            this.metadata.remove("spawnChunkRadius");
+//            this.metadata.putInt("spawnChunkRadius", radius);
+//            this.refreshSpawnMetadata = true;
+//
+//            Servux.debugLog("setSpawnPos(): updating Spawn Chunk Radius [{}] -> [{}]", this.spawnChunkRadius, radius);
+//        }
+//
+//        this.spawnChunkRadius = radius;
+//    }
 
     public boolean shouldRefreshSpawnMetadata() { return this.refreshSpawnMetadata; }
 

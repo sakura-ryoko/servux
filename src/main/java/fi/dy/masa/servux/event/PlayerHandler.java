@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.ApiStatus;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.server.PlayerConfigEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
@@ -33,7 +34,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onClientConnect(SocketAddress addr, GameProfile profile, @Nullable Text result)
+    public void onClientConnect(SocketAddress addr, PlayerConfigEntry profile, @Nullable Text result)
     {
         if (!this.handlers.isEmpty())
         {
@@ -69,7 +70,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerOp(GameProfile profile, UUID uuid, @Nullable ServerPlayerEntity player)
+    public void onPlayerOp(PlayerConfigEntry profile, UUID uuid, @Nullable ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {
@@ -81,7 +82,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerDeOp(GameProfile profile, UUID uuid, @Nullable ServerPlayerEntity player)
+    public void onPlayerDeOp(PlayerConfigEntry profile, UUID uuid, @Nullable ServerPlayerEntity player)
     {
         if (!this.handlers.isEmpty())
         {

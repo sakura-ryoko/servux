@@ -1,7 +1,16 @@
 package fi.dy.masa.servux.mixin.server;
 
 import java.net.SocketAddress;
+import java.util.Optional;
 import java.util.UUID;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.server.PlayerConfigEntry;
+import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ConnectedClientData;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,13 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import com.mojang.authlib.GameProfile;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+
 import fi.dy.masa.servux.event.PlayerHandler;
 
 /**
@@ -25,14 +28,14 @@ import fi.dy.masa.servux.event.PlayerHandler;
 public abstract class MixinPlayerManager
 {
     @Unique
-    private GameProfile profileTemp;
+    private PlayerConfigEntry profileTemp;
 
     public MixinPlayerManager() { super(); }
 
     @Inject(method = "checkCanJoin", at = @At("RETURN"))
-    private void servux_onClientConnect(SocketAddress address, GameProfile profile, CallbackInfoReturnable<Text> cir)
+    private void servux_onClientConnect(SocketAddress address, PlayerConfigEntry playerConfigEntry, CallbackInfoReturnable<Text> cir)
     {
-        ((PlayerHandler) PlayerHandler.getInstance()).onClientConnect(address, profile, cir.getReturnValue());
+        ((PlayerHandler) PlayerHandler.getInstance()).onClientConnect(address, playerConfigEntry, cir.getReturnValue());
     }
 
     @Inject(method = "onPlayerConnect", at = @At("TAIL"))
@@ -47,13 +50,13 @@ public abstract class MixinPlayerManager
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerRespawn(cir.getReturnValue(), player);
     }
 
-    @Inject(method = "addToOperators", at = @At("HEAD"))
-    private void servux_onCaptureGameProfileOp(GameProfile profile, CallbackInfo ci)
+    @Inject(method = "addToOperators(Lnet/minecraft/server/PlayerConfigEntry;Ljava/util/Optional;Ljava/util/Optional;)V", at = @At("HEAD"))
+    private void servux_onCaptureGameProfileOp(PlayerConfigEntry player, Optional<Integer> permissionLevel, Optional<Boolean> canBypassPlayerLimit, CallbackInfo ci)
     {
-        this.profileTemp = profile;
+        this.profileTemp = player;
     }
 
-    @Redirect(method = "addToOperators",
+    @Redirect(method = "addToOperators(Lnet/minecraft/server/PlayerConfigEntry;Ljava/util/Optional;Ljava/util/Optional;)V",
             at = @At(value = "INVOKE",
                     target ="Lnet/minecraft/server/PlayerManager;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/network/ServerPlayerEntity;"))
     private ServerPlayerEntity servux_onPlayerOp(PlayerManager instance, UUID uuid)
@@ -71,9 +74,9 @@ public abstract class MixinPlayerManager
     }
 
     @Inject(method = "removeFromOperators", at = @At("HEAD"))
-    private void servux_onGameProfileDeOp(GameProfile profile, CallbackInfo ci)
+    private void servux_onGameProfileDeOp(PlayerConfigEntry player, CallbackInfo ci)
     {
-        this.profileTemp = profile;
+        this.profileTemp = player;
     }
 
     @Redirect(method = "removeFromOperators",

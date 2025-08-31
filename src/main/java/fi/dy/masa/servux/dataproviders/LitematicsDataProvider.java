@@ -13,7 +13,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -214,7 +213,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
         //Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getWorld().getBlockEntity(pos);
+        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleBlockResponse(pos, nbt));
     }
@@ -227,11 +226,11 @@ public class LitematicsDataProvider extends DataProviderBase
         }
 
         //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
-        Entity entity = player.getWorld().getEntityById(entityId);
+        Entity entity = player.getEntityWorld().getEntityById(entityId);
 
         if (entity != null)
         {
-            NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+            NbtView view = NbtView.getWriter(player.getEntityWorld().getRegistryManager());
             Identifier id = EntityType.getId(entity.getType());
 
             entity.writeData(view.getWriter());
@@ -257,7 +256,7 @@ public class LitematicsDataProvider extends DataProviderBase
             return;
         }
 
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         Chunk chunk = world != null ? world.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, false) : null;
 
         if (chunk == null)
@@ -299,7 +298,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
             for (Entity entity : entities)
             {
-                NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+                NbtView view = NbtView.getWriter(player.getEntityWorld().getRegistryManager());
                 Identifier id = EntityType.getId(entity.getType());
 
                 entity.writeData(view.getWriter());
@@ -355,10 +354,10 @@ public class LitematicsDataProvider extends DataProviderBase
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode", ReplaceBehavior.NONE.name()));
             PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
             LayerRange layerRange = tags.get("RenderLayerRange", LayerRange.CODEC).orElse(null);
-            placement.pasteTo(player.getWorld(), replaceMode, layerBehavior, layerRange);
+            placement.pasteTo(player.getEntityWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
+            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getEntityWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
         }
     }
 
@@ -389,10 +388,10 @@ public class LitematicsDataProvider extends DataProviderBase
             ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getString("ReplaceMode", ReplaceBehavior.NONE.name()));
             PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getString("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
             LayerRange layerRange = tags.get("RenderLayerRange", LayerRange.CODEC).orElse(null);
-            placement.pasteTo(player.getWorld(), replaceMode, layerBehavior, layerRange);
+            placement.pasteTo(player.getEntityWorld(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
+            player.sendMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.getEntityWorld().getRegistryKey().getValue().toString(), timeElapsed), false);
         }
     }
 

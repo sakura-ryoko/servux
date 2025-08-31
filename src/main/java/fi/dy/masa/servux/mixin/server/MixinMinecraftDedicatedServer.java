@@ -4,7 +4,6 @@ import com.mojang.datafixers.DataFixer;
 import fi.dy.masa.servux.event.ServerInitHandler;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.SaveLoader;
-import net.minecraft.server.WorldGenerationProgressListenerFactory;
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
 import net.minecraft.server.dedicated.ServerPropertiesLoader;
 import net.minecraft.util.ApiServices;
@@ -18,9 +17,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMinecraftDedicatedServer
 {
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void servux_DedicatedServerInit(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager,
-                                            SaveLoader saveLoader, ServerPropertiesLoader propertiesLoader, DataFixer dataFixer,
-                                            ApiServices apiServices, WorldGenerationProgressListenerFactory worldGenerationProgressListenerFactory, CallbackInfo ci)
+    private void servux_DedicatedServerInit(Thread serverThread, LevelStorage.Session session,
+											ResourcePackManager dataPackManager, SaveLoader saveLoader,
+											ServerPropertiesLoader propertiesLoader, DataFixer dataFixer,
+											ApiServices apiServices, CallbackInfo ci)
     {
         ((ServerInitHandler) ServerInitHandler.getInstance()).onServerInit();
     }

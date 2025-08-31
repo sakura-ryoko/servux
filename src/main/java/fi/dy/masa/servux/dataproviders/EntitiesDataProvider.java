@@ -150,7 +150,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getWorld().getBlockEntity(pos);
+        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
         NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
@@ -163,11 +163,11 @@ public class EntitiesDataProvider extends DataProviderBase
         }
 
         //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
-        Entity entity = player.getWorld().getEntityById(entityId);
+        Entity entity = player.getEntityWorld().getEntityById(entityId);
 
         if (entity != null)
         {
-            NbtView view = NbtView.getWriter(player.getWorld().getRegistryManager());
+            NbtView view = NbtView.getWriter(player.getEntityWorld().getRegistryManager());
             Identifier id = EntityType.getId(entity.getType());
 
             entity.writeData(view.getWriter());

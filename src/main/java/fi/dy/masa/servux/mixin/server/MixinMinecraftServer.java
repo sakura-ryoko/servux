@@ -7,8 +7,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.WorldGenerationProgressListener;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.GlobalPos;
 import net.minecraft.util.profiler.Profiler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,7 +26,10 @@ public abstract class MixinMinecraftServer
     @Shadow private int ticks;
     @Shadow public abstract ResourceManager getResourceManager();
 
-    @Inject(method = "tick", at = @At(value = "RETURN", ordinal = 1))
+	@Shadow
+	public abstract GlobalPos getSpawnPos();
+
+	@Inject(method = "tick", at = @At(value = "RETURN", ordinal = 1))
     private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci, @Local Profiler profiler)
     {
         profiler.push("servux_tick");
@@ -35,16 +37,17 @@ public abstract class MixinMinecraftServer
         profiler.pop();
     }
 
-    @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/util/math/MathHelper;square(I)I", shift = At.Shift.BEFORE)
+    @Inject(method = "prepareStartRegion",
+			at = @At(value = "INVOKE",
+					 target = "Lnet/minecraft/server/MinecraftServer;updateMobSpawnOptions()V",
+					 shift = At.Shift.BEFORE)
     )
-    private void servux_onPrepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci,
-                                             @Local BlockPos blockPos, @Local int i)
+    private void servux_onPrepareStartRegion(CallbackInfo ci)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.setSpawnPos(blockPos);
-            HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
+            HudDataProvider.INSTANCE.setSpawnPos(this.getSpawnPos().pos());
+//            HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
         }
     }
 

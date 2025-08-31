@@ -133,7 +133,7 @@ public class EntityUtils
 
                     if (passenger != null)
                     {
-                        passenger.startRiding(entity, true);
+                        passenger.startRiding(entity, true, false);
                     }
                 }
             }

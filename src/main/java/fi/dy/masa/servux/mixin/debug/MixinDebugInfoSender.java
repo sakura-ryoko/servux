@@ -133,7 +133,7 @@ public class MixinDebugInfoSender
     @Inject(method = "sendBrainDebugData", at = @At("HEAD"))
     private static void servux_onSendBrainDebugData(LivingEntity living, CallbackInfo ci)
     {
-        if (living.getWorld() instanceof ServerWorld world)
+        if (living.getEntityWorld() instanceof ServerWorld world)
         {
             DebugDataProvider.INSTANCE.sendBrainDebugData(world, living);
         }
@@ -143,7 +143,7 @@ public class MixinDebugInfoSender
     @Inject(method = "sendBeeDebugData", at = @At("HEAD"))
     private static void servux_onSendBeeDebugData(BeeEntity bee, CallbackInfo ci)
     {
-        if (bee.getWorld() instanceof ServerWorld world)
+        if (bee.getEntityWorld() instanceof ServerWorld world)
         {
             DebugDataProvider.INSTANCE.sendBeeDebugData(world, bee);
         }
@@ -152,7 +152,7 @@ public class MixinDebugInfoSender
     @Inject(method = "sendBreezeDebugData", at = @At("HEAD"))
     private static void servux_onSendBreezeDebugData(BreezeEntity breeze, CallbackInfo ci)
     {
-        if (breeze.getWorld() instanceof ServerWorld world)
+        if (breeze.getEntityWorld() instanceof ServerWorld world)
         {
             DebugDataProvider.INSTANCE.sendBreezeDebugData(world, breeze);
         }

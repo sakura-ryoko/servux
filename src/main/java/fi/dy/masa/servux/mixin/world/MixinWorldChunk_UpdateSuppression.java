@@ -15,9 +15,9 @@ public abstract class MixinWorldChunk_UpdateSuppression
                 slice = @Slice(from = @At(value = "INVOKE",
                                 target = "Lnet/minecraft/world/chunk/ChunkSection;getBlockState(III)" +
                                           "Lnet/minecraft/block/BlockState;")),
-                at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isClient:Z", ordinal = 0))
+                at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;isClient()Z", ordinal = 0))
     private boolean servux_redirectIsRemote(World world)
     {
-        return WorldUtils.shouldPreventBlockUpdates(world) || world.isClient;
+        return WorldUtils.shouldPreventBlockUpdates(world) || world.isClient();
     }
 }

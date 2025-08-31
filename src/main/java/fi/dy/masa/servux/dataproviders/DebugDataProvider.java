@@ -531,12 +531,12 @@ public class DebugDataProvider extends DataProviderBase
                     }
                     else if (memory.isTimed())
                     {
-                        String var10000 = this.format((ServerWorld) entity.getWorld(), object);
+                        String var10000 = this.format((ServerWorld) entity.getEntityWorld(), object);
                         string = var10000 + " (ttl: " + memory.getExpiry() + ")";
                     }
                     else
                     {
-                        string = this.format((ServerWorld) entity.getWorld(), object);
+                        string = this.format((ServerWorld) entity.getEntityWorld(), object);
                     }
                 }
                 else

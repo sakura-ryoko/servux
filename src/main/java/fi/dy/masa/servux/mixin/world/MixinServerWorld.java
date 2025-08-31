@@ -17,8 +17,7 @@ import fi.dy.masa.servux.dataproviders.HudDataProvider;
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld
 {
-    @Shadow private int spawnChunkRadius;
-
+//    @Shadow private int spawnChunkRadius;
     @Shadow @NotNull public abstract MinecraftServer getServer();
 
     @Inject(method = "setSpawnPos", at = @At("TAIL"))
@@ -27,7 +26,7 @@ public abstract class MixinServerWorld
         if (HudDataProvider.INSTANCE.isEnabled())
         {
             HudDataProvider.INSTANCE.setSpawnPos(pos);
-            HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
+//            HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
         }
     }
 

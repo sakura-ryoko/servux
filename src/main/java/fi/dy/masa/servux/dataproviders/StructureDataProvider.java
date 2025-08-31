@@ -1,16 +1,11 @@
 package fi.dy.masa.servux.dataproviders;
 
-import javax.annotation.Nullable;
 import java.util.*;
-
-import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
-import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.settings.ServuxStringListSetting;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
@@ -21,21 +16,24 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureContext;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.profiler.Profiler;
-import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.gen.structure.Structure;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringListSetting;
 import fi.dy.masa.servux.util.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
@@ -236,7 +234,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         UUID uuid = player.getUuid();
         ChunkPos center = player.getWatchedSection().toChunkPos();
-        Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.getWorld(), center, chunkRadius);
+        Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.getEntityWorld(), center, chunkRadius);
 
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
@@ -324,7 +322,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (positionsToUpdate.isEmpty() == false)
         {
-            ServerWorld world = player.getWorld();
+            ServerWorld world = player.getEntityWorld();
             ChunkPos center = player.getWatchedSection().toChunkPos();
             Map<Structure, LongSet> references = new HashMap<>();
 
@@ -472,7 +470,7 @@ public class StructureDataProvider extends DataProviderBase
                                   Map<Structure, LongSet> references,
                                   int tickCounter)
     {
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
 
         if (starts.isEmpty() == false)
