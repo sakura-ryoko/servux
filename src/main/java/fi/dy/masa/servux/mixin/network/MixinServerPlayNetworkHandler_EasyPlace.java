@@ -19,6 +19,5 @@ public class MixinServerPlayNetworkHandler_EasyPlace
     private Vec3d servux$removeHitPosCheck(Vec3d hitVec, Vec3d blockCenter)
     {
         return Vec3d.ZERO;
-        //return hitVec.subtract(blockCenter);
     }
 }

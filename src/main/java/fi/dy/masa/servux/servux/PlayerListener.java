@@ -1,12 +1,11 @@
 package fi.dy.masa.servux.servux;
 
-import java.net.SocketAddress;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import fi.dy.masa.servux.dataproviders.*;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
+import net.minecraft.server.network.ServerPlayerEntity;
+
+import java.net.SocketAddress;
 
 public class PlayerListener implements IPlayerListener
 {
@@ -38,10 +37,10 @@ public class PlayerListener implements IPlayerListener
             TweaksDataProvider.INSTANCE.sendMetadata(player);
         }
 
-        if (DebugDataProvider.INSTANCE.isEnabled())
-        {
-            DebugDataProvider.INSTANCE.register(player);
-        }
+//        if (DebugDataProvider.INSTANCE.isEnabled())
+//        {
+//            DebugDataProvider.INSTANCE.register(player);
+//        }
     }
 
     @Override
@@ -72,9 +71,9 @@ public class PlayerListener implements IPlayerListener
             TweaksDataProvider.INSTANCE.removePlayer(player);
         }
 
-        if (DebugDataProvider.INSTANCE.isEnabled())
-        {
-            DebugDataProvider.INSTANCE.unregister(player);
-        }
+//        if (DebugDataProvider.INSTANCE.isEnabled())
+//        {
+//            DebugDataProvider.INSTANCE.unregister(player);
+//        }
     }
 }

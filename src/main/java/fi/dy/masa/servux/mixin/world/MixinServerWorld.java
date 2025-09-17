@@ -1,18 +1,16 @@
 package fi.dy.masa.servux.mixin.world;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import org.jetbrains.annotations.NotNull;
-
+import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldProperties;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import fi.dy.masa.servux.dataproviders.HudDataProvider;
 
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld
@@ -21,11 +19,11 @@ public abstract class MixinServerWorld
     @Shadow @NotNull public abstract MinecraftServer getServer();
 
     @Inject(method = "setSpawnPos", at = @At("TAIL"))
-    private void servux_onSetSpawnPos(BlockPos pos, float angle, CallbackInfo ci)
+    private void servux_onSetSpawnPos(WorldProperties.class_12064 arg, CallbackInfo ci)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.setSpawnPos(pos);
+            HudDataProvider.INSTANCE.setSpawnPos(arg.globalPos());
 //            HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
         }
     }

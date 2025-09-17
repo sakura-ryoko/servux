@@ -180,7 +180,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (this.registeredPlayers.containsKey(uuid))
         {
-            this.addChunkTimeoutIfHasReferences(uuid, chunk, player.getServer().getTicks());
+            this.addChunkTimeoutIfHasReferences(uuid, chunk, player.getCommandSource().getServer().getTicks());
         }
     }
 
@@ -190,7 +190,7 @@ public class StructureDataProvider extends DataProviderBase
 
         // System.out.printf("register\n");
         boolean registered = false;
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.getCommandSource().getServer();
         UUID uuid = player.getUuid();
 
         if (this.hasPermission(player) == false)
@@ -213,7 +213,7 @@ public class StructureDataProvider extends DataProviderBase
 
                 Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().getLiteralString());
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
-                this.initialSyncStructuresToPlayerWithinRange(player, player.getServer().getPlayerManager().getViewDistance()+2, tickCounter);
+                this.initialSyncStructuresToPlayerWithinRange(player, player.getCommandSource().getServer().getPlayerManager().getViewDistance()+2, tickCounter);
             }
 
             registered = true;

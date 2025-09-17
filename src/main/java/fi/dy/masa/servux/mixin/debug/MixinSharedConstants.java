@@ -8,8 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(SharedConstants.class)
 public abstract class MixinSharedConstants
 {
-    @Shadow @Mutable
-    public static boolean isDevelopment;
+    @Shadow @Mutable public static boolean isDevelopment;
 
     public MixinSharedConstants() {}
 

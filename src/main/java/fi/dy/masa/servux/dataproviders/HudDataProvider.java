@@ -1,23 +1,6 @@
 package fi.dy.masa.servux.dataproviders;
 
-import java.util.*;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import me.lucko.fabric.api.permissions.v0.Permissions;
-
 import com.mojang.serialization.DataResult;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeEntry;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.profiler.Profiler;
-
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.loggers.DataLogger;
@@ -28,6 +11,24 @@ import fi.dy.masa.servux.network.packet.ServuxHudHandler;
 import fi.dy.masa.servux.network.packet.ServuxHudPacket;
 import fi.dy.masa.servux.settings.*;
 import fi.dy.masa.servux.util.StringUtils;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.recipe.Recipe;
+import net.minecraft.recipe.RecipeEntry;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.GlobalPos;
+import net.minecraft.util.profiler.Profiler;
+import net.minecraft.world.World;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.*;
 
 public class HudDataProvider extends DataProviderBase
 {
@@ -50,8 +51,8 @@ public class HudDataProvider extends DataProviderBase
             this.loggersEnabled, this.loggersEnableList, this.loggerPermissionLevel
     );
 
-    private BlockPos spawnPos = BlockPos.ORIGIN;
-    private int spawnChunkRadius = -1;
+    private GlobalPos spawnPos = new GlobalPos(World.OVERWORLD, BlockPos.ORIGIN);
+//    private int spawnChunkRadius = -1;
     private long worldSeed = 0;
     private int clearWeatherTime = -1;
     private int rainWeatherTime = -1;
@@ -82,9 +83,10 @@ public class HudDataProvider extends DataProviderBase
         this.metadata.putString("servux", Reference.MOD_STRING);
 
         // Spawn Metadata
-        this.metadata.putInt("spawnPosX", this.getSpawnPos().getX());
-        this.metadata.putInt("spawnPosY", this.getSpawnPos().getY());
-        this.metadata.putInt("spawnPosZ", this.getSpawnPos().getZ());
+        this.metadata.putString("spawnDimension", this.getSpawnPos().dimension().getValue().toString());
+        this.metadata.putInt("spawnPosX", this.getSpawnPos().pos().getX());
+        this.metadata.putInt("spawnPosY", this.getSpawnPos().pos().getY());
+        this.metadata.putInt("spawnPosZ", this.getSpawnPos().pos().getZ());
 //        this.metadata.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
 
         // Loggers
@@ -509,14 +511,15 @@ public class HudDataProvider extends DataProviderBase
         if (!this.isEnabled()) return;
 
         NbtCompound nbt = new NbtCompound();
-        BlockPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
+        GlobalPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
 
         nbt.putString("id", getNetworkChannel().toString());
         nbt.putString("servux", Reference.MOD_STRING);
         nbt.putInt("version", this.getProtocolVersion());
-        nbt.putInt("spawnPosX", spawnPos.getX());
-        nbt.putInt("spawnPosY", spawnPos.getY());
-        nbt.putInt("spawnPosZ", spawnPos.getZ());
+        nbt.putString("spawnDimension", spawnPos.dimension().getValue().toString());
+        nbt.putInt("spawnPosX", spawnPos.pos().getX());
+        nbt.putInt("spawnPosY", spawnPos.pos().getY());
+        nbt.putInt("spawnPosZ", spawnPos.pos().getZ());
 //        nbt.putInt("spawnChunkRadius", HudDataProvider.INSTANCE.getSpawnChunkRadius());
 
         if (this.shareSeed.getValue() && this.hasPermissionsForSeed(player))
@@ -606,29 +609,31 @@ public class HudDataProvider extends DataProviderBase
         HANDLER.encodeServerData(player, ServuxHudPacket.ResponseS2CStart(nbt));
     }
 
-    public BlockPos getSpawnPos()
+    public GlobalPos getSpawnPos()
     {
         if (this.spawnPos == null)
         {
-            this.setSpawnPos(BlockPos.ORIGIN);
+            this.setSpawnPos(new GlobalPos(ServerWorld.OVERWORLD, BlockPos.ORIGIN));
         }
 
         return this.spawnPos;
     }
 
-    public void setSpawnPos(BlockPos spawnPos)
+    public void setSpawnPos(GlobalPos spawnPos)
     {
         if (this.spawnPos.equals(spawnPos) == false)
         {
+            this.metadata.remove("spawnDimension");
             this.metadata.remove("spawnPosX");
             this.metadata.remove("spawnPosY");
             this.metadata.remove("spawnPosZ");
-            this.metadata.putInt("spawnPosX", spawnPos.getX());
-            this.metadata.putInt("spawnPosY", spawnPos.getY());
-            this.metadata.putInt("spawnPosZ", spawnPos.getZ());
+            this.metadata.putString("spawnDimension", spawnPos.dimension().getValue().toString());
+            this.metadata.putInt("spawnPosX", spawnPos.pos().getX());
+            this.metadata.putInt("spawnPosY", spawnPos.pos().getY());
+            this.metadata.putInt("spawnPosZ", spawnPos.pos().getZ());
             this.refreshSpawnMetadata = true;
 
-            Servux.debugLog("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toShortString(), spawnPos.toShortString());
+            Servux.debugLog("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toString(), spawnPos.toString());
         }
 
         this.spawnPos = spawnPos;

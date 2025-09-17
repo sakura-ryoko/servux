@@ -46,7 +46,7 @@ public abstract class MixinMinecraftServer
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.setSpawnPos(this.getSpawnPos().pos());
+            HudDataProvider.INSTANCE.setSpawnPos(this.getSpawnPos());
 //            HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
         }
     }
