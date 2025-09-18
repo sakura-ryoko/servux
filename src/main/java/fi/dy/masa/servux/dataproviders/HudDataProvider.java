@@ -619,6 +619,18 @@ public class HudDataProvider extends DataProviderBase
         return this.spawnPos;
     }
 
+    public String getSpawnPosAsString()
+    {
+        GlobalPos pos = this.getSpawnPos();
+
+        return String.format("[%s: %d, %d, %d]", pos.dimension().getValue().toString(), pos.pos().getX(), pos.pos().getY(), pos.pos().getZ());
+    }
+
+    public String getSpawnPosAsString(GlobalPos pos)
+    {
+        return String.format("[%s: %d, %d, %d]", pos.dimension().getValue().toString(), pos.pos().getX(), pos.pos().getY(), pos.pos().getZ());
+    }
+
     public void setSpawnPos(GlobalPos spawnPos)
     {
         if (this.spawnPos.equals(spawnPos) == false)
@@ -633,7 +645,7 @@ public class HudDataProvider extends DataProviderBase
             this.metadata.putInt("spawnPosZ", spawnPos.pos().getZ());
             this.refreshSpawnMetadata = true;
 
-            Servux.debugLog("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.spawnPos.toString(), spawnPos.toString());
+            Servux.debugLog("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.getSpawnPosAsString(), this.getSpawnPosAsString(spawnPos));
         }
 
         this.spawnPos = spawnPos;
