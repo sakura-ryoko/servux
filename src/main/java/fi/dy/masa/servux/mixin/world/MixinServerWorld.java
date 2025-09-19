@@ -18,12 +18,12 @@ public abstract class MixinServerWorld
 //    @Shadow private int spawnChunkRadius;
     @Shadow @NotNull public abstract MinecraftServer getServer();
 
-    @Inject(method = "setSpawnPos", at = @At("TAIL"))
-    private void servux_onSetSpawnPos(WorldProperties.class_12064 arg, CallbackInfo ci)
+    @Inject(method = "setSpawnPoint", at = @At("TAIL"))
+    private void servux_onSetSpawnPos(WorldProperties.SpawnPoint spawnPoint, CallbackInfo ci)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.setSpawnPos(arg.globalPos());
+            HudDataProvider.INSTANCE.setSpawnPos(spawnPoint.globalPos());
 //            HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
         }
     }
