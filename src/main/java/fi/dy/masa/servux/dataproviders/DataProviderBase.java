@@ -84,7 +84,7 @@ public abstract class DataProviderBase implements IDataProvider
     }
 
     @Override
-    public final int getTickInterval()
+    public int getTickInterval()
     {
         return this.tickRate;
     }

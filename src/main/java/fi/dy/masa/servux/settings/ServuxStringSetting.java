@@ -10,14 +10,25 @@ import java.util.List;
 public class ServuxStringSetting extends AbstractServuxSetting<String>
 {
     private final boolean strict;
+    public ServuxStringSetting(IDataProvider dataProvider, String name, String defaultValue, List<String> examples, boolean strict, IServuxSettingCallback<String> callback)
+    {
+        this(dataProvider, name, null, null, defaultValue, examples, strict, callback);
+    }
+
     public ServuxStringSetting(IDataProvider dataProvider, String name, String defaultValue, List<String> examples, boolean strict)
     {
         this(dataProvider, name, null, null, defaultValue, examples, strict);
     }
 
+    public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples, boolean strict, IServuxSettingCallback<String> callback)
+    {
+        super(dataProvider, name, prettyName, comment, defaultValue, examples, callback);
+        this.strict = strict;
+    }
+
     public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples, boolean strict)
     {
-        super(dataProvider, name, prettyName, comment, defaultValue, examples);
+        super(dataProvider, name, prettyName, comment, defaultValue, examples, null);
         this.strict = strict;
     }
 

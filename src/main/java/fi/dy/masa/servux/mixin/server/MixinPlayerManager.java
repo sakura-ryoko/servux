@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.server;
 
 import java.net.SocketAddress;
 import java.util.UUID;

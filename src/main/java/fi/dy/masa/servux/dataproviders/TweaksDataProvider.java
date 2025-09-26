@@ -3,13 +3,21 @@ package fi.dy.masa.servux.dataproviders;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import fi.dy.masa.servux.settings.IServuxSettingCallback;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.util.InventoryUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -22,16 +30,30 @@ import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import net.minecraft.util.profiler.Profiler;
 
 public class TweaksDataProvider extends DataProviderBase
 {
     public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
-    protected final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
-    protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel);
+	private final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
+    private final NbtCompound metadata = new NbtCompound();
+    private final BoolCallbacks boolCallback = new BoolCallbacks();
+    private final IntCallbacks intCallback = new IntCallbacks();
+	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0, this.intCallback);
+	private final ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 120, 1200, 40, this.intCallback);
+	private final ServuxBoolSetting stackableShulkers = new ServuxBoolSetting(this, "stackable_shulkers", false, this.boolCallback);
+	private final ServuxIntSetting stackableShulkersSize = new ServuxIntSetting(this, "stackable_shulkers_count", 64, 99, 1, this.intCallback);
+	private final ServuxBoolSetting stackableShulkersFix = new ServuxBoolSetting(this, "stackable_shulkers_fix", true, this.boolCallback);
+	private final List<IServuxSetting<?>> settings = List.of(
+            this.permissionLevel,
+            this.updateInterval,
+            this.stackableShulkers,
+            this.stackableShulkersSize,
+            this.stackableShulkersFix
+    );
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
+    private boolean configDirty = false;
 
     protected TweaksDataProvider()
     {
@@ -45,6 +67,9 @@ public class TweaksDataProvider extends DataProviderBase
         this.metadata.putString("id", this.getNetworkChannel().toString());
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
+
+        this.setTickRate(40);
+        this.checkTweaksMetadata();
     }
 
     @Override
@@ -57,11 +82,13 @@ public class TweaksDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        if (this.isRegistered() == false)
+
+        if (!this.isRegistered())
         {
             HANDLER.registerPlayPayload(ServuxTweaksPacket.Payload.ID, ServuxTweaksPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxTweaksPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -70,6 +97,31 @@ public class TweaksDataProvider extends DataProviderBase
     {
         HANDLER.unregisterPlayReceiver();
         ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
+    }
+
+    @Override
+    public boolean shouldTick()
+    {
+        return this.isEnabled();
+    }
+
+    @Override
+    public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
+    {
+        if (!this.isEnabled()) return;
+
+        if ((tickCounter % this.updateInterval.getValue()) == 0)
+        {
+            profiler.push(this.getName());
+
+            if (this.configDirty)
+            {
+                this.updateAllTweaks(server);
+                this.configDirty = false;
+            }
+
+            profiler.pop();
+        }
     }
 
     @Override
@@ -84,6 +136,45 @@ public class TweaksDataProvider extends DataProviderBase
         return !this.isPlayerInvalid(player);
     }
 
+    private void checkTweaksMetadata()
+    {
+        // Only send the config when the Tweak is enabled;
+        // (ie; don't turn it off in case they are using Carpet)
+        if (this.shouldEmptyShulkersStack())
+        {
+            this.metadata.putBoolean("stackingShulkers", this.shouldEmptyShulkersStack());
+            this.metadata.putInt("stackingShulkersMax", this.stackableShulkersSize.getValue());
+        }
+        else
+        {
+            if (this.metadata.contains("stackingShulkers"))
+            {
+                this.metadata.remove("stackingShulkers");
+            }
+
+            if (this.metadata.contains("stackingShulkersMax"))
+            {
+                this.metadata.remove("stackingShulkersMax");
+            }
+        }
+    }
+
+    public void updateAllTweaks(MinecraftServer server)
+    {
+        Servux.debugLog("tweaksData: Invoke updateAllTweaks()");
+        List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
+
+        this.checkTweaksMetadata();
+
+        for (ServerPlayerEntity player : players)
+        {
+            if (this.isPlayerRegistered(player))
+            {
+                this.sendMetadata(player);
+            }
+        }
+    }
+
     public void sendMetadata(ServerPlayerEntity player)
     {
         if (!this.isEnabled()) return;
@@ -96,6 +187,7 @@ public class TweaksDataProvider extends DataProviderBase
         }
 
         Servux.debugLog("tweaksDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        this.checkTweaksMetadata();
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -163,9 +255,10 @@ public class TweaksDataProvider extends DataProviderBase
 
         if (entity != null)
         {
+            Identifier id = EntityType.getId(entity.getType());
+
             if (entity instanceof PlayerEntity)
             {
-                Identifier id = EntityType.getId(entity.getType());
                 nbt = entity.writeNbt(nbt);
 
                 if (id != null)
@@ -173,11 +266,23 @@ public class TweaksDataProvider extends DataProviderBase
                     nbt.putString("id", id.toString());
                 }
 
+                if (!EntitiesDataProvider.INSTANCE.hasPlayerInventoryPermission(player))
+                {
+                    nbt.remove("Inventory");
+                    nbt.put("Inventory", new NbtList());
+                }
+                if (!EntitiesDataProvider.INSTANCE.hasPlayerEnderItemsPermission(player))
+                {
+                    nbt.remove("EnderItems");
+                    nbt.put("EnderItems", new NbtList());
+                }
+
                 HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
             }
             else if (entity.saveSelfNbt(nbt))
             {
-                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
+	            nbt.putString("id", id.toString());
+                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt.copy()));
             }
         }
     }
@@ -204,7 +309,37 @@ public class TweaksDataProvider extends DataProviderBase
     }
      */
 
-    @Override
+    public boolean shouldEmptyShulkersStack()
+    {
+        return this.stackableShulkers.getValue();
+    }
+
+    public boolean isStackableShulkersFixActive()
+    {
+        return this.shouldEmptyShulkersStack() && this.stackableShulkersFix.getValue();
+    }
+
+    public int defaultEmptyShulkersMaxCount()
+    {
+        if (this.shouldEmptyShulkersStack())
+        {
+            return this.stackableShulkersSize.getValue();
+        }
+
+        return 1;
+    }
+
+    public int getEmptyShulkersMaxCount(ItemStack stack)
+    {
+        if (this.shouldEmptyShulkersStack() && InventoryUtils.isShulkerBox(stack))
+        {
+            return this.defaultEmptyShulkersMaxCount();
+        }
+
+        return stack.getComponents().getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
+    }
+
+	@Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
@@ -220,5 +355,26 @@ public class TweaksDataProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
+    }
+
+    // Callbacks marks the config as dirty so that we can broadcast the config changes
+    public static class BoolCallbacks implements IServuxSettingCallback<Boolean>
+    {
+        @Override
+        public void onValueChanged(IServuxSetting<Boolean> setting, Boolean oldValue, Boolean value)
+        {
+            Servux.debugLog("Config Change detected; {}:{}", setting.dataProvider().getName(), setting.name());
+            TweaksDataProvider.INSTANCE.configDirty = true;
+        }
+    }
+
+    public static class IntCallbacks implements IServuxSettingCallback<Integer>
+    {
+        @Override
+        public void onValueChanged(IServuxSetting<Integer> setting, Integer oldValue, Integer value)
+        {
+            Servux.debugLog("Config Change detected; {}:{}", setting.dataProvider().getName(), setting.name());
+            TweaksDataProvider.INSTANCE.configDirty = true;
+        }
     }
 }

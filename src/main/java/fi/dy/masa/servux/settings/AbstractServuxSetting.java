@@ -5,6 +5,7 @@ import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.util.i18nLang;
 import net.minecraft.text.Text;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,8 +17,9 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     private final T defaultValue;
     private final List<String> examples;
     private final IDataProvider dataProvider;
+    private final @Nullable IServuxSettingCallback<T> callback;
 
-    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples, IServuxSettingCallback<T> callback)
     {
         Objects.requireNonNull(name);
         this.name = name;
@@ -27,11 +29,17 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
         this.value = defaultValue;
         this.examples = examples;
         this.dataProvider = dataProvider;
+        this.callback = callback;
+    }
+
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, IServuxSettingCallback<T> callback)
+    {
+        this(dataProvider, name, prettyName, comment, defaultValue, null, callback);
     }
 
     public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue)
     {
-        this(dataProvider, name, prettyName, comment, defaultValue, null);
+        this(dataProvider, name, prettyName, comment, defaultValue, null, null);
     }
 
     private T value;
@@ -74,7 +82,10 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 
     protected void onValueChanged(T oldValue, T value)
     {
-
+        if (this.callback != null)
+        {
+            this.callback.onValueChanged(this, oldValue, value);
+        }
     }
 
     @Override
