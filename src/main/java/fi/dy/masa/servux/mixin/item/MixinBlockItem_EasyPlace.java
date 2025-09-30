@@ -30,7 +30,7 @@ public abstract class MixinBlockItem_EasyPlace extends Item
     @Shadow public abstract Block getBlock();
 
     @Inject(method = "getPlacementState", at = @At("HEAD"), cancellable = true)
-    private void modifyPlacementState(ItemPlacementContext ctx, CallbackInfoReturnable<BlockState> cir)
+    private void servux_modifyPlacementState(ItemPlacementContext ctx, CallbackInfoReturnable<BlockState> cir)
     {
         if (ctx.getPlayer() instanceof ServerPlayerEntity player)
         {
@@ -41,12 +41,15 @@ public abstract class MixinBlockItem_EasyPlace extends Item
         }
 
         BlockState stateOrig = this.getBlock().getPlacementState(ctx);
-        final boolean validated = !ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled() || this.canPlace(ctx, stateOrig);
 
-        if (stateOrig != null && validated)
-        {
-            UseContext context = UseContext.from(ctx, ctx.getHand());
-            cir.setReturnValue(PlacementHandler.applyPlacementProtocolV3(stateOrig, context));
-        }
+		if (stateOrig != null)
+		{
+
+			if (!ServuxConfigProvider.INSTANCE.isEasyPlaceValidatorEnabled() || this.canPlace(ctx, stateOrig))
+			{
+				UseContext context = UseContext.from(ctx, ctx.getHand());
+				cir.setReturnValue(PlacementHandler.applyPlacementProtocolV3(stateOrig, context));
+			}
+		}
     }
 }
