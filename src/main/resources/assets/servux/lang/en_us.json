@@ -33,6 +33,8 @@
     "servux.config.entity_data.nbt_query_permission_level.name": "Nbt Query Permission Level",
     "servux.config.entity_data.permission_level.comment": "The permission level required for the Entity data provider, will send entity data to clients with this permission level",
     "servux.config.entity_data.permission_level.name": "Permission Level",
+    "servux.config.entity_data.fix_allay_gathering.comment": "Fix Allay Gathering when \"mobGriefing\" is disabled\nThere is no reason why Vanilla should be doing this.",
+    "servux.config.entity_data.fix_allay_gathering.name": "Fix Allay Gathering",
     "servux.config.hud_data.logger_permission_level.comment": "Permissions Required for sharing logger data",
     "servux.config.hud_data.logger_permission_level.name": "Logger Permissions",
     "servux.config.hud_data.loggers_enable_list.comment": "The list of Data Loggers that should be enabled",
