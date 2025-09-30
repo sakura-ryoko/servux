@@ -34,7 +34,8 @@ public class EntitiesDataProvider extends DataProviderBase
             0, 4, 0);
     protected ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
     protected ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
-    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel);
+	protected ServuxBoolSetting fixAllayGathering = new ServuxBoolSetting(this, "fix_allay_gathering", true);
+    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel, this.fixAllayGathering);
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
 
@@ -197,6 +198,11 @@ public class EntitiesDataProvider extends DataProviderBase
     {
         return this.isEnabled() && this.nbtQueryOverride.getValue();
     }
+
+	public boolean hasFixAllayGathering()
+	{
+		return this.isEnabled() && this.fixAllayGathering.getValue();
+	}
 
     public boolean hasNbtQueryPermission(ServerPlayerEntity player)
     {

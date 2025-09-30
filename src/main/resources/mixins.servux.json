@@ -13,6 +13,7 @@
         "debug.IMixinMobEntity",
         "debug.MixinPath",
         "debug.MixinSharedConstants",
+        "entity.MixinAllayEntity",
         "item.MixinBlockItem_EasyPlace",
         "item.MixinItemStack",
         "nbt.IMixinNbtReadView",
