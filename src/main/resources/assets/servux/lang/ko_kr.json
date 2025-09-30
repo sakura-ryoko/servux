@@ -27,6 +27,8 @@
     "servux.config.debug_data.permission_level.name": "Permission Level",
     "servux.config.debug_data.server_development_mode.comment": "Enable the Vanilla \"isDevelopmentMode\" flag to on",
     "servux.config.debug_data.server_development_mode.name": "Server Development Mode",
+    "servux.config.entity_data.fix_allay_gathering.comment": "Fix Allay Gathering when \"mobGriefing\" is disabled\nThere is no reason why Vanilla should be doing this.",
+    "servux.config.entity_data.fix_allay_gathering.name": "Fix Allay Gathering",
     "servux.config.entity_data.nbt_query_override.comment": "Override the default ops level 2 permissions for NbtQuery packets, and set the permissions using \"nbt_query_permission_level\"",
     "servux.config.entity_data.nbt_query_override.name": "Nbt Query Packet Permissions Override",
     "servux.config.entity_data.nbt_query_permission_level.comment": "The permission level required for Nbt Query Packets when \"nbt_query_override\" is enabled",
