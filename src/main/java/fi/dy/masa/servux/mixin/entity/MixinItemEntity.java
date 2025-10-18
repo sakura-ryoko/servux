@@ -41,6 +41,6 @@ public class MixinItemEntity
 		}
 
 		this.isAllay = false;
-		return instance.getBoolean(GameRules.DO_MOB_GRIEFING);
+		return instance.getBoolean(rule);
 	}
 }
