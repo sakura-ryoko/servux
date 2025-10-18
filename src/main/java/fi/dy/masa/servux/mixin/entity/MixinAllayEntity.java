@@ -25,7 +25,7 @@ public abstract class MixinAllayEntity
 			return true;
 		}
 
-		return instance.getBoolean(GameRules.DO_MOB_GRIEFING);
+		return instance.getBoolean(rule);
 	}
 
 //	@Inject(method = "isItemPickupCoolingDown",
