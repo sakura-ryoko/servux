@@ -40,22 +40,22 @@ import fi.dy.masa.servux.util.Timeout;
 public class StructureDataProvider extends DataProviderBase
 {
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
+	private final static ServuxStructuresHandler<ServuxStructuresPacket.Payload> HANDLER = ServuxStructuresHandler.getInstance();
+	private final NbtCompound metadata = new NbtCompound();
+    private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private final ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
+    private final ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
+    private final ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
+    private final ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
+    private final ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
+    private final ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
+    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
-    protected final static ServuxStructuresHandler<ServuxStructuresPacket.Payload> HANDLER = ServuxStructuresHandler.getInstance();
-    protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
-    protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
-    protected final NbtCompound metadata = new NbtCompound();
-    protected int retainDistance;
-    private ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    private ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
-    private ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
-    private ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
-    private ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
-    private ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
-    private ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
-    private List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
+	private final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
+	private final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
+	private int retainDistance;
 
-    protected StructureDataProvider()
+	protected StructureDataProvider()
     {
         super("structure_bounding_boxes",
                 ServuxStructuresHandler.CHANNEL_ID,
@@ -82,11 +82,13 @@ public class StructureDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        if (this.isRegistered() == false)
+
+        if (!this.isRegistered())
         {
             HANDLER.registerPlayPayload(ServuxStructuresPacket.Payload.ID, ServuxStructuresPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxStructuresPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -138,7 +140,7 @@ public class StructureDataProvider extends DataProviderBase
 
                 if (this.registeredPlayers.containsKey(uuid))
                 {
-                    if (this.hasPermission(player) == false)
+                    if (!this.hasPermission(player))
                     {
                         this.unregister(player);
                     }
@@ -157,7 +159,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public void checkForInvalidPlayers(MinecraftServer server)
     {
-        if (this.registeredPlayers.isEmpty() == false)
+        if (!this.registeredPlayers.isEmpty())
         {
             Iterator<UUID> iter = this.registeredPlayers.keySet().iterator();
 
@@ -193,14 +195,14 @@ public class StructureDataProvider extends DataProviderBase
         MinecraftServer server = player.getCommandSource().getServer();
         UUID uuid = player.getUuid();
 
-        if (this.hasPermission(player) == false)
+        if (!this.hasPermission(player))
         {
             // No Permission
             Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
             return registered;
         }
 
-        if (this.registeredPlayers.containsKey(uuid) == false)
+        if (!this.registeredPlayers.containsKey(uuid))
         {
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
             int tickCounter = server.getTicks();
@@ -320,7 +322,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        if (positionsToUpdate.isEmpty() == false)
+        if (!positionsToUpdate.isEmpty())
         {
             ServerWorld world = player.getEntityWorld();
             ChunkPos center = player.getWatchedSection().toChunkPos();
@@ -347,7 +349,7 @@ public class StructureDataProvider extends DataProviderBase
 
             // System.out.printf("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d\n", positionsToUpdate.size(), references.size(), this.timeout);
 
-            if (references.isEmpty() == false)
+            if (!references.isEmpty())
             {
                 this.sendStructures(player, references, tickCounter);
             }
@@ -356,12 +358,12 @@ public class StructureDataProvider extends DataProviderBase
 
     protected void getStructureReferencesFromChunk(int chunkX, int chunkZ, World world, Map<Structure, LongSet> references)
     {
-        if (world.isChunkLoaded(chunkX, chunkZ) == false)
+        if (!world.isChunkLoaded(chunkX, chunkZ))
         {
             return;
         }
 
-        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_STARTS, false);
+        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
         if (chunk == null)
         {
@@ -373,8 +375,7 @@ public class StructureDataProvider extends DataProviderBase
             Structure feature = entry.getKey();
             LongSet startChunks = entry.getValue();
 
-            // TODO add an option && feature != StructureFeature.MINESHAFT
-            if (startChunks.isEmpty() == false)
+            if (!startChunks.isEmpty())
             {
                 references.merge(feature, startChunks, (oldSet, entrySet) -> {
                     LongOpenHashSet newSet = new LongOpenHashSet(oldSet);
@@ -387,12 +388,12 @@ public class StructureDataProvider extends DataProviderBase
 
     protected boolean chunkHasStructureReferences(int chunkX, int chunkZ, World world)
     {
-        if (world.isChunkLoaded(chunkX, chunkZ) == false)
+        if (!world.isChunkLoaded(chunkX, chunkZ))
         {
             return false;
         }
 
-        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_STARTS, false);
+        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
         if (chunk == null)
         {
@@ -401,8 +402,7 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<Structure, LongSet> entry : chunk.getStructureReferences().entrySet())
         {
-            // TODO add an option entry.getKey() != StructureFeature.MINESHAFT &&
-            if (entry.getValue().isEmpty() == false)
+            if (!entry.getValue().isEmpty())
             {
                 return true;
             }
@@ -425,12 +425,12 @@ public class StructureDataProvider extends DataProviderBase
             {
                 ChunkPos pos = new ChunkPos(iter.nextLong());
 
-                if (world.isChunkLoaded(pos.x, pos.z) == false)
+                if (!world.isChunkLoaded(pos.x, pos.z))
                 {
                     continue;
                 }
 
-                Chunk chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_STARTS, false);
+                Chunk chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_REFERENCES, false);
 
                 if (chunk == null)
                 {
@@ -473,7 +473,7 @@ public class StructureDataProvider extends DataProviderBase
         ServerWorld world = player.getEntityWorld();
         Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
 
-        if (starts.isEmpty() == false)
+        if (!starts.isEmpty())
         {
             this.addOrRefreshTimeouts(player.getUuid(), references, tickCounter);
 
@@ -496,7 +496,10 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
-            Identifier structureType = Registries.STRUCTURE_TYPE.getId(entry.getValue().getStructure().getType());
+			Structure structure = entry.getValue().getStructure();
+			if (structure == null) continue;          // When using C2ME, this could return NULL
+            Identifier structureType = Registries.STRUCTURE_TYPE.getId(structure.getType());
+
             if (this.shouldSendStructure(structureType))
             {
                 ChunkPos pos = entry.getKey();
@@ -509,13 +512,13 @@ public class StructureDataProvider extends DataProviderBase
 
     protected boolean shouldSendStructure(Identifier identifier)
     {
-        if (structureWhitelistEnabled.getValue())
+        if (this.structureWhitelistEnabled.getValue())
         {
-            return structureWhitelist.getValue().contains(identifier.toString());
+            return this.structureWhitelist.getValue().contains(identifier.toString());
         }
-        if (structureBlacklistEnabled.getValue())
+        if (this.structureBlacklistEnabled.getValue())
         {
-            return !structureBlacklist.getValue().contains(identifier.toString());
+            return !this.structureBlacklist.getValue().contains(identifier.toString());
         }
 
         return true;
@@ -524,7 +527,7 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
-        return Permissions.check(player, this.permNode, permissionLevel.getValue());
+        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override

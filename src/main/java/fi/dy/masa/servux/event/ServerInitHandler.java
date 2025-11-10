@@ -15,7 +15,7 @@ public class ServerInitHandler implements IServerInitDispatcher
     @Override
     public void registerServerInitHandler(IServerInitHandler handler)
     {
-        if (this.handlers.contains(handler) == false)
+        if (!this.handlers.contains(handler))
         {
             this.handlers.add(handler);
         }
@@ -24,7 +24,7 @@ public class ServerInitHandler implements IServerInitDispatcher
     @ApiStatus.Internal
     public void onServerInit()
     {
-        if (this.handlers.isEmpty() == false)
+        if (!this.handlers.isEmpty())
         {
             for (IServerInitHandler handler : this.handlers)
             {

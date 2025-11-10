@@ -27,15 +27,13 @@ import fi.dy.masa.servux.util.nbt.NbtView;
 public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
-    protected final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
-    protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
-            "permission_level",
-            0, 4, 0);
-    protected ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
-    protected ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
-	protected ServuxBoolSetting fixAllayGathering = new ServuxBoolSetting(this, "fix_allay_gathering", true);
-    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel, this.fixAllayGathering);
+    private final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
+	private final NbtCompound metadata = new NbtCompound();
+	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+	private final ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
+	private final ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
+	private final ServuxBoolSetting fixAllayGathering = new ServuxBoolSetting(this, "fix_allay_gathering", true);
+	private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel, this.fixAllayGathering);
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
 
@@ -63,11 +61,13 @@ public class EntitiesDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        if (this.isRegistered() == false)
+
+        if (!this.isRegistered())
         {
             HANDLER.registerPlayPayload(ServuxEntitiesPacket.Payload.ID, ServuxEntitiesPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxEntitiesPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -94,7 +94,7 @@ public class EntitiesDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
-        if (this.hasPermission(player) == false)
+        if (!this.hasPermission(player))
         {
             // No Permission
             Servux.debugLog("entity_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
@@ -144,7 +144,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
     public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isEnabled())
         {
             return;
         }
@@ -158,7 +158,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isEnabled())
         {
             return;
         }

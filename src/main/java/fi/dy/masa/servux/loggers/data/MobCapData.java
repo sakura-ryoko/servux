@@ -129,7 +129,7 @@ public class MobCapData
     {
         for (boolean b : this.dataValid)
         {
-            if (b == false)
+            if (!b)
             {
                 return;
             }

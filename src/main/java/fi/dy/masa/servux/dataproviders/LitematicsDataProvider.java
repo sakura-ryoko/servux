@@ -17,6 +17,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -44,14 +45,10 @@ import fi.dy.masa.servux.util.position.PositionUtils;
 public class LitematicsDataProvider extends DataProviderBase
 {
     public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
-    protected final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
-    protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
-            "permission_level",
-            0, 4, 0);
-    protected ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this,
-            "permission_level_paste",
-            0, 4, 0);
+	private final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
+	private final NbtCompound metadata = new NbtCompound();
+	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+    private final ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", 0, 4, 0);
     public ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
     public ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
     public ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
@@ -86,7 +83,8 @@ public class LitematicsDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        if (this.isRegistered() == false)
+
+        if (!this.isRegistered())
         {
             HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
@@ -206,7 +204,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isEnabled())
         {
             return;
         }
@@ -220,7 +218,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isEnabled())
         {
             return;
         }
@@ -246,7 +244,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBulkEntityRequest(ServerPlayerEntity player, ChunkPos chunkPos, NbtCompound req)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isEnabled())
         {
             //Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
             return;
@@ -332,13 +330,13 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
-        if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
+        if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
             player.sendMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
             return;
         }
-        if (player.isCreative() == false)
+        if (!player.isCreative())
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
             player.sendMessage(StringUtils.translate("servux.litematics.error.creative_required"));
@@ -365,13 +363,13 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
-        if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
+        if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().getLiteralString());
             player.sendMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
             return;
         }
-        if (player.isCreative() == false)
+        if (!player.isCreative())
         {
             Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().getLiteralString());
             player.sendMessage(StringUtils.translate("servux.litematics.error.creative_required"));
@@ -401,6 +399,11 @@ public class LitematicsDataProvider extends DataProviderBase
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
+	public boolean hasPermissionsForPaste(ServerPlayerEntity player)
+	{
+		return this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
+	}
+
     @Override
     public void onTickEndPre()
     {
@@ -411,10 +414,5 @@ public class LitematicsDataProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
-    }
-
-    public boolean hasPermissionsForPaste(ServerPlayerEntity player)
-    {
-        return this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
     }
 }
