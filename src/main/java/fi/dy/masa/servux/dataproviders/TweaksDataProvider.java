@@ -34,16 +34,16 @@ import net.minecraft.util.profiler.Profiler;
 public class TweaksDataProvider extends DataProviderBase
 {
     public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
-    protected final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
-    protected final NbtCompound metadata = new NbtCompound();
+	private final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
+    private final NbtCompound metadata = new NbtCompound();
     private final BoolCallbacks boolCallback = new BoolCallbacks();
     private final IntCallbacks intCallback = new IntCallbacks();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0, this.intCallback);
-    protected ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 120, 1200, 40, this.intCallback);
-    protected ServuxBoolSetting stackableShulkers = new ServuxBoolSetting(this, "stackable_shulkers", false, this.boolCallback);
-    protected ServuxIntSetting stackableShulkersSize = new ServuxIntSetting(this, "stackable_shulkers_count", 64, 99, 1, this.intCallback);
-    protected ServuxBoolSetting stackableShulkersFix = new ServuxBoolSetting(this, "stackable_shulkers_fix", true, this.boolCallback);
-    protected List<IServuxSetting<?>> settings = List.of(
+	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0, this.intCallback);
+	private final ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 120, 1200, 40, this.intCallback);
+	private final ServuxBoolSetting stackableShulkers = new ServuxBoolSetting(this, "stackable_shulkers", false, this.boolCallback);
+	private final ServuxIntSetting stackableShulkersSize = new ServuxIntSetting(this, "stackable_shulkers_count", 64, 99, 1, this.intCallback);
+	private final ServuxBoolSetting stackableShulkersFix = new ServuxBoolSetting(this, "stackable_shulkers_fix", true, this.boolCallback);
+	private final List<IServuxSetting<?>> settings = List.of(
             this.permissionLevel, this.updateInterval,
             this.stackableShulkers, this.stackableShulkersSize, this.stackableShulkersFix
     );
@@ -78,11 +78,13 @@ public class TweaksDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        if (this.isRegistered() == false)
+
+        if (!this.isRegistered())
         {
             HANDLER.registerPlayPayload(ServuxTweaksPacket.Payload.ID, ServuxTweaksPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxTweaksPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -173,7 +175,7 @@ public class TweaksDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
-        if (this.hasPermission(player) == false)
+        if (!this.hasPermission(player))
         {
             // No Permission
             Servux.debugLog("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
@@ -224,7 +226,7 @@ public class TweaksDataProvider extends DataProviderBase
 
     public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isEnabled())
         {
             return;
         }
@@ -238,7 +240,7 @@ public class TweaksDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
     {
-        if (this.hasPermission(player) == false)
+        if (!this.hasPermission(player))
         {
             return;
         }

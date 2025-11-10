@@ -19,7 +19,8 @@ public class PlayerHandler implements IPlayerManager
     public static IPlayerManager getInstance() { return INSTANCE; }
 
     @Override
-    public void registerPlayerHandler(IPlayerListener handler) {
+    public void registerPlayerHandler(IPlayerListener handler)
+    {
         if (!this.handlers.contains(handler))
         {
             this.handlers.add(handler);

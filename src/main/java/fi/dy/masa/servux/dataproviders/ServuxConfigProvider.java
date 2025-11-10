@@ -63,7 +63,7 @@ public class ServuxConfigProvider extends DataProviderBase
     protected ServuxConfigProvider()
     {
         super("servux_main",
-                Identifier.of("servux:main"),
+                Identifier.of("servux", "main"),
                 1, 0, Reference.MOD_ID+".main",
                 "The Servux Main configuration data provider");
     }
@@ -117,7 +117,7 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return Permissions.check(player, Reference.MOD_ID+".main.admin", adminPermissionLevel.getValue());
+        return Permissions.check(player, Reference.MOD_ID+".main.admin", this.adminPermissionLevel.getValue());
     }
 
     public boolean hasPermission_EasyPlace(ServerPlayerEntity player)
@@ -127,13 +127,18 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return Permissions.check(player, Reference.MOD_ID+".main.easy_place", easyPlacePermissionLevel.getValue());
+        return Permissions.check(player, Reference.MOD_ID+".main.easy_place", this.easyPlacePermissionLevel.getValue());
     }
 
     public boolean isEasyPlaceValidatorEnabled()
     {
         return this.easyPlaceValidatorEnabled.getValue();
     }
+
+	public String getDefaultLanguage()
+	{
+		return this.defaultLanguage.getValue();
+	}
 
     @Override
     public void onTickEndPre()
@@ -145,10 +150,5 @@ public class ServuxConfigProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
-    }
-
-    public String getDefaultLanguage()
-    {
-        return defaultLanguage.getValue();
     }
 }
