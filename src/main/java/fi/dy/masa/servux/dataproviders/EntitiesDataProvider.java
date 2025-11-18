@@ -6,6 +6,7 @@ import java.util.UUID;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.command.DefaultPermissions;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
@@ -211,7 +212,7 @@ public class EntitiesDataProvider extends DataProviderBase
             return Permissions.check(player, this.permNode+".nbt_query_override", this.nbtQueryPermissionLevel.getValue());
         }
 
-        return player.hasPermissionLevel(2);
+        return player.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS);
     }
 
     @Override

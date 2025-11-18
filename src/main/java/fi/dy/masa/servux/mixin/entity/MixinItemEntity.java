@@ -4,7 +4,9 @@ import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.passive.AllayEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRule;
+import net.minecraft.world.rule.GameRuleType;
+import net.minecraft.world.rule.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,18 +31,19 @@ public class MixinItemEntity
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Redirect(method = "damage",
 	          at = @At(value = "INVOKE",
-	                   target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$Key;)Z"))
-	private boolean servux$fixAllayGathering6(GameRules instance, GameRules.Key<GameRules.BooleanRule> rule)
+	                   target = "Lnet/minecraft/world/rule/GameRules;getValue(Lnet/minecraft/world/rule/GameRule;)Ljava/lang/Object;"))
+	private <T> T servux$fixAllayGathering6(GameRules instance, GameRule<T> rule)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
-			this.isAllay)
+			this.isAllay && rule.getType() == GameRuleType.BOOL)        // Ensure BOOL type
 		{
-			return true;
+			return (T) (Object) true;
 		}
 
 		this.isAllay = false;
-		return instance.getBoolean(rule);
+		return instance.getValue(rule);
 	}
 }

@@ -3,7 +3,8 @@ package fi.dy.masa.servux.mixin.entity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRule;
+import net.minecraft.world.rule.GameRules;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,18 +33,19 @@ public abstract class MixinMobEntity
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Redirect(method = "tickMovement",
 	          at = @At(value = "INVOKE",
-	                   target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$Key;)Z"))
-	private boolean servux$fixAllayGathering4(GameRules instance, GameRules.Key<GameRules.BooleanRule> rule)
+	                   target = "Lnet/minecraft/world/rule/GameRules;getValue(Lnet/minecraft/world/rule/GameRule;)Ljava/lang/Object;"))
+	private <T> T servux$fixAllayGathering4(GameRules instance, GameRule<T> rule)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
 			this.isAllay)
 		{
-			return true;
+			return (T) (Object) true;
 		}
 
 		this.isAllay = false;
-		return instance.getBoolean(rule);
+		return instance.getValue(rule);
 	}
 }
