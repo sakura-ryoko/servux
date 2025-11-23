@@ -3,6 +3,7 @@ package fi.dy.masa.servux.util.data;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.util.StringIdentifiable;
 
@@ -17,7 +18,7 @@ public enum FileType implements StringIdentifiable
     VANILLA_STRUCTURE;
 
     public static final StringIdentifiable.EnumCodec<FileType> CODEC = StringIdentifiable.createCodec(FileType::values);
-    public static final ImmutableList<FileType> VALUES = ImmutableList.copyOf(values());
+    public static final ImmutableList<@NotNull FileType> VALUES = ImmutableList.copyOf(values());
 
     public static FileType fromName(String fileName)
     {
