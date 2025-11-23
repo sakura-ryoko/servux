@@ -16,6 +16,7 @@ import net.minecraft.util.Identifier;
  * -
  * Post-ReWrite code
  */
+@Deprecated(forRemoval = true)
 public class ResourceLocation
 {
     public static final Codec<ResourceLocation> CODEC = RecordCodecBuilder.create(

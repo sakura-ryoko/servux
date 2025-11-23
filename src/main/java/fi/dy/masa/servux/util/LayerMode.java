@@ -3,6 +3,7 @@ package fi.dy.masa.servux.util;
 import java.util.function.IntFunction;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -20,7 +21,7 @@ public enum LayerMode implements StringIdentifiable
     public static final EnumCodec<LayerMode> CODEC = StringIdentifiable.createCodec(LayerMode::values);
     public static final IntFunction<LayerMode> INDEX_TO_VALUE = ValueLists.createIndexToValueFunction(LayerMode::getIndex, values(), ValueLists.OutOfBoundsHandling.WRAP);
     public static final PacketCodec<ByteBuf, LayerMode> PACKET_CODEC = PacketCodecs.indexed(INDEX_TO_VALUE, LayerMode::getIndex);
-    public static final ImmutableList<LayerMode> VALUES = ImmutableList.copyOf(values());
+    public static final ImmutableList<@NotNull LayerMode> VALUES = ImmutableList.copyOf(values());
 
     private final int index;
     private final String configString;
