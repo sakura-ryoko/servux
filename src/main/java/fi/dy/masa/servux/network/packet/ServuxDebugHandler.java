@@ -1,13 +1,13 @@
 package fi.dy.masa.servux.network.packet;
 
+import net.minecraft.network.packet.CustomPayload;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.network.packet.CustomPayload;
 
 @Environment(EnvType.SERVER)
 @Deprecated
 public abstract class ServuxDebugHandler<T extends CustomPayload>
-//        implements IPluginServerPlayHandler<T>
+//		implements IPluginServerPlayHandler<T>
 {
 //    private static final ServuxDebugHandler<ServuxDebugPacket.Payload> INSTANCE = new ServuxDebugHandler<>() {
 //        @Override
@@ -61,6 +61,7 @@ public abstract class ServuxDebugHandler<T extends CustomPayload>
 //        {
 //            case PACKET_C2S_METADATA_REQUEST -> DebugDataProvider.INSTANCE.sendMetadata(player);
 //            case PACKET_C2S_METADATA_CONFIRM -> DebugDataProvider.INSTANCE.confirmMetadata(player, packet.getCompound());
+//	        case PACKET_C2S_METADATA_UPDATE -> DebugDataProvider.INSTANCE.updateMetadata(player, packet.getCompound());
 //            case PACKET_C2S_DEBUG_SERVICE_REGISTER ->
 //            {
 //                Servux.debugLog("ServuxDebugHandler#decodeServerData(): received Debug Service Register from player {}", player.getName().getLiteralString());

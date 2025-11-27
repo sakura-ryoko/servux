@@ -1,9 +1,8 @@
 package fi.dy.masa.servux.dataproviders;
 
-//@SuppressWarnings({"unchecked", "deprecation"})
 @Deprecated
 public class DebugDataProvider
-//        extends DataProviderBase
+//		extends DataProviderBase
 {
 //    public static final DebugDataProvider INSTANCE = new DebugDataProvider();
 //
@@ -13,8 +12,8 @@ public class DebugDataProvider
 //
 //    private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 2, 4, 0);
 //    //private final ServuxStringListSetting enabledDebugPackets = new ServuxStringListSetting(this, "debug_enabled", List.of("chunk_watcher", "poi", "pathfinding", "neighbor_update", "structures", "goal_selector", "raids", "brain", "bees", "breeze", "game_event"));
-//    //private final ServuxBoolSetting enableServerDevelopmentMode = new ServuxBoolSetting(this, "server_development_mode", false);
 //    private final List<IServuxSetting<?>> settings = List.of(this.basePermissionLevel);
+//	private final HashMap<UUID, List<DebugRenderType>> enabledRenderers = new HashMap<>();
 //
 //    protected DebugDataProvider()
 //    {
@@ -30,7 +29,19 @@ public class DebugDataProvider
 //        this.metadata.putString("servux", Reference.MOD_STRING);
 //    }
 //
-//    @Override
+//	@Override
+//	public void setEnabled(boolean toggle)
+//	{
+//		super.setEnabled(toggle);
+//		this.toggleDebugRendering(toggle);
+//	}
+//
+//	private void toggleDebugRendering(boolean toggle)
+//	{
+//		this.toggleRenderer(DebugRenderType.DEBUG_ENABLED, toggle);
+//	}
+//
+//	@Override
 //    public void registerHandler()
 //    {
 //        ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
@@ -90,13 +101,6 @@ public class DebugDataProvider
 //        return Permissions.check(player, Reference.MOD_ID + ".debug_data", this.basePermissionLevel.getValue());
 //    }
 //
-//    /*
-//    public boolean isServerDevelopmentMode()
-//    {
-//        return this.enableServerDevelopmentMode.getValue();
-//    }
-//     */
-//
 //    public boolean register(ServerPlayerEntity player)
 //    {
 //        return this.register(player, null);
@@ -108,7 +112,7 @@ public class DebugDataProvider
 //        {
 //            // System.out.printf("register\n");
 //            boolean registered = false;
-//            MinecraftServer server = player.getServer();
+////            MinecraftServer server = player.getCommandSource().getServer();
 //            UUID uuid = player.getUuid();
 //
 //            if (this.hasPermission(player) == false)
@@ -196,377 +200,108 @@ public class DebugDataProvider
 //        }
 //    }
 //
-//    private void sendDebugData(ServerWorld world, CustomPayload payload)
-//    {
-//        if (this.isEnabled())
-//        {
-//            Packet<?> packet = new CustomPayloadS2CPacket(payload);
+//	public void updateMetadata(ServerPlayerEntity player, NbtCompound data)
+//	{
+//		if (this.isEnabled())
+//		{
+//			UUID uuid = player.getUuid();
 //
-//            for (ServerPlayerEntity player : world.getPlayers())
-//            {
-//                if (this.registeredPlayers.containsKey(player.getUuid()) &&
-//                    player.networkHandler.accepts(packet))
-//                {
-//                    player.networkHandler.sendPacket(packet);
-//                }
-//            }
-//        }
-//    }
+//			if (this.registeredPlayers.containsKey(uuid))
+//			{
+//				this.registeredPlayers.replace(uuid, data.copy());
+//			}
+//			else
+//			{
+//				this.registeredPlayers.put(uuid, data.copy());
+//			}
 //
-//    public void sendChunkWatchingChange(ServerWorld world, ChunkPos pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugWorldgenAttemptCustomPayload(pos.getStartPos().up(100), 1.0F, 1.0F, 1.0F, 1.0F, 1.0F));
-//        }
-//    }
+//			Servux.debugLog("debugDataChannel: received confirm from player {}", player.getName().getLiteralString());
+//		}
+//	}
 //
-//    public void sendPoiAdditions(ServerWorld world, BlockPos pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            world.getPointOfInterestStorage().getType(pos).ifPresent((registryEntry) ->
-//            {
-//                int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
-//                String name = registryEntry.getIdAsString();
-//                this.sendDebugData(world, new DebugPoiAddedCustomPayload(pos, name, tickets));
-//            });
-//        }
-//    }
+//	private void storePlayerRendererList(ServerPlayerEntity player, NbtCompound data)
+//	{
+//		if (this.isEnabled())
+//		{
+//			UUID uuid = player.getUuid();
+//			String key = "enabledRenderers";
 //
-//    public void sendPoiRemoval(ServerWorld world, BlockPos pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugPoiRemovedCustomPayload(pos));
-//        }
-//    }
+//			if (data.contains(key))
+//			{
+//				NbtList nbt = data.getListOrEmpty(key);
+//				List<DebugRenderType> list = new ArrayList<>();
 //
-//    public void sendPointOfInterest(ServerWorld world, BlockPos pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            int tickets = world.getPointOfInterestStorage().getFreeTickets(pos);
-//            this.sendDebugData(world, new DebugPoiTicketCountCustomPayload(pos, tickets));
-//        }
-//    }
+//				if (!nbt.isEmpty())
+//				{
+//					for (NbtElement entry : nbt)
+//					{
+//						try
+//						{
+//							DebugRenderType type = DebugRenderType.CODEC.parse(NbtOps.INSTANCE, entry).getOrThrow();
 //
-//    public void sendPoi(ServerWorld world, BlockPos pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            Registry<Structure> registry = world.getRegistryManager().getOrThrow(RegistryKeys.STRUCTURE);
-//            ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(pos);
-//            Iterator<RegistryEntry<Structure>> iterator = registry.iterateEntries(StructureTags.VILLAGE).iterator();
+//							if (type != null)
+//							{
+//								list.add(type);
+//								this.toggleRenderer(type, true);
+//							}
+//						}
+//						catch (Exception err)
+//						{
+//							Servux.LOGGER.warn("DebugDataProvider#storePlayerRendererList: Exception parsing data; {}", err.getLocalizedMessage());
+//						}
+//					}
+//				}
 //
-//            RegistryEntry<Structure> entry;
-//            do
-//            {
-//                if (!iterator.hasNext())
-//                {
-//                    this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(), Set.of(chunkSectionPos)));
-//                    return;
-//                }
+//				data.remove(key);
+//				this.enabledRenderers.remove(uuid);
 //
-//                entry = iterator.next();
-//            }
-//            while (world.getStructureAccessor().getStructureStarts(chunkSectionPos, entry.value()).isEmpty());
+//				if (!list.isEmpty())
+//				{
+//					this.enabledRenderers.put(uuid, list);
+//				}
+//			}
+//		}
+//	}
 //
-//            this.sendDebugData(world, new DebugVillageSectionsCustomPayload(Set.of(chunkSectionPos), Set.of()));
-//        }
-//    }
+//	private void toggleRenderer(DebugRenderType type, boolean toggle)
+//	{
+//		type.toggleSharedConstant(toggle);
+//	}
 //
-//    public void sendPathfindingData(ServerWorld world, MobEntity mob, @Nullable Path path, float nodeReachProximity)
-//    {
-//        if (this.isEnabled())
-//        {
-//            if (path != null)
-//            {
-//                this.sendDebugData(world, new DebugPathCustomPayload(mob.getId(), path, nodeReachProximity));
-//            }
-//        }
-//    }
+//	private boolean playerHasRenderer(ServerPlayerEntity player, DebugRenderType type)
+//	{
+//		if (this.isEnabled())
+//		{
+//			UUID uuid = player.getUuid();
 //
-//    public void sendNeighborUpdate(ServerWorld world, BlockPos pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugNeighborsUpdateCustomPayload(world.getTime(), pos));
-//        }
-//    }
+//			if (this.enabledRenderers.containsKey(uuid))
+//			{
+//				return this.enabledRenderers.get(uuid).contains(type);
+//			}
+//		}
 //
-//    public void sendStructureStart(StructureWorldAccess world, StructureStart structureStart)
-//    {
-//        if (this.isEnabled())
-//        {
-//            List<DebugStructuresCustomPayload.Piece> pieces = new ArrayList<>();
+//		return false;
+//	}
 //
-//            for (int i = 0; i < structureStart.getChildren().size(); ++i)
-//            {
-//                pieces.add(new DebugStructuresCustomPayload.Piece(structureStart.getChildren().get(i).getBoundingBox(), i == 0));
-//            }
+//	private boolean anyPlayerHasRenderer(DebugRenderType type)
+//	{
+//		if (this.isEnabled())
+//		{
+//			AtomicBoolean result = new AtomicBoolean(false);
 //
-//            ServerWorld serverWorld = world.toServerWorld();
-//            this.sendDebugData(serverWorld, new DebugStructuresCustomPayload(serverWorld.getRegistryKey(), structureStart.getBoundingBox(), pieces));
-//        }
-//    }
+//			this.enabledRenderers.forEach(
+//					(uuid, list) ->
+//					{
+//						if (list.contains(type))
+//						{
+//							result.set(true);
+//						}
+//					}
+//			);
 //
-//    public void sendGoalSelector(ServerWorld world, MobEntity mob, GoalSelector goalSelector)
-//    {
-//        if (this.isEnabled())
-//        {
-//            List<DebugGoalSelectorCustomPayload.Goal> goals = ((IMixinMobEntity) mob).servux_getGoalSelector().getGoals().stream().map((goal) ->
-//                    new DebugGoalSelectorCustomPayload.Goal(goal.getPriority(), goal.isRunning(), goal.getGoal().toString())).toList();
+//			return result.get();
+//		}
 //
-//            this.sendDebugData(world, new DebugGoalSelectorCustomPayload(mob.getId(), mob.getBlockPos(), goals));
-//        }
-//    }
-//
-//    public void sendRaids(ServerWorld world, Collection<Raid> raids)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugRaidsCustomPayload(raids.stream().map(Raid::getCenter).toList()));
-//        }
-//    }
-//
-//    public void sendBrainDebugData(ServerWorld serverWorld, LivingEntity livingEntity)
-//    {
-//        if (this.isEnabled())
-//        {
-//            MobEntity entity = (MobEntity) livingEntity;
-//            int angerLevel;
-//
-//            if (entity instanceof WardenEntity wardenEntity)
-//            {
-//                angerLevel = wardenEntity.getAnger();
-//            }
-//            else
-//            {
-//                angerLevel = -1;
-//            }
-//
-//            List<String> gossips = new ArrayList<>();
-//            Set<BlockPos> pois = new HashSet<>();
-//            Set<BlockPos> potentialPois = new HashSet<>();
-//            String profession;
-//            int xp;
-//            String inventory;
-//            boolean wantsGolem;
-//
-//            if (entity instanceof VillagerEntity villager)
-//            {
-//                profession = villager.getVillagerData().profession().toString();
-//                xp = villager.getExperience();
-//                inventory = villager.getInventory().toString();
-//                wantsGolem = villager.canSummonGolem(serverWorld.getTime());
-//                villager.getGossip().getEntityReputationAssociatedGossips().forEach((uuid, associatedGossip) ->
-//                {
-//                    Entity gossipEntity = serverWorld.getEntity(uuid);
-//
-//                    if (gossipEntity != null)
-//                    {
-//                        String name = NameGenerator.name(gossipEntity);
-//
-//                        for (Object2IntMap.Entry<VillagerGossipType> typeEntry : associatedGossip.object2IntEntrySet())
-//                        {
-//                            Map.Entry<VillagerGossipType, Integer> entry = (Map.Entry) typeEntry;
-//                            gossips.add(name + ": " + entry.getKey().asString() + " " + entry.getValue());
-//                        }
-//                    }
-//                });
-//
-//                Brain<?> brain = villager.getBrain();
-//                addPoi(brain, MemoryModuleType.HOME, pois);
-//                addPoi(brain, MemoryModuleType.JOB_SITE, pois);
-//                addPoi(brain, MemoryModuleType.MEETING_POINT, pois);
-//                addPoi(brain, MemoryModuleType.HIDING_PLACE, pois);
-//                addPoi(brain, MemoryModuleType.POTENTIAL_JOB_SITE, potentialPois);
-//            }
-//            else
-//            {
-//                profession = "";
-//                xp = 0;
-//                inventory = "";
-//                wantsGolem = false;
-//            }
-//
-//            this.sendDebugData(serverWorld, new DebugBrainCustomPayload(new DebugBrainCustomPayload.Brain(
-//                    entity.getUuid(), entity.getId(), entity.getName().getString(),
-//                    profession, xp, entity.getHealth(), entity.getMaxHealth(),
-//                    entity.getPos(), inventory, entity.getNavigation().getCurrentPath(),
-//                    wantsGolem, angerLevel,
-//                    entity.getBrain().getPossibleActivities().stream().map(Activity::toString).toList(),
-//                    entity.getBrain().getRunningTasks().stream().map(Task::getName).toList(),
-//                    this.listMemories(entity, serverWorld.getTime()),
-//                    //memories,
-//                    gossips, pois, potentialPois)));
-//        }
-//    }
-//
-//    public void sendBeeDebugData(ServerWorld world, BeeEntity bee)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugBeeCustomPayload(
-//                    new DebugBeeCustomPayload.Bee(bee.getUuid(), bee.getId(), bee.getPos(),
-//                            bee.getNavigation().getCurrentPath(), bee.getHivePos(), bee.getFlowerPos(), bee.getMoveGoalTicks(),
-//                            bee.getGoalSelector().getGoals().stream().map((prioritizedGoal) ->
-//                                    prioritizedGoal.getGoal().toString()).collect(Collectors.toSet()), bee.getPossibleHives())));
-//
-//        }
-//    }
-//
-//    public void sendBreezeDebugData(ServerWorld world, BreezeEntity breeze)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugBreezeCustomPayload(new DebugBreezeCustomPayload.BreezeInfo(
-//                    breeze.getUuid(), breeze.getId(), breeze.getTarget() == null ? null : breeze.getTarget().getId(),
-//                    breeze.getBrain().getOptionalRegisteredMemory(MemoryModuleType.BREEZE_JUMP_TARGET).orElse(null))));
-//        }
-//    }
-//
-//    public void sendGameEvent(ServerWorld world, RegistryEntry<GameEvent> event, Vec3d pos)
-//    {
-//        if (this.isEnabled())
-//        {
-//            event.getKey().ifPresent((key) -> this.sendDebugData(world, new DebugGameEventCustomPayload(key, pos)));
-//        }
-//    }
-//
-//    public void sendGameEventListener(ServerWorld world, GameEventListener eventListener)
-//    {
-//        if (this.isEnabled())
-//        {
-//            this.sendDebugData(world, new DebugGameEventListenersCustomPayload(eventListener.getPositionSource(), eventListener.getRange()));
-//        }
-//    }
-//
-//    // Tools
-//    private void addPoi(Brain<?> brain, MemoryModuleType<GlobalPos> memoryModuleType, Set<BlockPos> set)
-//    {
-//        if (this.isEnabled())
-//        {
-//            Optional<BlockPos> opt = brain.getOptionalRegisteredMemory(memoryModuleType).map(GlobalPos::pos);
-//
-//            Objects.requireNonNull(set);
-//            opt.ifPresent(set::add);
-//        }
-//    }
-//
-//    private List<String> listMemories(LivingEntity entity, long currentTime)
-//    {
-//        if (this.isEnabled())
-//        {
-//            Map<MemoryModuleType<?>, Optional<? extends Memory<?>>> map = entity.getBrain().getMemories();
-//            List<String> list = Lists.newArrayList();
-//
-//            for (Map.Entry<MemoryModuleType<?>, Optional<? extends Memory<?>>> memoryModuleTypeOptionalEntry : map.entrySet())
-//            {
-//                MemoryModuleType<?> memoryModuleType = memoryModuleTypeOptionalEntry.getKey();
-//                Optional<? extends Memory<?>> optional = memoryModuleTypeOptionalEntry.getValue();
-//                String string;
-//
-//                if (optional.isPresent())
-//                {
-//                    Memory<?> memory = optional.get();
-//                    Object object = memory.getValue();
-//
-//                    if (memoryModuleType == MemoryModuleType.HEARD_BELL_TIME)
-//                    {
-//                        long l = currentTime - (Long) object;
-//                        string = l + " ticks ago";
-//                    }
-//                    else if (memory.isTimed())
-//                    {
-//                        String var10000 = this.format((ServerWorld) entity.getEntityWorld(), object);
-//                        string = var10000 + " (ttl: " + memory.getExpiry() + ")";
-//                    }
-//                    else
-//                    {
-//                        string = this.format((ServerWorld) entity.getEntityWorld(), object);
-//                    }
-//                }
-//                else
-//                {
-//                    string = "-";
-//                }
-//
-//                String type = Registries.MEMORY_MODULE_TYPE.getId(memoryModuleType).getPath();
-//                list.add(type + ": " + string);
-//            }
-//
-//            list.sort(String::compareTo);
-//            return list;
-//        }
-//
-//        return List.of();
-//    }
-//
-//    private String format(ServerWorld world, @Nullable Object object)
-//    {
-//        if (this.isEnabled())
-//        {
-//            if (object == null)
-//            {
-//                return "-";
-//            }
-//            else if (object instanceof UUID)
-//            {
-//                return format(world, world.getEntity((UUID) object));
-//            }
-//            else
-//            {
-//                Entity entity;
-//                if (object instanceof LivingEntity)
-//                {
-//                    entity = (Entity) object;
-//                    return NameGenerator.name(entity);
-//                }
-//                else if (object instanceof Nameable)
-//                {
-//                    return ((Nameable) object).getName().getString();
-//                }
-//                else if (object instanceof WalkTarget)
-//                {
-//                    return format(world, ((WalkTarget) object).getLookTarget());
-//                }
-//                else if (object instanceof EntityLookTarget)
-//                {
-//                    return format(world, ((EntityLookTarget) object).getEntity());
-//                }
-//                else if (object instanceof GlobalPos)
-//                {
-//                    return format(world, ((GlobalPos) object).pos());
-//                }
-//                else if (object instanceof BlockPosLookTarget)
-//                {
-//                    return format(world, ((BlockPosLookTarget) object).getBlockPos());
-//                }
-//                else if (object instanceof DamageSource)
-//                {
-//                    entity = ((DamageSource) object).getAttacker();
-//                    return entity == null ? object.toString() : format(world, entity);
-//                }
-//                else if (!(object instanceof Collection))
-//                {
-//                    return object.toString();
-//                }
-//                else
-//                {
-//                    List<String> list = Lists.newArrayList();
-//
-//                    for (Object object2 : (Iterable) object)
-//                    {
-//                        list.add(format(world, object2));
-//                    }
-//
-//                    return list.toString();
-//                }
-//            }
-//        }
-//
-//        return "";
-//    }
+//		return false;
+//	}
 }

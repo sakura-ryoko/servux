@@ -1,13 +1,13 @@
 package fi.dy.masa.servux.network.packet;
 
 @Deprecated
-public class ServuxDebugPacket
-//        implements IServerPayloadData
+class ServuxDebugPacket
+//		implements IServerPayloadData
 {
 //    private Type packetType;
 //    private NbtCompound nbt;
 //    private PacketByteBuf buffer;
-//    public static final int PROTOCOL_VERSION = 1;
+//    public static final int PROTOCOL_VERSION = 2;
 //
 //    private ServuxDebugPacket(Type type)
 //    {
@@ -46,7 +46,17 @@ public class ServuxDebugPacket
 //        return packet;
 //    }
 //
-//    public static ServuxDebugPacket DebugServiceRegister(@Nullable NbtCompound nbt)
+//	public static ServuxDebugPacket MetadataUpdate(@Nullable NbtCompound nbt)
+//	{
+//		var packet = new ServuxDebugPacket(Type.PACKET_C2S_METADATA_UPDATE);
+//		if (nbt != null)
+//		{
+//			packet.nbt.copyFrom(nbt);
+//		}
+//		return packet;
+//	}
+//
+//	public static ServuxDebugPacket DebugServiceRegister(@Nullable NbtCompound nbt)
 //    {
 //        var packet = new ServuxDebugPacket(Type.PACKET_C2S_DEBUG_SERVICE_REGISTER);
 //        if (nbt != null)
@@ -169,7 +179,7 @@ public class ServuxDebugPacket
 //                    Servux.LOGGER.error("ServuxDebugPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
 //                }
 //            }
-//            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_METADATA_CONFIRM, PACKET_C2S_DEBUG_SERVICE_REGISTER, PACKET_C2S_DEBUG_SERVICE_UNREGISTER ->
+//            case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_METADATA_CONFIRM, PACKET_C2S_METADATA_UPDATE, PACKET_C2S_DEBUG_SERVICE_REGISTER, PACKET_C2S_DEBUG_SERVICE_UNREGISTER ->
 //            {
 //                // Write NBT
 //                try
@@ -247,7 +257,19 @@ public class ServuxDebugPacket
 //                    Servux.LOGGER.error("ServuxDebugPacket#fromPacket: error reading Metadata Confirm from packet: [{}]", e.getLocalizedMessage());
 //                }
 //            }
-//            case PACKET_C2S_DEBUG_SERVICE_REGISTER ->
+//	        case PACKET_C2S_METADATA_UPDATE ->
+//	        {
+//		        // Read Nbt
+//		        try
+//		        {
+//			        return ServuxDebugPacket.MetadataUpdate(input.readNbt());
+//		        }
+//		        catch (Exception e)
+//		        {
+//			        Servux.LOGGER.error("ServuxDebugPacket#fromPacket: error reading Metadata Update from packet: [{}]", e.getLocalizedMessage());
+//		        }
+//	        }
+//	        case PACKET_C2S_DEBUG_SERVICE_REGISTER ->
 //            {
 //                // Read Nbt
 //                try
@@ -309,6 +331,7 @@ public class ServuxDebugPacket
 //        PACKET_C2S_METADATA_CONFIRM(3),
 //        PACKET_C2S_DEBUG_SERVICE_REGISTER(4),
 //        PACKET_C2S_DEBUG_SERVICE_UNREGISTER(5),
+//	    PACKET_C2S_METADATA_UPDATE(6),
 //        // For Packet Splitter (Oversize Packets, S2C)
 //        PACKET_S2C_NBT_RESPONSE_START(10),
 //        PACKET_S2C_NBT_RESPONSE_DATA(11);
