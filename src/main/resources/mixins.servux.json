@@ -10,8 +10,6 @@
         "block.MixinHopperBlockEntity",
         "block.MixinRailBlocks",
         "block.MixinStairsBlock",
-        "debug.IMixinMobEntity",
-        "debug.MixinPath",
         "debug.MixinSharedConstants",
         "entity.MixinAllayEntity",
         "entity.MixinItemEntity",

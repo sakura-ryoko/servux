@@ -96,20 +96,19 @@ public class CompoundData extends BaseData implements DataView
     @Override
     public boolean containsList(String key, int listEntryType)
     {
-        BaseData data = this.values.get(key);
+	    BaseData data = this.values.get(key);
 
-		if (data != null)
-		{
-			LOGGER.debug("containsList: req [{}], has [{}]", listEntryType, ((ListData) data).getContainedType());
-		}
-		else
-		{
-			LOGGER.debug("containsList: req [{}], has: [NULL]", listEntryType);
-		}
-
-        return data != null &&
-               data.getType() == Constants.NBT.TAG_LIST &&
-               ((ListData) data).getContainedType() == listEntryType;
+	    if (data.getType() == Constants.NBT.TAG_LIST &&
+		    data instanceof ListData listData)
+	    {
+		    LOGGER.debug("containsList: req [{}], has [{}]", listEntryType, listData.getContainedType());
+		    return listData.getContainedType() == listEntryType;
+	    }
+	    else
+	    {
+		    LOGGER.debug("containsList: req [{}], has: [NULL] (Type found: '{}')", listEntryType, data.getType());
+		    return false;
+	    }
     }
 
 	@Override
@@ -129,7 +128,20 @@ public class CompoundData extends BaseData implements DataView
         return Optional.ofNullable(this.values.get(key));
     }
 
-    @Override
+	@Override
+	public Optional<Integer> getDataType(String key)
+	{
+		BaseData data = this.values.get(key);
+
+		if (data != null)
+		{
+			return Optional.of(data.getType());
+		}
+
+		return Optional.empty();
+	}
+
+	@Override
     public boolean getBoolean(String key)
     {
         BaseData data = this.values.get(key);
