@@ -9,6 +9,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -33,7 +34,20 @@ public class EntitiesDataProvider extends DataProviderBase
 	private final ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
 	private final ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
 	private final ServuxBoolSetting fixAllayGathering = new ServuxBoolSetting(this, "fix_allay_gathering", true);
-	private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel, this.fixAllayGathering);
+	private final ServuxBoolSetting nbtAllowPlayerInventory = new ServuxBoolSetting(this, "nbt_allow_player_inventory", true);
+	private final ServuxBoolSetting nbtAllowPlayerEnderItems = new ServuxBoolSetting(this, "nbt_allow_player_ender_items", true);
+	private final ServuxIntSetting playerInventoryPermissionLevel = new ServuxIntSetting(this, "player_inventory_permission_level", 2, 4, 0);
+	private final ServuxIntSetting playerEnderItemsPermissionLevel = new ServuxIntSetting(this, "player_ender_items_permission_level", 2, 4, 0);
+	private final List<IServuxSetting<?>> settings = List.of(
+			this.permissionLevel,
+			this.nbtQueryOverride,
+			this.nbtQueryPermissionLevel,
+			this.fixAllayGathering,
+			this.nbtAllowPlayerInventory,
+			this.nbtAllowPlayerEnderItems,
+			this.playerInventoryPermissionLevel,
+			this.playerEnderItemsPermissionLevel
+	);
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
 
@@ -176,6 +190,20 @@ public class EntitiesDataProvider extends DataProviderBase
 
             if (nbt != null && id != null)
             {
+				if (entity.getType() == EntityType.PLAYER)
+				{
+					if (!this.hasPlayerInventoryPermission(player))
+					{
+						nbt.remove("Inventory");
+						nbt.put("Inventory", new NbtList());
+					}
+					if (!this.hasPlayerEnderItemsPermission(player))
+					{
+						nbt.remove("EnderItems");
+						nbt.put("EnderItems", new NbtList());
+					}
+				}
+
                 nbt.putString("id", id.toString());
                 HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
             }
@@ -204,6 +232,11 @@ public class EntitiesDataProvider extends DataProviderBase
 		return this.isEnabled() && this.fixAllayGathering.getValue();
 	}
 
+	/**
+	 * Tweaks Data Provider also uses the same settings here.
+	 * @param player ()
+	 * @return ()
+	 */
     public boolean hasNbtQueryPermission(ServerPlayerEntity player)
     {
         if (this.nbtQueryOverride.getValue())
@@ -214,7 +247,42 @@ public class EntitiesDataProvider extends DataProviderBase
         return player.hasPermissionLevel(2);
     }
 
-    @Override
+	public boolean hasNbtAllowPlayerInventory()
+	{
+		return this.nbtAllowPlayerInventory.getValue();
+	}
+
+	/**
+	 * Tweaks Data Provider also uses the same settings here.
+	 * @param player ()
+	 * @return ()
+	 */
+	public boolean hasPlayerInventoryPermission(ServerPlayerEntity player)
+	{
+		if (this.hasNbtAllowPlayerInventory())
+		{
+			return Permissions.check(player, this.permNode+".nbt_allow_player_inventory", this.playerInventoryPermissionLevel.getValue());
+		}
+
+		return false;
+	}
+
+	public boolean hasNbtAllowPlayerEnderItems()
+	{
+		return this.nbtAllowPlayerEnderItems.getValue();
+	}
+
+	public boolean hasPlayerEnderItemsPermission(ServerPlayerEntity player)
+	{
+		if (this.hasNbtAllowPlayerEnderItems())
+		{
+			return Permissions.check(player, this.permNode+".nbt_allow_player_ender_items", this.playerEnderItemsPermissionLevel.getValue());
+		}
+
+		return false;
+	}
+
+	@Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
