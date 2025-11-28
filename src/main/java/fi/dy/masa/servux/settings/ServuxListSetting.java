@@ -13,14 +13,19 @@ public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>
 {
     private static final Gson GSON = new Gson();
 
-    public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples, String separatorRegex)
+    public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples, IServuxSettingCallback<List<T>> callback)
     {
-        this(dataProvider, name, prettyName, comment, defaultValue, examples);
+        super(dataProvider, name, prettyName, comment, defaultValue, examples, callback);
     }
+
+//    public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples, String separatorRegex)
+//    {
+//        this(dataProvider, name, prettyName, comment, defaultValue, examples);
+//    }
 
     public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples)
     {
-        super(dataProvider, name, prettyName, comment, defaultValue, examples);
+        super(dataProvider, name, prettyName, comment, defaultValue, examples, null);
     }
 
     @Override

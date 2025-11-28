@@ -1,5 +1,7 @@
 package fi.dy.masa.servux.mixin.world;
 
+import org.objectweb.asm.Opcodes;
+
 import fi.dy.masa.servux.util.WorldUtils;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
@@ -15,7 +17,9 @@ public abstract class MixinWorldChunk_UpdateSuppression
                 slice = @Slice(from = @At(value = "INVOKE",
                                 target = "Lnet/minecraft/world/chunk/ChunkSection;getBlockState(III)" +
                                           "Lnet/minecraft/block/BlockState;")),
-                at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isClient:Z", ordinal = 0))
+                at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isClient:Z",
+                         ordinal = 0,
+                         opcode = Opcodes.GETFIELD))
     private boolean servux_redirectIsRemote(World world)
     {
         return WorldUtils.shouldPreventBlockUpdates(world) || world.isClient;

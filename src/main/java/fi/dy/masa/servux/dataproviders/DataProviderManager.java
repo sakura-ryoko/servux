@@ -169,6 +169,7 @@ public class DataProviderManager
         if (name.contains(":"))
         {
             String[] parts = name.split(":");
+            if (parts.length < 2) { return null; }
             String providerName = parts[0];
             String settingName = parts[1];
             IDataProvider provider = this.providers.get(providerName);

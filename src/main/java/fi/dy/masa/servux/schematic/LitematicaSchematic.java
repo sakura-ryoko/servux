@@ -666,10 +666,10 @@ public class LitematicaSchematic
                                            BlockPos minCorner,
                                            final long currentTick)
     {
-        int minCX = ChunkSectionPos.getSectionCoord(box.minX);
-        int minCZ = ChunkSectionPos.getSectionCoord(box.minZ);
-        int maxCX = ChunkSectionPos.getSectionCoord(box.maxX);
-        int maxCZ = ChunkSectionPos.getSectionCoord(box.maxZ);
+        int minCX = ChunkSectionPos.getSectionCoord(box.minX());
+        int minCZ = ChunkSectionPos.getSectionCoord(box.minZ());
+        int maxCX = ChunkSectionPos.getSectionCoord(box.maxX());
+        int maxCZ = ChunkSectionPos.getSectionCoord(box.maxZ());
 
         for (int cx = minCX; cx <= maxCX; ++cx)
         {

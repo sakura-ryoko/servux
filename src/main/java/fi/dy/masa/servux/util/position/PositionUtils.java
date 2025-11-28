@@ -563,15 +563,15 @@ public class PositionUtils
         int minY = world.getBottomY();
         int maxY = world.getTopY() - 1;
 
-        if (box.minY > maxY || box.maxY < minY)
+        if (box.minY() > maxY || box.maxY() < minY)
         {
             return null;
         }
 
-        if (box.minY < minY || box.maxY > maxY)
+        if (box.minY() < minY || box.maxY() > maxY)
         {
-            box = new IntBoundingBox(box.minX, Math.max(box.minY, minY), box.minZ,
-                    box.maxX, Math.min(box.maxY, maxY), box.maxZ);
+            box = new IntBoundingBox(box.minX(), Math.max(box.minY(), minY), box.minZ(),
+                                     box.maxX(), Math.min(box.maxY(), maxY), box.maxZ());
         }
 
         return box;
@@ -744,7 +744,7 @@ public class PositionUtils
 
     public static net.minecraft.util.math.Box createAABBFrom(IntBoundingBox bb)
     {
-        return createAABB(bb.minX, bb.minY, bb.minZ, bb.maxX + 1, bb.maxY + 1, bb.maxZ + 1);
+        return createAABB(bb.minX(), bb.minY(), bb.minZ(), bb.maxX() + 1, bb.maxY() + 1, bb.maxZ() + 1);
     }
 
     /**

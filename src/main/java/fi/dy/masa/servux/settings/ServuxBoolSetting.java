@@ -9,14 +9,24 @@ import java.util.List;
 
 public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
 {
+    public ServuxBoolSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, boolean defaultValue, IServuxSettingCallback<Boolean> callback)
+    {
+        super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"), callback);
+    }
+
     public ServuxBoolSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, boolean defaultValue)
     {
-        super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"));
+        super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"), null);
+    }
+
+    public ServuxBoolSetting(IDataProvider dataProvider, String name, boolean defaultValue, IServuxSettingCallback<Boolean> callback)
+    {
+        super(dataProvider, name, null, null, defaultValue, List.of("true", "false"), callback);
     }
 
     public ServuxBoolSetting(IDataProvider dataProvider, String name, boolean defaultValue)
     {
-        super(dataProvider, name, null, null, defaultValue, List.of("true", "false"));
+        super(dataProvider, name, null, null, defaultValue, List.of("true", "false"), null);
     }
 
     @Override
