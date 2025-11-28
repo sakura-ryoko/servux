@@ -15,6 +15,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -44,8 +45,11 @@ public class TweaksDataProvider extends DataProviderBase
 	private final ServuxIntSetting stackableShulkersSize = new ServuxIntSetting(this, "stackable_shulkers_count", 64, 99, 1, this.intCallback);
 	private final ServuxBoolSetting stackableShulkersFix = new ServuxBoolSetting(this, "stackable_shulkers_fix", true, this.boolCallback);
 	private final List<IServuxSetting<?>> settings = List.of(
-            this.permissionLevel, this.updateInterval,
-            this.stackableShulkers, this.stackableShulkersSize, this.stackableShulkersFix
+            this.permissionLevel,
+            this.updateInterval,
+            this.stackableShulkers,
+            this.stackableShulkersSize,
+            this.stackableShulkersFix
     );
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
@@ -258,7 +262,21 @@ public class TweaksDataProvider extends DataProviderBase
 
             if (nbt != null && id != null)
             {
-                nbt.putString("id", id.toString());
+	            if (entity.getType() == EntityType.PLAYER)
+	            {
+		            if (!EntitiesDataProvider.INSTANCE.hasPlayerInventoryPermission(player))
+		            {
+			            nbt.remove("Inventory");
+			            nbt.put("Inventory", new NbtList());
+		            }
+		            if (!EntitiesDataProvider.INSTANCE.hasPlayerEnderItemsPermission(player))
+		            {
+			            nbt.remove("EnderItems");
+			            nbt.put("EnderItems", new NbtList());
+		            }
+	            }
+
+	            nbt.putString("id", id.toString());
                 HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt.copy()));
             }
         }
@@ -316,7 +334,7 @@ public class TweaksDataProvider extends DataProviderBase
         return stack.getComponents().getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
     }
 
-    @Override
+	@Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
