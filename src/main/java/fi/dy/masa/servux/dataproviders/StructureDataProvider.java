@@ -29,6 +29,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.gen.StructureTerrainAdaptation;
 import net.minecraft.world.gen.structure.Structure;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -42,7 +43,6 @@ import fi.dy.masa.servux.util.Timeout;
 public class StructureDataProvider extends DataProviderBase
 {
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
-
     protected final static ServuxStructuresHandler<ServuxStructuresPacket.Payload> HANDLER = ServuxStructuresHandler.getInstance();
     protected final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
     protected final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
@@ -70,6 +70,8 @@ public class StructureDataProvider extends DataProviderBase
         this.metadata.putInt("version", this.getProtocolVersion());
         this.metadata.putString("servux", Reference.MOD_STRING);
         this.metadata.putInt("timeout", timeout.getValue());
+
+        this.setTickRate(40);
     }
 
     @Override
@@ -82,11 +84,13 @@ public class StructureDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
+
         if (this.isRegistered() == false)
         {
             HANDLER.registerPlayPayload(ServuxStructuresPacket.Payload.ID, ServuxStructuresPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxStructuresPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -361,7 +365,7 @@ public class StructureDataProvider extends DataProviderBase
             return;
         }
 
-        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_STARTS, false);
+        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
         if (chunk == null)
         {
@@ -430,7 +434,7 @@ public class StructureDataProvider extends DataProviderBase
                     continue;
                 }
 
-                Chunk chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_STARTS, false);
+                Chunk chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_REFERENCES, false);
 
                 if (chunk == null)
                 {
@@ -496,11 +500,22 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
-            Identifier structureType = Registries.STRUCTURE_TYPE.getId(entry.getValue().getStructure().getType());
-            if (this.shouldSendStructure(structureType))
+            StructureStart start = entry.getValue();
+			Structure structure = start.getStructure();
+			if (structure == null) continue;          // When using C2ME, this could return NULL
+            Identifier structureType = Registries.STRUCTURE_TYPE.getId(structure.getType());
+            boolean expandBox = structure.getTerrainAdaptation() != StructureTerrainAdaptation.NONE;
+
+            if (structureType != null &&
+                this.shouldSendStructure(structureType))
             {
                 ChunkPos pos = entry.getKey();
-                list.add(entry.getValue().toNbt(ctx, pos));
+                NbtCompound nbt = start.toNbt(ctx, pos);
+
+                // Should expand BB by 12
+                // This is Needed for things like Pillager Outposts
+                nbt.putBoolean("ExpandBox", expandBox);
+                list.add(nbt);
             }
         }
 

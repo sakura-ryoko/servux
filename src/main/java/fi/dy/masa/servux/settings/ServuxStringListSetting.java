@@ -9,14 +9,29 @@ import java.util.List;
 
 public class ServuxStringListSetting extends ServuxListSetting<String>
 {
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue, List<String> examples, IServuxSettingCallback<List<String>> callback)
+    {
+        super(dataProvider, name, prettyName, comment, defaultValue, examples, callback);
+    }
+
     public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue, List<String> examples)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples);
     }
 
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue, IServuxSettingCallback<List<String>> callback)
+    {
+        super(dataProvider, name, prettyName, comment, defaultValue, List.of(), callback);
+    }
+
     public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, List.of());
+    }
+
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, List<String> defaultValue, IServuxSettingCallback<List<String>> callback)
+    {
+        super(dataProvider, name, null, null, defaultValue, List.of(), callback);
     }
 
     public ServuxStringListSetting(IDataProvider dataProvider, String name, List<String> defaultValue)

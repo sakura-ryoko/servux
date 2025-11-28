@@ -25,6 +25,7 @@ public class ServuxConfigProvider extends DataProviderBase
     private final ServuxIntSetting basePermissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     private final ServuxIntSetting adminPermissionLevel = new ServuxIntSetting(this, "permission_level_admin", 3, 4, 0);
     private final ServuxIntSetting easyPlacePermissionLevel = new ServuxIntSetting(this, "permission_level_easy_place", 0, 4, 0);
+    private final ServuxBoolSetting easyPlaceValidatorEnabled = new ServuxBoolSetting(this, "easy_place_validator_enabled", true);
     private final ServuxStringSetting defaultLanguage = new ServuxStringSetting(this, "default_language",
         i18nLang.DEFAULT_LANG,
         List.of("en_us", "zh_cn"), false)
@@ -58,7 +59,7 @@ public class ServuxConfigProvider extends DataProviderBase
     protected ServuxConfigProvider()
     {
         super("servux_main",
-                Identifier.of("servux:main"),
+                Identifier.of("servux", "main"),
                 1, 0, Reference.MOD_ID+".main",
                 "The Servux Main configuration data provider");
     }
@@ -112,7 +113,7 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return Permissions.check(player, Reference.MOD_ID+".main.admin", adminPermissionLevel.getValue());
+        return Permissions.check(player, Reference.MOD_ID+".main.admin", this.adminPermissionLevel.getValue());
     }
 
     public boolean hasPermission_EasyPlace(ServerPlayerEntity player)
@@ -122,7 +123,17 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return Permissions.check(player, Reference.MOD_ID+".main.easy_place", easyPlacePermissionLevel.getValue());
+        return Permissions.check(player, Reference.MOD_ID+".main.easy_place", this.easyPlacePermissionLevel.getValue());
+    }
+
+    public boolean isEasyPlaceValidatorEnabled()
+    {
+        return this.easyPlaceValidatorEnabled.getValue();
+    }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage.getValue();
     }
 
     @Override
@@ -135,10 +146,5 @@ public class ServuxConfigProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
-    }
-
-    public String getDefaultLanguage()
-    {
-        return defaultLanguage.getValue();
     }
 }

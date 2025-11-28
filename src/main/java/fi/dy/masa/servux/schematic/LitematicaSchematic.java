@@ -48,7 +48,6 @@ import net.minecraft.util.math.*;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.FileType;
-import fi.dy.masa.servux.util.data.Schema;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
@@ -680,10 +679,10 @@ public class LitematicaSchematic
                                            BlockPos minCorner,
                                            final long currentTick)
     {
-        int minCX = ChunkSectionPos.getSectionCoord(box.minX);
-        int minCZ = ChunkSectionPos.getSectionCoord(box.minZ);
-        int maxCX = ChunkSectionPos.getSectionCoord(box.maxX);
-        int maxCZ = ChunkSectionPos.getSectionCoord(box.maxZ);
+        int minCX = ChunkSectionPos.getSectionCoord(box.minX());
+        int minCZ = ChunkSectionPos.getSectionCoord(box.minZ());
+        int maxCX = ChunkSectionPos.getSectionCoord(box.maxX());
+        int maxCZ = ChunkSectionPos.getSectionCoord(box.maxZ());
 
         for (int cx = minCX; cx <= maxCX; ++cx)
         {

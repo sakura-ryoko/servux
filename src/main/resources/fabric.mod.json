@@ -5,7 +5,6 @@
 	"version": "${mod_version}",
 
 	"description": "Server-side support and integration for masa's client mods",
-	"license": "LGPLv3",
 	"authors": [
 		"masa"
 	],
@@ -15,6 +14,8 @@
 		"twitter": "https://twitter.com/maruohon",
 		"discord": "https://discordapp.com/channels/211786369951989762/453662800460644354/"
 	},
+	"license": "LGPLv3",
+	"icon": "assets/servux/icon.png",
 
 	"environment": "server",
 
@@ -27,6 +28,7 @@
 	"mixins": [
 		"mixins.servux.json"
 	],
+	"accessWidener": "servux.accesswidener",
 
 	"depends": {
 		"minecraft": "1.21.5",

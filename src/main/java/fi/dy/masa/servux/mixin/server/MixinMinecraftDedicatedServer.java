@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.server;
 
 import com.mojang.datafixers.DataFixer;
 import fi.dy.masa.servux.event.ServerInitHandler;

@@ -1,11 +1,13 @@
 plugins {
-	id 'fabric-loom' version '1.10-SNAPSHOT'
+	id 'fabric-loom' version '1.14-SNAPSHOT'
 	id 'maven-publish'
 }
 
 repositories {
 	// maven { url = 'https://masa.dy.fi/maven' }
 	maven { url = 'https://maven.fallenbreath.me/releases' }
+	maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
+//	maven { url = 'https://maven.nucleoid.xyz/' }
 	// maven { url = 'https://jitpack.io' }
 }
 
@@ -36,6 +38,8 @@ base {
 }
 
 loom {
+	accessWidenerPath = file("src/main/resources/servux.accesswidener")
+
 //	def commonVmArgs = ['-Dmixin.debug.export=true', '-Dmixin.debug.countInjections=true']
 //	// [FEATURE] MIXIN_AUDITOR
 //	runs {
