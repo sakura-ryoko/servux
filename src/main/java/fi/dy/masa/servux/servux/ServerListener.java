@@ -47,6 +47,7 @@ public class ServerListener implements IServerListener
     public void onServerStopping(MinecraftServer server)
     {
         DataProviderManager.INSTANCE.onServerTickEndPre();
+        DataProviderManager.INSTANCE.writeToConfig();
     }
 
     @Override

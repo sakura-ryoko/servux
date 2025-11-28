@@ -9,6 +9,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -25,14 +26,26 @@ import fi.dy.masa.servux.settings.ServuxIntSetting;
 public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
-    protected final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
-    protected final NbtCompound metadata = new NbtCompound();
-    protected ServuxIntSetting permissionLevel = new ServuxIntSetting(this,
-            "permission_level",
-            0, 4, 0);
-    protected ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
-    protected ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
-    protected List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.nbtQueryOverride, this.nbtQueryPermissionLevel);
+    private final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
+	private final NbtCompound metadata = new NbtCompound();
+	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+	private final ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
+	private final ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
+	private final ServuxBoolSetting fixAllayGathering = new ServuxBoolSetting(this, "fix_allay_gathering", true);
+	private final ServuxBoolSetting nbtAllowPlayerInventory = new ServuxBoolSetting(this, "nbt_allow_player_inventory", true);
+	private final ServuxBoolSetting nbtAllowPlayerEnderItems = new ServuxBoolSetting(this, "nbt_allow_player_ender_items", true);
+	private final ServuxIntSetting playerInventoryPermissionLevel = new ServuxIntSetting(this, "player_inventory_permission_level", 2, 4, 0);
+	private final ServuxIntSetting playerEnderItemsPermissionLevel = new ServuxIntSetting(this, "player_ender_items_permission_level", 2, 4, 0);
+	private final List<IServuxSetting<?>> settings = List.of(
+			this.permissionLevel,
+			this.nbtQueryOverride,
+			this.nbtQueryPermissionLevel,
+			this.fixAllayGathering,
+			this.nbtAllowPlayerInventory,
+			this.nbtAllowPlayerEnderItems,
+			this.playerInventoryPermissionLevel,
+			this.playerEnderItemsPermissionLevel
+	);
 
     private final List<UUID> invalidPlayers = new ArrayList<>();
 
@@ -60,11 +73,13 @@ public class EntitiesDataProvider extends DataProviderBase
     public void registerHandler()
     {
         ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
-        if (this.isRegistered() == false)
+
+        if (!this.isRegistered())
         {
             HANDLER.registerPlayPayload(ServuxEntitiesPacket.Payload.ID, ServuxEntitiesPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
             this.setRegistered(true);
         }
+
         HANDLER.registerPlayReceiver(ServuxEntitiesPacket.Payload.ID, HANDLER::receivePlayPayload);
     }
 
@@ -166,9 +181,10 @@ public class EntitiesDataProvider extends DataProviderBase
 
         if (entity != null)
         {
+	        Identifier id = EntityType.getId(entity.getType());
+
             if (entity instanceof PlayerEntity)
             {
-                Identifier id = EntityType.getId(entity.getType());
                 nbt = entity.writeNbt(nbt);
 
                 if (id != null)
@@ -176,10 +192,22 @@ public class EntitiesDataProvider extends DataProviderBase
                     nbt.putString("id", id.toString());
                 }
 
+                if (!this.hasPlayerInventoryPermission(player))
+                {
+                    nbt.remove("Inventory");
+                    nbt.put("Inventory", new NbtList());
+                }
+                if (!this.hasPlayerEnderItemsPermission(player))
+                {
+                    nbt.remove("EnderItems");
+                    nbt.put("EnderItems", new NbtList());
+                }
+
                 HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
             }
             else if (entity.saveSelfNbt(nbt))
             {
+                nbt.putString("id", id.toString());
                 HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleEntityResponse(entityId, nbt));
             }
         }
@@ -202,6 +230,16 @@ public class EntitiesDataProvider extends DataProviderBase
         return this.isEnabled() && this.nbtQueryOverride.getValue();
     }
 
+	public boolean hasFixAllayGathering()
+	{
+		return this.isEnabled() && this.fixAllayGathering.getValue();
+	}
+
+	/**
+	 * Tweaks Data Provider also uses the same settings here.
+	 * @param player ()
+	 * @return ()
+	 */
     public boolean hasNbtQueryPermission(ServerPlayerEntity player)
     {
         if (this.nbtQueryOverride.getValue())
@@ -212,7 +250,42 @@ public class EntitiesDataProvider extends DataProviderBase
         return player.hasPermissionLevel(2);
     }
 
-    @Override
+	public boolean hasNbtAllowPlayerInventory()
+	{
+		return this.nbtAllowPlayerInventory.getValue();
+	}
+
+	/**
+	 * Tweaks Data Provider also uses the same settings here.
+	 * @param player ()
+	 * @return ()
+	 */
+	public boolean hasPlayerInventoryPermission(ServerPlayerEntity player)
+	{
+		if (this.hasNbtAllowPlayerInventory())
+		{
+			return Permissions.check(player, this.permNode+".nbt_allow_player_inventory", this.playerInventoryPermissionLevel.getValue());
+		}
+
+		return false;
+	}
+
+	public boolean hasNbtAllowPlayerEnderItems()
+	{
+		return this.nbtAllowPlayerEnderItems.getValue();
+	}
+
+	public boolean hasPlayerEnderItemsPermission(ServerPlayerEntity player)
+	{
+		if (this.hasNbtAllowPlayerEnderItems())
+		{
+			return Permissions.check(player, this.permNode+".nbt_allow_player_ender_items", this.playerEnderItemsPermissionLevel.getValue());
+		}
+
+		return false;
+	}
+
+	@Override
     public boolean hasPermission(ServerPlayerEntity player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());

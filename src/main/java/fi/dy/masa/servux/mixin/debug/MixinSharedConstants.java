@@ -8,25 +8,21 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import fi.dy.masa.servux.dataproviders.DebugDataProvider;
+import fi.dy.masa.servux.Reference;
 
 @Mixin(SharedConstants.class)
 public abstract class MixinSharedConstants
 {
-    @Shadow @Mutable
-    public static boolean isDevelopment;
+    @Shadow @Mutable public static boolean isDevelopment;
 
     public MixinSharedConstants() {}
 
-    /*
     @Inject(method = "<clinit>", at = @At("TAIL"))
     private static void servux_enableServerDevelopmentMode(CallbackInfo ci)
     {
-        if (DebugDataProvider.INSTANCE.isEnabled() &&
-            DebugDataProvider.INSTANCE.isServerDevelopmentMode())
+        if (Reference.DEV_DEBUG)
         {
             isDevelopment = true;
         }
     }
-     */
 }

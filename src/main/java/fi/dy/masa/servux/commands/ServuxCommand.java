@@ -1,14 +1,13 @@
 package fi.dy.masa.servux.commands;
 
 import java.util.*;
-
 import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
@@ -20,6 +19,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
@@ -38,70 +38,72 @@ public class ServuxCommand implements IServerCommand
                          CommandManager.RegistrationEnvironment environment)
     {
         dispatcher.register(CommandManager
-            .literal(Reference.MOD_ID).requires(Permissions.require(Reference.MOD_ID + ".commands", 4))
-            .then(CommandManager.literal("reload").requires(Permissions.require(Reference.MOD_ID + ".commands.reload", 4))
-                .executes((ctx) ->
-                {
-                    ServuxConfigProvider.INSTANCE.doReloadConfig(ctx.getSource());
-                    return 1;
-                }))
-            .then(CommandManager.literal("save").requires(Permissions.require(Reference.MOD_ID + ".commands.save", 4))
-                .executes((ctx) ->
-                {
-                    ServuxConfigProvider.INSTANCE.doSaveConfig(ctx.getSource());
-                    return 1;
-                }))
-            .then(CommandManager.literal("set")
-                .requires(Permissions.require(Reference.MOD_ID + ".commands.set", 4))
-                .then(settingsNode().then(CommandManager.argument("value", StringArgumentType.greedyString())
-                        .suggests((ctx, builder) -> {
-                            Identifier settingId = ctx.getArgument("setting", Identifier.class);
-                            String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
-                            var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
-                            if (setting != null)
-                            {
-                                return CommandSource.suggestMatching(setting.examples(), builder);
-                            }
-                            return builder.buildFuture();
-                        })
-                        .executes(ServuxCommand::configModify))))
-            .then(CommandManager.literal("info")
-                .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
-                .then(settingsNode().executes(ServuxCommand::configInfo)))
-            .then(CommandManager.literal("list")
-                .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
-                .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getAllProviders().stream()
-                    .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList()))
-                .then(CommandManager.argument("provider", StringArgumentType.string())
-                    .suggests((ctx, builder) -> CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider"))))
-                    .executes(ctx -> {
-                        String provider = StringArgumentType.getString(ctx, "provider");
-                        Optional<IDataProvider> dataProvider = DataProviderManager.INSTANCE.getProviderByName(provider);
-                        if (dataProvider.isEmpty())
-                        {
-                            throw StringUtils.translateError("servux.command.error.unknown_data_provider");
-                        }
-                        ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.config.list.data_provider", provider), false);
-                        return configList(ctx, dataProvider.get().getSettings());
-                    })))
-            .then(CommandManager.literal("search")
-                .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
-                .then(CommandManager.argument("query", StringArgumentType.greedyString())
-                    .executes(ctx ->
-                    {
-                        String query = StringArgumentType.getString(ctx, "query");
-                        var settings = configSearch(ctx, query);
-                        if (settings.isEmpty())
-                        {
-                            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.none", query), false);
-                            return 0;
-                        }
-                        else
-                        {
-                            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.results", settings.size(), query), false);
-                            return configList(ctx, settings);
-                        }
-                    })))
+                                    .literal(Reference.MOD_ID).requires(Permissions.require(Reference.MOD_ID + ".commands", 4))
+                                    .then(CommandManager.literal("reload").requires(Permissions.require(Reference.MOD_ID + ".commands.reload", 4))
+                                                        .executes((ctx) ->
+                                                                  {
+                                                                      ServuxConfigProvider.INSTANCE.doReloadConfig(ctx.getSource());
+                                                                      return 1;
+                                                                  }))
+                                    .then(CommandManager.literal("save").requires(Permissions.require(Reference.MOD_ID + ".commands.save", 4))
+                                                        .executes((ctx) ->
+                                                                  {
+                                                                      ServuxConfigProvider.INSTANCE.doSaveConfig(ctx.getSource());
+                                                                      return 1;
+                                                                  }))
+                                    .then(CommandManager.literal("set")
+                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.set", 4))
+                                                        .then(settingsNode().then(CommandManager.argument("value", StringArgumentType.greedyString())
+                                                                                                .suggests((ctx, builder) ->
+                                                                                                          {
+                                                                                                              Identifier settingId = ctx.getArgument("setting", Identifier.class);
+                                                                                                              String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
+                                                                                                              var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
+                                                                                                              if (setting != null)
+                                                                                                              {
+                                                                                                                  return CommandSource.suggestMatching(setting.examples(), builder);
+                                                                                                              }
+                                                                                                              return builder.buildFuture();
+                                                                                                          })
+                                                                                                .executes(ServuxCommand::configModify))))
+                                    .then(CommandManager.literal("info")
+                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
+                                                        .then(settingsNode().executes(ServuxCommand::configInfo)))
+                                    .then(CommandManager.literal("list")
+                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
+                                                        .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getAllProviders().stream()
+                                                                                                                     .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList()))
+                                                        .then(CommandManager.argument("provider", StringArgumentType.string())
+                                                                            .suggests((ctx, builder) -> CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider"))))
+                                                                            .executes(ctx ->
+                                                                                      {
+                                                                                          String provider = StringArgumentType.getString(ctx, "provider");
+                                                                                          Optional<IDataProvider> dataProvider = DataProviderManager.INSTANCE.getProviderByName(provider);
+                                                                                          if (dataProvider.isEmpty())
+                                                                                          {
+                                                                                              throw StringUtils.translateError("servux.command.error.unknown_data_provider");
+                                                                                          }
+                                                                                          ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.config.list.data_provider", provider), false);
+                                                                                          return configList(ctx, dataProvider.get().getSettings());
+                                                                                      })))
+                                    .then(CommandManager.literal("search")
+                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
+                                                        .then(CommandManager.argument("query", StringArgumentType.greedyString())
+                                                                            .executes(ctx ->
+                                                                                      {
+                                                                                          String query = StringArgumentType.getString(ctx, "query");
+                                                                                          var settings = configSearch(ctx, query);
+                                                                                          if (settings.isEmpty())
+                                                                                          {
+                                                                                              ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.none", query), false);
+                                                                                              return 0;
+                                                                                          }
+                                                                                          else
+                                                                                          {
+                                                                                              ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.results", settings.size(), query), false);
+                                                                                              return configList(ctx, settings);
+                                                                                          }
+                                                                                      })))
         );
     }
 
@@ -109,27 +111,27 @@ public class ServuxCommand implements IServerCommand
     {
         String[] searchParts = query.split(" ");
         return DataProviderManager.INSTANCE.getAllProviders().stream()
-            .flatMap(iDataProvider -> iDataProvider.getSettings().stream())
-            .filter(iServuxSetting ->
-            {
-                for (String part : searchParts)
-                {
-                    if (iServuxSetting.name().contains(part))
-                    {
-                        continue;
-                    }
-                    if (iServuxSetting.comment().getString().contains(part))
-                    {
-                        continue;
-                    }
-                    if (iServuxSetting.dataProvider().getName().contains(part))
-                    {
-                        continue;
-                    }
-                    return false;
-                }
-                return true;
-            }).toList();
+                                           .flatMap(iDataProvider -> iDataProvider.getSettings().stream())
+                                           .filter(iServuxSetting ->
+                                                   {
+                                                       for (String part : searchParts)
+                                                       {
+                                                           if (iServuxSetting.name().contains(part))
+                                                           {
+                                                               continue;
+                                                           }
+                                                           if (iServuxSetting.comment().getString().contains(part))
+                                                           {
+                                                               continue;
+                                                           }
+                                                           if (iServuxSetting.dataProvider().getName().contains(part))
+                                                           {
+                                                               continue;
+                                                           }
+                                                           return false;
+                                                       }
+                                                       return true;
+                                                   }).toList();
     }
 
     private int configList(CommandContext<ServerCommandSource> ctx, List<IServuxSetting<?>> list)
@@ -173,27 +175,29 @@ public class ServuxCommand implements IServerCommand
         return list.size();
     }
 
-    private ArgumentBuilder<ServerCommandSource, ?> settingsNode() {
+    private ArgumentBuilder<ServerCommandSource, ?> settingsNode()
+    {
         var node = CommandManager.argument("setting", IdentifierArgumentType.identifier());
-        node.suggests((ctx, builder) -> {
-            if (builder.getRemainingLowerCase().contains(":"))
-            {
-                String providerName = builder.getRemaining().split(":")[0];
-                DataProviderManager.INSTANCE.getProviderByName(providerName).ifPresent(iDataProvider ->
-                    iDataProvider.getSettings().forEach(iServuxSetting ->
-                    {
-                        builder.suggest(providerName + ":" + iServuxSetting.name(), iServuxSetting.prettyName());
-                    }));
-            }
-            else
-            {
-                CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders().stream()
-                    .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList(), builder, IServuxSetting::name, IServuxSetting::prettyName);
+        node.suggests((ctx, builder) ->
+                      {
+                          if (builder.getRemainingLowerCase().contains(":"))
+                          {
+                              String providerName = builder.getRemaining().split(":")[0];
+                              DataProviderManager.INSTANCE.getProviderByName(providerName).ifPresent(iDataProvider ->
+                                                                                                             iDataProvider.getSettings().forEach(iServuxSetting ->
+                                                                                                                                                 {
+                                                                                                                                                     builder.suggest(providerName + ":" + iServuxSetting.name(), iServuxSetting.prettyName());
+                                                                                                                                                 }));
+                          }
+                          else
+                          {
+                              CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders().stream()
+                                                                                        .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList(), builder, IServuxSetting::name, IServuxSetting::prettyName);
 
-                CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider")));
-            }
-            return builder.buildFuture();
-        });
+                              CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider")));
+                          }
+                          return builder.buildFuture();
+                      });
         return node;
     }
 
@@ -280,18 +284,33 @@ public class ServuxCommand implements IServerCommand
         {
             throw StringUtils.translateError("servux.command.error.unknown_setting");
         }
-        String value = ctx.getArgument("value", String.class);
+        String value;
+        try
+        {
+            value = ctx.getArgument("value", String.class);
+        }
+        catch (Exception e)
+        {
+            // No argument given
+            value = setting.getDefaultValue().toString();
+        }
+        if (value == null || value.isEmpty())
+        {
+            // No argument given
+            value = setting.getDefaultValue().toString();
+        }
         if (!setting.validateString(value))
         {
             throw StringUtils.translateError("servux.command.error.invalid_value");
         }
-        setting.setValueFromString(value);
+        String finalValue = value;
+        setting.setValueFromString(finalValue);
         ctx.getSource().sendFeedback(() ->
             StringUtils.translate("servux.command.config.set_value",
                 setting.shortDisplayName().copy().styled(style -> style
                     .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))),
-                value),
-            true
+                                  finalValue),
+                                     true
         );
         return 1;
     }

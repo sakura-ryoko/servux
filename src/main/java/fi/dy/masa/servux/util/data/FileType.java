@@ -2,8 +2,12 @@ package fi.dy.masa.servux.util.data;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
 
-public enum FileType
+import net.minecraft.util.StringIdentifiable;
+
+public enum FileType implements StringIdentifiable
 {
     INVALID,
     UNKNOWN,
@@ -13,30 +17,33 @@ public enum FileType
     SPONGE_SCHEMATIC,
     VANILLA_STRUCTURE;
 
+    public static final StringIdentifiable.EnumCodec<FileType> CODEC = StringIdentifiable.createCodec(FileType::values);
+    public static final ImmutableList<@NotNull FileType> VALUES = ImmutableList.copyOf(values());
+
     public static FileType fromName(String fileName)
     {
         if (fileName.endsWith(".litematic"))
-            {
-                return LITEMATICA_SCHEMATIC;
-            }
-            else if (fileName.endsWith(".schematic"))
-            {
-                return SCHEMATICA_SCHEMATIC;
-            }
-            else if (fileName.endsWith(".nbt"))
-            {
-                return VANILLA_STRUCTURE;
-            }
-            else if (fileName.endsWith(".schem"))
-            {
-                return SPONGE_SCHEMATIC;
-            }
-            else if (fileName.endsWith(".json"))
-            {
-                return JSON;
-            }
+        {
+            return LITEMATICA_SCHEMATIC;
+        }
+        else if (fileName.endsWith(".schematic"))
+        {
+            return SCHEMATICA_SCHEMATIC;
+        }
+        else if (fileName.endsWith(".nbt"))
+        {
+            return VANILLA_STRUCTURE;
+        }
+        else if (fileName.endsWith(".schem"))
+        {
+            return SPONGE_SCHEMATIC;
+        }
+        else if (fileName.endsWith(".json"))
+        {
+            return JSON;
+        }
 
-            return UNKNOWN;
+        return UNKNOWN;
     }
 
     public static FileType fromFile(Path file)
@@ -51,17 +58,37 @@ public enum FileType
         }
     }
 
+    public static String getFileExt(FileType type)
+    {
+        return switch (type)
+        {
+            case LITEMATICA_SCHEMATIC -> ".litematic";
+            case SCHEMATICA_SCHEMATIC -> ".schematic";
+            case SPONGE_SCHEMATIC -> ".schem";
+            case VANILLA_STRUCTURE -> ".nbt";
+            case JSON -> ".json";
+            case INVALID -> ".invalid";
+            case UNKNOWN -> ".unknown";
+        };
+    }
+
     public static String getString(FileType type)
     {
         return switch (type)
         {
-            case LITEMATICA_SCHEMATIC   -> "litematic";
-            case SCHEMATICA_SCHEMATIC   -> "schematic";
-            case SPONGE_SCHEMATIC       -> "sponge";
-            case VANILLA_STRUCTURE      -> "vanilla_nbt";
-            case JSON                   -> "JSON";
-            case INVALID                -> "invalid";
-            case UNKNOWN                -> "unknown";
+            case LITEMATICA_SCHEMATIC -> "litematic";
+            case SCHEMATICA_SCHEMATIC -> "schematic";
+            case SPONGE_SCHEMATIC -> "sponge";
+            case VANILLA_STRUCTURE -> "vanilla_nbt";
+            case JSON -> "JSON";
+            case INVALID -> "invalid";
+            case UNKNOWN -> "unknown";
         };
+    }
+
+    @Override
+    public String asString()
+    {
+        return getString(this);
     }
 }
