@@ -11,11 +11,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.profiler.Profiler;
-
+import net.minecraft.util.profiling.ProfilerFiller;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.settings.IServuxSetting;
@@ -29,15 +29,15 @@ public class DataProviderManager
      * lower case name to data provider instances.
      */
     protected final HashMap<String, IDataProvider> providers = new HashMap<>();
-    protected ImmutableList<IDataProvider> providersImmutable = ImmutableList.of();
+    protected ImmutableList<@NotNull IDataProvider> providersImmutable = ImmutableList.of();
     protected ArrayList<IDataProvider> providersTicking = new ArrayList<>();
 
-    public ImmutableList<IDataProvider> getAllProviders()
+    public ImmutableList<@NotNull IDataProvider> getAllProviders()
     {
         return this.providersImmutable;
     }
     protected Path configDir = null;
-    protected DynamicRegistryManager.Immutable immutable = DynamicRegistryManager.EMPTY;
+    protected RegistryAccess.Frozen immutable = RegistryAccess.EMPTY;
 
     /**
      * Registers the given data provider, if it's not already registered
@@ -99,7 +99,7 @@ public class DataProviderManager
         return false;
     }
 
-    public void tickProviders(MinecraftServer server, int tickCounter, Profiler profiler)
+    public void tickProviders(MinecraftServer server, int tickCounter, ProfilerFiller profiler)
     {
         if (this.providersTicking.isEmpty() == false)
         {
@@ -133,12 +133,12 @@ public class DataProviderManager
         }
     }
 
-    public void onCaptureImmutable(@Nonnull DynamicRegistryManager.Immutable immutable)
+    public void onCaptureImmutable(@Nonnull RegistryAccess.Frozen immutable)
     {
         this.immutable = immutable;
     }
 
-    public DynamicRegistryManager.Immutable getRegistryManager()
+    public RegistryAccess.Frozen getRegistryManager()
     {
         return this.immutable;
     }

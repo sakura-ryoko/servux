@@ -2,13 +2,15 @@ package fi.dy.masa.servux.network.packet;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import io.netty.buffer.Unpooled;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtSizeTracker;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.NotNull;
+
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
 
@@ -18,8 +20,8 @@ public class ServuxTweaksPacket implements IServerPayloadData
     private int transactionId;
     private int entityId;
     private BlockPos pos;
-    private NbtCompound nbt;
-    private PacketByteBuf buffer;
+    private CompoundTag nbt;
+    private FriendlyByteBuf buffer;
     public static final int PROTOCOL_VERSION = 1;
 
     private ServuxTweaksPacket(Type type)
@@ -27,58 +29,58 @@ public class ServuxTweaksPacket implements IServerPayloadData
         this.packetType = type;
         this.transactionId = -1;
         this.entityId = -1;
-        this.pos = BlockPos.ORIGIN;
-        this.nbt = new NbtCompound();
+        this.pos = BlockPos.ZERO;
+        this.nbt = new CompoundTag();
         this.clearPacket();
     }
 
-    public static ServuxTweaksPacket MetadataRequest(@Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket MetadataRequest(@Nullable CompoundTag nbt)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_C2S_METADATA_REQUEST);
         if (nbt != null)
         {
-            packet.nbt.copyFrom(nbt);
+            packet.nbt.merge(nbt);
         }
         return packet;
     }
 
-    public static ServuxTweaksPacket MetadataResponse(@Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket MetadataResponse(@Nullable CompoundTag nbt)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_S2C_METADATA);
         if (nbt != null)
         {
-            packet.nbt.copyFrom(nbt);
+            packet.nbt.merge(nbt);
         }
         return packet;
     }
 
     // Entity simple response
-    public static ServuxTweaksPacket SimpleEntityResponse(int entityId, @Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket SimpleEntityResponse(int entityId, @Nullable CompoundTag nbt)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_S2C_ENTITY_NBT_RESPONSE_SIMPLE);
         if (nbt != null)
         {
-            packet.nbt.copyFrom(nbt);
+            packet.nbt.merge(nbt);
         }
         packet.entityId = entityId;
         return packet;
     }
 
-    public static ServuxTweaksPacket SimpleBlockResponse(BlockPos pos, @Nullable NbtCompound nbt)
+    public static ServuxTweaksPacket SimpleBlockResponse(BlockPos pos, @Nullable CompoundTag nbt)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_S2C_BLOCK_NBT_RESPONSE_SIMPLE);
         if (nbt != null)
         {
-            packet.nbt.copyFrom(nbt);
+            packet.nbt.merge(nbt);
         }
-        packet.pos = pos.toImmutable();
+        packet.pos = pos.immutable();
         return packet;
     }
 
     public static ServuxTweaksPacket BlockEntityRequest(BlockPos pos)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_C2S_BLOCK_ENTITY_REQUEST);
-        packet.pos = pos.toImmutable();
+        packet.pos = pos.immutable();
         return packet;
     }
 
@@ -90,33 +92,33 @@ public class ServuxTweaksPacket implements IServerPayloadData
     }
 
     // Nbt Packet, using Packet Splitter
-    public static ServuxTweaksPacket ResponseS2CStart(@Nonnull NbtCompound nbt)
+    public static ServuxTweaksPacket ResponseS2CStart(@Nonnull CompoundTag nbt)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_S2C_NBT_RESPONSE_START);
-        packet.nbt.copyFrom(nbt);
+        packet.nbt.merge(nbt);
         return packet;
     }
 
-    public static ServuxTweaksPacket ResponseS2CData(@Nonnull PacketByteBuf buffer)
+    public static ServuxTweaksPacket ResponseS2CData(@Nonnull FriendlyByteBuf buffer)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_S2C_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
-        packet.nbt = new NbtCompound();
+        packet.nbt = new CompoundTag();
         return packet;
     }
 
-    public static ServuxTweaksPacket ResponseC2SStart(@Nonnull NbtCompound nbt)
+    public static ServuxTweaksPacket ResponseC2SStart(@Nonnull CompoundTag nbt)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_C2S_NBT_RESPONSE_START);
-        packet.nbt.copyFrom(nbt);
+        packet.nbt.merge(nbt);
         return packet;
     }
 
-    public static ServuxTweaksPacket ResponseC2SData(@Nonnull PacketByteBuf buffer)
+    public static ServuxTweaksPacket ResponseC2SData(@Nonnull FriendlyByteBuf buffer)
     {
         var packet = new ServuxTweaksPacket(Type.PACKET_C2S_NBT_RESPONSE_DATA);
         packet.buffer = buffer;
-        packet.buffer = new PacketByteBuf(buffer.copy());
+        packet.buffer = new FriendlyByteBuf(buffer.copy());
         return packet;
     }
 
@@ -125,7 +127,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
         if (this.buffer != null)
         {
             this.buffer.clear();
-            this.buffer = new PacketByteBuf(Unpooled.buffer());
+            this.buffer = new FriendlyByteBuf(Unpooled.buffer());
         }
     }
 
@@ -148,7 +150,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
 
         if (this.nbt != null && !this.nbt.isEmpty())
         {
-            total += this.nbt.getSizeInBytes();
+            total += this.nbt.sizeInBytes();
         }
         if (this.buffer != null)
         {
@@ -177,12 +179,12 @@ public class ServuxTweaksPacket implements IServerPayloadData
 
     public BlockPos getPos() { return this.pos; }
 
-    public NbtCompound getCompound()
+    public CompoundTag getCompound()
     {
         return this.nbt;
     }
 
-    public PacketByteBuf getBuffer()
+    public FriendlyByteBuf getBuffer()
     {
         return this.buffer;
     }
@@ -198,7 +200,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
     }
 
     @Override
-    public void toPacket(PacketByteBuf output)
+    public void toPacket(FriendlyByteBuf output)
     {
         output.writeVarInt(this.packetType.get());
 
@@ -288,7 +290,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
     }
 
     @Nullable
-    public static ServuxTweaksPacket fromPacket(PacketByteBuf input)
+    public static ServuxTweaksPacket fromPacket(FriendlyByteBuf input)
     {
         int i = input.readVarInt();
         Type type = getType(i);
@@ -331,7 +333,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxTweaksPacket.SimpleBlockResponse(input.readBlockPos(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
+                    return ServuxTweaksPacket.SimpleBlockResponse(input.readBlockPos(), (CompoundTag) input.readNbt(NbtAccounter.unlimitedHeap()));
                 }
                 catch (Exception e)
                 {
@@ -342,7 +344,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
             {
                 try
                 {
-                    return ServuxTweaksPacket.SimpleEntityResponse(input.readVarInt(), (NbtCompound) input.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
+                    return ServuxTweaksPacket.SimpleEntityResponse(input.readVarInt(), (CompoundTag) input.readNbt(NbtAccounter.unlimitedHeap()));
                 }
                 catch (Exception e)
                 {
@@ -354,7 +356,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxTweaksPacket.ResponseS2CData(new PacketByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxTweaksPacket.ResponseS2CData(new FriendlyByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
@@ -366,7 +368,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
                 // Read Packet Buffer Slice
                 try
                 {
-                    return ServuxTweaksPacket.ResponseC2SData(new PacketByteBuf(input.readBytes(input.readableBytes())));
+                    return ServuxTweaksPacket.ResponseC2SData(new FriendlyByteBuf(input.readBytes(input.readableBytes())));
                 }
                 catch (Exception e)
                 {
@@ -408,12 +410,12 @@ public class ServuxTweaksPacket implements IServerPayloadData
     {
         if (this.nbt != null && !this.nbt.isEmpty())
         {
-            this.nbt = new NbtCompound();
+            this.nbt = new CompoundTag();
         }
         this.clearPacket();
         this.transactionId = -1;
         this.entityId = -1;
-        this.pos = BlockPos.ORIGIN;
+        this.pos = BlockPos.ZERO;
         this.packetType = null;
     }
 
@@ -456,23 +458,23 @@ public class ServuxTweaksPacket implements IServerPayloadData
         int get() { return this.type; }
     }
 
-    public record Payload(ServuxTweaksPacket data) implements CustomPayload
+    public record Payload(ServuxTweaksPacket data) implements CustomPacketPayload
     {
-        public static final Id<Payload> ID = new Id<>(ServuxTweaksHandler.CHANNEL_ID);
-        public static final PacketCodec<PacketByteBuf, Payload> CODEC = CustomPayload.codecOf(Payload::write, Payload::new);
+        public static final CustomPacketPayload.Type<@NotNull Payload> ID = new CustomPacketPayload.Type<>(ServuxTweaksHandler.CHANNEL_ID);
+        public static final StreamCodec<@NotNull FriendlyByteBuf, @NotNull Payload> CODEC = CustomPacketPayload.codec(Payload::write, Payload::new);
 
-        public Payload(PacketByteBuf input)
+        public Payload(FriendlyByteBuf input)
         {
             this(fromPacket(input));
         }
 
-        private void write(PacketByteBuf output)
+        private void write(FriendlyByteBuf output)
         {
             data.toPacket(output);
         }
 
         @Override
-        public Id<? extends CustomPayload> getId()
+        public CustomPacketPayload.@NotNull Type<? extends @NotNull CustomPacketPayload> type()
         {
             return ID;
         }

@@ -4,10 +4,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.UUID;
 import javax.annotation.Nullable;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.network.ServerPlayerEntity;
-
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
@@ -16,7 +14,7 @@ import fi.dy.masa.servux.util.data.FileType;
 public class SchematicBufferManager
 {
     private final HashMap<Long, SchematicBuffer> fileBuffers;
-    private final HashMap<Long, NbtCompound> optionalNbt;
+    private final HashMap<Long, CompoundTag> optionalNbt;
     private final HashMap<UUID, Long> playerMap;
 
     public SchematicBufferManager()
@@ -26,17 +24,17 @@ public class SchematicBufferManager
         this.playerMap = new HashMap<>();
     }
 
-    public void createBuffer(String name, final long sessionKey, ServerPlayerEntity player)
+    public void createBuffer(String name, final long sessionKey, ServerPlayer player)
     {
         this.createBuffer(name, FileType.LITEMATICA_SCHEMATIC, sessionKey, null, player);
     }
 
-    public void createBuffer(String name, final long sessionKey, @Nullable NbtCompound optional, ServerPlayerEntity player)
+    public void createBuffer(String name, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
     {
         this.createBuffer(name, FileType.LITEMATICA_SCHEMATIC, sessionKey, optional, player);
     }
 
-    public void createBuffer(String name, FileType type, final long sessionKey, @Nullable NbtCompound optional, ServerPlayerEntity player)
+    public void createBuffer(String name, FileType type, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
     {
         if (this.fileBuffers.containsKey(sessionKey) || this.optionalNbt.containsKey(sessionKey))
         {
@@ -52,7 +50,7 @@ public class SchematicBufferManager
             this.optionalNbt.put(sessionKey, optional.copy());
         }
 
-        this.playerMap.put(player.getUuid(), sessionKey);
+        this.playerMap.put(player.getUUID(), sessionKey);
     }
 
     private @Nullable SchematicBuffer getBuffer(final long sessionKey)
@@ -65,14 +63,14 @@ public class SchematicBufferManager
         return null;
     }
 
-    public NbtCompound getOptionalNbt(final long sessionKey)
+    public CompoundTag getOptionalNbt(final long sessionKey)
     {
         if (this.optionalNbt.containsKey(sessionKey))
         {
             return this.optionalNbt.get(sessionKey);
         }
 
-        return new NbtCompound();
+        return new CompoundTag();
     }
 
     public void receiveSlice(final long sessionKey, final int slice, byte[] dataIn, final int size)
@@ -101,9 +99,9 @@ public class SchematicBufferManager
         this.optionalNbt.remove(sessionKey);
     }
 
-    public void removePlayer(ServerPlayerEntity player)
+    public void removePlayer(ServerPlayer player)
     {
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
 
         if (this.playerMap.containsKey(uuid))
         {

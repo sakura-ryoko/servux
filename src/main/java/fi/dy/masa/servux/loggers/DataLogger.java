@@ -1,19 +1,20 @@
 package fi.dy.masa.servux.loggers;
 
 import com.google.common.collect.ImmutableList;
+import org.jetbrains.annotations.NotNull;
+
 import com.mojang.serialization.Codec;
-import net.minecraft.util.StringIdentifiable;
-
 import javax.annotation.Nullable;
+import net.minecraft.util.StringRepresentable;
 
-public enum DataLogger implements StringIdentifiable
+public enum DataLogger implements StringRepresentable
 {
     TPS             ("tps",             DataLoggerType.TPS, DataLoggerTPS.CODEC),
     MOB_CAPS        ("mob_caps",        DataLoggerType.MOB_CAPS, DataLoggerMobCaps.CODEC)
     ;
 
-    public static final EnumCodec<DataLogger> CODEC = StringIdentifiable.createCodec(DataLogger::values);
-    public static final ImmutableList<DataLogger> VALUES = ImmutableList.copyOf(values());
+    public static final EnumCodec<@NotNull DataLogger> CODEC = StringRepresentable.fromEnum(DataLogger::values);
+    public static final ImmutableList<@NotNull DataLogger> VALUES = ImmutableList.copyOf(values());
 
     private final String name;
     private final DataLoggerType<?> type;
@@ -27,7 +28,7 @@ public enum DataLogger implements StringIdentifiable
     }
 
     @Override
-    public String asString()
+    public @NotNull String getSerializedName()
     {
         return this.name;
     }

@@ -2,15 +2,15 @@ package fi.dy.masa.servux.schematic.container;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryEntryLookup;
-import net.minecraft.registry.RegistryKeys;
-
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 
 public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStatePalette
@@ -87,18 +87,18 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
     }
 
     @Override
-    public void readFromNBT(NbtList tagList)
+    public void readFromNBT(ListTag tagList)
     {
         //RegistryEntryLookup<Block> lookup = Registries.BLOCK.getReadOnlyWrapper();
-        RegistryEntryLookup<Block> lookup = DataProviderManager.INSTANCE.getRegistryManager().getOrThrow(RegistryKeys.BLOCK);
+        HolderGetter<@NotNull Block> lookup = DataProviderManager.INSTANCE.getRegistryManager().lookupOrThrow(Registries.BLOCK);
         // Ugly, but it should work, without changing the ILitematicaBlockStatePalette interface.
 
         final int size = tagList.size();
 
         for (int i = 0; i < size; ++i)
         {
-            NbtCompound tag = tagList.getCompoundOrEmpty(i);
-            BlockState state = NbtHelper.toBlockState(lookup, tag);
+            CompoundTag tag = tagList.getCompoundOrEmpty(i);
+            BlockState state = NbtUtils.readBlockState(lookup, tag);
 
             if (i > 0 || state != LitematicaBlockStateContainer.AIR_BLOCK_STATE)
             {
@@ -108,9 +108,9 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
     }
 
     @Override
-    public NbtList writeToNBT()
+    public ListTag writeToNBT()
     {
-        NbtList tagList = new NbtList();
+        ListTag tagList = new ListTag();
 
         for (int id = 0; id < this.currentSize; ++id)
         {
@@ -121,7 +121,7 @@ public class LitematicaBlockStatePaletteLinear implements ILitematicaBlockStateP
                 state = LitematicaBlockStateContainer.AIR_BLOCK_STATE;
             }
 
-            NbtCompound tag = NbtHelper.fromBlockState(state);
+            CompoundTag tag = NbtUtils.writeBlockState(state);
             tagList.add(tag);
         }
 

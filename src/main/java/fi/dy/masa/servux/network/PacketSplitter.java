@@ -1,19 +1,19 @@
 package fi.dy.masa.servux.network;
 
 import javax.annotation.Nullable;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import java.util.HashMap;
 import java.util.Map;
 import io.netty.buffer.Unpooled;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 
 /**
  * Network packet splitter code from QuickCarpet by skyrising
  * @author skyrising
- *
+ * -
  * Updated by Sakura to work with newer versions by changing the Reading Session keys,
  * and using the HANDLER interface to send packets via the Payload system
  */
@@ -28,12 +28,12 @@ public class PacketSplitter
 
     private static final Map<Long, ReadingSession> READING_SESSIONS = new HashMap<>();
 
-    public static <T extends CustomPayload> boolean send(IPluginServerPlayHandler<T> handler, PacketByteBuf packet, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler)
+    public static <T extends CustomPacketPayload> boolean send(IPluginServerPlayHandler<T> handler, FriendlyByteBuf packet, ServerPlayer player, ServerGamePacketListenerImpl networkHandler)
     {
         return send(handler, packet, MAX_PAYLOAD_PER_PACKET_S2C, player, networkHandler);
     }
 
-    private static <T extends CustomPayload> boolean send(IPluginServerPlayHandler<T> handler, PacketByteBuf packet, int payloadLimit, ServerPlayerEntity player, ServerPlayNetworkHandler networkHandler)
+    private static <T extends CustomPacketPayload> boolean send(IPluginServerPlayHandler<T> handler, FriendlyByteBuf packet, int payloadLimit, ServerPlayer player, ServerGamePacketListenerImpl networkHandler)
     {
         int len = packet.writerIndex();
 
@@ -42,7 +42,7 @@ public class PacketSplitter
         for (int offset = 0; offset < len; offset += payloadLimit)
         {
             int thisLen = Math.min(len - offset, payloadLimit);
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer(thisLen));
+            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer(thisLen));
 
             buf.resetWriterIndex();
 
@@ -60,18 +60,18 @@ public class PacketSplitter
         return true;
     }
 
-    public static <T extends CustomPayload> PacketByteBuf receive(IPluginServerPlayHandler<T> handler,
+    public static <T extends CustomPacketPayload> FriendlyByteBuf receive(IPluginServerPlayHandler<T> handler,
                                                          long key,
-                                                         PacketByteBuf buf)
+                                                         FriendlyByteBuf buf)
     {
         // this size needed to be bumped larger for Litematics
         return receive(handler.getPayloadChannel(), key, buf, DEFAULT_MAX_RECEIVE_SIZE_S2C);
     }
 
     @Nullable
-    private static PacketByteBuf receive(Identifier channel,
+    private static FriendlyByteBuf receive(Identifier channel,
                                          long key,
-                                         PacketByteBuf buf,
+                                         FriendlyByteBuf buf,
                                          int maxLength)
     {
         return READING_SESSIONS.computeIfAbsent(key, ReadingSession::new).receive(buf, maxLength);
@@ -113,7 +113,7 @@ public class PacketSplitter
     {
         private final long key;
         private int expectedSize = -1;
-        private PacketByteBuf received;
+        private FriendlyByteBuf received;
 
         private ReadingSession(long key)
         {
@@ -121,7 +121,7 @@ public class PacketSplitter
         }
 
         @Nullable
-        private PacketByteBuf receive(PacketByteBuf data, int maxLength)
+        private FriendlyByteBuf receive(FriendlyByteBuf data, int maxLength)
         {
             data.readerIndex(0);
             //data = PacketUtils.slice(data);
@@ -135,7 +135,7 @@ public class PacketSplitter
                     throw new IllegalArgumentException("Payload too large");
                 }
 
-                this.received = new PacketByteBuf(Unpooled.buffer(this.expectedSize));
+                this.received = new FriendlyByteBuf(Unpooled.buffer(this.expectedSize));
             }
 
             if (this.received == null)

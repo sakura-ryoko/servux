@@ -1,15 +1,15 @@
 package fi.dy.masa.servux.event;
 
 import javax.annotation.Nullable;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.NameAndId;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.jetbrains.annotations.ApiStatus;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.server.PlayerConfigEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
 import fi.dy.masa.servux.interfaces.IPlayerManager;
 
@@ -35,7 +35,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onClientConnect(SocketAddress addr, PlayerConfigEntry profile, @Nullable Text result)
+    public void onClientConnect(SocketAddress addr, NameAndId profile, @Nullable Component result)
     {
         if (!this.handlers.isEmpty())
         {
@@ -47,7 +47,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
+    public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayer player)
     {
         if (!this.handlers.isEmpty())
         {
@@ -59,7 +59,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerRespawn(ServerPlayerEntity newPlayer, ServerPlayerEntity oldPlayer)
+    public void onPlayerRespawn(ServerPlayer newPlayer, ServerPlayer oldPlayer)
     {
         if (!this.handlers.isEmpty())
         {
@@ -71,7 +71,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerOp(PlayerConfigEntry profile, UUID uuid, @Nullable ServerPlayerEntity player)
+    public void onPlayerOp(NameAndId profile, UUID uuid, @Nullable ServerPlayer player)
     {
         if (!this.handlers.isEmpty())
         {
@@ -83,7 +83,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerDeOp(PlayerConfigEntry profile, UUID uuid, @Nullable ServerPlayerEntity player)
+    public void onPlayerDeOp(NameAndId profile, UUID uuid, @Nullable ServerPlayer player)
     {
         if (!this.handlers.isEmpty())
         {
@@ -95,7 +95,7 @@ public class PlayerHandler implements IPlayerManager
     }
 
     @ApiStatus.Internal
-    public void onPlayerLeave(ServerPlayerEntity player)
+    public void onPlayerLeave(ServerPlayer player)
     {
         if (!this.handlers.isEmpty())
         {

@@ -4,17 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.command.DefaultPermissions;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -30,7 +27,7 @@ public class EntitiesDataProvider extends DataProviderBase
 {
     public static final EntitiesDataProvider INSTANCE = new EntitiesDataProvider();
     private final static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> HANDLER = ServuxEntitiesHandler.getInstance();
-	private final NbtCompound metadata = new NbtCompound();
+	private final CompoundTag metadata = new CompoundTag();
 	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
 	private final ServuxBoolSetting nbtQueryOverride = new ServuxBoolSetting(this, "nbt_query_override", false);
 	private final ServuxIntSetting nbtQueryPermissionLevel = new ServuxIntSetting(this, "nbt_query_permission_level", 2, 4, 0);
@@ -100,28 +97,28 @@ public class EntitiesDataProvider extends DataProviderBase
     }
 
     @Override
-    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    public boolean isPlayerRegistered(ServerPlayer player)
     {
         return !this.isPlayerInvalid(player);
     }
 
-    public void sendMetadata(ServerPlayerEntity player)
+    public void sendMetadata(ServerPlayer player)
     {
         if (!this.isEnabled()) return;
 
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.debugLog("entity_data: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("entity_data: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
             return;
         }
 
-        Servux.debugLog("entityDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        Servux.debugLog("entityDataChannel: sendMetadata to player {}", player.getName().tryCollapseToString());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
-        if (player.networkHandler != null)
+        if (player.connection != null)
         {
-            HANDLER.sendPlayPayload(player.networkHandler, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
+            HANDLER.sendPlayPayload(player.connection, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.MetadataResponse(this.metadata)));
         }
         else
         {
@@ -129,35 +126,35 @@ public class EntitiesDataProvider extends DataProviderBase
         }
     }
 
-    public void onPacketFailure(ServerPlayerEntity player)
+    public void onPacketFailure(ServerPlayer player)
     {
         this.setPlayerInvalid(player);
     }
 
-    public void removePlayer(ServerPlayerEntity player)
+    public void removePlayer(ServerPlayer player)
     {
         this.removeInvalidPlayer(player);
     }
 
-    private void setPlayerInvalid(ServerPlayerEntity player)
+    private void setPlayerInvalid(ServerPlayer player)
     {
-        if (!this.invalidPlayers.contains(player.getUuid()))
+        if (!this.invalidPlayers.contains(player.getUUID()))
         {
-            this.invalidPlayers.add(player.getUuid());
+            this.invalidPlayers.add(player.getUUID());
         }
     }
 
-    private boolean isPlayerInvalid(ServerPlayerEntity player)
+    private boolean isPlayerInvalid(ServerPlayer player)
     {
-        return this.invalidPlayers.contains(player.getUuid());
+        return this.invalidPlayers.contains(player.getUUID());
     }
 
-    private void removeInvalidPlayer(ServerPlayerEntity player)
+    private void removeInvalidPlayer(ServerPlayer player)
     {
-        this.invalidPlayers.remove(player.getUuid());
+        this.invalidPlayers.remove(player.getUUID());
     }
 
-    public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
+    public void onBlockEntityRequest(ServerPlayer player, BlockPos pos)
     {
         if (!this.hasPermission(player) || !this.isEnabled())
         {
@@ -166,12 +163,12 @@ public class EntitiesDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
-        NbtCompound nbt = be != null ? be.createNbtWithIdentifyingData(player.getRegistryManager()) : new NbtCompound();
+        BlockEntity be = player.level().getBlockEntity(pos);
+        CompoundTag nbt = be != null ? be.saveWithFullMetadata(player.registryAccess()) : new CompoundTag();
         HANDLER.encodeServerData(player, ServuxEntitiesPacket.SimpleBlockResponse(pos, nbt));
     }
 
-    public void onEntityRequest(ServerPlayerEntity player, int entityId)
+    public void onEntityRequest(ServerPlayer player, int entityId)
     {
         if (!this.hasPermission(player) || !this.isEnabled())
         {
@@ -179,15 +176,15 @@ public class EntitiesDataProvider extends DataProviderBase
         }
 
         //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
-        Entity entity = player.getEntityWorld().getEntityById(entityId);
+        Entity entity = player.level().getEntity(entityId);
 
         if (entity != null)
         {
-            NbtView view = NbtView.getWriter(player.getEntityWorld().getRegistryManager());
-            Identifier id = EntityType.getId(entity.getType());
+            NbtView view = NbtView.getWriter(player.level().registryAccess());
+            Identifier id = EntityType.getKey(entity.getType());
 
-            entity.writeData(view.getWriter());
-            NbtCompound nbt = view.readNbt();
+            entity.saveWithoutId(view.getWriter());
+            CompoundTag nbt = view.readNbt();
 
             if (nbt != null && id != null)
             {
@@ -196,12 +193,12 @@ public class EntitiesDataProvider extends DataProviderBase
 					if (!this.hasPlayerInventoryPermission(player))
 					{
 						nbt.remove("Inventory");
-						nbt.put("Inventory", new NbtList());
+						nbt.put("Inventory", new ListTag());
 					}
 					if (!this.hasPlayerEnderItemsPermission(player))
 					{
 						nbt.remove("EnderItems");
-						nbt.put("EnderItems", new NbtList());
+						nbt.put("EnderItems", new ListTag());
 					}
 				}
 
@@ -238,14 +235,14 @@ public class EntitiesDataProvider extends DataProviderBase
 	 * @param player ()
 	 * @return ()
 	 */
-    public boolean hasNbtQueryPermission(ServerPlayerEntity player)
+    public boolean hasNbtQueryPermission(ServerPlayer player)
     {
         if (this.nbtQueryOverride.getValue())
         {
             return Permissions.check(player, this.permNode+".nbt_query_override", this.nbtQueryPermissionLevel.getValue());
         }
 
-        return player.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS);
+        return player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
     }
 
 	public boolean hasNbtAllowPlayerInventory()
@@ -258,7 +255,7 @@ public class EntitiesDataProvider extends DataProviderBase
 	 * @param player ()
 	 * @return ()
 	 */
-	public boolean hasPlayerInventoryPermission(ServerPlayerEntity player)
+	public boolean hasPlayerInventoryPermission(ServerPlayer player)
 	{
 		if (this.hasNbtAllowPlayerInventory())
 		{
@@ -273,7 +270,7 @@ public class EntitiesDataProvider extends DataProviderBase
 		return this.nbtAllowPlayerEnderItems.getValue();
 	}
 
-	public boolean hasPlayerEnderItemsPermission(ServerPlayerEntity player)
+	public boolean hasPlayerEnderItemsPermission(ServerPlayer player)
 	{
 		if (this.hasNbtAllowPlayerEnderItems())
 		{
@@ -284,7 +281,7 @@ public class EntitiesDataProvider extends DataProviderBase
 	}
 
 	@Override
-    public boolean hasPermission(ServerPlayerEntity player)
+    public boolean hasPermission(ServerPlayer player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }

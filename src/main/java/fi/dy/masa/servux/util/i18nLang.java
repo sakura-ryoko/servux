@@ -7,15 +7,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.NotNull;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -41,7 +41,7 @@ public class i18nLang
 
     public static i18nLang create(String languageCode, String path) throws IOException
     {
-        ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+        ImmutableMap.Builder<@NotNull String, @NotNull String> builder = ImmutableMap.builder();
         BiConsumer<String, String> biConsumer = builder::put;
         load(biConsumer, path);
         final Map<String, String> map = builder.build();
@@ -123,18 +123,17 @@ public class i18nLang
         return map.get(key);
     }
 
-    public MutableText translate(String key, Object... args)
+    public MutableComponent translate(String key, Object... args)
     {
         if (hasTranslation(key))
         {
-            return Text.translatableWithFallback(key, get(key), args);
+            return Component.translatableWithFallback(key, get(key), args);
         }
         else
         {
-            return Text.literal(key).styled((style) ->
-                                                    style.withColor(Formatting.RED)
-                                                     //.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.of("Missing translation: "+key))));
-                                                     .withHoverEvent(new HoverEvent.ShowText(Text.of("Missing translation: "+key))));
+            return Component.literal(key).withStyle((style) ->
+                                                    style.withColor(ChatFormatting.RED)
+                                                     .withHoverEvent(new HoverEvent.ShowText(Component.nullToEmpty("Missing translation: "+key))));
         }
     }
 
@@ -142,4 +141,9 @@ public class i18nLang
     {
         return map.containsKey(key);
     }
+
+	public String getLanguageCode()
+	{
+		return this.languageCode;
+	}
 }

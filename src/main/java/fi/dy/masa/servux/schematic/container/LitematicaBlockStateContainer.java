@@ -1,18 +1,17 @@
 package fi.dy.masa.servux.schematic.container;
 
 import io.netty.buffer.Unpooled;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class LitematicaBlockStateContainer implements ILitematicaBlockStatePaletteResizer
 {
-    public static final BlockState AIR_BLOCK_STATE = Blocks.AIR.getDefaultState();
+    public static final BlockState AIR_BLOCK_STATE = Blocks.AIR.defaultBlockState();
     protected LitematicaBitArray storage;
     protected ILitematicaBlockStatePalette palette;
     protected final Vec3i size;
@@ -145,7 +144,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
         return this.palette;
     }
 
-    public static LitematicaBlockStateContainer createFrom(NbtList palette, long[] blockStates, BlockPos size)
+    public static LitematicaBlockStateContainer createFrom(ListTag palette, long[] blockStates, BlockPos size)
     {
         int bits = Math.max(2, Integer.SIZE - Integer.numberOfLeadingZeros(palette.size() - 1));
         LitematicaBlockStateContainer container = new LitematicaBlockStateContainer(size.getX(), size.getY(), size.getZ(), bits, blockStates);
@@ -168,7 +167,7 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
     {
         int volume = size.getX() * size.getY() * size.getZ();
         LitematicaBitArray bitArray = new LitematicaBitArray(bits, volume);
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.wrappedBuffer(blockStates));
+        FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.wrappedBuffer(blockStates));
         long[] blockCounts = new long[1 << bits];
 
         for (int i = 0; i < volume; ++i)

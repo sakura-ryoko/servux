@@ -3,19 +3,18 @@ package fi.dy.masa.servux.settings;
 import com.google.gson.JsonElement;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 
 public interface IServuxSetting<T>
 {
     String name();
 
-    Text prettyName();
+    Component prettyName();
 
-    Text comment();
+    Component comment();
 
     List<String> examples();
 
@@ -46,15 +45,15 @@ public interface IServuxSetting<T>
 
     JsonElement writeToJson();
 
-    default Text shortDisplayName()
+    default Component shortDisplayName()
     {
-        return prettyName().copy().styled(style ->
+        return prettyName().copy().withStyle(style ->
                                                   //style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, comment().copy()
                                                   //.append(Text.literal("\n(%s)".formatted(qualifiedName())).formatted(Formatting.DARK_GRAY))))
                                                   style.withHoverEvent(new HoverEvent.ShowText(comment().copy()
-                                                                                                        .append(Text.literal("\n(%s)".formatted(qualifiedName()))
-                                                                                                                    .formatted(Formatting.DARK_GRAY))))
-                                                       .withColor(Formatting.YELLOW)
+                                                                                                        .append(Component.literal("\n(%s)".formatted(qualifiedName()))
+                                                                                                                    .withStyle(ChatFormatting.DARK_GRAY))))
+                                                       .withColor(ChatFormatting.YELLOW)
                                          );
     }
 

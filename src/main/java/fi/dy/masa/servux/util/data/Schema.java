@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.StringRepresentable;
 import com.google.common.collect.ImmutableList;
 import io.netty.buffer.ByteBuf;
-
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.util.StringIdentifiable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A Utility Table of Minecraft Data Versions and their respective Version strings.
@@ -17,7 +17,7 @@ import net.minecraft.util.StringIdentifiable;
  * NOTE:  Not all Snapshots are listed here, but this serves as a guidepost to return
  * the "closest" version String based on a given DataVersion within reasonable accuracy.
  */
-public enum Schema implements StringIdentifiable
+public enum Schema implements StringRepresentable
 {
     // TODO --> Add Schema Versions to this as versions get released
     // Minecraft Data Versions
@@ -139,22 +139,22 @@ public enum Schema implements StringIdentifiable
     SCHEMA_1_09_00 (169,  "1.9"),
     SCHEMA_15W32A  (100,  "15w32a");
 
-    public static final EnumCodec<Schema> CODEC = StringIdentifiable.createCodec(Schema::sorted);
-    public static final PacketCodec<ByteBuf, Schema> PACKET_CODEC = new PacketCodec<>()
+    public static final EnumCodec<@NotNull Schema> CODEC = StringRepresentable.fromEnum(Schema::sorted);
+    public static final StreamCodec<@NotNull ByteBuf, @NotNull Schema> PACKET_CODEC = new StreamCodec<>()
     {
         @Override
         public void encode(ByteBuf buf, Schema value)
         {
-            PacketCodecs.INTEGER.encode(buf, value.schemaId);
+            ByteBufCodecs.INT.encode(buf, value.schemaId);
         }
 
         @Override
         public Schema decode(ByteBuf buf)
         {
-            return Schema.getSchemaByDataVersion(PacketCodecs.INTEGER.decode(buf));
+            return Schema.getSchemaByDataVersion(ByteBufCodecs.INT.decode(buf));
         }
     };
-    public static final ImmutableList<Schema> VALUES = ImmutableList.copyOf(values());
+    public static final ImmutableList<@NotNull Schema> VALUES = ImmutableList.copyOf(values());
 
     private final int schemaId;
     private final String str;
@@ -218,7 +218,7 @@ public enum Schema implements StringIdentifiable
     }
 
     @Override
-    public String asString()
+    public @NotNull String getSerializedName()
     {
         return this.str;
     }

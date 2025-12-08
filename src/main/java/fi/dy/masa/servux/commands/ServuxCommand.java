@@ -2,24 +2,22 @@ package fi.dy.masa.servux.commands;
 
 import java.util.*;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.CommandSource;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
@@ -33,27 +31,27 @@ public class ServuxCommand implements IServerCommand
     public static final ServuxCommand INSTANCE = new ServuxCommand();
 
     @Override
-    public void register(CommandDispatcher<ServerCommandSource> dispatcher,
-                         CommandRegistryAccess registryAccess,
-                         CommandManager.RegistrationEnvironment environment)
+    public void register(CommandDispatcher<CommandSourceStack> dispatcher,
+                         CommandBuildContext registryAccess,
+                         Commands.CommandSelection environment)
     {
-        dispatcher.register(CommandManager
+        dispatcher.register(Commands
                                     .literal(Reference.MOD_ID).requires(Permissions.require(Reference.MOD_ID + ".commands", 4))
-                                    .then(CommandManager.literal("reload").requires(Permissions.require(Reference.MOD_ID + ".commands.reload", 4))
+                                    .then(Commands.literal("reload").requires(Permissions.require(Reference.MOD_ID + ".commands.reload", 4))
                                                         .executes((ctx) ->
                                                                   {
                                                                       ServuxConfigProvider.INSTANCE.doReloadConfig(ctx.getSource());
                                                                       return 1;
                                                                   }))
-                                    .then(CommandManager.literal("save").requires(Permissions.require(Reference.MOD_ID + ".commands.save", 4))
+                                    .then(Commands.literal("save").requires(Permissions.require(Reference.MOD_ID + ".commands.save", 4))
                                                         .executes((ctx) ->
                                                                   {
                                                                       ServuxConfigProvider.INSTANCE.doSaveConfig(ctx.getSource());
                                                                       return 1;
                                                                   }))
-                                    .then(CommandManager.literal("set")
+                                    .then(Commands.literal("set")
                                                         .requires(Permissions.require(Reference.MOD_ID + ".commands.set", 4))
-                                                        .then(settingsNode().then(CommandManager.argument("value", StringArgumentType.greedyString())
+                                                        .then(settingsNode().then(Commands.argument("value", StringArgumentType.greedyString())
                                                                                                 .suggests((ctx, builder) ->
                                                                                                           {
                                                                                                               Identifier settingId = ctx.getArgument("setting", Identifier.class);
@@ -61,20 +59,20 @@ public class ServuxCommand implements IServerCommand
                                                                                                               var setting = DataProviderManager.INSTANCE.getSettingByName(settingName);
                                                                                                               if (setting != null)
                                                                                                               {
-                                                                                                                  return CommandSource.suggestMatching(setting.examples(), builder);
+                                                                                                                  return SharedSuggestionProvider.suggest(setting.examples(), builder);
                                                                                                               }
                                                                                                               return builder.buildFuture();
                                                                                                           })
                                                                                                 .executes(ServuxCommand::configModify))))
-                                    .then(CommandManager.literal("info")
+                                    .then(Commands.literal("info")
                                                         .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
                                                         .then(settingsNode().executes(ServuxCommand::configInfo)))
-                                    .then(CommandManager.literal("list")
+                                    .then(Commands.literal("list")
                                                         .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
                                                         .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getAllProviders().stream()
                                                                                                                      .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList()))
-                                                        .then(CommandManager.argument("provider", StringArgumentType.string())
-                                                                            .suggests((ctx, builder) -> CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider"))))
+                                                        .then(Commands.argument("provider", StringArgumentType.string())
+                                                                            .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Component.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider"))))
                                                                             .executes(ctx ->
                                                                                       {
                                                                                           String provider = StringArgumentType.getString(ctx, "provider");
@@ -83,31 +81,31 @@ public class ServuxCommand implements IServerCommand
                                                                                           {
                                                                                               throw StringUtils.translateError("servux.command.error.unknown_data_provider");
                                                                                           }
-                                                                                          ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.config.list.data_provider", provider), false);
+                                                                                          ctx.getSource().sendSuccess(() -> StringUtils.translate("servux.command.config.list.data_provider", provider), false);
                                                                                           return configList(ctx, dataProvider.get().getSettings());
                                                                                       })))
-                                    .then(CommandManager.literal("search")
+                                    .then(Commands.literal("search")
                                                         .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
-                                                        .then(CommandManager.argument("query", StringArgumentType.greedyString())
+                                                        .then(Commands.argument("query", StringArgumentType.greedyString())
                                                                             .executes(ctx ->
                                                                                       {
                                                                                           String query = StringArgumentType.getString(ctx, "query");
                                                                                           var settings = configSearch(ctx, query);
                                                                                           if (settings.isEmpty())
                                                                                           {
-                                                                                              ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.none", query), false);
+                                                                                              ctx.getSource().sendSuccess(() -> StringUtils.translate("servux.command.search.none", query), false);
                                                                                               return 0;
                                                                                           }
                                                                                           else
                                                                                           {
-                                                                                              ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.search.results", settings.size(), query), false);
+                                                                                              ctx.getSource().sendSuccess(() -> StringUtils.translate("servux.command.search.results", settings.size(), query), false);
                                                                                               return configList(ctx, settings);
                                                                                           }
                                                                                       })))
         );
     }
 
-    private List<IServuxSetting<?>> configSearch(CommandContext<ServerCommandSource> ctx, String query)
+    private List<IServuxSetting<?>> configSearch(CommandContext<CommandSourceStack> ctx, String query)
     {
         String[] searchParts = query.split(" ");
         return DataProviderManager.INSTANCE.getAllProviders().stream()
@@ -134,11 +132,11 @@ public class ServuxCommand implements IServerCommand
                                                    }).toList();
     }
 
-    private int configList(CommandContext<ServerCommandSource> ctx, List<IServuxSetting<?>> list)
+    private int configList(CommandContext<CommandSourceStack> ctx, List<IServuxSetting<?>> list)
     {
         if (list.isEmpty())
         {
-            ctx.getSource().sendFeedback(() -> StringUtils.translate("servux.command.error.no_settings"), false);
+            ctx.getSource().sendSuccess(() -> StringUtils.translate("servux.command.error.no_settings"), false);
             return 0;
         }
 
@@ -154,15 +152,15 @@ public class ServuxCommand implements IServerCommand
 
         for (IServuxSetting<?> setting : list)
         {
-            ctx.getSource().sendFeedback(() ->
+            ctx.getSource().sendSuccess(() ->
                                          {
-                                             MutableText text = Text.empty();
-                                             text.append(setting.shortDisplayName().copy().styled(style -> style
+                                             MutableComponent text = Component.empty();
+                                             text.append(setting.shortDisplayName().copy().withStyle(style -> style
                                                      .withBold(true)
                                                      .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))));
                                              if (appearedMultiTimes.contains(setting.name()))
                                              {
-                                                 text.append(Text.literal(" (").append(Text.of(setting.dataProvider().getName())).append(")").formatted(Formatting.GRAY));
+                                                 text.append(Component.literal(" (").append(Component.nullToEmpty(setting.dataProvider().getName())).append(")").withStyle(ChatFormatting.GRAY));
                                              }
                                              String value = setting.valueToString(setting.getValue());
                                              if (value.length() < 10)
@@ -175,9 +173,9 @@ public class ServuxCommand implements IServerCommand
         return list.size();
     }
 
-    private ArgumentBuilder<ServerCommandSource, ?> settingsNode()
+    private ArgumentBuilder<CommandSourceStack, ?> settingsNode()
     {
-        var node = CommandManager.argument("setting", IdentifierArgumentType.identifier());
+        var node = Commands.argument("setting", IdentifierArgument.id());
         node.suggests((ctx, builder) ->
                       {
                           if (builder.getRemainingLowerCase().contains(":"))
@@ -185,23 +183,22 @@ public class ServuxCommand implements IServerCommand
                               String providerName = builder.getRemaining().split(":")[0];
                               DataProviderManager.INSTANCE.getProviderByName(providerName).ifPresent(iDataProvider ->
                                                                                                              iDataProvider.getSettings().forEach(iServuxSetting ->
-                                                                                                                                                 {
-                                                                                                                                                     builder.suggest(providerName + ":" + iServuxSetting.name(), iServuxSetting.prettyName());
-                                                                                                                                                 }));
+		                                                                                                                                                 builder.suggest(providerName + ":" + iServuxSetting.name(), iServuxSetting.prettyName()))
+                              );
                           }
                           else
                           {
-                              CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders().stream()
+                              SharedSuggestionProvider.suggest(DataProviderManager.INSTANCE.getAllProviders().stream()
                                                                                         .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList(), builder, IServuxSetting::name, IServuxSetting::prettyName);
 
-                              CommandSource.suggestMatching(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Text.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider")));
+                              SharedSuggestionProvider.suggest(DataProviderManager.INSTANCE.getAllProviders(), builder, IDataProvider::getName, iDataProvider -> Component.literal(iDataProvider.getDescription()).append(StringUtils.translate("servux.suffix.data_provider")));
                           }
                           return builder.buildFuture();
                       });
         return node;
     }
 
-    private static int configInfo(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException
+    private static int configInfo(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException
     {
         Identifier settingId = ctx.getArgument("setting", Identifier.class);
         String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
@@ -211,38 +208,38 @@ public class ServuxCommand implements IServerCommand
             throw StringUtils.translateError("servux.command.error.unknown_setting");
         }
 
-        ctx.getSource().sendFeedback(Text::empty, false);
-        ctx.getSource().sendFeedback(() ->
+        ctx.getSource().sendSuccess(Component::empty, false);
+        ctx.getSource().sendSuccess(() ->
                                      {
-                                         MutableText text = Text.empty();
-                                         text.append(setting.prettyName().copy().styled(style ->
-                                                                                                style.withColor(Formatting.YELLOW).withBold(true)));
+                                         MutableComponent text = Component.empty();
+                                         text.append(setting.prettyName().copy().withStyle(style ->
+                                                                                                style.withColor(ChatFormatting.YELLOW).withBold(true)));
                                          text.append(" (");
-                                         text.append(Text.literal(setting.qualifiedName()).styled(style ->
-                                                                                                          style.withColor(Formatting.GRAY)
+                                         text.append(Component.literal(setting.qualifiedName()).withStyle(style ->
+                                                                                                          style.withColor(ChatFormatting.GRAY)
                                                                                                                .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_copy")))
                                                                                                                .withClickEvent(new ClickEvent.CopyToClipboard(setting.qualifiedName()))
                                          ));
                                          text.append(")");
                                          return text;
                                      }, false);
-        ctx.getSource().sendFeedback(() -> setting.comment().copy().formatted(Formatting.GRAY), false);
-        ctx.getSource().sendFeedback(() ->
+        ctx.getSource().sendSuccess(() -> setting.comment().copy().withStyle(ChatFormatting.GRAY), false);
+        ctx.getSource().sendSuccess(() ->
                                      {
-                                         MutableText text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).styled(style -> style
+                                         MutableComponent text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).withStyle(style -> style
                                                  .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
                                                  .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " "))
                                          ).append(" ");
                                          if (Objects.equals(setting.getDefaultValue(), setting.getValue()))
                                          {
-                                             text.append(StringUtils.translate("servux.command.suffix.default_value").formatted(Formatting.GRAY));
+                                             text.append(StringUtils.translate("servux.command.suffix.default_value").withStyle(ChatFormatting.GRAY));
                                          }
                                          else
                                          {
-                                             text.append(StringUtils.translate("servux.command.suffix.modified").formatted(Formatting.GREEN));
+                                             text.append(StringUtils.translate("servux.command.suffix.modified").withStyle(ChatFormatting.GREEN));
                                              text.append(" ");
-                                             text.append(StringUtils.translate("servux.command.info.reset").formatted(Formatting.GRAY)
-                                                                    .styled(style -> style
+                                             text.append(StringUtils.translate("servux.command.info.reset").withStyle(ChatFormatting.GRAY)
+                                                                    .withStyle(style -> style
                                                                             .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " " + setting.valueToString(setting.getDefaultValue())))
                                                                             .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_reset_to", setting.valueToString(setting.getDefaultValue()))))
                                                                     ));
@@ -251,18 +248,18 @@ public class ServuxCommand implements IServerCommand
                                      }, false);
         if (!setting.examples().isEmpty())
         {
-            MutableText text = StringUtils.translate("servux.command.info.examples");
+            MutableComponent text = StringUtils.translate("servux.command.info.examples");
             setting.examples().forEach(example ->
                                        {
-                                           MutableText optionText = Text.literal(example).styled(style ->
+                                           MutableComponent optionText = Component.literal(example).withStyle(style ->
                                                                                                  {
                                                                                                      if (example.equals(setting.valueToString(setting.getValue())))
                                                                                                      {
-                                                                                                         style = style.withColor(Formatting.GREEN);
+                                                                                                         style = style.withColor(ChatFormatting.GREEN);
                                                                                                      }
                                                                                                      else
                                                                                                      {
-                                                                                                         style = style.withColor(Formatting.GRAY);
+                                                                                                         style = style.withColor(ChatFormatting.GRAY);
                                                                                                      }
                                                                                                      return style
                                                                                                              .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " " + example))
@@ -270,13 +267,13 @@ public class ServuxCommand implements IServerCommand
                                                                                                  });
                                            text.append(optionText).append(" ");
                                        });
-            ctx.getSource().sendFeedback(() -> text, false);
+            ctx.getSource().sendSuccess(() -> text, false);
         }
 
         return 1;
     }
 
-    private static int configModify(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException
+    private static int configModify(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException
     {
         Identifier settingId = ctx.getArgument("setting", Identifier.class);
         String settingName = StringUtils.removeDefaultMinecraftNamespace(settingId);
@@ -306,9 +303,9 @@ public class ServuxCommand implements IServerCommand
         }
         String finalValue = value;
         setting.setValueFromString(finalValue);
-        ctx.getSource().sendFeedback(() ->
+        ctx.getSource().sendSuccess(() ->
                                              StringUtils.translate("servux.command.config.set_value",
-                                                                   setting.shortDisplayName().copy().styled(style -> style
+                                                                   setting.shortDisplayName().copy().withStyle(style -> style
                                                                            .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))),
                                                                    finalValue),
                                      true

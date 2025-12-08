@@ -3,28 +3,27 @@ package fi.dy.masa.servux.settings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
-import net.minecraft.text.Text;
-
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class ServuxStringListSetting extends ServuxListSetting<String>
 {
-    public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue, List<String> examples, IServuxSettingCallback<List<String>> callback)
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, List<String> defaultValue, List<String> examples, IServuxSettingCallback<List<String>> callback)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples, callback);
     }
 
-    public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue, List<String> examples)
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, List<String> defaultValue, List<String> examples)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples);
     }
 
-    public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue, IServuxSettingCallback<List<String>> callback)
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, List<String> defaultValue, IServuxSettingCallback<List<String>> callback)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, List.of(), callback);
     }
 
-    public ServuxStringListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<String> defaultValue)
+    public ServuxStringListSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, List<String> defaultValue)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, List.of());
     }

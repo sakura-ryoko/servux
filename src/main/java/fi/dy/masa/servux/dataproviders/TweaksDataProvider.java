@@ -8,19 +8,18 @@ import fi.dy.masa.servux.settings.IServuxSettingCallback;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.util.InventoryUtils;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -30,13 +29,12 @@ import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.nbt.NbtView;
-import net.minecraft.util.profiler.Profiler;
 
 public class TweaksDataProvider extends DataProviderBase
 {
     public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
 	private final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
-    private final NbtCompound metadata = new NbtCompound();
+    private final CompoundTag metadata = new CompoundTag();
     private final BoolCallbacks boolCallback = new BoolCallbacks();
     private final IntCallbacks intCallback = new IntCallbacks();
 	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0, this.intCallback);
@@ -106,7 +104,7 @@ public class TweaksDataProvider extends DataProviderBase
     }
 
     @Override
-    public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
+    public void tick(MinecraftServer server, int tickCounter, ProfilerFiller profiler)
     {
         if (!this.isEnabled()) return;
 
@@ -131,7 +129,7 @@ public class TweaksDataProvider extends DataProviderBase
     }
 
     @Override
-    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    public boolean isPlayerRegistered(ServerPlayer player)
     {
         return !this.isPlayerInvalid(player);
     }
@@ -162,11 +160,11 @@ public class TweaksDataProvider extends DataProviderBase
     public void updateAllTweaks(MinecraftServer server)
     {
         Servux.debugLog("tweaksData: Invoke updateAllTweaks()");
-        List<ServerPlayerEntity> players = server.getPlayerManager().getPlayerList();
+        List<ServerPlayer> players = server.getPlayerList().getPlayers();
 
         this.checkTweaksMetadata();
 
-        for (ServerPlayerEntity player : players)
+        for (ServerPlayer player : players)
         {
             if (this.isPlayerRegistered(player))
             {
@@ -175,24 +173,24 @@ public class TweaksDataProvider extends DataProviderBase
         }
     }
 
-    public void sendMetadata(ServerPlayerEntity player)
+    public void sendMetadata(ServerPlayer player)
     {
         if (!this.isEnabled()) return;
 
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.debugLog("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
             return;
         }
 
-        Servux.debugLog("tweaksDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
+        Servux.debugLog("tweaksDataChannel: sendMetadata to player {}", player.getName().tryCollapseToString());
         this.checkTweaksMetadata();
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
-        if (player.networkHandler != null)
+        if (player.connection != null)
         {
-            HANDLER.sendPlayPayload(player.networkHandler, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(this.metadata)));
+            HANDLER.sendPlayPayload(player.connection, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(this.metadata)));
         }
         else
         {
@@ -200,35 +198,35 @@ public class TweaksDataProvider extends DataProviderBase
         }
     }
 
-    public void onPacketFailure(ServerPlayerEntity player)
+    public void onPacketFailure(ServerPlayer player)
     {
         this.setPlayerInvalid(player);
     }
 
-    public void removePlayer(ServerPlayerEntity player)
+    public void removePlayer(ServerPlayer player)
     {
         this.removeInvalidPlayer(player);
     }
 
-    private void setPlayerInvalid(ServerPlayerEntity player)
+    private void setPlayerInvalid(ServerPlayer player)
     {
-        if (!this.invalidPlayers.contains(player.getUuid()))
+        if (!this.invalidPlayers.contains(player.getUUID()))
         {
-            this.invalidPlayers.add(player.getUuid());
+            this.invalidPlayers.add(player.getUUID());
         }
     }
 
-    private boolean isPlayerInvalid(ServerPlayerEntity player)
+    private boolean isPlayerInvalid(ServerPlayer player)
     {
-        return this.invalidPlayers.contains(player.getUuid());
+        return this.invalidPlayers.contains(player.getUUID());
     }
 
-    private void removeInvalidPlayer(ServerPlayerEntity player)
+    private void removeInvalidPlayer(ServerPlayer player)
     {
-        this.invalidPlayers.remove(player.getUuid());
+        this.invalidPlayers.remove(player.getUUID());
     }
 
-    public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
+    public void onBlockEntityRequest(ServerPlayer player, BlockPos pos)
     {
         if (!this.hasPermission(player) || !this.isEnabled())
         {
@@ -237,12 +235,12 @@ public class TweaksDataProvider extends DataProviderBase
 
         //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
 
-        BlockEntity be = player.getEntityWorld().getBlockEntity(pos);
-        NbtCompound nbt = be != null ? be.createNbt(player.getRegistryManager()) : new NbtCompound();
+        BlockEntity be = player.level().getBlockEntity(pos);
+        CompoundTag nbt = be != null ? be.saveWithoutMetadata(player.registryAccess()) : new CompoundTag();
         HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleBlockResponse(pos, nbt));
     }
 
-    public void onEntityRequest(ServerPlayerEntity player, int entityId)
+    public void onEntityRequest(ServerPlayer player, int entityId)
     {
         if (!this.hasPermission(player))
         {
@@ -250,15 +248,15 @@ public class TweaksDataProvider extends DataProviderBase
         }
 
         //Servux.logger.warn("onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
-        Entity entity = player.getEntityWorld().getEntityById(entityId);
+        Entity entity = player.level().getEntity(entityId);
 
         if (entity != null)
         {
-            NbtView view = NbtView.getWriter(player.getEntityWorld().getRegistryManager());
-            Identifier id = EntityType.getId(entity.getType());
+            NbtView view = NbtView.getWriter(player.level().registryAccess());
+            Identifier id = EntityType.getKey(entity.getType());
 
-            entity.writeData(view.getWriter());
-            NbtCompound nbt = view.readNbt();
+            entity.saveWithoutId(view.getWriter());
+            CompoundTag nbt = view.readNbt();
 
             if (nbt != null && id != null)
             {
@@ -267,12 +265,12 @@ public class TweaksDataProvider extends DataProviderBase
 		            if (!EntitiesDataProvider.INSTANCE.hasPlayerInventoryPermission(player))
 		            {
 			            nbt.remove("Inventory");
-			            nbt.put("Inventory", new NbtList());
+			            nbt.put("Inventory", new ListTag());
 		            }
 		            if (!EntitiesDataProvider.INSTANCE.hasPlayerEnderItemsPermission(player))
 		            {
 			            nbt.remove("EnderItems");
-			            nbt.put("EnderItems", new NbtList());
+			            nbt.put("EnderItems", new ListTag());
 		            }
 	            }
 
@@ -331,11 +329,11 @@ public class TweaksDataProvider extends DataProviderBase
             return this.defaultEmptyShulkersMaxCount();
         }
 
-        return stack.getComponents().getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
+        return stack.getComponents().getOrDefault(DataComponents.MAX_STACK_SIZE, 1);
     }
 
 	@Override
-    public boolean hasPermission(ServerPlayerEntity player)
+    public boolean hasPermission(ServerPlayer player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }

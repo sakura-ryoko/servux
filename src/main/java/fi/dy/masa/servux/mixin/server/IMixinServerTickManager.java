@@ -1,12 +1,12 @@
 package fi.dy.masa.servux.mixin.server;
 
-import net.minecraft.server.ServerTickManager;
+import net.minecraft.server.ServerTickRateManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(ServerTickManager.class)
+@Mixin(ServerTickRateManager.class)
 public interface IMixinServerTickManager
 {
-    @Accessor("sprintTicks")
+    @Accessor("remainingSprintTicks")
     long servux_getStringTicks();
 }

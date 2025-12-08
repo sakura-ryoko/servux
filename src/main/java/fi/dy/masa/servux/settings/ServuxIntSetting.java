@@ -3,33 +3,33 @@ package fi.dy.masa.servux.settings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 
 public class ServuxIntSetting extends AbstractServuxSetting<Integer>
 {
     private final int maxValue;
     private final int minValue;
 
-    public ServuxIntSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, int defaultValue, int maxValue, int minValue, IServuxSettingCallback<Integer> callback)
+    public ServuxIntSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, int defaultValue, int maxValue, int minValue, IServuxSettingCallback<Integer> callback)
     {
         super(dataProvider ,name, prettyName, comment, defaultValue, callback);
         this.maxValue = maxValue;
         this.minValue = minValue;
     }
 
-    public ServuxIntSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, int defaultValue, int maxValue, int minValue)
+    public ServuxIntSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, int defaultValue, int maxValue, int minValue)
     {
         super(dataProvider ,name, prettyName, comment, defaultValue);
         this.maxValue = maxValue;
         this.minValue = minValue;
     }
 
-    public ServuxIntSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, int defaultValue, IServuxSettingCallback<Integer> callback)
+    public ServuxIntSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, int defaultValue, IServuxSettingCallback<Integer> callback)
     {
         this(dataProvider, name, prettyName, comment, defaultValue, Integer.MAX_VALUE, Integer.MIN_VALUE, callback);
     }
 
-    public ServuxIntSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, int defaultValue)
+    public ServuxIntSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, int defaultValue)
     {
         this(dataProvider, name, prettyName, comment, defaultValue, Integer.MAX_VALUE, Integer.MIN_VALUE);
     }

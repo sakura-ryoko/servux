@@ -3,18 +3,17 @@ package fi.dy.masa.servux.loggers;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.entity.SpawnGroup;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.SpawnHelper;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.level.NaturalSpawner;
 import fi.dy.masa.servux.loggers.data.MobCapData;
 
-public class DataLoggerMobCaps extends DataLoggerBase<NbtCompound>
+public class DataLoggerMobCaps extends DataLoggerBase<CompoundTag>
 {
-    public static final Codec<NbtCompound> CODEC = NbtCompound.CODEC;
+    public static final Codec<CompoundTag> CODEC = CompoundTag.CODEC;
 
     public DataLoggerMobCaps(DataLogger type)
     {
@@ -22,22 +21,22 @@ public class DataLoggerMobCaps extends DataLoggerBase<NbtCompound>
     }
 
     @Override
-    public NbtCompound getResult(MinecraftServer server)
+    public CompoundTag getResult(MinecraftServer server)
     {
-        NbtCompound nbt = new NbtCompound();
+        CompoundTag nbt = new CompoundTag();
 
-        for (ServerWorld world : server.getWorlds())
+        for (ServerLevel world : server.getAllLevels())
         {
-            String dimKey = world.getRegistryKey().getValue().toString();
+            String dimKey = world.dimension().identifier().toString();
             MobCapData mobCapData = new MobCapData();
             MobCapData.Cap[] data = MobCapData.createCapArray();
-            SpawnHelper.Info info = world.getChunkManager().getSpawnInfo();
+            NaturalSpawner.SpawnState info = world.getChunkSource().getLastSpawnState();
 
             if (info != null)
             {
-                int spawnableChunks = world.getChunkManager().chunkLoadingManager.getLevelManager().getTickedChunkCount();
+                int spawnableChunks = world.getChunkSource().chunkMap.getDistanceManager().getNaturalSpawnChunkCount();
                 int divisor = 17 * 17;
-                long worldTime = world.getTime();
+                long worldTime = world.getGameTime();
 
                 if (spawnableChunks <= 0)
                 {
@@ -45,12 +44,12 @@ public class DataLoggerMobCaps extends DataLoggerBase<NbtCompound>
                     continue;       // Not loaded
                 }
 
-                for (Object2IntMap.Entry<SpawnGroup> entry : info.getGroupToCount().object2IntEntrySet())
+                for (Object2IntMap.Entry<MobCategory> entry : info.getMobCategoryCounts().object2IntEntrySet())
                 {
                     MobCapData.EntityCategory category = MobCapData.EntityCategory.fromVanillaCategory(entry.getKey());
 
                     int current = entry.getIntValue();
-                    int capacity = entry.getKey().getCapacity() * spawnableChunks / divisor;
+                    int capacity = entry.getKey().getMaxInstancesPerChunk() * spawnableChunks / divisor;
                     data[category.ordinal()].setCurrentAndCap(current, capacity);
 
                     for (MobCapData.EntityCategory type : MobCapData.EntityCategory.values())
@@ -62,7 +61,7 @@ public class DataLoggerMobCaps extends DataLoggerBase<NbtCompound>
 
                 try
                 {
-                    NbtCompound nbtEntry = (NbtCompound) MobCapData.CODEC.encodeStart(world.getRegistryManager().getOps(NbtOps.INSTANCE), mobCapData).getPartialOrThrow();
+                    CompoundTag nbtEntry = (CompoundTag) MobCapData.CODEC.encodeStart(world.registryAccess().createSerializationContext(NbtOps.INSTANCE), mobCapData).getPartialOrThrow();
                     nbtEntry.putLong("WorldTick", worldTime);
                     nbt.put(dimKey, nbtEntry);
                 }

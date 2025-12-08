@@ -3,22 +3,21 @@ package fi.dy.masa.servux.util;
 import java.util.Iterator;
 import java.util.Optional;
 import javax.annotation.Nullable;
-
+import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ChestBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.ChestType;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import com.google.common.base.Splitter;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.enums.ChestType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
+import org.jetbrains.annotations.NotNull;
 
 public class BlockUtils
 {
@@ -32,15 +31,15 @@ public class BlockUtils
      * @return the first PropertyDirection, or null if there are no such properties
      */
     @SuppressWarnings("unchecked")
-    public static Optional<EnumProperty<Direction>> getFirstDirectionProperty(BlockState state)
+    public static Optional<EnumProperty<@NotNull Direction>> getFirstDirectionProperty(BlockState state)
     {
         for (Property<?> prop : state.getProperties())
         {
             if (prop instanceof EnumProperty<?> ep)
             {
-                if (ep.getType().equals(Direction.class))
+                if (ep.getValueClass().equals(Direction.class))
                 {
-                    return Optional.of((EnumProperty<Direction>) ep);
+                    return Optional.of((EnumProperty<@NotNull Direction>) ep);
                 }
             }
         }
@@ -58,37 +57,37 @@ public class BlockUtils
      */
     public static Optional<Direction> getFirstPropertyFacingValue(BlockState state)
     {
-        Optional<EnumProperty<Direction>> propOptional = getFirstDirectionProperty(state);
-        return propOptional.map((directionProperty) -> Direction.byId(((Direction) state.get(directionProperty)).getId()));
+        Optional<EnumProperty<@NotNull Direction>> propOptional = getFirstDirectionProperty(state);
+        return propOptional.map((directionProperty) -> Direction.byName(((Direction) state.getValue(directionProperty)).getName()));
     }
 
     @Nullable
     public static Direction getPropertyFacingValue(BlockState state)
     {
-        return state.contains(Properties.FACING) ? state.get(Properties.FACING) : null;
+        return state.hasProperty(BlockStateProperties.FACING) ? state.getValue(BlockStateProperties.FACING) : null;
     }
 
-    public static BlockState fixMirrorDoubleChest(BlockState state, BlockMirror mirror, ChestType type)
+    public static BlockState fixMirrorDoubleChest(BlockState state, Mirror mirror, ChestType type)
     {
-        Direction facing = state.get(ChestBlock.FACING);
+        Direction facing = state.getValue(ChestBlock.FACING);
         Direction.Axis axis = facing.getAxis();
 
-        if (mirror == BlockMirror.FRONT_BACK) // x
+        if (mirror == Mirror.FRONT_BACK) // x
         {
-            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+            state = state.setValue(ChestBlock.TYPE, type.getOpposite());
 
             if (axis == Direction.Axis.X)
             {
-                state = state.with(ChestBlock.FACING, facing.getOpposite());
+                state = state.setValue(ChestBlock.FACING, facing.getOpposite());
             }
         }
-        else if (mirror == BlockMirror.LEFT_RIGHT) // z
+        else if (mirror == Mirror.LEFT_RIGHT) // z
         {
-            state = state.with(ChestBlock.CHEST_TYPE, type.getOpposite());
+            state = state.setValue(ChestBlock.TYPE, type.getOpposite());
 
             if (axis == Direction.Axis.Z)
             {
-                state = state.with(ChestBlock.FACING, facing.getOpposite());
+                state = state.setValue(ChestBlock.FACING, facing.getOpposite());
             }
         }
 
@@ -109,19 +108,19 @@ public class BlockUtils
         {
             Identifier id = Identifier.tryParse(blockName);
 
-            if (Registries.BLOCK.containsId(id))
+            if (id != null && BuiltInRegistries.BLOCK.containsKey(id))
             {
-                Optional<RegistryEntry.Reference<Block>> opt = Registries.BLOCK.getEntry(id);
+                Optional<Holder.Reference<@NotNull Block>> opt = BuiltInRegistries.BLOCK.get(id);
                 Block block;
 
                 if (opt.isPresent())
                 {
                     block = opt.get().value();
-                    BlockState state = block.getDefaultState();
+                    BlockState state = block.defaultBlockState();
 
                     if (index != -1 && str.length() > (index + 4) && str.charAt(str.length() - 1) == ']')
                     {
-                        StateManager<Block, BlockState> stateManager = block.getStateManager();
+                        StateDefinition<@NotNull Block, @NotNull BlockState> stateManager = block.getStateDefinition();
                         String propStr = str.substring(index + 1, str.length() - 1);
 
                         for (String propAndVal : COMMA_SPLITTER.split(propStr))
@@ -162,14 +161,14 @@ public class BlockUtils
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Comparable<T>> BlockState getBlockStateWithProperty(BlockState state, Property<T> prop, Comparable<?> value)
+    public static <T extends Comparable<T>> BlockState getBlockStateWithProperty(BlockState state, Property<@NotNull T> prop, Comparable<?> value)
     {
-        return state.with(prop, (T) value);
+        return state.setValue(prop, (T) value);
     }
 
     @Nullable
-    public static <T extends Comparable<T>> T getPropertyValueByName(Property<T> prop, String valStr)
+    public static <T extends Comparable<T>> T getPropertyValueByName(Property<@NotNull T> prop, String valStr)
     {
-        return prop.parse(valStr).orElse(null);
+        return prop.getValue(valStr).orElse(null);
     }
 }

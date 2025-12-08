@@ -3,17 +3,16 @@ package fi.dy.masa.servux.loggers;
 import java.util.concurrent.TimeUnit;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerTickManager;
-
+import net.minecraft.server.ServerTickRateManager;
 import fi.dy.masa.servux.loggers.data.TPSData;
 import fi.dy.masa.servux.mixin.server.IMixinServerTickManager;
 
-public class DataLoggerTPS extends DataLoggerBase<NbtCompound>
+public class DataLoggerTPS extends DataLoggerBase<CompoundTag>
 {
-    public static final Codec<NbtCompound> CODEC = NbtCompound.CODEC;
+    public static final Codec<CompoundTag> CODEC = CompoundTag.CODEC;
 
     public DataLoggerTPS(DataLogger type)
     {
@@ -21,25 +20,25 @@ public class DataLoggerTPS extends DataLoggerBase<NbtCompound>
     }
 
     @Override
-    public NbtCompound getResult(MinecraftServer server)
+    public CompoundTag getResult(MinecraftServer server)
     {
         try
         {
-            return (NbtCompound) TPSData.CODEC.encodeStart(server.getRegistryManager().getOps(NbtOps.INSTANCE), this.build(server)).getOrThrow();
+            return (CompoundTag) TPSData.CODEC.encodeStart(server.registryAccess().createSerializationContext(NbtOps.INSTANCE), this.build(server)).getOrThrow();
         }
         catch (Exception e)
         {
-            return new NbtCompound();
+            return new CompoundTag();
         }
     }
     
     private TPSData build(MinecraftServer server)
     {
-        ServerTickManager tickManager = server.getTickManager();
+        ServerTickRateManager tickManager = server.tickRateManager();
         boolean frozen = tickManager.isFrozen();
         boolean sprinting = tickManager.isSprinting();
-        final double mspt = (double) server.getAverageNanosPerTick() / TimeUnit.MILLISECONDS.toNanos(1L);
-        double tps = 1000.0D / Math.max(sprinting ? 0.0 : tickManager.getMillisPerTick(), mspt);
+        final double mspt = (double) server.getAverageTickTimeNanos() / TimeUnit.MILLISECONDS.toNanos(1L);
+        double tps = 1000.0D / Math.max(sprinting ? 0.0 : tickManager.millisecondsPerTick(), mspt);
 
         if (frozen)
         {
@@ -51,7 +50,7 @@ public class DataLoggerTPS extends DataLoggerBase<NbtCompound>
                         ((IMixinServerTickManager) tickManager).servux_getStringTicks(),
                         frozen,
                         sprinting,
-                        tickManager.isStepping()
+                        tickManager.isSteppingForward()
         );
     }
 }

@@ -3,9 +3,8 @@ package fi.dy.masa.servux.settings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
-import net.minecraft.text.Text;
-
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class ServuxStringSetting extends AbstractServuxSetting<String>
 {
@@ -20,13 +19,13 @@ public class ServuxStringSetting extends AbstractServuxSetting<String>
         this(dataProvider, name, null, null, defaultValue, examples, strict);
     }
 
-    public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples, boolean strict, IServuxSettingCallback<String> callback)
+    public ServuxStringSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, String defaultValue, List<String> examples, boolean strict, IServuxSettingCallback<String> callback)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples, callback);
         this.strict = strict;
     }
 
-    public ServuxStringSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, String defaultValue, List<String> examples, boolean strict)
+    public ServuxStringSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, String defaultValue, List<String> examples, boolean strict)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples, null);
         this.strict = strict;

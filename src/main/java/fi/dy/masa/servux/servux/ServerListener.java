@@ -1,8 +1,7 @@
 package fi.dy.masa.servux.servux;
 
-import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
-
+import net.minecraft.server.packs.resources.ResourceManager;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
@@ -21,7 +20,7 @@ public class ServerListener implements IServerListener
     public void onServerStarted(MinecraftServer server)
     {
         DataProviderManager.INSTANCE.writeToConfig();
-        DataProviderManager.INSTANCE.onCaptureImmutable(server.getRegistryManager());
+        DataProviderManager.INSTANCE.onCaptureImmutable(server.registryAccess());
 
         if (HudDataProvider.INSTANCE.isEnabled())
         {
@@ -39,7 +38,7 @@ public class ServerListener implements IServerListener
     public void onServerResourceReloadPost(MinecraftServer server, ResourceManager resourceManager, boolean success)
     {
         DataProviderManager.INSTANCE.writeToConfig();
-        DataProviderManager.INSTANCE.onCaptureImmutable(server.getRegistryManager());
+        DataProviderManager.INSTANCE.onCaptureImmutable(server.registryAccess());
         i18nLang.tryLoadLanguage(ServuxConfigProvider.INSTANCE.getDefaultLanguage());
     }
 

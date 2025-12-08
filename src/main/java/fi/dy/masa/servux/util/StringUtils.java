@@ -2,8 +2,8 @@ package fi.dy.masa.servux.util;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import net.minecraft.text.MutableText;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 
 public class StringUtils
 {
@@ -30,7 +30,7 @@ public class StringUtils
      * @param translationKey (key)
      * @param args (...args)
      */
-    public static MutableText translate(String translationKey, Object... args)
+    public static MutableComponent translate(String translationKey, Object... args)
     {
         return i18nLang.getInstance().translate(translationKey, args);
     }

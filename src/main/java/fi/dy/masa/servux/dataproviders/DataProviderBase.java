@@ -1,11 +1,9 @@
 package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
+import net.minecraft.resources.Identifier;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import net.minecraft.util.Identifier;
-
 import fi.dy.masa.servux.settings.IServuxSetting;
 
 public abstract class DataProviderBase implements IDataProvider

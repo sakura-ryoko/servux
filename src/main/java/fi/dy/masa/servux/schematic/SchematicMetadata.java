@@ -1,11 +1,9 @@
 package fi.dy.masa.servux.schematic;
 
 import javax.annotation.Nullable;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
 import fi.dy.masa.servux.util.data.FileType;
 import fi.dy.masa.servux.util.data.Schema;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
@@ -283,9 +281,9 @@ public class SchematicMetadata
         }
     }
 
-    public NbtCompound writeToNBT()
+    public CompoundTag writeToNBT()
     {
-        NbtCompound nbt = new NbtCompound();
+        CompoundTag nbt = new CompoundTag();
 
         nbt.putString("Name", this.name);
         nbt.putString("Author", this.author);
@@ -326,23 +324,23 @@ public class SchematicMetadata
         return nbt;
     }
 
-    public void readFromNBT(NbtCompound nbt)
+    public void readFromNBT(CompoundTag nbt)
     {
-        this.name = nbt.getString("Name", "?");
-        this.author = nbt.getString("Author", "?");
-        this.description = nbt.getString("Description", "");
-        this.regionCount = nbt.getInt("RegionCount", -1);
-        this.timeCreated = nbt.getLong("TimeCreated", -1L);
-        this.timeModified = nbt.getLong("TimeModified", -1L);
+        this.name = nbt.getStringOr("Name", "?");
+        this.author = nbt.getStringOr("Author", "?");
+        this.description = nbt.getStringOr("Description", "");
+        this.regionCount = nbt.getIntOr("RegionCount", -1);
+        this.timeCreated = nbt.getLongOr("TimeCreated", -1L);
+        this.timeModified = nbt.getLongOr("TimeModified", -1L);
 
         if (nbt.contains("TotalVolume"))
         {
-            this.totalVolume = nbt.getInt("TotalVolume", -1);
+            this.totalVolume = nbt.getIntOr("TotalVolume", -1);
         }
 
         if (nbt.contains("TotalBlocks"))
         {
-            this.totalBlocks = nbt.getInt("TotalBlocks", -1);
+            this.totalBlocks = nbt.getIntOr("TotalBlocks", -1);
         }
 
         if (nbt.contains("EnclosingSize"))

@@ -1,25 +1,31 @@
 package fi.dy.masa.servux.util.position;
 
+import java.util.*;
+import java.util.function.BiConsumer;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Direction.AxisDirection;
+import net.minecraft.core.Vec3i;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.phys.Vec3;
+
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.servux.schematic.selection.AreaSelection;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.IntBoundingBox;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.*;
-import net.minecraft.util.math.Direction.AxisDirection;
-import net.minecraft.world.World;
-import net.minecraft.world.border.WorldBorder;
-import org.apache.commons.lang3.tuple.Pair;
-
-import javax.annotation.Nullable;
-import java.util.*;
-import java.util.function.BiConsumer;
 
 public class PositionUtils
 {
@@ -27,16 +33,16 @@ public class PositionUtils
     public static final Direction[] HORIZONTAL_DIRECTIONS = new Direction[] { Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST };
     public static final Direction[] VERTICAL_DIRECTIONS = new Direction[] { Direction.DOWN, Direction.UP };
 
-    public static Vec3d modifyValue(CoordinateType type, Vec3d valueIn, double amount)
+    public static Vec3 modifyValue(CoordinateType type, Vec3 valueIn, double amount)
     {
         switch (type)
         {
             case X:
-                return new Vec3d(valueIn.x + amount, valueIn.y         , valueIn.z         );
+                return new Vec3(valueIn.x + amount, valueIn.y         , valueIn.z         );
             case Y:
-                return new Vec3d(valueIn.x         , valueIn.y + amount, valueIn.z         );
+                return new Vec3(valueIn.x         , valueIn.y + amount, valueIn.z         );
             case Z:
-                return new Vec3d(valueIn.x         , valueIn.y         , valueIn.z + amount);
+                return new Vec3(valueIn.x         , valueIn.y         , valueIn.z + amount);
         }
 
         return valueIn;
@@ -47,26 +53,26 @@ public class PositionUtils
         switch (type)
         {
             case X:
-                return BlockPos.ofFloored(valueIn.getX() + amount, valueIn.getY()         , valueIn.getZ()         );
+                return BlockPos.containing(valueIn.getX() + amount, valueIn.getY()         , valueIn.getZ()         );
             case Y:
-                return BlockPos.ofFloored(valueIn.getX()         , valueIn.getY() + amount, valueIn.getZ()         );
+                return BlockPos.containing(valueIn.getX()         , valueIn.getY() + amount, valueIn.getZ()         );
             case Z:
-                return BlockPos.ofFloored(valueIn.getX()         , valueIn.getY()         , valueIn.getZ() + amount);
+                return BlockPos.containing(valueIn.getX()         , valueIn.getY()         , valueIn.getZ() + amount);
         }
 
         return valueIn;
     }
 
-    public static Vec3d setValue(CoordinateType type, Vec3d valueIn, double newValue)
+    public static Vec3 setValue(CoordinateType type, Vec3 valueIn, double newValue)
     {
         switch (type)
         {
             case X:
-                return new Vec3d(newValue , valueIn.y, valueIn.z);
+                return new Vec3(newValue , valueIn.y, valueIn.z);
             case Y:
-                return new Vec3d(valueIn.x, newValue , valueIn.z);
+                return new Vec3(valueIn.x, newValue , valueIn.z);
             case Z:
-                return new Vec3d(valueIn.x, valueIn.y, newValue);
+                return new Vec3(valueIn.x, valueIn.y, newValue);
         }
 
         return valueIn;
@@ -77,11 +83,11 @@ public class PositionUtils
         switch (type)
         {
             case X:
-                return BlockPos.ofFloored(newValue      , valueIn.getY(), valueIn.getZ());
+                return BlockPos.containing(newValue      , valueIn.getY(), valueIn.getZ());
             case Y:
-                return BlockPos.ofFloored(valueIn.getX(), newValue      , valueIn.getZ());
+                return BlockPos.containing(valueIn.getX(), newValue      , valueIn.getZ());
             case Z:
-                return BlockPos.ofFloored(valueIn.getX(), valueIn.getY(), newValue      );
+                return BlockPos.containing(valueIn.getX(), valueIn.getY(), newValue      );
         }
 
         return valueIn;
@@ -89,14 +95,14 @@ public class PositionUtils
 
     public static BlockPos getEntityBlockPos(Entity entity)
     {
-        return BlockPos.ofFloored(Math.floor(entity.getX()), Math.floor(entity.getY()), Math.floor(entity.getZ()));
+        return BlockPos.containing(Math.floor(entity.getX()), Math.floor(entity.getY()), Math.floor(entity.getZ()));
     }
 
     /**
      * Returns the closest direction the given entity is looking towards,
      * with a vertical/pitch threshold of 60 degrees.
-     * @param entity
-     * @return
+     * @param entity ()
+     * @return ()
      */
     public static Direction getClosestLookingDirection(Entity entity)
     {
@@ -105,29 +111,29 @@ public class PositionUtils
 
     /**
      * Returns the closest direction the given entity is looking towards.
-     * @param entity
+     * @param entity ()
      * @param verticalThreshold the pitch threshold to return the up or down facing instead of horizontals
-     * @return
+     * @return ()
      */
     public static Direction getClosestLookingDirection(Entity entity, float verticalThreshold)
     {
-        if (entity.getPitch() >= verticalThreshold)
+        if (entity.getXRot() >= verticalThreshold)
         {
             return Direction.DOWN;
         }
-        else if (entity.getYaw() <= -verticalThreshold)
+        else if (entity.getYRot() <= -verticalThreshold)
         {
             return Direction.UP;
         }
 
-        return entity.getHorizontalFacing();
+        return entity.getDirection();
     }
 
     /**
      * Returns the closest block position directly infront of the
      * given entity that is not colliding with it.
-     * @param entity
-     * @return
+     * @param entity ()
+     * @return ()
      */
     public static BlockPos getPositionInfrontOfEntity(Entity entity)
     {
@@ -137,39 +143,39 @@ public class PositionUtils
     /**
      * Returns the closest block position directly infront of the
      * given entity that is not colliding with it.
-     * @param entity
-     * @param verticalThreshold
-     * @return
+     * @param entity ()
+     * @param verticalThreshold ()
+     * @return ()
      */
     public static BlockPos getPositionInfrontOfEntity(Entity entity, float verticalThreshold)
     {
         double x = entity.getX();
         double y = entity.getY();
         double z = entity.getZ();
-        double w = entity.getWidth();
-        BlockPos pos = BlockPos.ofFloored(x, y, z);
+        double w = entity.getBbWidth();
+        BlockPos pos = BlockPos.containing(x, y, z);
 
-        if (entity.getPitch() >= verticalThreshold)
+        if (entity.getXRot() >= verticalThreshold)
         {
-            return pos.down(1);
+            return pos.below(1);
         }
-        else if (entity.getPitch() <= -verticalThreshold)
+        else if (entity.getXRot() <= -verticalThreshold)
         {
-            return BlockPos.ofFloored(x, Math.ceil(entity.getBoundingBox().maxY), z);
+            return BlockPos.containing(x, Math.ceil(entity.getBoundingBox().maxY), z);
         }
 
-        y = Math.floor(y + entity.getStandingEyeHeight());
+        y = Math.floor(y + entity.getEyeHeight());
 
-        switch (entity.getHorizontalFacing())
+        switch (entity.getDirection())
         {
             case EAST:
-                return BlockPos.ofFloored((int) Math.ceil( x + w / 2),     (int) y, (int) Math.floor(z));
+                return BlockPos.containing((int) Math.ceil( x + w / 2),     (int) y, (int) Math.floor(z));
             case WEST:
-                return BlockPos.ofFloored((int) Math.floor(x - w / 2) - 1, (int) y, (int) Math.floor(z));
+                return BlockPos.containing((int) Math.floor(x - w / 2) - 1, (int) y, (int) Math.floor(z));
             case SOUTH:
-                return BlockPos.ofFloored((int) Math.floor(x), (int) y, (int) Math.ceil( z + w / 2)    );
+                return BlockPos.containing((int) Math.floor(x), (int) y, (int) Math.ceil( z + w / 2)    );
             case NORTH:
-                return BlockPos.ofFloored((int) Math.floor(x), (int) y, (int) Math.floor(z - w / 2) - 1);
+                return BlockPos.containing((int) Math.floor(x), (int) y, (int) Math.floor(z - w / 2) - 1);
             default:
         }
 
@@ -178,11 +184,11 @@ public class PositionUtils
 
     /**
      * Returns the hit vector at the center point of the given side/face of the given block position.
-     * @param basePos
-     * @param facing
-     * @return
+     * @param basePos ()
+     * @param facing ()
+     * @return ()
      */
-    public static Vec3d getHitVecCenter(BlockPos basePos, Direction facing)
+    public static Vec3 getHitVecCenter(BlockPos basePos, Direction facing)
     {
         int x = basePos.getX();
         int y = basePos.getY();
@@ -190,28 +196,28 @@ public class PositionUtils
 
         switch (facing)
         {
-            case UP:    return new Vec3d(x + 0.5, y + 1  , z + 0.5);
-            case DOWN:  return new Vec3d(x + 0.5, y      , z + 0.5);
-            case NORTH: return new Vec3d(x + 0.5, y + 0.5, z      );
-            case SOUTH: return new Vec3d(x + 0.5, y + 0.5, z + 1  );
-            case WEST:  return new Vec3d(x      , y + 0.5, z      );
-            case EAST:  return new Vec3d(x + 1  , y + 0.5, z + 1);
-            default:    return new Vec3d(x, y, z);
+            case UP:    return new Vec3(x + 0.5, y + 1  , z + 0.5);
+            case DOWN:  return new Vec3(x + 0.5, y      , z + 0.5);
+            case NORTH: return new Vec3(x + 0.5, y + 0.5, z      );
+            case SOUTH: return new Vec3(x + 0.5, y + 0.5, z + 1  );
+            case WEST:  return new Vec3(x      , y + 0.5, z      );
+            case EAST:  return new Vec3(x + 1  , y + 0.5, z + 1);
+            default:    return new Vec3(x, y, z);
         }
     }
 
     /**
      * Returns the part of the block face the player is currently targeting.
      * The block face is divided into four side segments and a center segment.
-     * @param originalSide
-     * @param playerFacingH
-     * @param pos
-     * @param hitVec
-     * @return
+     * @param originalSide ()
+     * @param playerFacingH ()
+     * @param pos ()
+     * @param hitVec ()
+     * @return ()
      */
-    public static HitPart getHitPart(Direction originalSide, Direction playerFacingH, BlockPos pos, Vec3d hitVec)
+    public static HitPart getHitPart(Direction originalSide, Direction playerFacingH, BlockPos pos, Vec3 hitVec)
     {
-        Vec3d positions = getHitPartPositions(originalSide, playerFacingH, pos, hitVec);
+        Vec3 positions = getHitPartPositions(originalSide, playerFacingH, pos, hitVec);
         double posH = positions.x;
         double posV = positions.y;
         double offH = Math.abs(posH - 0.5d);
@@ -234,7 +240,7 @@ public class PositionUtils
         }
     }
 
-    private static Vec3d getHitPartPositions(Direction originalSide, Direction playerFacingH, BlockPos pos, Vec3d hitVec)
+    private static Vec3 getHitPartPositions(Direction originalSide, Direction playerFacingH, BlockPos pos, Vec3 hitVec)
     {
         double x = hitVec.x - pos.getX();
         double y = hitVec.y - pos.getY();
@@ -275,30 +281,30 @@ public class PositionUtils
                 break;
             case NORTH:
             case SOUTH:
-                posH = originalSide.getDirection() == AxisDirection.POSITIVE ? x : 1.0d - x;
+                posH = originalSide.getAxisDirection() == AxisDirection.POSITIVE ? x : 1.0d - x;
                 posV = y;
                 break;
             case WEST:
             case EAST:
-                posH = originalSide.getDirection() == AxisDirection.NEGATIVE ? z : 1.0d - z;
+                posH = originalSide.getAxisDirection() == AxisDirection.NEGATIVE ? z : 1.0d - z;
                 posV = y;
                 break;
         }
 
-        return new Vec3d(posH, posV, 0);
+        return new Vec3(posH, posV, 0);
     }
 
     /**
      * Returns the direction the targeted part of the targeting overlay is pointing towards.
-     * @param side
-     * @param playerFacingH
-     * @param pos
-     * @param hitVec
-     * @return
+     * @param side ()
+     * @param playerFacingH ()
+     * @param pos ()
+     * @param hitVec ()
+     * @return ()
      */
-    public static Direction getTargetedDirection(Direction side, Direction playerFacingH, BlockPos pos, Vec3d hitVec)
+    public static Direction getTargetedDirection(Direction side, Direction playerFacingH, BlockPos pos, Vec3 hitVec)
     {
-        Vec3d positions = getHitPartPositions(side, playerFacingH, pos, hitVec);
+        Vec3 positions = getHitPartPositions(side, playerFacingH, pos, hitVec);
         double posH = positions.x;
         double posV = positions.y;
         double offH = Math.abs(posH - 0.5d);
@@ -310,7 +316,7 @@ public class PositionUtils
             {
                 if (offH > offV)
                 {
-                    return posH < 0.5d ? playerFacingH.rotateYCounterclockwise() : playerFacingH.rotateYClockwise();
+                    return posH < 0.5d ? playerFacingH.getCounterClockWise() : playerFacingH.getClockWise();
                 }
                 else
                 {
@@ -328,7 +334,7 @@ public class PositionUtils
             {
                 if (offH > offV)
                 {
-                    return posH < 0.5d ? side.rotateYClockwise() : side.rotateYCounterclockwise();
+                    return posH < 0.5d ? side.getClockWise() : side.getCounterClockWise();
                 }
                 else
                 {
@@ -396,7 +402,7 @@ public class PositionUtils
 
     public static long getChunkPosLong(BlockPos blockPos)
     {
-        return ChunkPos.toLong(blockPos.getX() >> 4, blockPos.getZ() >> 4);
+        return ChunkPos.asLong(blockPos.getX() >> 4, blockPos.getZ() >> 4);
     }
 
     public static BlockPos getMinCorner(BlockPos pos1, BlockPos pos2)
@@ -424,19 +430,19 @@ public class PositionUtils
         return pos;
     }
 
-    public static boolean arePositionsWithinWorld(World world, BlockPos pos1, BlockPos pos2)
+    public static boolean arePositionsWithinWorld(Level world, BlockPos pos1, BlockPos pos2)
     {
-        if (pos1.getY() >= world.getBottomY() && pos1.getY() < world.getTopYInclusive() &&
-            pos2.getY() >= world.getBottomY() && pos2.getY() < world.getTopYInclusive())
+        if (pos1.getY() >= world.getMinY() && pos1.getY() < world.getMaxY() &&
+            pos2.getY() >= world.getMinY() && pos2.getY() < world.getMaxY())
         {
             WorldBorder border = world.getWorldBorder();
-            return border.contains(pos1) && border.contains(pos2);
+            return border.isWithinBounds(pos1) && border.isWithinBounds(pos2);
         }
 
         return false;
     }
 
-    public static boolean isBoxWithinWorld(World world, Box box)
+    public static boolean isBoxWithinWorld(Level world, Box box)
     {
         if (box.getPos1() != null && box.getPos2() != null)
         {
@@ -514,14 +520,14 @@ public class PositionUtils
     public static BlockPos getEnclosingAreaSize(Collection<Box> boxes)
     {
         Pair<BlockPos, BlockPos> pair = getEnclosingAreaCorners(boxes);
-        return pair.getRight().subtract(pair.getLeft()).add(1, 1, 1);
+        return pair.getRight().subtract(pair.getLeft()).offset(1, 1, 1);
     }
 
     /**
      * Returns the min and max corners of the enclosing box around the given collection of boxes.
      * The minimum corner is the left entry and the maximum corner is the right entry of the pair.
-     * @param boxes
-     * @return
+     * @param boxes ()
+     * @return ()
      */
     @Nullable
     public static Pair<BlockPos, BlockPos> getEnclosingAreaCorners(Collection<Box> boxes)
@@ -531,8 +537,8 @@ public class PositionUtils
             return null;
         }
 
-        BlockPos.Mutable posMin = new BlockPos.Mutable( 60000000,  60000000,  60000000);
-        BlockPos.Mutable posMax = new BlockPos.Mutable(-60000000, -60000000, -60000000);
+        BlockPos.MutableBlockPos posMin = new BlockPos.MutableBlockPos( 60000000,  60000000,  60000000);
+        BlockPos.MutableBlockPos posMax = new BlockPos.MutableBlockPos(-60000000, -60000000, -60000000);
 
         for (Box box : boxes)
         {
@@ -540,10 +546,10 @@ public class PositionUtils
             getMinMaxCoords(posMin, posMax, box.getPos2());
         }
 
-        return Pair.of(posMin.toImmutable(), posMax.toImmutable());
+        return Pair.of(posMin.immutable(), posMax.immutable());
     }
 
-    private static void getMinMaxCoords(BlockPos.Mutable posMin, BlockPos.Mutable posMax, @Nullable BlockPos posToCheck)
+    private static void getMinMaxCoords(BlockPos.MutableBlockPos posMin, BlockPos.MutableBlockPos posMax, @Nullable BlockPos posToCheck)
     {
         if (posToCheck != null)
         {
@@ -558,10 +564,10 @@ public class PositionUtils
     }
 
     @Nullable
-    public static IntBoundingBox clampBoxToWorldHeightRange(IntBoundingBox box, World world)
+    public static IntBoundingBox clampBoxToWorldHeightRange(IntBoundingBox box, Level world)
     {
-        int minY = world.getBottomY();
-        int maxY = world.getTopYInclusive();
+        int minY = world.getMinY();
+        int maxY = world.getMaxY();
 
         if (box.minY() > maxY || box.maxY() < minY)
         {
@@ -599,9 +605,9 @@ public class PositionUtils
         return volume;
     }
 
-    public static ImmutableMap<String, IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ, ImmutableMap<String, Box> subRegions)
+    public static ImmutableMap<@NotNull String, @NotNull IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ, ImmutableMap<@NotNull String, @NotNull Box> subRegions)
     {
-        ImmutableMap.Builder<String, IntBoundingBox> builder = new ImmutableMap.Builder<>();
+        ImmutableMap.Builder<@NotNull String, @NotNull IntBoundingBox> builder = new ImmutableMap.Builder<>();
 
         for (Map.Entry<String, Box> entry : subRegions.entrySet())
         {
@@ -617,9 +623,9 @@ public class PositionUtils
         return builder.build();
     }
 
-    public static ImmutableList<IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ, Collection<Box> boxes)
+    public static ImmutableList<@NotNull IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ, Collection<Box> boxes)
     {
-        ImmutableList.Builder<IntBoundingBox> builder = new ImmutableList.Builder<>();
+        ImmutableList.Builder<@NotNull IntBoundingBox> builder = new ImmutableList.Builder<>();
 
         for (Box box : boxes)
         {
@@ -634,7 +640,7 @@ public class PositionUtils
         return builder.build();
     }
 
-    public static Set<ChunkPos> getTouchedChunks(ImmutableMap<String, Box> boxes)
+    public static Set<ChunkPos> getTouchedChunks(ImmutableMap<@NotNull String, @NotNull Box> boxes)
     {
         return getTouchedChunksForBoxes(boxes.values());
     }
@@ -730,7 +736,7 @@ public class PositionUtils
     /**
      * Creates an enclosing AABB around the given positions. They will both be inside the box.
      */
-    public static net.minecraft.util.math.Box createEnclosingAABB(BlockPos pos1, BlockPos pos2)
+    public static net.minecraft.world.phys.AABB createEnclosingAABB(BlockPos pos1, BlockPos pos2)
     {
         int minX = Math.min(pos1.getX(), pos2.getX());
         int minY = Math.min(pos1.getY(), pos2.getY());
@@ -742,7 +748,7 @@ public class PositionUtils
         return createAABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
-    public static net.minecraft.util.math.Box createAABBFrom(IntBoundingBox bb)
+    public static net.minecraft.world.phys.AABB createAABBFrom(IntBoundingBox bb)
     {
         return createAABB(bb.minX(), bb.minY(), bb.minZ(), bb.maxX() + 1, bb.maxY() + 1, bb.maxZ() + 1);
     }
@@ -750,7 +756,7 @@ public class PositionUtils
     /**
      * Creates an AABB for the given position
      */
-    public static net.minecraft.util.math.Box createAABBForPosition(BlockPos pos)
+    public static net.minecraft.world.phys.AABB createAABBForPosition(BlockPos pos)
     {
         return createAABBForPosition(pos.getX(), pos.getY(), pos.getZ());
     }
@@ -758,7 +764,7 @@ public class PositionUtils
     /**
      * Creates an AABB for the given position
      */
-    public static net.minecraft.util.math.Box createAABBForPosition(int x, int y, int z)
+    public static net.minecraft.world.phys.AABB createAABBForPosition(int x, int y, int z)
     {
         return createAABB(x, y, z, x + 1, y + 1, z + 1);
     }
@@ -766,9 +772,9 @@ public class PositionUtils
     /**
      * Creates an AABB with the given bounds
      */
-    public static net.minecraft.util.math.Box createAABB(int minX, int minY, int minZ, int maxX, int maxY, int maxZ)
+    public static net.minecraft.world.phys.AABB createAABB(int minX, int minY, int minZ, int maxX, int maxY, int maxZ)
     {
-        return new net.minecraft.util.math.Box(minX, minY, minZ, maxX, maxY, maxZ);
+        return new net.minecraft.world.phys.AABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     /**
@@ -875,7 +881,7 @@ public class PositionUtils
     /**
      * Mirrors and then rotates the given position around the origin
      */
-    public static BlockPos getTransformedBlockPos(BlockPos pos, BlockMirror mirror, BlockRotation rotation)
+    public static BlockPos getTransformedBlockPos(BlockPos pos, Mirror mirror, Rotation rotation)
     {
         int x = pos.getX();
         int y = pos.getY();
@@ -909,7 +915,7 @@ public class PositionUtils
         }
     }
 
-    public static BlockPos getReverseTransformedBlockPos(BlockPos pos, BlockMirror mirror, BlockRotation rotation)
+    public static BlockPos getReverseTransformedBlockPos(BlockPos pos, Mirror mirror, Rotation rotation)
     {
         int x = pos.getX();
         int y = pos.getY();
@@ -959,7 +965,7 @@ public class PositionUtils
      * Does the opposite transform from getTransformedBlockPos(), to return the original,
      * non-transformed position from the transformed position.
      */
-    public static BlockPos getOriginalPositionFromTransformed(BlockPos pos, BlockMirror mirror, BlockRotation rotation)
+    public static BlockPos getOriginalPositionFromTransformed(BlockPos pos, Mirror mirror, Rotation rotation)
     {
         int x = pos.getX();
         int y = pos.getY();
@@ -1002,7 +1008,7 @@ public class PositionUtils
         return new BlockPos(x, y, z);
     }
 
-    public static Vec3d getTransformedPosition(Vec3d originalPos, BlockMirror mirror, BlockRotation rotation)
+    public static Vec3 getTransformedPosition(Vec3 originalPos, Mirror mirror, Rotation rotation)
     {
         double x = originalPos.x;
         double y = originalPos.y;
@@ -1024,26 +1030,26 @@ public class PositionUtils
         switch (rotation)
         {
             case COUNTERCLOCKWISE_90:
-                return new Vec3d(z, y, 1.0D - x);
+                return new Vec3(z, y, 1.0D - x);
             case CLOCKWISE_90:
-                return new Vec3d(1.0D - z, y, x);
+                return new Vec3(1.0D - z, y, x);
             case CLOCKWISE_180:
-                return new Vec3d(1.0D - x, y, 1.0D - z);
+                return new Vec3(1.0D - x, y, 1.0D - z);
             default:
-                return transformed ? new Vec3d(x, y, z) : originalPos;
+                return transformed ? new Vec3(x, y, z) : originalPos;
         }
     }
 
-    public static BlockRotation getReverseRotation(BlockRotation rotationIn)
+    public static Rotation getReverseRotation(Rotation rotationIn)
     {
         switch (rotationIn)
         {
             case COUNTERCLOCKWISE_90:
-                return BlockRotation.CLOCKWISE_90;
+                return Rotation.CLOCKWISE_90;
             case CLOCKWISE_90:
-                return BlockRotation.COUNTERCLOCKWISE_90;
+                return Rotation.COUNTERCLOCKWISE_90;
             case CLOCKWISE_180:
-                return BlockRotation.CLOCKWISE_180;
+                return Rotation.CLOCKWISE_180;
             default:
                 return rotationIn;
         }
@@ -1113,39 +1119,39 @@ public class PositionUtils
         return z2 > z1 ? Direction.SOUTH : Direction.WEST;
     }
 
-    public static BlockRotation cycleRotation(BlockRotation rotation, boolean reverse)
+    public static Rotation cycleRotation(Rotation rotation, boolean reverse)
     {
         int ordinal = rotation.ordinal();
 
         if (reverse)
         {
-            ordinal = ordinal == 0 ? BlockRotation.values().length - 1 : ordinal - 1;
+            ordinal = ordinal == 0 ? Rotation.values().length - 1 : ordinal - 1;
         }
         else
         {
-            ordinal = ordinal >= BlockRotation.values().length - 1 ? 0 : ordinal + 1;
+            ordinal = ordinal >= Rotation.values().length - 1 ? 0 : ordinal + 1;
         }
 
-        return BlockRotation.values()[ordinal];
+        return Rotation.values()[ordinal];
     }
 
-    public static BlockMirror cycleMirror(BlockMirror mirror, boolean reverse)
+    public static Mirror cycleMirror(Mirror mirror, boolean reverse)
     {
         int ordinal = mirror.ordinal();
 
         if (reverse)
         {
-            ordinal = ordinal == 0 ? BlockMirror.values().length - 1 : ordinal - 1;
+            ordinal = ordinal == 0 ? Mirror.values().length - 1 : ordinal - 1;
         }
         else
         {
-            ordinal = ordinal >= BlockMirror.values().length - 1 ? 0 : ordinal + 1;
+            ordinal = ordinal >= Mirror.values().length - 1 ? 0 : ordinal + 1;
         }
 
-        return BlockMirror.values()[ordinal];
+        return Mirror.values()[ordinal];
     }
 
-    public static String getRotationNameShort(BlockRotation rotation)
+    public static String getRotationNameShort(Rotation rotation)
     {
         switch (rotation)
         {
@@ -1157,7 +1163,7 @@ public class PositionUtils
         }
     }
 
-    public static String getMirrorName(BlockMirror mirror)
+    public static String getMirrorName(Mirror mirror)
     {
         switch (mirror)
         {
@@ -1168,9 +1174,9 @@ public class PositionUtils
         }
     }
 
-    public static float getRotatedYaw(float yaw, BlockRotation rotation)
+    public static float getRotatedYaw(float yaw, Rotation rotation)
     {
-        yaw = MathHelper.wrapDegrees(yaw);
+        yaw = Mth.wrapDegrees(yaw);
 
         switch (rotation)
         {
@@ -1189,9 +1195,9 @@ public class PositionUtils
         return yaw;
     }
 
-    public static float getMirroredYaw(float yaw, BlockMirror mirror)
+    public static float getMirroredYaw(float yaw, Mirror mirror)
     {
-        yaw = MathHelper.wrapDegrees(yaw);
+        yaw = Mth.wrapDegrees(yaw);
 
         switch (mirror)
         {
@@ -1209,7 +1215,7 @@ public class PositionUtils
 
     public static class BlockPosComparator implements Comparator<BlockPos>
     {
-        private BlockPos posReference = BlockPos.ORIGIN;
+        private BlockPos posReference = BlockPos.ZERO;
         private boolean closestFirst;
 
         public void setClosestFirst(boolean closestFirst)
@@ -1225,8 +1231,8 @@ public class PositionUtils
         @Override
         public int compare(BlockPos pos1, BlockPos pos2)
         {
-            double dist1 = pos1.getSquaredDistance(this.posReference);
-            double dist2 = pos2.getSquaredDistance(this.posReference);
+            double dist1 = pos1.distSqr(this.posReference);
+            double dist2 = pos2.distSqr(this.posReference);
 
             if (dist1 == dist2)
             {
@@ -1239,7 +1245,7 @@ public class PositionUtils
 
     public static class ChunkPosComparator implements Comparator<ChunkPos>
     {
-        private BlockPos posReference = BlockPos.ORIGIN;
+        private BlockPos posReference = BlockPos.ZERO;
         private boolean closestFirst;
 
         public ChunkPosComparator setClosestFirst(boolean closestFirst)

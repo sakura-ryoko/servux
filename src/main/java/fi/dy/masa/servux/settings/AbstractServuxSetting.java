@@ -3,23 +3,22 @@ package fi.dy.masa.servux.settings;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.util.i18nLang;
-import net.minecraft.text.Text;
-
 import javax.annotation.Nullable;
+import net.minecraft.network.chat.Component;
 import java.util.List;
 import java.util.Objects;
 
 public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 {
     private final String name;
-    private final Text prettyName;
-    private final Text comment;
+    private final Component prettyName;
+    private final Component comment;
     private final T defaultValue;
     private final List<String> examples;
     private final IDataProvider dataProvider;
     private final @Nullable IServuxSettingCallback<T> callback;
 
-    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples, IServuxSettingCallback<T> callback)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, T defaultValue, List<String> examples, @Nullable IServuxSettingCallback<T> callback)
     {
         Objects.requireNonNull(name);
         this.name = name;
@@ -32,12 +31,12 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
         this.callback = callback;
     }
 
-    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, IServuxSettingCallback<T> callback)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, T defaultValue, IServuxSettingCallback<T> callback)
     {
         this(dataProvider, name, prettyName, comment, defaultValue, null, callback);
     }
 
-    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, T defaultValue)
     {
         this(dataProvider, name, prettyName, comment, defaultValue, null, null);
     }
@@ -56,11 +55,11 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
         return value;
     }
 
+	/**
+	 * the value field should not be modified directly, please invoke this method.
+	 * override this value to handle all the value changes, even caused by reading config.
+	 */
     @Override
-    /**
-     * the value field should not be modified directly, please invoke this method.
-     * override this value to handle all the value changes, even caused by reading config.
-     */
     public void setValueNoCallback(T value)
     {
         this.value = value;
@@ -104,7 +103,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
-    public Text prettyName()
+    public Component prettyName()
     {
         if (prettyName == null)
         {
@@ -114,7 +113,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
-    public Text comment()
+    public Component comment()
     {
         if (comment == null)
         {

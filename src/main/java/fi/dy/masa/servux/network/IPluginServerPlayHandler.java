@@ -3,26 +3,28 @@ package fi.dy.masa.servux.network;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
+import org.jetbrains.annotations.NotNull;
+
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 import fi.dy.masa.servux.Servux;
 
 /**
  * Interface for ServerPlayHandler
  * @param <T> (Payload Param)
  */
-public interface IPluginServerPlayHandler<T extends CustomPayload> extends ServerPlayNetworking.PlayPayloadHandler<T>
+public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends ServerPlayNetworking.PlayPayloadHandler<@NotNull T>
 {
     int FROM_SERVER = 1;
     int TO_SERVER = 2;
@@ -65,7 +67,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param id (Your Payload Id<T>)
      * @param codec (Your Payload's CODEC)
      */
-    default void registerPlayPayload(@Nonnull CustomPayload.Id<T> id, @Nonnull PacketCodec<? super RegistryByteBuf,T> codec, int direction)
+    default void registerPlayPayload(@Nonnull CustomPacketPayload.Type<@NotNull T> id, @Nonnull StreamCodec<? super RegistryFriendlyByteBuf, @NotNull T> codec, int direction)
     {
         if (this.isPlayRegistered(this.getPayloadChannel()) == false)
         {
@@ -104,7 +106,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param receiver (Your Packet Receiver // if null, uses this::receivePlayPayload)
      * @return (True / False)
      */
-    default boolean registerPlayReceiver(@Nonnull CustomPayload.Id<T> id, @Nullable ServerPlayNetworking.PlayPayloadHandler<T> receiver)
+    default boolean registerPlayReceiver(@Nonnull CustomPacketPayload.Type<@NotNull T> id, @Nullable ServerPlayNetworking.PlayPayloadHandler<@NotNull T> receiver)
     {
         if (this.isPlayRegistered(this.getPayloadChannel()))
         {
@@ -148,7 +150,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param handler (Network Handler that received the data)
      * @param ci (Callbackinfo for sending ci.cancel(), if wanted)
      */
-    default void receivePlayPayload(T payload, ServerPlayNetworkHandler handler, CallbackInfo ci) {}
+    default void receivePlayPayload(T payload, ServerGamePacketListenerImpl handler, CallbackInfo ci) {}
 
     /**
      * Payload Decoder wrapper function [OPTIONAL]
@@ -160,9 +162,9 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param player (Player received from)
      * @param data (Data Codec)
      */
-    default void decodeNbtCompound(Identifier channel, ServerPlayerEntity player, NbtCompound data) {}
-    default <D> void decodeObject(Identifier channel, ServerPlayerEntity player, D data1) {}
-    default <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayerEntity player, P data) {}
+    default void decodeNbtCompound(Identifier channel, ServerPlayer player, CompoundTag data) {}
+    default <D> void decodeObject(Identifier channel, ServerPlayer player, D data1) {}
+    default <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayer player, P data) {}
 
     /**
      * Payload Encoder wrapper function [OPTIONAL]
@@ -171,9 +173,9 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param player (Player to send the data to)
      * @param data (Data Codec)
      */
-    default void encodeNbtCompound(ServerPlayerEntity player, NbtCompound data) {}
-    default <D> void encodeObject(ServerPlayerEntity player, D data1) {}
-    default <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data) {}
+    default void encodeNbtCompound(ServerPlayer player, CompoundTag data) {}
+    default <D> void encodeObject(ServerPlayer player, D data1) {}
+    default <P extends IServerPayloadData> void encodeServerData(ServerPlayer player, P data) {}
 
     /**
      * Used as an iterative "wrapper" for Payload Splitter to send individual Packets
@@ -181,7 +183,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param buf (Sliced Buffer to send)
      * @param networkHandler (Network Handler as a fail-over option)
      */
-    void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buf, ServerPlayNetworkHandler networkHandler);
+    void encodeWithSplitter(ServerPlayer player, FriendlyByteBuf buf, ServerGamePacketListenerImpl networkHandler);
 
     /**
      * Sends the Payload to the player using the Fabric-API interface.
@@ -190,11 +192,11 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param payload (The Payload to send)
      * @return (true/false --> for error control)
      */
-    default boolean sendPlayPayload(@Nonnull ServerPlayerEntity player, @Nonnull T payload)
+    default boolean sendPlayPayload(@Nonnull ServerPlayer player, @Nonnull T payload)
     {
-        if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
+        if (payload.type().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            if (ServerPlayNetworking.canSend(player, payload.getId()))
+            if (ServerPlayNetworking.canSend(player, payload.type()))
             {
                 ServerPlayNetworking.send(player, payload);
                 return true;
@@ -202,7 +204,7 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
         }
         else
         {
-            Servux.LOGGER.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.LOGGER.warn("sendPlayPayload: [Fabric-API] error sending payload for channel: {}, check if channel is registered", payload.type().id().toString());
         }
 
         return false;
@@ -214,21 +216,21 @@ public interface IPluginServerPlayHandler<T extends CustomPayload> extends Serve
      * @param payload (The Payload to send)
      * @return (true/false --> for error control)
      */
-    default boolean sendPlayPayload(@Nonnull ServerPlayNetworkHandler handler, @Nonnull T payload)
+    default boolean sendPlayPayload(@Nonnull ServerGamePacketListenerImpl handler, @Nonnull T payload)
     {
-        if (payload.getId().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
+        if (payload.type().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
         {
-            Packet<?> packet = new CustomPayloadS2CPacket(payload);
+            Packet<?> packet = new ClientboundCustomPayloadPacket(payload);
 
-            if (handler.accepts(packet))
+            if (handler.shouldHandleMessage(packet))
             {
-                handler.sendPacket(packet);
+                handler.send(packet);
                 return true;
             }
         }
         else
         {
-            Servux.LOGGER.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, check if channel is registered", payload.getId().id().toString());
+            Servux.LOGGER.warn("sendPlayPayload: [NetworkHandler] error sending payload for channel: {}, check if channel is registered", payload.type().id().toString());
         }
 
         return false;

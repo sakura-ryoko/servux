@@ -3,13 +3,14 @@ package fi.dy.masa.servux.util.data;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.Identifier;
 import io.netty.buffer.ByteBuf;
+import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.util.Identifier;
 
 /**
  * Wraps the Mojmap "ResourceLocation" with Identifier
@@ -24,17 +25,17 @@ public class ResourceLocation
                     Identifier.CODEC.fieldOf("id").forGetter(get -> get.id)
             ).apply(resourceLocationInstance, ResourceLocation::new)
     );
-    public static final PacketCodec<ByteBuf, ResourceLocation> PACKET_CODEC = PacketCodecs.STRING.xmap(ResourceLocation::of, ResourceLocation::toString);
+    public static final StreamCodec<@NotNull ByteBuf, @NotNull ResourceLocation> PACKET_CODEC = ByteBufCodecs.STRING_UTF8.map(ResourceLocation::of, ResourceLocation::toString);
     private final Identifier id;
 
     public ResourceLocation(String str)
     {
-        this.id = Identifier.of(str);
+        this.id = Identifier.parse(str);
     }
 
     public ResourceLocation(String name, String path)
     {
-        this.id = Identifier.of(name, path);
+        this.id = Identifier.fromNamespaceAndPath(name, path);
     }
 
     public ResourceLocation(Identifier id)

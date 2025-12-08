@@ -4,8 +4,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import fi.dy.masa.servux.dataproviders.TweaksDataProvider;
 import fi.dy.masa.servux.util.InventoryUtils;
-import net.minecraft.block.entity.HopperBlockEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -19,9 +19,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinHopperBlockEntity
 {
     @WrapOperation(
-            method = "isFull",
+            method = "inventoryFull",
             at = @At(value = "INVOKE",
-                     target = "Lnet/minecraft/item/ItemStack;getMaxCount()I")
+                     target = "Lnet/minecraft/world/item/ItemStack;getMaxStackSize()I")
     )
     private int servux_modifyShulkerMaxCount(ItemStack instance, Operation<Integer> original)
     {
@@ -34,9 +34,9 @@ public class MixinHopperBlockEntity
     }
 
     @WrapOperation(
-            method = "isInventoryFull",
+            method = "isFullContainer",
             at = @At(value = "INVOKE",
-                     target = "Lnet/minecraft/item/ItemStack;getMaxCount()I")
+                     target = "Lnet/minecraft/world/item/ItemStack;getMaxStackSize()I")
     )
     private static int servux_modifyShulkerMaxCountStatic(ItemStack instance, Operation<Integer> original)
     {

@@ -3,10 +3,8 @@ package fi.dy.masa.servux.event;
 import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.annotations.ApiStatus;
-
-import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
-
+import net.minecraft.server.packs.resources.ResourceManager;
 import fi.dy.masa.servux.interfaces.IServerListener;
 import fi.dy.masa.servux.interfaces.IServerManager;
 

@@ -2,12 +2,11 @@ package fi.dy.masa.servux.util.data;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import net.minecraft.util.StringRepresentable;
 import com.google.common.collect.ImmutableList;
 import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.util.StringIdentifiable;
-
-public enum FileType implements StringIdentifiable
+public enum FileType implements StringRepresentable
 {
     INVALID,
     UNKNOWN,
@@ -17,7 +16,7 @@ public enum FileType implements StringIdentifiable
     SPONGE_SCHEMATIC,
     VANILLA_STRUCTURE;
 
-    public static final StringIdentifiable.EnumCodec<FileType> CODEC = StringIdentifiable.createCodec(FileType::values);
+    public static final StringRepresentable.EnumCodec<@NotNull FileType> CODEC = StringRepresentable.fromEnum(FileType::values);
     public static final ImmutableList<@NotNull FileType> VALUES = ImmutableList.copyOf(values());
 
     public static FileType fromName(String fileName)
@@ -87,7 +86,7 @@ public enum FileType implements StringIdentifiable
     }
 
     @Override
-    public String asString()
+    public @NotNull String getSerializedName()
     {
         return getString(this);
     }

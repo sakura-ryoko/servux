@@ -1,11 +1,10 @@
 package fi.dy.masa.servux.mixin.block;
 
 import java.util.function.Supplier;
-
-import net.minecraft.block.Block;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,9 +15,9 @@ import fi.dy.masa.servux.util.WorldUtils;
 @Mixin(Block.class)
 public class MixinBlock_UpdateSuppression
 {
-    @Inject(method = "dropStack(Lnet/minecraft/world/World;Ljava/util/function/Supplier;Lnet/minecraft/item/ItemStack;)V",
+    @Inject(method = "popResource(Lnet/minecraft/world/level/Level;Ljava/util/function/Supplier;Lnet/minecraft/world/item/ItemStack;)V",
             at = @At("HEAD"), cancellable = true)
-    private static void servux_preventItemDrops(World world,
+    private static void servux_preventItemDrops(Level world,
                                                     Supplier<ItemEntity> itemEntitySupplier,
                                                     ItemStack stack,
                                                     CallbackInfo ci)

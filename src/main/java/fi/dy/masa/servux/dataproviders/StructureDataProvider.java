@@ -5,25 +5,23 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.structure.StructureContext;
-import net.minecraft.structure.StructureStart;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.profiler.Profiler;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraft.world.chunk.ChunkStatus;
-import net.minecraft.world.chunk.WorldChunk;
-import net.minecraft.world.gen.structure.Structure;
-
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -41,7 +39,7 @@ public class StructureDataProvider extends DataProviderBase
 {
     public static final StructureDataProvider INSTANCE = new StructureDataProvider();
 	private final static ServuxStructuresHandler<ServuxStructuresPacket.Payload> HANDLER = ServuxStructuresHandler.getInstance();
-	private final NbtCompound metadata = new NbtCompound();
+	private final CompoundTag metadata = new CompoundTag();
     private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
     private final ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
     private final ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
@@ -106,9 +104,9 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    public boolean isPlayerRegistered(ServerPlayer player)
     {
-        return this.registeredPlayers.containsKey(player.getUuid());
+        return this.registeredPlayers.containsKey(player.getUUID());
     }
 
     @Override
@@ -118,7 +116,7 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public void tick(MinecraftServer server, int tickCounter, Profiler profiler)
+    public void tick(MinecraftServer server, int tickCounter, ProfilerFiller profiler)
     {
         if (!this.isEnabled()) return;
 
@@ -128,15 +126,15 @@ public class StructureDataProvider extends DataProviderBase
             //Servux.printDebug("=======================\n");
             //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
 
-            List<ServerPlayerEntity> playerList = server.getPlayerManager().getPlayerList();
-            this.retainDistance = server.getPlayerManager().getViewDistance() + 2;
+            List<ServerPlayer> playerList = server.getPlayerList().getPlayers();
+            this.retainDistance = server.getPlayerList().getViewDistance() + 2;
             //this.lastTick = tickCounter;
 
-            profiler.swap(this.getName() + "_players");
+            profiler.popPush(this.getName() + "_players");
 
-            for (ServerPlayerEntity player : playerList)
+            for (ServerPlayer player : playerList)
             {
-                UUID uuid = player.getUuid();
+                UUID uuid = player.getUUID();
 
                 if (this.registeredPlayers.containsKey(uuid))
                 {
@@ -167,7 +165,7 @@ public class StructureDataProvider extends DataProviderBase
             {
                 UUID uuid = iter.next();
 
-                if (server.getPlayerManager().getPlayer(uuid) == null)
+                if (server.getPlayerList().getPlayer(uuid) == null)
                 {
                     this.timeouts.remove(uuid);
                     iter.remove();
@@ -176,46 +174,46 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
-    public void onStartedWatchingChunk(ServerPlayerEntity player, WorldChunk chunk)
+    public void onStartedWatchingChunk(ServerPlayer player, LevelChunk chunk)
     {
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
 
         if (this.registeredPlayers.containsKey(uuid))
         {
-            this.addChunkTimeoutIfHasReferences(uuid, chunk, player.getCommandSource().getServer().getTicks());
+            this.addChunkTimeoutIfHasReferences(uuid, chunk, player.createCommandSourceStack().getServer().getTickCount());
         }
     }
 
-    public boolean register(ServerPlayerEntity player)
+    public boolean register(ServerPlayer player)
     {
         if (!this.isEnabled()) return false;
 
         // System.out.printf("register\n");
         boolean registered = false;
-        MinecraftServer server = player.getCommandSource().getServer();
-        UUID uuid = player.getUuid();
+        MinecraftServer server = player.createCommandSourceStack().getServer();
+        UUID uuid = player.getUUID();
 
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().getLiteralString());
+            Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
             return registered;
         }
 
         if (!this.registeredPlayers.containsKey(uuid))
         {
             this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
-            int tickCounter = server.getTicks();
-            ServerPlayNetworkHandler handler = player.networkHandler;
+            int tickCounter = server.getTickCount();
+            ServerGamePacketListenerImpl handler = player.connection;
 
             if (handler != null)
             {
-                NbtCompound nbt = new NbtCompound();
-                nbt.copyFrom(this.metadata);
+                CompoundTag nbt = new CompoundTag();
+                nbt.merge(this.metadata);
 
-                Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().getLiteralString());
+                Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().tryCollapseToString());
                 HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
-                this.initialSyncStructuresToPlayerWithinRange(player, player.getCommandSource().getServer().getPlayerManager().getViewDistance()+2, tickCounter);
+                this.initialSyncStructuresToPlayerWithinRange(player, player.createCommandSourceStack().getServer().getPlayerList().getViewDistance()+2, tickCounter);
             }
 
             registered = true;
@@ -224,19 +222,19 @@ public class StructureDataProvider extends DataProviderBase
         return registered;
     }
 
-    public boolean unregister(ServerPlayerEntity player)
+    public boolean unregister(ServerPlayer player)
     {
         // System.out.printf("unregister\n");
         HANDLER.resetFailures(this.getNetworkChannel(), player);
 
-        return this.registeredPlayers.remove(player.getUuid()) != null;
+        return this.registeredPlayers.remove(player.getUUID()) != null;
     }
 
-    protected void initialSyncStructuresToPlayerWithinRange(ServerPlayerEntity player, int chunkRadius, int tickCounter)
+    protected void initialSyncStructuresToPlayerWithinRange(ServerPlayer player, int chunkRadius, int tickCounter)
     {
-        UUID uuid = player.getUuid();
-        ChunkPos center = player.getWatchedSection().toChunkPos();
-        Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.getEntityWorld(), center, chunkRadius);
+        UUID uuid = player.getUUID();
+        ChunkPos center = player.getLastSectionPos().chunk();
+        Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.level(), center, chunkRadius);
 
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
@@ -245,11 +243,11 @@ public class StructureDataProvider extends DataProviderBase
         this.sendStructures(player, references, tickCounter);
     }
 
-    protected void addChunkTimeoutIfHasReferences(final UUID uuid, WorldChunk chunk, final int tickCounter)
+    protected void addChunkTimeoutIfHasReferences(final UUID uuid, LevelChunk chunk, final int tickCounter)
     {
         final ChunkPos pos = chunk.getPos();
 
-        if (this.chunkHasStructureReferences(pos.x, pos.z, chunk.getWorld()))
+        if (this.chunkHasStructureReferences(pos.x, pos.z, chunk.getLevel()))
         {
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
@@ -259,9 +257,9 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
-    protected void checkForDimensionChange(ServerPlayerEntity player)
+    protected void checkForDimensionChange(ServerPlayer player)
     {
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         PlayerDimensionPosition playerPos = this.registeredPlayers.get(uuid);
 
         if (playerPos == null || playerPos.dimensionChanged(player))
@@ -288,9 +286,9 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
-    protected void refreshTrackedChunks(ServerPlayerEntity player, int tickCounter)
+    protected void refreshTrackedChunks(ServerPlayer player, int tickCounter)
     {
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         Map<ChunkPos, Timeout> map = this.timeouts.get(uuid);
 
         if (map != null)
@@ -308,7 +306,7 @@ public class StructureDataProvider extends DataProviderBase
                Math.abs(pos.z - center.z) > chunkRadius;
     }
 
-    protected void sendAndRefreshExpiredStructures(ServerPlayerEntity player, Map<ChunkPos, Timeout> map, int tickCounter)
+    protected void sendAndRefreshExpiredStructures(ServerPlayer player, Map<ChunkPos, Timeout> map, int tickCounter)
     {
         Set<ChunkPos> positionsToUpdate = new HashSet<>();
 
@@ -324,8 +322,8 @@ public class StructureDataProvider extends DataProviderBase
 
         if (!positionsToUpdate.isEmpty())
         {
-            ServerWorld world = player.getEntityWorld();
-            ChunkPos center = player.getWatchedSection().toChunkPos();
+            ServerLevel world = player.level();
+            ChunkPos center = player.getLastSectionPos().chunk();
             Map<Structure, LongSet> references = new HashMap<>();
 
             for (ChunkPos pos : positionsToUpdate)
@@ -356,21 +354,21 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
-    protected void getStructureReferencesFromChunk(int chunkX, int chunkZ, World world, Map<Structure, LongSet> references)
+    protected void getStructureReferencesFromChunk(int chunkX, int chunkZ, Level world, Map<Structure, LongSet> references)
     {
-        if (!world.isChunkLoaded(chunkX, chunkZ))
+        if (!world.hasChunk(chunkX, chunkZ))
         {
             return;
         }
 
-        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
+        ChunkAccess chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
         if (chunk == null)
         {
             return;
         }
 
-        for (Map.Entry<Structure, LongSet> entry : chunk.getStructureReferences().entrySet())
+        for (Map.Entry<Structure, LongSet> entry : chunk.getAllReferences().entrySet())
         {
             Structure feature = entry.getKey();
             LongSet startChunks = entry.getValue();
@@ -386,21 +384,21 @@ public class StructureDataProvider extends DataProviderBase
         }
     }
 
-    protected boolean chunkHasStructureReferences(int chunkX, int chunkZ, World world)
+    protected boolean chunkHasStructureReferences(int chunkX, int chunkZ, Level world)
     {
-        if (!world.isChunkLoaded(chunkX, chunkZ))
+        if (!world.hasChunk(chunkX, chunkZ))
         {
             return false;
         }
 
-        Chunk chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
+        ChunkAccess chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
         if (chunk == null)
         {
             return false;
         }
 
-        for (Map.Entry<Structure, LongSet> entry : chunk.getStructureReferences().entrySet())
+        for (Map.Entry<Structure, LongSet> entry : chunk.getAllReferences().entrySet())
         {
             if (!entry.getValue().isEmpty())
             {
@@ -411,7 +409,7 @@ public class StructureDataProvider extends DataProviderBase
         return false;
     }
 
-    protected Map<ChunkPos, StructureStart> getStructureStartsFromReferences(ServerWorld world, Map<Structure, LongSet> references)
+    protected Map<ChunkPos, StructureStart> getStructureStartsFromReferences(ServerLevel world, Map<Structure, LongSet> references)
     {
         Map<ChunkPos, StructureStart> starts = new HashMap<>();
 
@@ -425,19 +423,19 @@ public class StructureDataProvider extends DataProviderBase
             {
                 ChunkPos pos = new ChunkPos(iter.nextLong());
 
-                if (!world.isChunkLoaded(pos.x, pos.z))
+                if (!world.hasChunk(pos.x, pos.z))
                 {
                     continue;
                 }
 
-                Chunk chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_REFERENCES, false);
+                ChunkAccess chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_REFERENCES, false);
 
                 if (chunk == null)
                 {
                     continue;
                 }
 
-                StructureStart start = chunk.getStructureStart(structure);
+                StructureStart start = chunk.getStartForStructure(structure);
 
                 if (start != null)
                 {
@@ -450,7 +448,7 @@ public class StructureDataProvider extends DataProviderBase
         return starts;
     }
 
-    protected Map<Structure, LongSet> getStructureReferencesWithinRange(ServerWorld world, ChunkPos center, int chunkRadius)
+    protected Map<Structure, LongSet> getStructureReferencesWithinRange(ServerLevel world, ChunkPos center, int chunkRadius)
     {
         Map<Structure, LongSet> references = new HashMap<>();
 
@@ -466,44 +464,44 @@ public class StructureDataProvider extends DataProviderBase
         return references;
     }
 
-    protected void sendStructures(ServerPlayerEntity player,
+    protected void sendStructures(ServerPlayer player,
                                   Map<Structure, LongSet> references,
                                   int tickCounter)
     {
-        ServerWorld world = player.getEntityWorld();
+        ServerLevel world = player.level();
         Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
 
         if (!starts.isEmpty())
         {
-            this.addOrRefreshTimeouts(player.getUuid(), references, tickCounter);
+            this.addOrRefreshTimeouts(player.getUUID(), references, tickCounter);
 
-            NbtList structureList = this.getStructureList(starts, world);
+            ListTag structureList = this.getStructureList(starts, world);
             // System.out.printf("sendStructures: starts: %d -> structureList: %d. refs: %s\n", starts.size(), structureList.size(), references.keySet());
 
-            if (this.registeredPlayers.containsKey(player.getUuid()))
+            if (this.registeredPlayers.containsKey(player.getUUID()))
             {
-                NbtCompound nbt = new NbtCompound();
+                CompoundTag nbt = new CompoundTag();
                 nbt.put("Structures", structureList.copy());
                 HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START, nbt));
             }
         }
     }
 
-    protected NbtList getStructureList(Map<ChunkPos, StructureStart> structures, ServerWorld world)
+    protected ListTag getStructureList(Map<ChunkPos, StructureStart> structures, ServerLevel world)
     {
-        NbtList list = new NbtList();
-        StructureContext ctx = StructureContext.from(world);
+        ListTag list = new ListTag();
+        StructurePieceSerializationContext ctx = StructurePieceSerializationContext.fromLevel(world);
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
 			Structure structure = entry.getValue().getStructure();
 			if (structure == null) continue;          // When using C2ME, this could return NULL
-            Identifier structureType = Registries.STRUCTURE_TYPE.getId(structure.getType());
+            Identifier structureType = BuiltInRegistries.STRUCTURE_TYPE.getKey(structure.type());
 
             if (this.shouldSendStructure(structureType))
             {
                 ChunkPos pos = entry.getKey();
-                list.add(entry.getValue().toNbt(ctx, pos));
+                list.add(entry.getValue().createTag(ctx, pos));
             }
         }
 
@@ -525,7 +523,7 @@ public class StructureDataProvider extends DataProviderBase
     }
 
     @Override
-    public boolean hasPermission(ServerPlayerEntity player)
+    public boolean hasPermission(ServerPlayer player)
     {
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }

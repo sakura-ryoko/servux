@@ -4,29 +4,26 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.util.JsonUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
-import net.minecraft.util.math.BlockBox;
-import net.minecraft.util.math.BlockPos;
-
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public class Box
 {
-    @Nullable
     private BlockPos pos1;
-    @Nullable
     private BlockPos pos2;
-    private BlockPos size = BlockPos.ORIGIN;
+    private BlockPos size = BlockPos.ZERO;
     private String name = "Unnamed";
     private PositionUtils.Corner selectedCorner = PositionUtils.Corner.NONE;
 
     public Box()
     {
-        this.pos1 = BlockPos.ORIGIN;
-        this.pos2 = BlockPos.ORIGIN;
+        this.pos1 = BlockPos.ZERO;
+        this.pos2 = BlockPos.ZERO;
         this.updateSize();
     }
 
-    public Box(@Nullable BlockPos pos1, @Nullable BlockPos pos2, String name)
+    public Box(BlockPos pos1, BlockPos pos2, String name)
     {
         this.pos1 = pos1;
         this.pos2 = pos2;
@@ -42,13 +39,11 @@ public class Box
         return box;
     }
 
-    @Nullable
     public BlockPos getPos1()
     {
         return this.pos1;
     }
 
-    @Nullable
     public BlockPos getPos2()
     {
         return this.pos2;
@@ -112,7 +107,7 @@ public class Box
             this.size = PositionUtils.getAreaSizeFromRelativeEndPosition(this.pos2.subtract(this.pos1));
         } else if (this.pos1 == null && this.pos2 == null)
         {
-            this.size = BlockPos.ORIGIN;
+            this.size = BlockPos.ZERO;
         } else
         {
             this.size = new BlockPos(1, 1, 1);
@@ -209,19 +204,20 @@ public class Box
         return this.pos1 != null || this.pos2 != null ? obj : null;
     }
 
-    public net.minecraft.util.math.BlockBox toVanilla()
+    public net.minecraft.world.level.levelgen.structure.BoundingBox toVanilla()
     {
-        if (pos1 != null && pos2 != null)
-        {
-            return new BlockBox(
-                    Math.min(pos1.getX(), pos2.getX()),
-                    Math.min(pos1.getY(), pos2.getY()),
-                    Math.min(pos1.getZ(), pos2.getZ()),
-                    Math.max(pos1.getX(), pos2.getX()),
-                    Math.max(pos1.getY(), pos2.getY()),
-                    Math.max(pos1.getZ(), pos2.getZ())
-            );
-        }
-        return null;
+		if (this.pos1 == null)
+		{
+			this.pos1 = BlockPos.ZERO;
+		}
+
+	    return new BoundingBox(
+			    Math.min(this.pos1.getX(), this.pos2.getX()),
+			    Math.min(this.pos1.getY(), this.pos2.getY()),
+			    Math.min(this.pos1.getZ(), this.pos2.getZ()),
+			    Math.max(this.pos1.getX(), this.pos2.getX()),
+			    Math.max(this.pos1.getY(), this.pos2.getY()),
+			    Math.max(this.pos1.getZ(), this.pos2.getZ())
+	    );
     }
 }

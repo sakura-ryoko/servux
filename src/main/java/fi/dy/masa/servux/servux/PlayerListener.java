@@ -3,14 +3,13 @@ package fi.dy.masa.servux.servux;
 import com.mojang.authlib.GameProfile;
 import fi.dy.masa.servux.dataproviders.*;
 import fi.dy.masa.servux.interfaces.IPlayerListener;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.net.SocketAddress;
+import net.minecraft.server.level.ServerPlayer;
 
 public class PlayerListener implements IPlayerListener
 {
     @Override
-    public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayerEntity player)
+    public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayer player)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
@@ -44,7 +43,7 @@ public class PlayerListener implements IPlayerListener
     }
 
     @Override
-    public void onPlayerLeave(ServerPlayerEntity player)
+    public void onPlayerLeave(ServerPlayer player)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {

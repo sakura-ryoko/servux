@@ -3,14 +3,13 @@ package fi.dy.masa.servux.mixin.server;
 import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.UUID;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.server.PlayerConfigEntry;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.Connection;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -24,44 +23,44 @@ import fi.dy.masa.servux.event.PlayerHandler;
 /**
  * Interface for processing various server side Player Manager events
  */
-@Mixin(PlayerManager.class)
+@Mixin(PlayerList.class)
 public abstract class MixinPlayerManager
 {
     @Unique
-    private PlayerConfigEntry profileTemp;
+    private NameAndId profileTemp;
 
     public MixinPlayerManager() { super(); }
 
-    @Inject(method = "checkCanJoin", at = @At("RETURN"))
-    private void servux_onClientConnect(SocketAddress address, PlayerConfigEntry playerConfigEntry, CallbackInfoReturnable<Text> cir)
+    @Inject(method = "canPlayerLogin", at = @At("RETURN"))
+    private void servux_onClientConnect(SocketAddress address, NameAndId playerConfigEntry, CallbackInfoReturnable<Component> cir)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onClientConnect(address, playerConfigEntry, cir.getReturnValue());
     }
 
-    @Inject(method = "onPlayerConnect", at = @At("TAIL"))
-    private void servux_onPlayerJoin(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci)
+    @Inject(method = "placeNewPlayer", at = @At("TAIL"))
+    private void servux_onPlayerJoin(Connection connection, ServerPlayer player, CommonListenerCookie clientData, CallbackInfo ci)
     {
-        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerJoin(connection.getAddress(), clientData.gameProfile(), player);
+        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerJoin(connection.getRemoteAddress(), clientData.gameProfile(), player);
     }
 
-    @Inject(method = "respawnPlayer", at = @At("RETURN"))
-    private void servux_onPlayerRespawn(ServerPlayerEntity player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayerEntity> cir)
+    @Inject(method = "respawn", at = @At("RETURN"))
+    private void servux_onPlayerRespawn(ServerPlayer player, boolean alive, Entity.RemovalReason removalReason, CallbackInfoReturnable<ServerPlayer> cir)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerRespawn(cir.getReturnValue(), player);
     }
 
-    @Inject(method = "addToOperators(Lnet/minecraft/server/PlayerConfigEntry;Ljava/util/Optional;Ljava/util/Optional;)V", at = @At("HEAD"))
-    private void servux_onCaptureGameProfileOp(PlayerConfigEntry player, Optional<Integer> permissionLevel, Optional<Boolean> canBypassPlayerLimit, CallbackInfo ci)
+    @Inject(method = "op(Lnet/minecraft/server/players/NameAndId;Ljava/util/Optional;Ljava/util/Optional;)V", at = @At("HEAD"))
+    private void servux_onCaptureGameProfileOp(NameAndId player, Optional<Integer> permissionLevel, Optional<Boolean> canBypassPlayerLimit, CallbackInfo ci)
     {
         this.profileTemp = player;
     }
 
-    @Redirect(method = "addToOperators(Lnet/minecraft/server/PlayerConfigEntry;Ljava/util/Optional;Ljava/util/Optional;)V",
+    @Redirect(method = "op(Lnet/minecraft/server/players/NameAndId;Ljava/util/Optional;Ljava/util/Optional;)V",
             at = @At(value = "INVOKE",
-                    target ="Lnet/minecraft/server/PlayerManager;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/network/ServerPlayerEntity;"))
-    private ServerPlayerEntity servux_onPlayerOp(PlayerManager instance, UUID uuid)
+                    target ="Lnet/minecraft/server/players/PlayerList;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/level/ServerPlayer;"))
+    private ServerPlayer servux_onPlayerOp(PlayerList instance, UUID uuid)
     {
-        ServerPlayerEntity player = instance.getPlayer(uuid);
+        ServerPlayer player = instance.getPlayer(uuid);
 
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerOp(this.profileTemp, uuid, player);
 
@@ -73,18 +72,18 @@ public abstract class MixinPlayerManager
         return player;
     }
 
-    @Inject(method = "removeFromOperators", at = @At("HEAD"))
-    private void servux_onGameProfileDeOp(PlayerConfigEntry player, CallbackInfo ci)
+    @Inject(method = "deop", at = @At("HEAD"))
+    private void servux_onGameProfileDeOp(NameAndId player, CallbackInfo ci)
     {
         this.profileTemp = player;
     }
 
-    @Redirect(method = "removeFromOperators",
+    @Redirect(method = "deop",
             at = @At(value = "INVOKE",
-                    target="Lnet/minecraft/server/PlayerManager;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/network/ServerPlayerEntity;"))
-    private ServerPlayerEntity servux_onPlayerDeOp(PlayerManager instance, UUID uuid)
+                    target="Lnet/minecraft/server/players/PlayerList;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/level/ServerPlayer;"))
+    private ServerPlayer servux_onPlayerDeOp(PlayerList instance, UUID uuid)
     {
-        ServerPlayerEntity player = instance.getPlayer(uuid);
+        ServerPlayer player = instance.getPlayer(uuid);
 
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerDeOp(this.profileTemp, uuid, player);
 
@@ -97,7 +96,7 @@ public abstract class MixinPlayerManager
     }
 
     @Inject(method = "remove", at = @At("HEAD"))
-    private void servux_onPlayerLeave(ServerPlayerEntity player, CallbackInfo ci)
+    private void servux_onPlayerLeave(ServerPlayer player, CallbackInfo ci)
     {
         ((PlayerHandler) PlayerHandler.getInstance()).onPlayerLeave(player);
     }

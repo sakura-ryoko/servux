@@ -1,7 +1,7 @@
 package fi.dy.masa.servux.interfaces;
 
-import net.minecraft.resource.ResourceManager;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.resources.ResourceManager;
 
 public interface IServerListener
 {

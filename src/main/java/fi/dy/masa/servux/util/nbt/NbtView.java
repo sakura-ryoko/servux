@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.storage.*;
-import net.minecraft.util.ErrorReporter;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.storage.*;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.mixin.nbt.IMixinNbtReadView;
@@ -26,9 +26,9 @@ import fi.dy.masa.servux.mixin.nbt.IMixinNbtWriteView;
 public class NbtView
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(Reference.MOD_ID+"-NbtView");
-    private static final ErrorReporter log = new ErrorReporter.Logging(LOGGER);
-    private ReadView reader;
-    private WriteView writer;
+    private static final ProblemReporter log = new ProblemReporter.ScopedCollector(LOGGER);
+    private ValueInput reader;
+    private ValueOutput writer;
 
     private NbtView() {}
 
@@ -38,10 +38,10 @@ public class NbtView
      * @param registry ()
      * @return ()
      */
-    public static NbtView getReader(NbtCompound nbt, @Nonnull DynamicRegistryManager registry)
+    public static NbtView getReader(CompoundTag nbt, @Nonnull RegistryAccess registry)
     {
         NbtView wrapper = new NbtView();
-        wrapper.reader = NbtReadView.create(log, registry, nbt);
+        wrapper.reader = TagValueInput.create(log, registry, nbt);
         wrapper.writer = null;
         return wrapper;
     }
@@ -51,15 +51,15 @@ public class NbtView
      * @param registry ()
      * @return ()
      */
-    public static NbtView getWriter(@Nonnull DynamicRegistryManager registry)
+    public static NbtView getWriter(@Nonnull RegistryAccess registry)
     {
         NbtView wrapper = new NbtView();
         wrapper.reader = null;
-        wrapper.writer = NbtWriteView.create(log, registry);
+        wrapper.writer = TagValueOutput.createWithContext(log, registry);
         return wrapper;
     }
 
-    public ErrorReporter getErrorReporter()
+    public ProblemReporter getErrorReporter()
     {
         return log;
     }
@@ -68,15 +68,15 @@ public class NbtView
 
     public boolean isWriter() { return this.writer != null; }
 
-    public @Nullable ReadView getReader() { return this.reader; }
+    public @Nullable ValueInput getReader() { return this.reader; }
 
-    public @Nullable WriteView getWriter() { return this.writer; }
+    public @Nullable ValueOutput getWriter() { return this.writer; }
 
-    public @Nullable NbtReadView asNbtReader() { return (NbtReadView) this.reader; }
+    public @Nullable TagValueInput asNbtReader() { return (TagValueInput) this.reader; }
 
-    public @Nullable NbtWriteView asNbtWriter() { return (NbtWriteView) this.writer; }
+    public @Nullable TagValueOutput asNbtWriter() { return (TagValueOutput) this.writer; }
 
-    public @Nullable ReadContext getReaderContext()
+    public @Nullable ValueInputContextHelper getReaderContext()
     {
         if (this.isReader())
         {
@@ -102,7 +102,7 @@ public class NbtView
      * Return whatever NbtCompound that this Reader/Writer contains.
      * @return ()
      */
-    public @Nullable NbtCompound readNbt()
+    public @Nullable CompoundTag readNbt()
     {
         if (this.isReader())
         {
@@ -122,7 +122,7 @@ public class NbtView
      * @param nbtIn ()
      * @return ()
      */
-    public @Nullable NbtView writeNbt(@Nonnull NbtCompound nbtIn)
+    public @Nullable NbtView writeNbt(@Nonnull CompoundTag nbtIn)
     {
         if (this.isReader())
         {
@@ -130,7 +130,7 @@ public class NbtView
             return null;
         }
 
-        for (String key : nbtIn.getKeys())
+        for (String key : nbtIn.keySet())
         {
             Objects.requireNonNull(this.readNbt()).put(key, nbtIn.get(key));
         }
@@ -152,7 +152,7 @@ public class NbtView
             return Optional.empty();
         }
 
-        return NbtUtils.readFlatMap(Objects.requireNonNullElse(this.readNbt(), new NbtCompound()), mapCodec);
+        return NbtUtils.readFlatMap(Objects.requireNonNullElse(this.readNbt(), new CompoundTag()), mapCodec);
     }
 
     /**
@@ -188,12 +188,12 @@ public class NbtView
      * @param value ()
      * @return ()
      */
-    public <T> NbtCompound writeFlatMap(MapCodec<T> mapCodec, T value)
+    public <T> CompoundTag writeFlatMap(MapCodec<T> mapCodec, T value)
     {
         if (this.isReader())
         {
             LOGGER.error("writeFlatMap(): Called from a Reader Context");
-            return new NbtCompound();
+            return new CompoundTag();
         }
 
         this.writeNbt(NbtUtils.writeFlatMap(mapCodec, value));
@@ -208,23 +208,23 @@ public class NbtView
      * @param value ()
      * @return ()
      */
-    public <T> NbtCompound writeCodec(String key, Codec<T> codec, T value)
+    public <T> CompoundTag writeCodec(String key, Codec<T> codec, T value)
     {
         if (this.isReader())
         {
             LOGGER.error("writeCodec(): Called from a Reader Context");
-            return new NbtCompound();
+            return new CompoundTag();
         }
 
         try
         {
-            this.writer.put(key, codec, value);
+            this.writer.store(key, codec, value);
             return this.readNbt();
         }
         catch (Exception err)
         {
             LOGGER.warn("writeCodec(): Exception writing to key '{}'; {}", key, err.getLocalizedMessage());
-            return new NbtCompound();
+            return new CompoundTag();
         }
     }
 }

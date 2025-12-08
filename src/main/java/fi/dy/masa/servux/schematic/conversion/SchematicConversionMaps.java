@@ -5,13 +5,13 @@ import com.mojang.serialization.Dynamic;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
-import net.minecraft.datafixer.Schemas;
-import net.minecraft.datafixer.TypeReferences;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.NbtString;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.util.datafix.DataFixers;
+import net.minecraft.util.datafix.fixes.References;
 
 public class SchematicConversionMaps
 {
@@ -21,7 +21,7 @@ public class SchematicConversionMaps
     {
         if (datafixer == null)
         {
-            datafixer = Schemas.getFixer();
+            datafixer = DataFixers.getDataFixer();
         }
         
         return datafixer;
@@ -29,12 +29,12 @@ public class SchematicConversionMaps
     
     public static String updateBlockName(String oldName, int oldVersion)
     {
-        NbtString tagStr = NbtString.of(oldName);
+        StringTag tagStr = StringTag.valueOf(oldName);
 
         try
         {
             return getDataFixer()
-                                  .update(TypeReferences.BLOCK_NAME, new Dynamic<>(NbtOps.INSTANCE, tagStr), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION)
+                                  .update(References.BLOCK_NAME, new Dynamic<>(NbtOps.INSTANCE, tagStr), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION)
                                   .getValue().asString()
                                   .orElse(oldName);
         }
@@ -48,51 +48,51 @@ public class SchematicConversionMaps
     /**
      * These are the Vanilla Data Fixer's for the 1.20.x -> 1.20.5 changes
      */
-    public static NbtCompound updateBlockStates(NbtCompound oldBlockState, int oldVersion)
+    public static CompoundTag updateBlockStates(CompoundTag oldBlockState, int oldVersion)
     {
         try
         {
-            return (NbtCompound) getDataFixer().update(TypeReferences.BLOCK_STATE, new Dynamic<>(NbtOps.INSTANCE, oldBlockState), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+            return (CompoundTag) getDataFixer().update(References.BLOCK_STATE, new Dynamic<>(NbtOps.INSTANCE, oldBlockState), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
         }
         catch (Exception e)
         {
             Servux.LOGGER.warn("updateBlockStates: failed to update Block State [{}], preserving original state (data may become lost)",
-                                   oldBlockState.contains("Name") ? oldBlockState.getString("Name", "?") : "?");
+                                   oldBlockState.contains("Name") ? oldBlockState.getStringOr("Name", "?") : "?");
             return oldBlockState;
         }
     }
 
-    public static NbtCompound updateBlockEntity(NbtCompound oldBlockEntity, int oldVersion)
+    public static CompoundTag updateBlockEntity(CompoundTag oldBlockEntity, int oldVersion)
     {
         try
         {
-            return (NbtCompound) getDataFixer().update(TypeReferences.BLOCK_ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldBlockEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+            return (CompoundTag) getDataFixer().update(References.BLOCK_ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldBlockEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
         }
         catch (Exception e)
         {
             BlockPos pos = NbtUtils.readBlockPos(oldBlockEntity);
             Servux.LOGGER.warn("updateBlockEntity: failed to update Block Entity [{}] at [{}], preserving original state (data may become lost)",
-                                   oldBlockEntity.contains("id") ? oldBlockEntity.getString("id", "?") : "?", pos != null ? pos.toShortString() : "?");
+                                   oldBlockEntity.contains("id") ? oldBlockEntity.getStringOr("id", "?") : "?", pos != null ? pos.toShortString() : "?");
             return oldBlockEntity;
         }
     }
 
-    public static NbtCompound updateEntity(NbtCompound oldEntity, int oldVersion)
+    public static CompoundTag updateEntity(CompoundTag oldEntity, int oldVersion)
     {
         try
         {
-            return (NbtCompound) getDataFixer().update(TypeReferences.ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
+            return (CompoundTag) getDataFixer().update(References.ENTITY, new Dynamic<>(NbtOps.INSTANCE, oldEntity), oldVersion, LitematicaSchematic.MINECRAFT_DATA_VERSION).getValue();
         }
         catch (Exception e)
         {
             Servux.LOGGER.warn("updateEntity: failed to update Entity [{}], preserving original state (data may become lost)",
-                                   oldEntity.contains("id") ? oldEntity.getString("id", "?") : "?");
+                                   oldEntity.contains("id") ? oldEntity.getStringOr("id", "?") : "?");
             return oldEntity;
         }
     }
 
     // Fix missing "id" tags.  This seems to be an issue with 1.19.x litematics.
-    public static NbtCompound checkForIdTag(NbtCompound tags)
+    public static CompoundTag checkForIdTag(CompoundTag tags)
     {
         if (tags.contains("id"))
         {
@@ -100,7 +100,7 @@ public class SchematicConversionMaps
         }
         if (tags.contains("Id"))
         {
-            tags.putString("id", tags.getString("Id", ""));
+            tags.putString("id", tags.getStringOr("Id", ""));
             return tags;
         }
 
@@ -206,7 +206,7 @@ public class SchematicConversionMaps
         // Fix any erroneous Items tags with the null "tag" tag.
         if (tags.contains("Items"))
         {
-            NbtList items = fixItemsTag(tags.getListOrEmpty("Items"));
+            ListTag items = fixItemsTag(tags.getListOrEmpty("Items"));
             tags.put("Items", items);
         }
 
@@ -214,16 +214,16 @@ public class SchematicConversionMaps
     }
 
     // Fix null 'tag' entries.  This seems to be an issue with 1.19.x litematics.
-    private static NbtList fixItemsTag(NbtList items)
+    private static ListTag fixItemsTag(ListTag items)
     {
-        NbtList newList = new NbtList();
+        ListTag newList = new ListTag();
 
         for (int i = 0; i < items.size(); i++)
         {
-            NbtCompound itemEntry = items.getCompoundOrEmpty(i);
+            CompoundTag itemEntry = items.getCompoundOrEmpty(i);
             if (itemEntry.contains("tag"))
             {
-                NbtCompound tag = null;
+                CompoundTag tag = null;
                 try
                 {
                     tag = itemEntry.getCompoundOrEmpty("tag");
@@ -240,11 +240,11 @@ public class SchematicConversionMaps
                     // Fix nested entries if they exist
                     if (tag.contains("BlockEntityTag"))
                     {
-                        NbtCompound entityEntry = tag.getCompoundOrEmpty("BlockEntityTag");
+                        CompoundTag entityEntry = tag.getCompoundOrEmpty("BlockEntityTag");
 
                         if (entityEntry.contains("Items"))
                         {
-                            NbtList nestedItems = fixItemsTag(entityEntry.getListOrEmpty("Items"));
+                            ListTag nestedItems = fixItemsTag(entityEntry.getListOrEmpty("Items"));
                             entityEntry.put("Items", nestedItems);
                         }
 

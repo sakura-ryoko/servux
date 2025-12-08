@@ -3,18 +3,17 @@ package fi.dy.masa.servux.settings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
-import net.minecraft.text.Text;
-
 import java.util.List;
+import net.minecraft.network.chat.Component;
 
 public class ServuxBoolSetting extends AbstractServuxSetting<Boolean>
 {
-    public ServuxBoolSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, boolean defaultValue, IServuxSettingCallback<Boolean> callback)
+    public ServuxBoolSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, boolean defaultValue, IServuxSettingCallback<Boolean> callback)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"), callback);
     }
 
-    public ServuxBoolSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, boolean defaultValue)
+    public ServuxBoolSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, boolean defaultValue)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, List.of("true", "false"), null);
     }

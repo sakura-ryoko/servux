@@ -2,14 +2,12 @@ package fi.dy.masa.servux.dataproviders;
 
 import java.util.List;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
@@ -53,7 +51,7 @@ public class ServuxConfigProvider extends DataProviderBase
             }
         }
     };
-    private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Text.of("Debug Log"), Text.of("Enable debug logging"), false);
+    private final ServuxBoolSetting debugLog = new ServuxBoolSetting(this, "debug_log", Component.nullToEmpty("Debug Log"), Component.nullToEmpty("Enable debug logging"), false);
     private final List<IServuxSetting<?>> settings = List.of(
             this.basePermissionLevel, this.adminPermissionLevel,
             this.easyPlacePermissionLevel, this.easyPlaceValidatorEnabled,
@@ -63,7 +61,7 @@ public class ServuxConfigProvider extends DataProviderBase
     protected ServuxConfigProvider()
     {
         super("servux_main",
-                Identifier.of("servux", "main"),
+                Identifier.fromNamespaceAndPath("servux", "main"),
                 1, 0, Reference.MOD_ID+".main",
                 "The Servux Main configuration data provider");
     }
@@ -87,21 +85,21 @@ public class ServuxConfigProvider extends DataProviderBase
     }
 
     @Override
-    public boolean isPlayerRegistered(ServerPlayerEntity player)
+    public boolean isPlayerRegistered(ServerPlayer player)
     {
         return true;
     }
 
-    public void doReloadConfig(ServerCommandSource source)
+    public void doReloadConfig(CommandSourceStack source)
     {
         DataProviderManager.INSTANCE.readFromConfig();
-        source.sendFeedback(() -> StringUtils.translate("servux.command.config.reloaded"), true);
+        source.sendSuccess(() -> StringUtils.translate("servux.command.config.reloaded"), true);
     }
 
-    public void doSaveConfig(ServerCommandSource source)
+    public void doSaveConfig(CommandSourceStack source)
     {
         DataProviderManager.INSTANCE.writeToConfig();
-        source.sendFeedback(() -> StringUtils.translate("servux.command.config.saved"), true);
+        source.sendSuccess(() -> StringUtils.translate("servux.command.config.saved"), true);
     }
 
     public boolean hasDebugMode()
@@ -110,7 +108,7 @@ public class ServuxConfigProvider extends DataProviderBase
     }
 
     @Override
-    public boolean hasPermission(ServerPlayerEntity player)
+    public boolean hasPermission(ServerPlayer player)
     {
         if (player == null)
         {
@@ -120,7 +118,7 @@ public class ServuxConfigProvider extends DataProviderBase
         return Permissions.check(player, Reference.MOD_ID+".main.admin", this.adminPermissionLevel.getValue());
     }
 
-    public boolean hasPermission_EasyPlace(ServerPlayerEntity player)
+    public boolean hasPermission_EasyPlace(ServerPlayer player)
     {
         if (player == null)
         {

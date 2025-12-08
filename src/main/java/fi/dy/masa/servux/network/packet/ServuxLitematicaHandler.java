@@ -5,20 +5,20 @@ import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtSizeTracker;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.random.Random;
-
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
@@ -28,18 +28,19 @@ import fi.dy.masa.servux.network.PacketSplitter;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 
 @Environment(EnvType.SERVER)
-public abstract class ServuxLitematicaHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
+public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> implements IPluginServerPlayHandler<T>
 {
-    private static final ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> INSTANCE = new ServuxLitematicaHandler<>() {
+    private static final ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> INSTANCE = new ServuxLitematicaHandler<>()
+    {
         @Override
-        public void receive(ServuxLitematicaPacket.Payload payload, ServerPlayNetworking.Context context)
+        public void receive(ServuxLitematicaPacket.Payload payload, ServerPlayNetworking.@NotNull Context context)
         {
             ServuxLitematicaHandler.INSTANCE.receivePlayPayload(payload, context);
         }
     };
     public static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = Identifier.of("servux", "litematics");
+    public static final Identifier CHANNEL_ID = Identifier.fromNamespaceAndPath("servux", "litematics");
 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
@@ -70,7 +71,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
     }
 
     @Override
-    public <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayerEntity player, P data)
+    public <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayer player, P data)
     {
         ServuxLitematicaPacket packet = (ServuxLitematicaPacket) data;
 
@@ -86,12 +87,12 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             case PACKET_C2S_BULK_ENTITY_NBT_REQUEST -> LitematicsDataProvider.INSTANCE.onBulkEntityRequest(player, packet.getChunkPos(), packet.getCompound());
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
-                UUID uuid = player.getUuid();
+                UUID uuid = player.getUUID();
                 long readingSessionKey;
 
                 if (!this.readingSessionKeys.containsKey(uuid))
                 {
-                    readingSessionKey = Random.create(Util.getMeasuringTimeMs()).nextLong();
+                    readingSessionKey = RandomSource.create(Util.getMillis()).nextLong();
                     this.readingSessionKeys.put(uuid, readingSessionKey);
                 }
                 else
@@ -103,7 +104,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                 {
                     Servux.LOGGER.info("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
                 }
-                PacketByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
+                FriendlyByteBuf fullPacket = PacketSplitter.receive(this, readingSessionKey, packet.getBuffer());
 
                 if (fullPacket != null)
                 {
@@ -115,7 +116,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     try
                     {
                         this.readingSessionKeys.remove(uuid);
-                        this.handleBulkData(player, fullPacket.readVarInt(), (NbtCompound) fullPacket.readNbt(NbtSizeTracker.ofUnlimitedBytes()));
+                        this.handleBulkData(player, fullPacket.readVarInt(), (CompoundTag) fullPacket.readNbt(NbtAccounter.unlimitedHeap()));
                     }
                     catch (Exception e)
                     {
@@ -123,24 +124,24 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
                     }
                 }
             }
-            default -> Servux.LOGGER.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("ServuxLitematicaHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().tryCollapseToString(), packet.getTotalSize());
         }
     }
 
-    private void handleBulkData(ServerPlayerEntity player, final int type, NbtCompound nbt)
+    private void handleBulkData(ServerPlayer player, final int type, CompoundTag nbt)
     {
-        String task = nbt.getString("Task", "LitematicaPaste");
+        String task = nbt.getStringOr("Task", "LitematicaPaste");
 
         switch (task)
         {
             // File-Transmit support
             case "Litematic-TransmitStart", "Litematic-TransmitCancel", "Litematic-TransmitData", "Litematic-TransmitEnd" ->
             {
-                Pair<LitematicaSchematic, NbtCompound> schemPair = LitematicaSchematic.receiveFileTransmit(nbt, player);
+                Pair<LitematicaSchematic, CompoundTag> schemPair = LitematicaSchematic.receiveFileTransmit(nbt, player);
 
                 if (schemPair != null && schemPair.getLeft().getFile() != null)
                 {
-                    Servux.debugLog("handleBulkData(): Received litematic '{}' from player {}", schemPair.getLeft().getFile().toAbsolutePath().toString(), player.getName().getLiteralString());
+                    Servux.debugLog("handleBulkData(): Received litematic '{}' from player {}", schemPair.getLeft().getFile().toAbsolutePath().toString(), player.getName().tryCollapseToString());
                     LitematicsDataProvider.INSTANCE.handleClientPasteRequestPair(player, type, schemPair);
                 }
             }
@@ -157,33 +158,33 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
         }
     }
 
-    public void resetFailures(Identifier channel, ServerPlayerEntity player)
+    public void resetFailures(Identifier channel, ServerPlayer player)
     {
         if (channel.equals(CHANNEL_ID))
         {
-            this.failures.remove(player.getUuid());
+            this.failures.remove(player.getUUID());
         }
     }
 
     @Override
     public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
-        if (payload.getId().id().equals(CHANNEL_ID))
+        if (payload.type().id().equals(CHANNEL_ID))
         {
-            ServerPlayerEntity player = ctx.player();
+            ServerPlayer player = ctx.player();
             ServuxLitematicaHandler.INSTANCE.decodeServerData(CHANNEL_ID, player, ((ServuxLitematicaPacket.Payload) payload).data());
         }
     }
 
     @Override
-    public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
+    public void encodeWithSplitter(ServerPlayer player, FriendlyByteBuf buffer, ServerGamePacketListenerImpl networkHandler)
     {
         // Send each PacketSplitter buffer slice
         ServuxLitematicaHandler.INSTANCE.sendPlayPayload(player, new ServuxLitematicaPacket.Payload(ServuxLitematicaPacket.ResponseS2CData(buffer)));
     }
 
     @Override
-    public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
+    public <P extends IServerPayloadData> void encodeServerData(ServerPlayer player, P data)
     {
         if (!LitematicsDataProvider.INSTANCE.isEnabled()) return;
 
@@ -192,14 +193,14 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
         // Send Response Data via Packet Splitter
         if (packet.getType().equals(ServuxLitematicaPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
         {
-            PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
             buffer.writeVarInt(packet.getTransactionId());
             buffer.writeNbt(packet.getCompound());
-            PacketSplitter.send(this, buffer, player, player.networkHandler);
+            PacketSplitter.send(this, buffer, player, player.connection);
         }
         else if (!ServuxLitematicaHandler.INSTANCE.sendPlayPayload(player, new ServuxLitematicaPacket.Payload(packet)))
         {
-            UUID id = player.getUuid();
+            UUID id = player.getUUID();
 
             // Packet failure tracking
             if (!this.failures.containsKey(id))
@@ -210,7 +211,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.LOGGER.info("Unregistering Litematic Client {} after {} failures (Litematica not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Litematic Client {} after {} failures (Litematica not installed perhaps)", player.getName().tryCollapseToString(), MAX_FAILURES);
                 }
 
                 LitematicsDataProvider.INSTANCE.onPacketFailure(player);

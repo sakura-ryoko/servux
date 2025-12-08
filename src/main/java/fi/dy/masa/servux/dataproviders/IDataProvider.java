@@ -2,11 +2,10 @@ package fi.dy.masa.servux.dataproviders;
 
 import com.google.gson.JsonObject;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.profiler.Profiler;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.profiling.ProfilerFiller;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 
 import java.util.List;
@@ -101,7 +100,7 @@ public interface IDataProvider
      * @param server ()
      * @param tickCounter The current server tick (since last server start)
      */
-    default void tick(MinecraftServer server, int tickCounter, Profiler profiler)
+    default void tick(MinecraftServer server, int tickCounter, ProfilerFiller profiler)
     {
     }
 
@@ -116,14 +115,14 @@ public interface IDataProvider
      * @param player (Player to be checked)
      * @return (True|False)
      */
-    boolean isPlayerRegistered(ServerPlayerEntity player);
+    boolean isPlayerRegistered(ServerPlayer player);
 
     /**
      * Determine if Player has permissions to this Data Provider
      * @param player (Player to test permissions for)
      * @return (true|false)
      */
-    boolean hasPermission(ServerPlayerEntity player);
+    boolean hasPermission(ServerPlayer player);
 
     /**
      * Signal The Data Providers when the server is shutting down

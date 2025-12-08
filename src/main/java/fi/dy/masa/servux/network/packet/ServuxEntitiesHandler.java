@@ -4,16 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
+import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
@@ -22,18 +22,19 @@ import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
 
 @Environment(EnvType.SERVER)
-public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
+public abstract class ServuxEntitiesHandler<T extends CustomPacketPayload> implements IPluginServerPlayHandler<T>
 {
-    private static final ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> INSTANCE = new ServuxEntitiesHandler<>() {
+    private static final ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> INSTANCE = new ServuxEntitiesHandler<>()
+    {
         @Override
-        public void receive(ServuxEntitiesPacket.Payload payload, ServerPlayNetworking.Context context)
+        public void receive(ServuxEntitiesPacket.Payload payload, ServerPlayNetworking.@NotNull Context context)
         {
             ServuxEntitiesHandler.INSTANCE.receivePlayPayload(payload, context);
         }
     };
     public static ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = Identifier.of("servux", "entity_data");
+    public static final Identifier CHANNEL_ID = Identifier.fromNamespaceAndPath("servux", "entity_data");
 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
@@ -64,7 +65,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
     }
 
     @Override
-    public <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayerEntity player, P data)
+    public <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayer player, P data)
     {
         ServuxEntitiesPacket packet = (ServuxEntitiesPacket) data;
 
@@ -113,7 +114,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
                 }
             }
              */
-            default -> Servux.LOGGER.warn("ServuxEntitiesHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("ServuxEntitiesHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().tryCollapseToString(), packet.getTotalSize());
         }
     }
 
@@ -126,33 +127,33 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
         }
     }
 
-    public void resetFailures(Identifier channel, ServerPlayerEntity player)
+    public void resetFailures(Identifier channel, ServerPlayer player)
     {
         if (channel.equals(CHANNEL_ID))
         {
-            this.failures.remove(player.getUuid());
+            this.failures.remove(player.getUUID());
         }
     }
 
     @Override
     public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
-        if (payload.getId().id().equals(CHANNEL_ID))
+        if (payload.type().id().equals(CHANNEL_ID))
         {
-            ServerPlayerEntity player = ctx.player();
+            ServerPlayer player = ctx.player();
             ServuxEntitiesHandler.INSTANCE.decodeServerData(CHANNEL_ID, player, ((ServuxEntitiesPacket.Payload) payload).data());
         }
     }
 
     @Override
-    public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
+    public void encodeWithSplitter(ServerPlayer player, FriendlyByteBuf buffer, ServerGamePacketListenerImpl networkHandler)
     {
         // Send each PacketSplitter buffer slice
         ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(ServuxEntitiesPacket.ResponseS2CData(buffer)));
     }
 
     @Override
-    public <P extends IServerPayloadData> void encodeServerData(ServerPlayerEntity player, P data)
+    public <P extends IServerPayloadData> void encodeServerData(ServerPlayer player, P data)
     {
         if (!EntitiesDataProvider.INSTANCE.isEnabled()) return;
 
@@ -161,14 +162,14 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
         // Send Response Data via Packet Splitter
         if (packet.getType().equals(ServuxEntitiesPacket.Type.PACKET_S2C_NBT_RESPONSE_START))
         {
-            PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
             buffer.writeVarInt(packet.getTransactionId());
             buffer.writeNbt(packet.getCompound());
-            PacketSplitter.send(this, buffer, player, player.networkHandler);
+            PacketSplitter.send(this, buffer, player, player.connection);
         }
         else if (!ServuxEntitiesHandler.INSTANCE.sendPlayPayload(player, new ServuxEntitiesPacket.Payload(packet)))
         {
-            UUID id = player.getUuid();
+            UUID id = player.getUUID();
 
             // Packet failure tracking
             if (!this.failures.containsKey(id))
@@ -179,7 +180,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.LOGGER.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Entities Client {} after {} failures (Mod not installed perhaps)", player.getName().tryCollapseToString(), MAX_FAILURES);
                 }
                 EntitiesDataProvider.INSTANCE.onPacketFailure(player);
             }

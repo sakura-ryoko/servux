@@ -6,18 +6,18 @@ import java.util.UUID;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
@@ -26,30 +26,30 @@ import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class EntityUtils
 {
-    public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof PlayerEntity) == false;
+    public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof Player) == false;
 
-    public static boolean isCreativeMode(PlayerEntity player)
+    public static boolean isCreativeMode(Player player)
     {
-        return player.getAbilities().creativeMode;
+        return player.getAbilities().instabuild;
     }
 
     public static Direction getHorizontalLookingDirection(Entity entity)
     {
-        return Direction.fromHorizontalDegrees(entity.getYaw());
+        return Direction.fromYRot(entity.getYRot());
     }
 
     public static Direction getVerticalLookingDirection(Entity entity)
     {
-        return entity.getPitch() > 0 ? Direction.DOWN : Direction.UP;
+        return entity.getXRot() > 0 ? Direction.DOWN : Direction.UP;
     }
 
     public static Direction getClosestLookingDirection(Entity entity)
     {
-        if (entity.getPitch() > 60.0f)
+        if (entity.getXRot() > 60.0f)
         {
             return Direction.DOWN;
         }
-        else if (-entity.getPitch() > 60.0f)
+        else if (-entity.getXRot() > 60.0f)
         {
             return Direction.UP;
         }
@@ -67,7 +67,7 @@ public class EntityUtils
 
         for (T entity : list)
         {
-            if (entity.getUuid().equals(uuid))
+            if (entity.getUUID().equals(uuid))
             {
                 return entity;
             }
@@ -80,22 +80,22 @@ public class EntityUtils
     public static String getEntityId(Entity entity)
     {
         EntityType<?> entitytype = entity.getType();
-        Identifier resourcelocation = EntityType.getId(entitytype);
-        return entitytype.isSaveable() && resourcelocation != null ? resourcelocation.toString() : null;
+        Identifier resourcelocation = EntityType.getKey(entitytype);
+        return entitytype.canSerialize() && resourcelocation != null ? resourcelocation.toString() : null;
     }
 
     @Nullable
-    private static Entity createEntityFromNBTSingle(NbtCompound nbt, World world)
+    private static Entity createEntityFromNBTSingle(CompoundTag nbt, Level world)
     {
         try
         {
-            NbtView view = NbtView.getReader(nbt, world.getRegistryManager());
-            Optional<Entity> optional = EntityType.getEntityFromData(view.getReader(), world, SpawnReason.LOAD);
+            NbtView view = NbtView.getReader(nbt, world.registryAccess());
+            Optional<Entity> optional = EntityType.create(view.getReader(), world, EntitySpawnReason.LOAD);
 
             if (optional.isPresent())
             {
                 Entity entity = optional.get();
-                entity.setUuid(UUID.randomUUID());
+                entity.setUUID(UUID.randomUUID());
                 return entity;
             }
         }
@@ -113,7 +113,7 @@ public class EntityUtils
      * @return ()
      */
     @Nullable
-    public static Entity createEntityAndPassengersFromNBT(NbtCompound nbt, World world)
+    public static Entity createEntityAndPassengersFromNBT(CompoundTag nbt, Level world)
     {
         Entity entity = createEntityFromNBTSingle(nbt, world);
 
@@ -125,7 +125,7 @@ public class EntityUtils
         {
             if (nbt.contains("Passengers"))
             {
-                NbtList taglist = nbt.getListOrEmpty("Passengers");
+                ListTag taglist = nbt.getListOrEmpty("Passengers");
 
                 for (int i = 0; i < taglist.size(); ++i)
                 {
@@ -142,18 +142,18 @@ public class EntityUtils
         }
     }
 
-    public static void spawnEntityAndPassengersInWorld(Entity entity, World world)
+    public static void spawnEntityAndPassengersInWorld(Entity entity, Level world)
     {
-        if (world.spawnEntity(entity) && entity.hasPassengers())
+        if (world.addFreshEntity(entity) && entity.isVehicle())
         {
-            for (Entity passenger : entity.getPassengerList())
+            for (Entity passenger : entity.getPassengers())
             {
-                passenger.refreshPositionAndAngles(
+                passenger.snapTo(
                         entity.getX(),
-                        entity.getY() + entity.getPassengerRidingPos(passenger).getY(),
+                        entity.getY() + entity.getPassengerRidingPosition(passenger).y(),
                         entity.getZ(),
-                        passenger.getYaw(), passenger.getPitch());
-                setEntityRotations(passenger, passenger.getYaw(), passenger.getPitch());
+                        passenger.getYRot(), passenger.getXRot());
+                setEntityRotations(passenger, passenger.getYRot(), passenger.getXRot());
                 spawnEntityAndPassengersInWorld(passenger, world);
             }
         }
@@ -161,32 +161,32 @@ public class EntityUtils
 
     public static void setEntityRotations(Entity entity, float yaw, float pitch)
     {
-        entity.setYaw(yaw);
-        entity.lastYaw = yaw;
+        entity.setYRot(yaw);
+        entity.yRotO = yaw;
 
-        entity.setPitch(pitch);
-        entity.lastPitch = pitch;
+        entity.setXRot(pitch);
+        entity.xRotO = pitch;
 
         if (entity instanceof LivingEntity livingBase)
         {
-            livingBase.headYaw = yaw;
-            livingBase.bodyYaw = yaw;
-            livingBase.lastHeadYaw = yaw;
-            livingBase.lastBodyYaw = yaw;
+            livingBase.yHeadRot = yaw;
+            livingBase.yBodyRot = yaw;
+            livingBase.yHeadRotO = yaw;
+            livingBase.yBodyRotO = yaw;
             //livingBase.renderYawOffset = yaw;
             //livingBase.prevRenderYawOffset = yaw;
         }
     }
 
-    public static List<Entity> getEntitiesWithinSubRegion(World world, BlockPos origin, BlockPos regionPos, BlockPos regionSize,
+    public static List<Entity> getEntitiesWithinSubRegion(Level world, BlockPos origin, BlockPos regionPos, BlockPos regionSize,
                                                           SchematicPlacement schematicPlacement, SubRegionPlacement placement)
     {
         // These are the untransformed relative positions
         BlockPos regionPosRelTransformed = PositionUtils.getTransformedBlockPos(regionPos, schematicPlacement.getMirror(), schematicPlacement.getRotation());
-        BlockPos posEndAbs = PositionUtils.getTransformedPlacementPosition(regionSize.add(-1, -1, -1), schematicPlacement, placement).add(regionPosRelTransformed).add(origin);
-        BlockPos regionPosAbs = regionPosRelTransformed.add(origin);
-        Box bb = PositionUtils.createEnclosingAABB(regionPosAbs, posEndAbs);
+        BlockPos posEndAbs = PositionUtils.getTransformedPlacementPosition(regionSize.offset(-1, -1, -1), schematicPlacement, placement).offset(regionPosRelTransformed).offset(origin);
+        BlockPos regionPosAbs = regionPosRelTransformed.offset(origin);
+        AABB bb = PositionUtils.createEnclosingAABB(regionPosAbs, posEndAbs);
 
-        return world.getOtherEntities(null, bb, EntityUtils.NOT_PLAYER);
+        return world.getEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
     }
 }

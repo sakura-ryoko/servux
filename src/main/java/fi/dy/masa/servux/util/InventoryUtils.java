@@ -1,10 +1,10 @@
 package fi.dy.masa.servux.util;
 
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
 
 public class InventoryUtils
 {
@@ -15,11 +15,11 @@ public class InventoryUtils
 
     public static boolean shulkerBoxHasItems(ItemStack stack)
     {
-        ContainerComponent container = stack.getComponents().get(DataComponentTypes.CONTAINER);
+        ItemContainerContents container = stack.getComponents().get(DataComponents.CONTAINER);
 
         if (container != null)
         {
-            return container.iterateNonEmpty().iterator().hasNext();
+            return container.nonEmptyItems().iterator().hasNext();
         }
 
         return false;

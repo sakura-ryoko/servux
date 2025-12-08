@@ -4,16 +4,15 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
-import net.minecraft.text.Text;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import net.minecraft.network.chat.Component;
 
 public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>>
 {
     private static final Gson GSON = new Gson();
 
-    public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples, IServuxSettingCallback<List<T>> callback)
+    public ServuxListSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, List<T> defaultValue, List<String> examples, IServuxSettingCallback<List<T>> callback)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples, callback);
     }
@@ -23,7 +22,7 @@ public abstract class ServuxListSetting<T> extends AbstractServuxSetting<List<T>
 //        this(dataProvider, name, prettyName, comment, defaultValue, examples);
 //    }
 
-    public ServuxListSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, List<T> defaultValue, List<String> examples)
+    public ServuxListSetting(IDataProvider dataProvider, String name, Component prettyName, Component comment, List<T> defaultValue, List<String> examples)
     {
         super(dataProvider, name, prettyName, comment, defaultValue, examples, null);
     }

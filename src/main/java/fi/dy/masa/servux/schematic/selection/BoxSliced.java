@@ -1,6 +1,6 @@
 package fi.dy.masa.servux.schematic.selection;
 
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
 
 public class BoxSliced extends Box
 {
@@ -16,7 +16,7 @@ public class BoxSliced extends Box
 
     /**
      * Returns the inclusive relative start offset from pos1
-     * @return
+     * @return ()
      */
     public int getSliceStart()
     {
@@ -25,7 +25,7 @@ public class BoxSliced extends Box
 
     /**
      * Returns the exclusive relative end offset from pos1
-     * @return
+     * @return ()
      */
     public int getSliceEnd()
     {

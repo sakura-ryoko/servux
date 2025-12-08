@@ -4,16 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
+import org.jetbrains.annotations.NotNull;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.HudDataProvider;
@@ -22,18 +22,19 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.PacketSplitter;
 
 @Environment(EnvType.SERVER)
-public abstract class ServuxStructuresHandler<T extends CustomPayload> implements IPluginServerPlayHandler<T>
+public abstract class ServuxStructuresHandler<T extends CustomPacketPayload> implements IPluginServerPlayHandler<T>
 {
-    private static final ServuxStructuresHandler<ServuxStructuresPacket.Payload> INSTANCE = new ServuxStructuresHandler<>() {
+    private static final ServuxStructuresHandler<ServuxStructuresPacket.Payload> INSTANCE = new ServuxStructuresHandler<>()
+    {
         @Override
-        public void receive(ServuxStructuresPacket.Payload payload, ServerPlayNetworking.Context context)
+        public void receive(ServuxStructuresPacket.Payload payload, ServerPlayNetworking.@NotNull Context context)
         {
             ServuxStructuresHandler.INSTANCE.receivePlayPayload(payload, context);
         }
     };
     public static ServuxStructuresHandler<ServuxStructuresPacket.Payload> getInstance() { return INSTANCE; }
 
-    public static final Identifier CHANNEL_ID = Identifier.of("servux", "structures");
+    public static final Identifier CHANNEL_ID = Identifier.fromNamespaceAndPath("servux", "structures");
 
     private boolean payloadRegistered = false;
     private final Map<UUID, Integer> failures = new HashMap<>();
@@ -62,7 +63,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         }
     }
 
-    public void decodeStructuresPacket(Identifier channel, ServerPlayerEntity player, ServuxStructuresPacket packet)
+    public void decodeStructuresPacket(Identifier channel, ServerPlayer player, ServuxStructuresPacket packet)
     {
         if (!channel.equals(CHANNEL_ID))
         {
@@ -74,7 +75,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             // Only NBT type packets are received from MiniHUD, not using PacketSplitter
             case PACKET_C2S_STRUCTURES_REGISTER ->
             {
-                Servux.debugLog("decodeStructuresPacket(): received Structures Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("decodeStructuresPacket(): received Structures Register from player {}", player.getName().tryCollapseToString());
                 StructureDataProvider.INSTANCE.unregister(player);
                 StructureDataProvider.INSTANCE.register(player);
             }
@@ -82,10 +83,10 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             case PACKET_C2S_REQUEST_SPAWN_METADATA -> HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             case PACKET_C2S_STRUCTURES_UNREGISTER ->
             {
-                Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().getLiteralString());
+                Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().tryCollapseToString());
                 StructureDataProvider.INSTANCE.unregister(player);
             }
-            default -> Servux.LOGGER.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().getLiteralString(), packet.getTotalSize());
+            default -> Servux.LOGGER.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().tryCollapseToString(), packet.getTotalSize());
         }
     }
 
@@ -98,46 +99,46 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
         }
     }
 
-    public void resetFailures(Identifier channel, ServerPlayerEntity player)
+    public void resetFailures(Identifier channel, ServerPlayer player)
     {
         if (channel.equals(CHANNEL_ID))
         {
-            this.failures.remove(player.getUuid());
+            this.failures.remove(player.getUUID());
         }
     }
 
     @Override
     public void receivePlayPayload(T payload, ServerPlayNetworking.Context ctx)
     {
-        if (payload.getId().id().equals(CHANNEL_ID))
+        if (payload.type().id().equals(CHANNEL_ID))
         {
-            ServerPlayerEntity player = ctx.player();
+            ServerPlayer player = ctx.player();
             ServuxStructuresHandler.INSTANCE.decodeStructuresPacket(CHANNEL_ID, player, ((ServuxStructuresPacket.Payload) payload).data());
         }
     }
 
     @Override
-    public void encodeWithSplitter(ServerPlayerEntity player, PacketByteBuf buffer, ServerPlayNetworkHandler networkHandler)
+    public void encodeWithSplitter(ServerPlayer player, FriendlyByteBuf buffer, ServerGamePacketListenerImpl networkHandler)
     {
         // Send each PacketSplitter buffer slice
         ServuxStructuresHandler.INSTANCE.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA, buffer));
     }
 
-    public void encodeStructuresPacket(ServerPlayerEntity player, ServuxStructuresPacket packet)
+    public void encodeStructuresPacket(ServerPlayer player, ServuxStructuresPacket packet)
     {
         if (!StructureDataProvider.INSTANCE.isEnabled()) return;
 
         if (packet.getType().equals(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START))
         {
             // Send Structure Data via Packet Splitter
-            PacketByteBuf buffer = new PacketByteBuf(Unpooled.buffer());
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
             buffer.writeNbt(packet.getCompound());
-            PacketSplitter.send(this, buffer, player, player.networkHandler);
+            PacketSplitter.send(this, buffer, player, player.connection);
         }
         else if (!ServuxStructuresHandler.INSTANCE.sendPlayPayload(player, new ServuxStructuresPacket.Payload(packet)))
         {
             // Packet failure tracking
-            UUID id = player.getUuid();
+            UUID id = player.getUUID();
 
             if (!this.failures.containsKey(id))
             {
@@ -147,7 +148,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPayload> implement
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.LOGGER.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().getLiteralString(), MAX_FAILURES);
+                    Servux.LOGGER.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().tryCollapseToString(), MAX_FAILURES);
                 }
 
                 StructureDataProvider.INSTANCE.unregister(player);

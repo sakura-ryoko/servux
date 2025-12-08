@@ -1,17 +1,17 @@
 package fi.dy.masa.servux.network;
 
 import com.google.common.collect.ArrayListMultimap;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.ApiStatus;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
 
 /**
  * The Server Network Play handler
  * @param <T> (Payload)
  */
-public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHandler
+public class ServerPlayHandler<T extends CustomPacketPayload> implements IServerPlayHandler
 {
-    private static final ServerPlayHandler<CustomPayload> INSTANCE = new ServerPlayHandler<>();
+    private static final ServerPlayHandler<CustomPacketPayload> INSTANCE = new ServerPlayHandler<>();
     private final ArrayListMultimap<Identifier, IPluginServerPlayHandler<T>> handlers = ArrayListMultimap.create();
     public static IServerPlayHandler getInstance()
     {
@@ -22,7 +22,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
 
     @Override
     @SuppressWarnings("unchecked")
-    public <P extends CustomPayload> void registerServerPlayHandler(IPluginServerPlayHandler<P> handler)
+    public <P extends CustomPacketPayload> void registerServerPlayHandler(IPluginServerPlayHandler<P> handler)
     {
         Identifier channel = handler.getPayloadChannel();
 
@@ -33,7 +33,7 @@ public class ServerPlayHandler<T extends CustomPayload> implements IServerPlayHa
     }
 
     @Override
-    public <P extends CustomPayload> void unregisterServerPlayHandler(IPluginServerPlayHandler<P> handler)
+    public <P extends CustomPacketPayload> void unregisterServerPlayHandler(IPluginServerPlayHandler<P> handler)
     {
         Identifier channel = handler.getPayloadChannel();
 

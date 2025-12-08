@@ -4,11 +4,10 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 import com.llamalad7.mixinextras.sugar.Local;
-
-import net.minecraft.resource.ResourceManager;
+import net.minecraft.core.GlobalPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.GlobalPos;
-import net.minecraft.util.profiler.Profiler;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,41 +22,39 @@ import fi.dy.masa.servux.event.ServerHandler;
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer
 {
-    @Shadow private int ticks;
+    @Shadow private int tickCount;
     @Shadow public abstract ResourceManager getResourceManager();
+	@Shadow protected abstract GlobalPos selectLevelLoadFocusPos();
 
-	@Shadow
-	public abstract GlobalPos getSpawnPos();
-
-	@Inject(method = "tick", at = @At(value = "RETURN", ordinal = 1))
-    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci, @Local Profiler profiler)
+	@Inject(method = "tickServer", at = @At(value = "RETURN", ordinal = 1))
+    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci, @Local ProfilerFiller profiler)
     {
         profiler.push("servux_tick");
-        DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.ticks, profiler);
+        DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.tickCount, profiler);
         profiler.pop();
     }
 
-    @Inject(method = "prepareStartRegion",
+    @Inject(method = "prepareLevels",
 			at = @At(value = "INVOKE",
-					 target = "Lnet/minecraft/server/MinecraftServer;updateMobSpawnOptions()V",
+					 target = "Lnet/minecraft/server/MinecraftServer;updateMobSpawningFlags()V",
 					 shift = At.Shift.BEFORE)
     )
     private void servux_onPrepareStartRegion(CallbackInfo ci)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.setSpawnPos(this.getSpawnPos());
+            HudDataProvider.INSTANCE.setSpawnPos(this.selectLevelLoadFocusPos());
 //            HudDataProvider.INSTANCE.setSpawnChunkRadius(i);
         }
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"), method = "runServer")
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;initServer()Z"), method = "runServer")
     private void servux_onServerStarting(CallbackInfo ci)
     {
         ((ServerHandler) ServerHandler.getInstance()).onServerStarting((MinecraftServer) (Object) this);
     }
 
-    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;createMetadata()Lnet/minecraft/server/ServerMetadata;", ordinal = 0), method = "runServer")
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;buildServerStatus()Lnet/minecraft/network/protocol/status/ServerStatus;", ordinal = 0), method = "runServer")
     private void servux_onServerStarted(CallbackInfo ci)
     {
         ((ServerHandler) ServerHandler.getInstance()).onServerStarted((MinecraftServer) (Object) this);
@@ -79,13 +76,13 @@ public abstract class MixinMinecraftServer
         }, (MinecraftServer) (Object) this);
     }
 
-    @Inject(at = @At("HEAD"), method = "shutdown")
+    @Inject(at = @At("HEAD"), method = "stopServer")
     private void servux_onServerStopping(CallbackInfo info)
     {
         ((ServerHandler) ServerHandler.getInstance()).onServerStopping((MinecraftServer) (Object) this);
     }
 
-    @Inject(at = @At("TAIL"), method = "shutdown")
+    @Inject(at = @At("TAIL"), method = "stopServer")
     private void servux_onServerStopped(CallbackInfo info)
     {
         ((ServerHandler) ServerHandler.getInstance()).onServerStopped((MinecraftServer) (Object) this);

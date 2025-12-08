@@ -5,15 +5,15 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.server.network.ServerPlayerEntity;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.util.PlacementHandler;
 import fi.dy.masa.servux.util.PlacementHandler.UseContext;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Should override Carpet-Extra's version with a higher priority
@@ -21,18 +21,18 @@ import fi.dy.masa.servux.util.PlacementHandler.UseContext;
 @Mixin(value = BlockItem.class, priority = 1010)
 public abstract class MixinBlockItem_EasyPlace extends Item
 {
-    private MixinBlockItem_EasyPlace(Settings builder)
+    private MixinBlockItem_EasyPlace(Properties builder)
     {
         super(builder);
     }
 
-    @Shadow protected abstract boolean canPlace(ItemPlacementContext context, BlockState state);
+    @Shadow protected abstract boolean canPlace(BlockPlaceContext context, BlockState state);
     @Shadow public abstract Block getBlock();
 
     @Inject(method = "getPlacementState", at = @At("HEAD"), cancellable = true)
-    private void servux_modifyPlacementState(ItemPlacementContext ctx, CallbackInfoReturnable<BlockState> cir)
+    private void servux_modifyPlacementState(BlockPlaceContext ctx, CallbackInfoReturnable<BlockState> cir)
     {
-        if (ctx.getPlayer() instanceof ServerPlayerEntity player)
+        if (ctx.getPlayer() instanceof ServerPlayer player)
         {
             if (ServuxConfigProvider.INSTANCE.hasPermission_EasyPlace(player) == false)
             {
@@ -40,7 +40,7 @@ public abstract class MixinBlockItem_EasyPlace extends Item
             }
         }
 
-        BlockState stateOrig = this.getBlock().getPlacementState(ctx);
+        BlockState stateOrig = this.getBlock().getStateForPlacement(ctx);
 
 		if (stateOrig != null)
 		{

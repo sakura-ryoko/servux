@@ -5,9 +5,8 @@ import java.util.Set;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DynamicOps;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
-
+import net.minecraft.nbt.Tag;
 import fi.dy.masa.servux.util.data.Constants;
 
 public interface DataView
@@ -59,7 +58,7 @@ public interface DataView
 		return this.getCodec(key, codec, NbtOps.INSTANCE);
 	}
 
-	default <T> Optional<T> getCodec(String key, Codec<T> codec, DynamicOps<NbtElement> ops)
+	default <T> Optional<T> getCodec(String key, Codec<T> codec, DynamicOps<Tag> ops)
 	{
 		return Optional.empty();
 	}

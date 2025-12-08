@@ -13,7 +13,7 @@ import fi.dy.masa.servux.Reference;
 @Mixin(SharedConstants.class)
 public abstract class MixinSharedConstants
 {
-    @Shadow @Mutable public static boolean isDevelopment;
+    @Shadow @Mutable public static boolean IS_RUNNING_IN_IDE;
 
     public MixinSharedConstants() {}
 
@@ -22,7 +22,7 @@ public abstract class MixinSharedConstants
     {
         if (Reference.DEV_DEBUG)
         {
-            isDevelopment = true;
+            IS_RUNNING_IN_IDE = true;
         }
     }
 }

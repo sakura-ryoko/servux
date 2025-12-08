@@ -1,41 +1,41 @@
 package fi.dy.masa.servux.util;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.dimension.DimensionType;
 
 public class PlayerDimensionPosition
 {
     protected DimensionType dimensionType;
     protected BlockPos pos;
 
-    public PlayerDimensionPosition(PlayerEntity player)
+    public PlayerDimensionPosition(Player player)
     {
         this.setPosition(player);
     }
 
-    public boolean dimensionChanged(PlayerEntity player)
+    public boolean dimensionChanged(Player player)
     {
-        return this.dimensionType != player.getEntityWorld().getDimension();
+        return this.dimensionType != player.level().dimensionType();
     }
 
-    public boolean needsUpdate(PlayerEntity player, int distanceThreshold)
+    public boolean needsUpdate(Player player, int distanceThreshold)
     {
-        if (player.getEntityWorld().getDimension() != this.dimensionType)
+        if (player.level().dimensionType() != this.dimensionType)
         {
             return true;
         }
 
-        BlockPos pos = player.getBlockPos();
+        BlockPos pos = player.blockPosition();
 
         return Math.abs(pos.getX() - this.pos.getX()) > distanceThreshold ||
                Math.abs(pos.getY() - this.pos.getY()) > distanceThreshold ||
                Math.abs(pos.getZ() - this.pos.getZ()) > distanceThreshold;
     }
 
-    public void setPosition(PlayerEntity player)
+    public void setPosition(Player player)
     {
-        this.dimensionType = player.getEntityWorld().getDimension();
-        this.pos = player.getBlockPos();
+        this.dimensionType = player.level().dimensionType();
+        this.pos = player.blockPosition();
     }
 }

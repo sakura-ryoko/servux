@@ -1,6 +1,8 @@
 package fi.dy.masa.servux.schematic.placement;
 
 import com.google.common.collect.ImmutableMap;
+import org.jetbrains.annotations.NotNull;
+
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
@@ -9,15 +11,13 @@ import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-
 import javax.annotation.Nullable;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import java.util.*;
 
 public class SchematicPlacement
@@ -29,8 +29,8 @@ public class SchematicPlacement
     private final LitematicaSchematic schematic;
     private BlockPos origin;
     private String name;
-    private BlockRotation rotation = BlockRotation.NONE;
-    private BlockMirror mirror = BlockMirror.NONE;
+    private Rotation rotation = Rotation.NONE;
+    private Mirror mirror = Mirror.NONE;
     private boolean ignoreEntities;
     private boolean regionPlacementsModified;
     private int coordinateLockMask;
@@ -54,27 +54,27 @@ public class SchematicPlacement
         return placement;
     }
 
-    public static SchematicPlacement createFromNbt(NbtCompound tags)
+    public static SchematicPlacement createFromNbt(CompoundTag tags)
     {
         try
         {
             LitematicaSchematic schematic = new LitematicaSchematic(tags.getCompoundOrEmpty("Schematics"));
             BlockPos origin = NbtUtils.readBlockPosFromIntArray(tags, "Origin");
-            String name = tags.getString("Name", "?");
+            String name = tags.getStringOr("Name", "?");
             SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false);
-            placement.mirror = BlockMirror.values()[tags.getInt("Mirror", 0)];
-            placement.rotation = BlockRotation.values()[tags.getInt("Rotation", 0)];
+            placement.mirror = Mirror.values()[tags.getIntOr("Mirror", 0)];
+            placement.rotation = Rotation.values()[tags.getIntOr("Rotation", 0)];
 
-            for (String entry : tags.getCompoundOrEmpty("SubRegions").getKeys())
+            for (String entry : tags.getCompoundOrEmpty("SubRegions").keySet())
             {
-                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
+                CompoundTag compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
                 origin = NbtUtils.readBlockPosFromIntArray(compound, "Pos");
-                name = compound.getString("Name", "?");
+                name = compound.getStringOr("Name", "?");
                 SubRegionPlacement sub = new SubRegionPlacement(origin, name);
-                sub.mirror = BlockMirror.values()[compound.getInt("Mirror", 0)];
-                sub.rotation = BlockRotation.values()[compound.getInt("Rotation", 0)];
-                sub.ignoreEntities = compound.getBoolean("IgnoreEntities", false);
-                sub.enabled = compound.getBoolean("Enabled", true);
+                sub.mirror = Mirror.values()[compound.getIntOr("Mirror", 0)];
+                sub.rotation = Rotation.values()[compound.getIntOr("Rotation", 0)];
+                sub.ignoreEntities = compound.getBooleanOr("IgnoreEntities", false);
+                sub.enabled = compound.getBooleanOr("Enabled", true);
                 placement.relativeSubRegionPlacements.put(entry, sub);
             }
 
@@ -86,26 +86,26 @@ public class SchematicPlacement
         }
     }
 
-    public static SchematicPlacement createFromNbt(LitematicaSchematic schematic, NbtCompound tags)
+    public static SchematicPlacement createFromNbt(LitematicaSchematic schematic, CompoundTag tags)
     {
         try
         {
             BlockPos origin = NbtUtils.readBlockPosFromIntArray(tags, "Origin");
-            String name = tags.getString("Name", "?");
+            String name = tags.getStringOr("Name", "?");
             SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false);
-            placement.mirror = BlockMirror.values()[tags.getInt("Mirror", 0)];
-            placement.rotation = BlockRotation.values()[tags.getInt("Rotation", 0)];
+            placement.mirror = Mirror.values()[tags.getIntOr("Mirror", 0)];
+            placement.rotation = Rotation.values()[tags.getIntOr("Rotation", 0)];
 
-            for (String entry : tags.getCompoundOrEmpty("SubRegions").getKeys())
+            for (String entry : tags.getCompoundOrEmpty("SubRegions").keySet())
             {
-                NbtCompound compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
+                CompoundTag compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
                 origin = NbtUtils.readBlockPosFromIntArray(compound, "Pos");
-                name = compound.getString("Name", "?");
+                name = compound.getStringOr("Name", "?");
                 SubRegionPlacement sub = new SubRegionPlacement(origin, name);
-                sub.mirror = BlockMirror.values()[compound.getInt("Mirror", 0)];
-                sub.rotation = BlockRotation.values()[compound.getInt("Rotation", 0)];
-                sub.ignoreEntities = compound.getBoolean("IgnoreEntities", false);
-                sub.enabled = compound.getBoolean("Enabled", true);
+                sub.mirror = Mirror.values()[compound.getIntOr("Mirror", 0)];
+                sub.rotation = Rotation.values()[compound.getIntOr("Rotation", 0)];
+                sub.ignoreEntities = compound.getBooleanOr("IgnoreEntities", false);
+                sub.enabled = compound.getBooleanOr("Enabled", true);
                 placement.relativeSubRegionPlacements.put(entry, sub);
             }
 
@@ -159,12 +159,12 @@ public class SchematicPlacement
         return origin;
     }
 
-    public BlockRotation getRotation()
+    public Rotation getRotation()
     {
         return rotation;
     }
 
-    public BlockMirror getMirror()
+    public Mirror getMirror()
     {
         return mirror;
     }
@@ -186,9 +186,9 @@ public class SchematicPlacement
         return this.relativeSubRegionPlacements.values();
     }
 
-    public ImmutableMap<String, SubRegionPlacement> getEnabledRelativeSubRegionPlacements()
+    public ImmutableMap<@NotNull String, @NotNull SubRegionPlacement> getEnabledRelativeSubRegionPlacements()
     {
-        ImmutableMap.Builder<String, SubRegionPlacement> builder = ImmutableMap.builder();
+        ImmutableMap.Builder<@NotNull String, @NotNull SubRegionPlacement> builder = ImmutableMap.builder();
 
         for (Map.Entry<String, SubRegionPlacement> entry : this.relativeSubRegionPlacements.entrySet())
         {
@@ -214,13 +214,13 @@ public class SchematicPlacement
     {
         if (this.shouldRenderEnclosingBox())
         {
-            ImmutableMap<String, Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
+            ImmutableMap<@NotNull String, @NotNull Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
             BlockPos pos1 = null;
             BlockPos pos2 = null;
 
             for (Box box : boxes.values())
             {
-                BlockPos tmp;
+	            BlockPos tmp;
                 tmp = PositionUtils.getMinCorner(box.getPos1(), box.getPos2());
 
                 if (pos1 == null)
@@ -249,9 +249,9 @@ public class SchematicPlacement
         }
     }
 
-    public ImmutableMap<String, Box> getSubRegionBoxes(RequiredEnabled required)
+    public ImmutableMap<@NotNull String, @NotNull Box> getSubRegionBoxes(RequiredEnabled required)
     {
-        ImmutableMap.Builder<String, Box> builder = ImmutableMap.builder();
+        ImmutableMap.Builder<@NotNull String, @NotNull Box> builder = ImmutableMap.builder();
         Map<String, BlockPos> areaSizes = this.schematic.getAreaSizes();
 
         for (Map.Entry<String, SubRegionPlacement> entry : this.relativeSubRegionPlacements.entrySet())
@@ -270,10 +270,10 @@ public class SchematicPlacement
             if (placement.matchesRequirement(required))
             {
                 BlockPos boxOriginRelative = placement.getPos();
-                BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).add(this.origin);
+                BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).offset(this.origin);
                 BlockPos pos2 = PositionUtils.getRelativeEndPositionFromAreaSize(areaSize);
                 pos2 = PositionUtils.getTransformedBlockPos(pos2, this.mirror, this.rotation);
-                pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).add(boxOriginAbsolute);
+                pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).offset(boxOriginAbsolute);
 
                 builder.put(name, new Box(boxOriginAbsolute, pos2, name));
             }
@@ -282,9 +282,9 @@ public class SchematicPlacement
         return builder.build();
     }
 
-    public ImmutableMap<String, Box> getSubRegionBoxFor(String regionName, RequiredEnabled required)
+    public ImmutableMap<@NotNull String, @NotNull Box> getSubRegionBoxFor(String regionName, RequiredEnabled required)
     {
-        ImmutableMap.Builder<String, Box> builder = ImmutableMap.builder();
+        ImmutableMap.Builder<@NotNull String, @NotNull Box> builder = ImmutableMap.builder();
         Map<String, BlockPos> areaSizes = this.schematic.getAreaSizes();
 
         SubRegionPlacement placement = this.relativeSubRegionPlacements.get(regionName);
@@ -298,10 +298,10 @@ public class SchematicPlacement
                 if (areaSize != null)
                 {
                     BlockPos boxOriginRelative = placement.getPos();
-                    BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).add(this.origin);
+                    BlockPos boxOriginAbsolute = PositionUtils.getTransformedBlockPos(boxOriginRelative, this.mirror, this.rotation).offset(this.origin);
                     BlockPos pos2 = PositionUtils.getRelativeEndPositionFromAreaSize(areaSize);
                     pos2 = PositionUtils.getTransformedBlockPos(pos2, this.mirror, this.rotation);
-                    pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).add(boxOriginAbsolute);
+                    pos2 = PositionUtils.getTransformedBlockPos(pos2, placement.getMirror(), placement.getRotation()).offset(boxOriginAbsolute);
 
                     builder.put(regionName, new Box(boxOriginAbsolute, pos2, regionName));
                 } else
@@ -316,7 +316,7 @@ public class SchematicPlacement
 
     public Set<String> getRegionsTouchingChunk(int chunkX, int chunkZ)
     {
-        ImmutableMap<String, Box> map = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
+        ImmutableMap<@NotNull String, @NotNull Box> map = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
         final int chunkXMin = chunkX << 4;
         final int chunkZMin = chunkZ << 4;
         final int chunkXMax = chunkXMin + 15;
@@ -342,9 +342,9 @@ public class SchematicPlacement
         return set;
     }
 
-    public ImmutableMap<String, IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ)
+    public ImmutableMap<@NotNull String, @NotNull IntBoundingBox> getBoxesWithinChunk(int chunkX, int chunkZ)
     {
-        ImmutableMap<String, Box> subRegions = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
+        ImmutableMap<@NotNull String, @NotNull Box> subRegions = this.getSubRegionBoxes(RequiredEnabled.PLACEMENT_ENABLED);
         return PositionUtils.getBoxesWithinChunk(chunkX, chunkZ, subRegions);
     }
 
@@ -392,8 +392,8 @@ public class SchematicPlacement
     /**
      * Moves the sub-region to the given <b>absolute</b> position.
      *
-     * @param regionName
-     * @param newPos
+     * @param regionName ()
+     * @param newPos ()
      */
     public void moveSubRegionTo(String regionName, BlockPos newPos)
     {
@@ -412,7 +412,7 @@ public class SchematicPlacement
         }
     }
 
-    public void setSubRegionRotation(String regionName, BlockRotation rotation)
+    public void setSubRegionRotation(String regionName, Rotation rotation)
     {
 
 
@@ -426,7 +426,7 @@ public class SchematicPlacement
         }
     }
 
-    public void setSubRegionMirror(String regionName, BlockMirror mirror)
+    public void setSubRegionMirror(String regionName, Mirror mirror)
     {
 
         if (this.relativeSubRegionPlacements.containsKey(regionName))
@@ -504,7 +504,7 @@ public class SchematicPlacement
         return this;
     }
 
-    public SchematicPlacement setRotation(BlockRotation rotation)
+    public SchematicPlacement setRotation(Rotation rotation)
     {
 
         if (this.rotation != rotation)
@@ -519,7 +519,7 @@ public class SchematicPlacement
         return this;
     }
 
-    public SchematicPlacement setMirror(BlockMirror mirror)
+    public SchematicPlacement setMirror(Mirror mirror)
     {
         if (this.mirror != mirror)
         {
@@ -548,7 +548,7 @@ public class SchematicPlacement
 
     private Box getEnclosingBox()
     {
-        ImmutableMap<String, Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
+        ImmutableMap<@NotNull String, @NotNull Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
         BlockPos pos1 = null;
         BlockPos pos2 = null;
 
@@ -584,10 +584,20 @@ public class SchematicPlacement
         return null;
     }
 
-    public void pasteTo(ServerWorld serverWorld, ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
+    public void pasteTo(ServerLevel serverWorld, ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
     {
-        this.getEnclosingBox().toVanilla().streamChunkPos().forEach(chunkPos ->
-                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos, this, replaceBehavior, layerBehavior, layerRange, false));
-        // todo
+		Box bb = this.getEnclosingBox();
+
+		if (bb != null)
+		{
+			bb.toVanilla().intersectingChunks().forEach(chunkPos ->
+					                                            SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos,
+					                                                                                          this,
+					                                                                                          replaceBehavior,
+					                                                                                          layerBehavior,
+					                                                                                          layerRange, false)
+			);
+		}
+        // todo CREATE TASK MANAGER
     }
 }
