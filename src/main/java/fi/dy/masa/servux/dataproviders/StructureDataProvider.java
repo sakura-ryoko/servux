@@ -21,6 +21,7 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
+import net.minecraft.world.level.levelgen.structure.TerrainAdjustment;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -188,7 +189,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return false;
 
-        // System.out.printf("register\n");
+//        System.out.printf("register [%s]\n", player.getName().getString());
         boolean registered = false;
         MinecraftServer server = player.createCommandSourceStack().getServer();
         UUID uuid = player.getUUID();
@@ -224,7 +225,7 @@ public class StructureDataProvider extends DataProviderBase
 
     public boolean unregister(ServerPlayer player)
     {
-        // System.out.printf("unregister\n");
+//        System.out.printf("unregister [%s]\n", player.getName().getString());
         HANDLER.resetFailures(this.getNetworkChannel(), player);
 
         return this.registeredPlayers.remove(player.getUUID()) != null;
@@ -239,7 +240,7 @@ public class StructureDataProvider extends DataProviderBase
         this.timeouts.remove(uuid);
         this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
-        // System.out.printf("initialSyncStructuresToPlayerWithinRange: references: %d\n", references.size());
+//        System.out.printf("initialSyncStructuresToPlayerWithinRange: references: %d\n", references.size());
         this.sendStructures(player, references, tickCounter);
     }
 
@@ -251,7 +252,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
-            //System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
+//            System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
             // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
             map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout.getValue()));
         }
@@ -273,7 +274,7 @@ public class StructureDataProvider extends DataProviderBase
                                         final Map<Structure, LongSet> references,
                                         final int tickCounter)
     {
-        // System.out.printf("addOrRefreshTimeouts: references: %d\n", references.size());
+//        System.out.printf("addOrRefreshTimeouts: references: %d\n", references.size());
         Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
         for (LongSet chunks : references.values())
@@ -293,7 +294,7 @@ public class StructureDataProvider extends DataProviderBase
 
         if (map != null)
         {
-            // System.out.printf("refreshTrackedChunks: timeouts: %d\n", map.size());
+//            System.out.printf("refreshTrackedChunks: timeouts: %d\n", map.size());
             this.sendAndRefreshExpiredStructures(player, map, tickCounter);
         }
     }
@@ -345,7 +346,7 @@ public class StructureDataProvider extends DataProviderBase
                 }
             }
 
-            // System.out.printf("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d\n", positionsToUpdate.size(), references.size(), this.timeout);
+//            System.out.printf("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d\n", positionsToUpdate.size(), references.size(), this.timeout.getValue());
 
             if (!references.isEmpty())
             {
@@ -444,7 +445,7 @@ public class StructureDataProvider extends DataProviderBase
             }
         }
 
-        // System.out.printf("getStructureStartsFromReferences: references: %d -> starts: %d\n", references.size(), starts.size());
+//        System.out.printf("getStructureStartsFromReferences: references: %d -> starts: %d\n", references.size(), starts.size());
         return starts;
     }
 
@@ -476,7 +477,7 @@ public class StructureDataProvider extends DataProviderBase
             this.addOrRefreshTimeouts(player.getUUID(), references, tickCounter);
 
             ListTag structureList = this.getStructureList(starts, world);
-            // System.out.printf("sendStructures: starts: %d -> structureList: %d. refs: %s\n", starts.size(), structureList.size(), references.keySet());
+//            System.out.printf("sendStructures: starts: %d -> structureList: %d. refs: %s\n", starts.size(), structureList.size(), references.keySet());
 
             if (this.registeredPlayers.containsKey(player.getUUID()))
             {
@@ -494,15 +495,27 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
-			Structure structure = entry.getValue().getStructure();
-			if (structure == null) continue;          // When using C2ME, this could return NULL
+            StructureStart start = entry.getValue();
+			Structure structure = start.getStructure();
+			if (structure == null) continue;          // When using C2ME, this could return NULL ...
             Identifier structureType = BuiltInRegistries.STRUCTURE_TYPE.getKey(structure.type());
+            boolean expandBox = structure.terrainAdaptation() != TerrainAdjustment.NONE;
 
-            if (this.shouldSendStructure(structureType))
+            if (structureType != null &&
+                this.shouldSendStructure(structureType))
             {
                 ChunkPos pos = entry.getKey();
-                list.add(entry.getValue().createTag(ctx, pos));
+                CompoundTag nbt = start.createTag(ctx, pos);
+
+                // Should expand BB by 12
+                // This is Needed for things like Pillager Outposts
+                nbt.putBoolean("ExpandBox", expandBox);
+                list.add(nbt);
             }
+//            else
+//            {
+//                System.out.print("getStructureList: type = NULL\n");
+//            }
         }
 
         return list;
@@ -510,6 +523,8 @@ public class StructureDataProvider extends DataProviderBase
 
     protected boolean shouldSendStructure(Identifier identifier)
     {
+//        System.out.printf("shouldSendStructure: [%s]\n", identifier.toString());
+
         if (this.structureWhitelistEnabled.getValue())
         {
             return this.structureWhitelist.getValue().contains(identifier.toString());
