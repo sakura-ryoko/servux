@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.13-SNAPSHOT'
+	id 'fabric-loom' version '1.14-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -37,7 +37,9 @@ base {
 	}
 }
 
-//loom {
+loom {
+	accessWidenerPath = file("src/main/resources/servux.accesswidener")
+
 //	def commonVmArgs = ['-Dmixin.debug.export=true', '-Dmixin.debug.countInjections=true']
 //	// [FEATURE] MIXIN_AUDITOR
 //	runs {
@@ -48,7 +50,7 @@ base {
 //			ideConfigGenerated false
 //		}
 //	}
-//}
+}
 
 processResources {
 	// Exclude the GIMP image files

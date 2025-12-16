@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.gen.StructureTerrainAdaptation;
 import net.minecraft.world.gen.structure.Structure;
 
 import fi.dy.masa.servux.Reference;
@@ -496,14 +497,22 @@ public class StructureDataProvider extends DataProviderBase
 
         for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
         {
-			Structure structure = entry.getValue().getStructure();
+            StructureStart start = entry.getValue();
+			Structure structure = start.getStructure();
 			if (structure == null) continue;          // When using C2ME, this could return NULL
             Identifier structureType = Registries.STRUCTURE_TYPE.getId(structure.getType());
+            boolean expandBox = structure.getTerrainAdaptation() != StructureTerrainAdaptation.NONE;
 
-            if (this.shouldSendStructure(structureType))
+            if (structureType != null &&
+                this.shouldSendStructure(structureType))
             {
                 ChunkPos pos = entry.getKey();
-                list.add(entry.getValue().toNbt(ctx, pos));
+                NbtCompound nbt = start.toNbt(ctx, pos);
+
+                // Should expand BB by 12
+                // This is Needed for things like Pillager Outposts
+                nbt.putBoolean("ExpandBox", expandBox);
+                list.add(nbt);
             }
         }
 

@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.jetbrains.annotations.ApiStatus;
 
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
@@ -16,11 +17,13 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.Uuids;
 import net.minecraft.util.math.*;
 
+import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.*;
 import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.servux.util.nbt.NbtKeys;
 
+@ApiStatus.Experimental
 public class DataTypeUtils
 {
     @Nullable
