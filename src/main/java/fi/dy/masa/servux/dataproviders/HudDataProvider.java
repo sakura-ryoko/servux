@@ -512,7 +512,7 @@ public class HudDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
-        BlockPos spawnPos = this.getSpawnPos();
+        GlobalPos spawnPos = this.getSpawnPos();
         NbtCompound nbt = new NbtCompound();
 
         nbt.putString("id", getNetworkChannel().toString());
@@ -655,7 +655,7 @@ public class HudDataProvider extends DataProviderBase
 
         this.spawnPos = spawnPos;
 
-        if (this.spawnPos..pos().equals(BlockPos.ORIGIN))
+        if (this.spawnPos.equals(new GlobalPos(ServerWorld.OVERWORLD, BlockPos.ORIGIN)))
         {
             Servux.LOGGER.warn("setSpawnPos(): Warning! Spawn pos was set to [{}]; please verify that this was intended", this.getSpawnPosAsString());
         }
