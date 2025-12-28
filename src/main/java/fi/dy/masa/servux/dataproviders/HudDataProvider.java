@@ -617,7 +617,7 @@ public class HudDataProvider extends DataProviderBase
     {
         if (this.spawnPos == null)
         {
-            this.spawnPos = new GlobalPos(ServerWorld.OVERWORLD, BlockPos.ORIGIN);
+            this.spawnPos = new GlobalPos(ServerLevel.OVERWORLD, BlockPos.ZERO);
         }
 
         return this.spawnPos;
@@ -654,7 +654,7 @@ public class HudDataProvider extends DataProviderBase
 
         this.spawnPos = spawnPos;
 
-        if (this.spawnPos.pos().equals(BlockPos.ORIGIN))
+        if (this.spawnPos.equals(new GlobalPos(ServerLevel.OVERWORLD, BlockPos.ZERO)))
         {
             Servux.LOGGER.warn("setSpawnPos(): Warning! Spawn pos was set to [{}]; please verify that this was intended", this.getSpawnPosAsString());
         }
