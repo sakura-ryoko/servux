@@ -511,7 +511,7 @@ public class HudDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
-	    GlobalPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
+	    GlobalPos spawnPos = this.getSpawnPos();
         CompoundTag nbt = new CompoundTag();
 
         nbt.putString("id", getNetworkChannel().toString());
@@ -521,7 +521,7 @@ public class HudDataProvider extends DataProviderBase
         nbt.putInt("spawnPosX", spawnPos.pos().getX());
         nbt.putInt("spawnPosY", spawnPos.pos().getY());
         nbt.putInt("spawnPosZ", spawnPos.pos().getZ());
-//        nbt.putInt("spawnChunkRadius", HudDataProvider.INSTANCE.getSpawnChunkRadius());
+//        nbt.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
 
         if (this.shareSeed.getValue() && this.hasPermissionsForSeed(player))
         {
@@ -617,7 +617,7 @@ public class HudDataProvider extends DataProviderBase
     {
         if (this.spawnPos == null)
         {
-            this.setSpawnPos(new GlobalPos(ServerLevel.OVERWORLD, BlockPos.ZERO));
+            this.spawnPos = new GlobalPos(ServerWorld.OVERWORLD, BlockPos.ORIGIN);
         }
 
         return this.spawnPos;
@@ -653,6 +653,11 @@ public class HudDataProvider extends DataProviderBase
         }
 
         this.spawnPos = spawnPos;
+
+        if (this.spawnPos.pos().equals(BlockPos.ORIGIN))
+        {
+            Servux.LOGGER.warn("setSpawnPos(): Warning! Spawn pos was set to [{}]; please verify that this was intended", this.getSpawnPosAsString());
+        }
     }
 
 //    public int getSpawnChunkRadius()
