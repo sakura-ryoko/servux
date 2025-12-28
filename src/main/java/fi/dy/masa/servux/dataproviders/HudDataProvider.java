@@ -511,8 +511,8 @@ public class HudDataProvider extends DataProviderBase
     {
         if (!this.isEnabled()) return;
 
+        BlockPos spawnPos = this.getSpawnPos();
         NbtCompound nbt = new NbtCompound();
-        BlockPos spawnPos = HudDataProvider.INSTANCE.getSpawnPos();
 
         nbt.putString("id", getNetworkChannel().toString());
         nbt.putString("servux", Reference.MOD_STRING);
@@ -520,12 +520,12 @@ public class HudDataProvider extends DataProviderBase
         nbt.putInt("spawnPosX", spawnPos.getX());
         nbt.putInt("spawnPosY", spawnPos.getY());
         nbt.putInt("spawnPosZ", spawnPos.getZ());
-        nbt.putInt("spawnChunkRadius", HudDataProvider.INSTANCE.getSpawnChunkRadius());
+        nbt.putInt("spawnChunkRadius", this.getSpawnChunkRadius());
 
         if (this.shareSeed.getValue() && this.hasPermissionsForSeed(player))
         {
             Servux.debugLog("refreshSpawnMetadata() player [{}] has seedPermissions.", player.getName().getLiteralString());
-            nbt.putLong("worldSeed", this.worldSeed);
+            nbt.putLong("worldSeed", this.getWorldSeed());
         }
         else
         {
@@ -616,7 +616,7 @@ public class HudDataProvider extends DataProviderBase
     {
         if (this.spawnPos == null)
         {
-            this.setSpawnPos(BlockPos.ORIGIN);
+            this.spawnPos = BlockPos.ORIGIN;
         }
 
         return this.spawnPos;
@@ -638,6 +638,11 @@ public class HudDataProvider extends DataProviderBase
         }
 
         this.spawnPos = spawnPos;
+
+        if (this.spawnPos.equals(BlockPos.ORIGIN))
+        {
+            Servux.LOGGER.warn("setSpawnPos(): Warning! Spawn pos was set to [{}]; please verify that this was intended", this.spawnPos.toShortString());
+        }
     }
 
     public int getSpawnChunkRadius()
