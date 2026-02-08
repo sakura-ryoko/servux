@@ -4,7 +4,7 @@
     "compatibilityLevel": "JAVA_21",
     "minVersion": "0.8",
     "mixins": [
-        "MixinMain",
+        "server.MixinMain",
         "block.MixinBlock_UpdateSuppression",
         "block.MixinChestBlock",
         "block.MixinHopperBlockEntity",

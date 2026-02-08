@@ -1,33 +1,33 @@
 package fi.dy.masa.servux.mixin.entity;
 
-import org.jetbrains.annotations.NotNull;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
-import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleType;
 import net.minecraft.world.level.gamerules.GameRules;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(Allay.class)
 public abstract class MixinAllayEntity
 {
 	@SuppressWarnings("unchecked")
-	@Redirect(method = "wantsToPickUp",
-	          at = @At(value = "INVOKE",
+	@WrapOperation(method = "wantsToPickUp",
+	               at = @At(value = "INVOKE",
 	                   target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
-	private <T> T servux$fixAllayGathering1(GameRules instance, GameRule<@NotNull T> rule)
+	private <T> T servux$fixAllayGathering1(GameRules instance, GameRule<T> gameRule, Operation<T> original)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
-			rule.gameRuleType() == GameRuleType.BOOL)        // Ensure BOOL type
+			gameRule.gameRuleType() == GameRuleType.BOOL)        // Ensure BOOL type
 		{
 			return (T) (Object) true;
 		}
 
-		return instance.get(rule);
+		return instance.get(gameRule);
 	}
 
 //	@Inject(method = "isItemPickupCoolingDown",

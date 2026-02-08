@@ -1,20 +1,20 @@
 package fi.dy.masa.servux.mixin.entity;
 
-import org.jetbrains.annotations.NotNull;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRules;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(Mob.class)
 public abstract class MixinMobEntity
@@ -36,10 +36,10 @@ public abstract class MixinMobEntity
 	}
 
 	@SuppressWarnings("unchecked")
-	@Redirect(method = "aiStep",
-	          at = @At(value = "INVOKE",
+	@WrapOperation(method = "aiStep",
+	               at = @At(value = "INVOKE",
 	                   target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
-	private <T> T servux$fixAllayGathering4(GameRules instance, GameRule<@NotNull T> rule)
+	private <T> T servux$fixAllayGathering4(GameRules instance, GameRule<T> gameRule, Operation<T> original)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
 			this.isAllay)
@@ -48,6 +48,6 @@ public abstract class MixinMobEntity
 		}
 
 		this.isAllay = false;
-		return instance.get(rule);
+		return instance.get(gameRule);
 	}
 }

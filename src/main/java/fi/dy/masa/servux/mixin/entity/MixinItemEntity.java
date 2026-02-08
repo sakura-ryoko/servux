@@ -1,15 +1,8 @@
 package fi.dy.masa.servux.mixin.entity;
 
-import org.jetbrains.annotations.NotNull;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.animal.allay.Allay;
@@ -17,6 +10,13 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleType;
 import net.minecraft.world.level.gamerules.GameRules;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(ItemEntity.class)
 public class MixinItemEntity
@@ -34,18 +34,18 @@ public class MixinItemEntity
 	}
 
 	@SuppressWarnings("unchecked")
-	@Redirect(method = "hurtServer",
-	          at = @At(value = "INVOKE",
+	@WrapOperation(method = "hurtServer",
+	               at = @At(value = "INVOKE",
 	                   target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
-	private <T> T servux$fixAllayGathering6(GameRules instance, GameRule<@NotNull T> rule)
+	private <T> T servux$fixAllayGathering6(GameRules instance, GameRule<T> gameRule, Operation<T> original)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
-			this.isAllay && rule.gameRuleType() == GameRuleType.BOOL)        // Ensure BOOL type
+			this.isAllay && gameRule.gameRuleType() == GameRuleType.BOOL)        // Ensure BOOL type
 		{
 			return (T) (Object) true;
 		}
 
 		this.isAllay = false;
-		return instance.get(rule);
+		return instance.get(gameRule);
 	}
 }

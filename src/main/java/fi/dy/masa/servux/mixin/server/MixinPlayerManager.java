@@ -3,6 +3,9 @@ package fi.dy.masa.servux.mixin.server;
 import java.net.SocketAddress;
 import java.util.Optional;
 import java.util.UUID;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,7 +17,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -55,14 +57,14 @@ public abstract class MixinPlayerManager
         this.profileTemp = player;
     }
 
-    @Redirect(method = "op(Lnet/minecraft/server/players/NameAndId;Ljava/util/Optional;Ljava/util/Optional;)V",
-            at = @At(value = "INVOKE",
+    @WrapOperation(method = "op(Lnet/minecraft/server/players/NameAndId;Ljava/util/Optional;Ljava/util/Optional;)V",
+                   at = @At(value = "INVOKE",
                     target ="Lnet/minecraft/server/players/PlayerList;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/level/ServerPlayer;"))
-    private ServerPlayer servux_onPlayerOp(PlayerList instance, UUID uuid)
+    private ServerPlayer servux_onPlayerOp(PlayerList instance, UUID uUID, Operation<ServerPlayer> original)
     {
-        ServerPlayer player = instance.getPlayer(uuid);
+        ServerPlayer player = instance.getPlayer(uUID);
 
-        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerOp(this.profileTemp, uuid, player);
+        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerOp(this.profileTemp, uUID, player);
 
         if (this.profileTemp != null)
         {
@@ -78,14 +80,14 @@ public abstract class MixinPlayerManager
         this.profileTemp = player;
     }
 
-    @Redirect(method = "deop",
+    @WrapOperation(method = "deop",
             at = @At(value = "INVOKE",
                     target="Lnet/minecraft/server/players/PlayerList;getPlayer(Ljava/util/UUID;)Lnet/minecraft/server/level/ServerPlayer;"))
-    private ServerPlayer servux_onPlayerDeOp(PlayerList instance, UUID uuid)
+    private ServerPlayer servux_onPlayerDeOp(PlayerList instance, UUID uUID, Operation<ServerPlayer> original)
     {
-        ServerPlayer player = instance.getPlayer(uuid);
+        ServerPlayer player = instance.getPlayer(uUID);
 
-        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerDeOp(this.profileTemp, uuid, player);
+        ((PlayerHandler) PlayerHandler.getInstance()).onPlayerDeOp(this.profileTemp, uUID, player);
 
         if (this.profileTemp != null)
         {

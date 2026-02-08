@@ -1,25 +1,27 @@
 package fi.dy.masa.servux.mixin.network;
 
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
-import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.permissions.Permission;
 import net.minecraft.server.permissions.PermissionSet;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+
+import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(value = ServerGamePacketListenerImpl.class, priority = 1005)
 public class MixinServerPlayNetworkHandler_QueryNbt
 {
     @Shadow public ServerPlayer player;
 
-    @Redirect(method = "handleBlockEntityTagQuery",
+    @WrapOperation(method = "handleBlockEntityTagQuery",
               at = @At(value = "INVOKE",
                        target = "Lnet/minecraft/server/permissions/PermissionSet;hasPermission(Lnet/minecraft/server/permissions/Permission;)Z"))
-    private boolean servux_onQueryBlockNbt(PermissionSet instance, Permission permission)
+    private boolean servux_onQueryBlockNbt(PermissionSet instance, Permission permission, Operation<Boolean> original)
     {
         if (EntitiesDataProvider.INSTANCE.hasNbtQueryOverride())
         {
@@ -32,10 +34,10 @@ public class MixinServerPlayNetworkHandler_QueryNbt
         }
     }
 
-    @Redirect(method = "handleEntityTagQuery",
-              at = @At(value = "INVOKE",
+    @WrapOperation(method = "handleEntityTagQuery",
+                   at = @At(value = "INVOKE",
                        target = "Lnet/minecraft/server/permissions/PermissionSet;hasPermission(Lnet/minecraft/server/permissions/Permission;)Z"))
-    private boolean servux_onQueryEntityNbt(PermissionSet instance, Permission permission)
+    private boolean servux_onQueryEntityNbt(PermissionSet instance, Permission permission, Operation<Boolean> original)
     {
         if (EntitiesDataProvider.INSTANCE.hasNbtQueryOverride())
         {

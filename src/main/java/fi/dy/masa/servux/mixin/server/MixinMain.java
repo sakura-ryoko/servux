@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin;
+package fi.dy.masa.servux.mixin.server;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.core.RegistryAccess;
