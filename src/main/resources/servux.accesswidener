@@ -1,2 +1,3 @@
 accessWidener v2 named
 mutable field net/minecraft/SharedConstants DEBUG_ENABLED Z
+accessible field net/minecraft/world/level/NaturalSpawner MAGIC_NUMBER I
