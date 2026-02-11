@@ -445,6 +445,32 @@ public class CompoundData extends BaseData implements DataView
         return copy;
     }
 
+    public CompoundData combine(CompoundData other)
+    {
+        if (other == null || other.isEmpty())
+        {
+            return this.copy();
+        }
+
+        for (String key : other.values.keySet())
+        {
+            BaseData data = other.values.get(key);
+
+            if (data.getType() == Constants.NBT.TAG_COMPOUND &&
+                this.values.containsKey(key) &&
+                this.values.get(key).getType() == Constants.NBT.TAG_COMPOUND)
+            {
+                CompoundData out = ((CompoundData) this.values.get(key)).combine((CompoundData) data);
+                this.values.put(key, out);
+                continue;
+            }
+
+            this.values.put(key, data);
+        }
+
+        return this.copy();
+    }
+
     @Override
     public String toString()
     {
@@ -465,24 +491,6 @@ public class CompoundData extends BaseData implements DataView
 
         return sb.append('}').toString();
     }
-
-	@Override
-	public boolean equals(Object o)
-	{
-		if (o instanceof CompoundData data)
-		{
-			boolean result = false;
-
-			for (String key : this.getKeys())
-			{
-				result = this.values.get(key).equals(data.values.get(key));
-			}
-
-			return result;
-		}
-
-		return false;
-	}
 
     @Override
     public void write(DataOutput output) throws IOException
@@ -554,5 +562,44 @@ public class CompoundData extends BaseData implements DataView
             output.writeUTF(key);
             data.write(output);
         }
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) { return true; }
+        if (o == null || this.getClass() != o.getClass()) { return false; }
+
+        // Masa's method
+//        CompoundData other = (CompoundData) o;
+
+//        return Objects.equals(this.values, other.values);
+
+        // Match any member of the compound using equals(),
+        // in any insertion order.
+        if (o instanceof CompoundData data)
+        {
+            boolean result = false;
+
+            for (String key : this.getKeys())
+            {
+                result = this.values.get(key).equals(data.values.get(key));
+
+                if (!result)
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this.values != null ? this.values.hashCode() : 0;
     }
 }

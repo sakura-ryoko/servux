@@ -123,11 +123,13 @@ public class DataFileUtils
         return false;
     }
 
+	@Deprecated
 	public static CompoundData readFromFileUsingNbtIo(@Nonnull Path file)
 	{
 		return readFromFileUsingNbtIo(file, NbtAccounter.unlimitedHeap());
 	}
 
+	@Deprecated
 	public static CompoundData readFromFileUsingNbtIo(@Nonnull Path file, NbtAccounter tracker)
 	{
 		if (!Files.exists(file) || !Files.isReadable(file))
@@ -147,6 +149,7 @@ public class DataFileUtils
 		return null;
 	}
 
+	@Deprecated
 	public static void writeToFileUsingNbtIo(@Nonnull CompoundData tag, @Nonnull Path file)
 	{
 		try

@@ -10,9 +10,9 @@ public interface ArrayData extends Iterable<BaseData>
 {
 	void clear();
 
-	boolean set(int index, BaseData value);
+	boolean set(int index, BaseData entry);
 
-	boolean add(int index, BaseData value);
+	boolean add(int index, BaseData entry);
 
 	BaseData remove(int index);
 
@@ -55,5 +55,4 @@ public interface ArrayData extends Iterable<BaseData>
 	default Stream<BaseData> stream()
 	{
 		return StreamSupport.stream(this.spliterator(), false);
-	}
-}
+	}}
