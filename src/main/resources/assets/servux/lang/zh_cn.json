@@ -135,5 +135,12 @@
     "servux.litematics.error.structure_write_to_file_failed.exception": "将结构写入文件「%s」失败（异常）",
     "servux.litematics.error.structure_write_to_file_failed.exists": "无法写入结构文件「%s」，文件已存在",
     "servux.litematics.success.pasted": "已将 §b%s§r 粘贴至世界 §d%s§r，耗时 §a%s§r 毫秒",
+    "servux.scheduler.feedback.aborted": "§cTask: §f'§d%s§f' has been aborted; ran for: §b%d §fms§r",
+    "servux.scheduler.feedback.completed": "§aTask: §f'§d%s§f' §ahas completed in: §b%d §fms§r",
+    "servux.scheduler.task.paste.failed": "§cSchematic Paste to world failed§r",
+    "servux.scheduler.task.paste.successful": "§aSchematic pasted in world§r",
+    "servux.scheduler.task.save.failed": "§cFailed to save schematic to file '§e%s§c'§r",
+    "servux.scheduler.task.save.interrupted": "§6Schematic saving interrupted or stopped§r",
+    "servux.scheduler.task.save.successful": "§aSchematic saved as '§e%s§a'§r",
     "servux.suffix.data_provider": "（数据提供者）"
 }
