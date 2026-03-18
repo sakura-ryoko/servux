@@ -123,6 +123,21 @@ public class i18nLang
         return map.get(key);
     }
 
+    public String translateAsString(String key, Object... args)
+    {
+        if (hasTranslation(key))
+        {
+            final String fmt = get(key);
+
+            if (fmt != null)
+            {
+                return String.format(fmt, args);
+            }
+        }
+
+        return String.format(key, args);
+    }
+
     public MutableComponent translate(String key, Object... args)
     {
         if (hasTranslation(key))

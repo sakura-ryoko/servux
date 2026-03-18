@@ -46,6 +46,6 @@ public class MixinItemEntity
 		}
 
 		this.isAllay = false;
-		return instance.get(gameRule);
+		return original.call(instance, gameRule);
 	}
 }

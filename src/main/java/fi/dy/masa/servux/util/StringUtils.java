@@ -25,6 +25,11 @@ public class StringUtils
         return settingId.getNamespace().equals("minecraft") ? settingId.getPath() : settingId.toString();
     }
 
+    public static String translateAsString(String translationKey, Object... args)
+    {
+        return i18nLang.getInstance().translateAsString(translationKey, args);
+    }
+
     /**
      * Can replace I18n
      * @param translationKey (key)

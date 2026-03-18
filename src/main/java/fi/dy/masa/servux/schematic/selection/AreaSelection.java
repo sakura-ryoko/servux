@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.servux.util.JsonUtils;
+import fi.dy.masa.servux.util.data.json.JsonUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
 import fi.dy.masa.servux.util.position.PositionUtils.CoordinateType;
 import fi.dy.masa.servux.util.position.PositionUtils.Corner;
@@ -395,7 +395,7 @@ public class AreaSelection
             area.currentBox = obj.get("current").getAsString();
         }
 
-        BlockPos pos = JsonUtils.blockPosFromJson(obj, "origin");
+        BlockPos pos = JsonUtils.getBlockPosOrDefault(obj, "origin", BlockPos.ZERO);
 
         if (pos != null)
         {

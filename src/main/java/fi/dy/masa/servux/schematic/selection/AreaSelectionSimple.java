@@ -3,7 +3,7 @@ package fi.dy.masa.servux.schematic.selection;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import fi.dy.masa.servux.util.JsonUtils;
+import fi.dy.masa.servux.util.data.json.JsonUtils;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 
@@ -103,7 +103,7 @@ public class AreaSelectionSimple extends AreaSelection
             area.setName(obj.get("name").getAsString());
         }
 
-        BlockPos pos = JsonUtils.blockPosFromJson(obj, "origin");
+        BlockPos pos = JsonUtils.getBlockPosOrDefault(obj, "origin", BlockPos.ZERO);
 
         if (pos != null)
         {

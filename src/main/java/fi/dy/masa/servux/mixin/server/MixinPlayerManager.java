@@ -10,6 +10,7 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.server.players.NameAndId;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.entity.Entity;
@@ -28,8 +29,7 @@ import fi.dy.masa.servux.event.PlayerHandler;
 @Mixin(PlayerList.class)
 public abstract class MixinPlayerManager
 {
-    @Unique
-    private NameAndId profileTemp;
+    @Unique private NameAndId profileTemp;
 
     public MixinPlayerManager() { super(); }
 
@@ -52,7 +52,7 @@ public abstract class MixinPlayerManager
     }
 
     @Inject(method = "op(Lnet/minecraft/server/players/NameAndId;Ljava/util/Optional;Ljava/util/Optional;)V", at = @At("HEAD"))
-    private void servux_onCaptureGameProfileOp(NameAndId player, Optional<Integer> permissionLevel, Optional<Boolean> canBypassPlayerLimit, CallbackInfo ci)
+    private void servux_onCaptureGameProfileOp(NameAndId player, Optional<LevelBasedPermissionSet> permissionLevel, Optional<Boolean> canBypassPlayerLimit, CallbackInfo ci)
     {
         this.profileTemp = player;
     }
@@ -71,7 +71,7 @@ public abstract class MixinPlayerManager
             this.profileTemp = null;
         }
 
-        return player;
+        return original.call(instance, uUID);
     }
 
     @Inject(method = "deop", at = @At("HEAD"))
@@ -94,7 +94,7 @@ public abstract class MixinPlayerManager
             this.profileTemp = null;
         }
 
-        return player;
+        return original.call(instance, uUID);
     }
 
     @Inject(method = "remove", at = @At("HEAD"))

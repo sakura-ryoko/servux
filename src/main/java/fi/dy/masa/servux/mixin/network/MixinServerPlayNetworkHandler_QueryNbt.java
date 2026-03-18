@@ -28,10 +28,8 @@ public class MixinServerPlayNetworkHandler_QueryNbt
 	        //Servux.debugLog("received NbtQueryBlock request from: {}", this.player.getName().getLiteralString());
 	        return EntitiesDataProvider.INSTANCE.hasNbtQueryPermission(this.player);
         }
-        else
-        {
-            return instance.hasPermission(permission);
-        }
+
+        return original.call(instance, permission);
     }
 
     @WrapOperation(method = "handleEntityTagQuery",
@@ -44,9 +42,7 @@ public class MixinServerPlayNetworkHandler_QueryNbt
 	        //Servux.debugLog("received NbtQueryEntity request from: {}", this.player.getName().getLiteralString());
 	        return EntitiesDataProvider.INSTANCE.hasNbtQueryPermission(this.player);
         }
-        else
-        {
-            return instance.hasPermission(permission);
-        }
+
+        return original.call(instance, permission);
     }
 }

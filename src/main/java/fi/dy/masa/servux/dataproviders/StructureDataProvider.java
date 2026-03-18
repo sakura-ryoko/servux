@@ -4,7 +4,7 @@ import java.util.*;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -23,6 +23,7 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.levelgen.structure.TerrainAdjustment;
 import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSerializationContext;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -33,7 +34,8 @@ import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringListSetting;
-import fi.dy.masa.servux.util.PlayerDimensionPosition;
+import fi.dy.masa.servux.util.PermissionsUtil;
+import fi.dy.masa.servux.util.position.PlayerDimensionPosition;
 import fi.dy.masa.servux.util.Timeout;
 
 public class StructureDataProvider extends DataProviderBase
@@ -248,7 +250,7 @@ public class StructureDataProvider extends DataProviderBase
     {
         final ChunkPos pos = chunk.getPos();
 
-        if (this.chunkHasStructureReferences(pos.x, pos.z, chunk.getLevel()))
+        if (this.chunkHasStructureReferences(pos.x(), pos.z(), chunk.getLevel()))
         {
             final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
@@ -281,7 +283,7 @@ public class StructureDataProvider extends DataProviderBase
         {
             for (Long chunkPosLong : chunks)
             {
-                final ChunkPos pos = new ChunkPos(chunkPosLong);
+                final ChunkPos pos = ChunkPos.unpack(chunkPosLong);
                 map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter)).setLastSync(tickCounter);
             }
         }
@@ -303,8 +305,8 @@ public class StructureDataProvider extends DataProviderBase
     {
         int chunkRadius = this.retainDistance;
 
-        return Math.abs(pos.x - center.x) > chunkRadius ||
-               Math.abs(pos.z - center.z) > chunkRadius;
+        return Math.abs(pos.x() - center.x()) > chunkRadius ||
+               Math.abs(pos.z() - center.z()) > chunkRadius;
     }
 
     protected void sendAndRefreshExpiredStructures(ServerPlayer player, Map<ChunkPos, Timeout> map, int tickCounter)
@@ -335,7 +337,7 @@ public class StructureDataProvider extends DataProviderBase
                 }
                 else
                 {
-                    this.getStructureReferencesFromChunk(pos.x, pos.z, world, references);
+                    this.getStructureReferencesFromChunk(pos.x(), pos.z(), world, references);
 
                     Timeout timeout = map.get(pos);
 
@@ -422,14 +424,14 @@ public class StructureDataProvider extends DataProviderBase
 
             while (iter.hasNext())
             {
-                ChunkPos pos = new ChunkPos(iter.nextLong());
+                ChunkPos pos = ChunkPos.unpack(iter.nextLong());
 
-                if (!world.hasChunk(pos.x, pos.z))
+                if (!world.hasChunk(pos.x(), pos.z()))
                 {
                     continue;
                 }
 
-                ChunkAccess chunk = world.getChunk(pos.x, pos.z, ChunkStatus.STRUCTURE_REFERENCES, false);
+                ChunkAccess chunk = world.getChunk(pos.x(), pos.z(), ChunkStatus.STRUCTURE_REFERENCES, false);
 
                 if (chunk == null)
                 {
@@ -453,9 +455,9 @@ public class StructureDataProvider extends DataProviderBase
     {
         Map<Structure, LongSet> references = new HashMap<>();
 
-        for (int cx = center.x - chunkRadius; cx <= center.x + chunkRadius; ++cx)
+        for (int cx = center.x() - chunkRadius; cx <= center.x() + chunkRadius; ++cx)
         {
-            for (int cz = center.z - chunkRadius; cz <= center.z + chunkRadius; ++cz)
+            for (int cz = center.z() - chunkRadius; cz <= center.z() + chunkRadius; ++cz)
             {
                 this.getStructureReferencesFromChunk(cx, cz, world, references);
             }
@@ -540,7 +542,7 @@ public class StructureDataProvider extends DataProviderBase
     @Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override

@@ -4,10 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import fi.dy.masa.servux.settings.IServuxSettingCallback;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
-import fi.dy.masa.servux.util.InventoryUtils;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +16,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -27,7 +24,11 @@ import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.IServuxSettingCallback;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.InventoryUtils;
+import fi.dy.masa.servux.util.PermissionsUtil;
 import fi.dy.masa.servux.util.nbt.NbtView;
 
 public class TweaksDataProvider extends DataProviderBase
@@ -335,7 +336,7 @@ public class TweaksDataProvider extends DataProviderBase
 	@Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override

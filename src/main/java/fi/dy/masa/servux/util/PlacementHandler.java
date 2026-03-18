@@ -26,6 +26,7 @@ import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
+import fi.dy.masa.servux.util.game.BlockUtils;
 
 public class PlacementHandler
 {

@@ -19,7 +19,7 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.settings.IServuxSetting;
-import fi.dy.masa.servux.util.JsonUtils;
+import fi.dy.masa.servux.util.data.json.JsonUtils;
 
 public class DataProviderManager
 {
@@ -203,7 +203,7 @@ public class DataProviderManager
 
     public void readFromConfig()
     {
-        JsonElement el = JsonUtils.parseJsonFileAsPath(this.getConfigFile());
+        JsonElement el = JsonUtils.parseJsonFile(this.getConfigFile());
         JsonObject obj = null;
 
         Servux.debugLog("DataProviderManager#readFromConfig()");
@@ -278,7 +278,7 @@ public class DataProviderManager
             root.add(name, provider.toJson());
         }
 
-        JsonUtils.writeJsonToFileAsPath(root, this.getConfigFile());
+        JsonUtils.writeJsonToFile(root, this.getConfigFile());
     }
 
     protected Path getConfigFile()

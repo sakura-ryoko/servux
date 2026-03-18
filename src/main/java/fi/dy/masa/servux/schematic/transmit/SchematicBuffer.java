@@ -64,11 +64,11 @@ public class SchematicBuffer implements AutoCloseable
             try
             {
                 Files.createDirectory(dir);
-                Servux.debugLog("LitematicBuffer#writeFile(): Created directory '{}' successfully", dir.toAbsolutePath().toString());
+                Servux.debugLog("SchematicBuffer#writeFile(): Created directory '{}' successfully", dir.toAbsolutePath().toString());
             }
             catch (IOException err)
             {
-                Servux.LOGGER.error("LitematicBuffer#writeFile(): Exception creating directory '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+                Servux.LOGGER.error("SchematicBuffer#writeFile(): Exception creating directory '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
                 return null;
             }
         }
@@ -80,11 +80,11 @@ public class SchematicBuffer implements AutoCloseable
             try
             {
                 Files.delete(file);
-                Servux.debugLog("LitematicBuffer#writeFile(): Deleted file '{}' successfully", file.toAbsolutePath().toString());
+                Servux.debugLog("SchematicBuffer#writeFile(): Deleted file '{}' successfully", file.toAbsolutePath().toString());
             }
             catch (IOException err)
             {
-                Servux.LOGGER.error("LitematicBuffer#writeFile(): Exception deleting file '{}'; {}", file.toAbsolutePath().toString(), err.getLocalizedMessage());
+                Servux.LOGGER.error("SchematicBuffer#writeFile(): Exception deleting file '{}'; {}", file.toAbsolutePath().toString(), err.getLocalizedMessage());
                 return null;
             }
         }
@@ -104,11 +104,11 @@ public class SchematicBuffer implements AutoCloseable
         }
         catch (Exception err)
         {
-            Servux.LOGGER.error("LitematicBuffer#writeFile(): Exception saving file '{}'; {}", file.toAbsolutePath().toString(), err.getLocalizedMessage());
+            Servux.LOGGER.error("SchematicBuffer#writeFile(): Exception saving file '{}'; {}", file.toAbsolutePath().toString(), err.getLocalizedMessage());
             return null;
         }
 
-        Servux.debugLog("LitematicBuffer#writeFile(): Saved file '{}' successfully", file.toAbsolutePath().toString());
+        Servux.debugLog("SchematicBuffer#writeFile(): Saved file '{}' successfully", file.toAbsolutePath().toString());
         this.buffer.clear();
         return file;
     }

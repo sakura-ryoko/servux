@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.event.ServerHandler;
+import fi.dy.masa.servux.scheduler.TaskScheduler;
 
 @Mixin(MinecraftServer.class)
 public abstract class MixinMinecraftServer
@@ -27,10 +28,12 @@ public abstract class MixinMinecraftServer
 	@Shadow protected abstract GlobalPos selectLevelLoadFocusPos();
 
 	@Inject(method = "tickServer", at = @At(value = "RETURN", ordinal = 1))
-    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci, @Local ProfilerFiller profiler)
+    private void servux_onTickEnd(BooleanSupplier supplier, CallbackInfo ci,
+                                  @Local(name = "profiler") ProfilerFiller profiler)
     {
         profiler.push("servux_tick");
         DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.tickCount, profiler);
+        TaskScheduler.getInstance().runTasks(profiler);
         profiler.pop();
     }
 

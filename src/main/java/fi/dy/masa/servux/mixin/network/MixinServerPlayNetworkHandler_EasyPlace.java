@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(value = ServerGamePacketListenerImpl.class, priority = 1010)
+@Mixin(value = ServerGamePacketListenerImpl.class, priority = 950)
 public class MixinServerPlayNetworkHandler_EasyPlace
 {
     @Shadow public ServerPlayer player;

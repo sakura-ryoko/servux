@@ -60,8 +60,11 @@ import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.FileType;
+import fi.dy.masa.servux.util.game.BlockUtils;
+import fi.dy.masa.servux.util.game.EntityUtils;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
+import fi.dy.masa.servux.util.position.IntBoundingBox;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicaSchematic
@@ -703,7 +706,7 @@ public class LitematicaSchematic
         {
             for (int cz = minCZ; cz <= maxCZ; ++cz)
             {
-                long cp = ChunkPos.asLong(cx, cz);
+                long cp = ChunkPos.pack(cx, cz);
 
                 LevelChunkTicks<@NotNull T> chunkTickScheduler = chunkTickSchedulers.get(cp);
 
@@ -823,6 +826,111 @@ public class LitematicaSchematic
 
         return isGravityBlock(stateUp) &&
                 (isExposed(world, posUp) || supportsExposedBlocks(world, posUp));
+    }
+
+    /**
+     * This is used by both {@link TaskProcessChunkBase} and {@link TaskPasteSchematicPerChunkDirect}
+     */
+    @SuppressWarnings("unchecked")
+    public void takeBlocksFromWorldWithinChunk(Level world, ImmutableMap<String, IntBoundingBox> volumes,
+                                               ImmutableMap<String, Box> boxes, SchematicSaveInfo info)
+    {
+        BlockPos.MutableBlockPos posMutable = new BlockPos.MutableBlockPos(0, 0, 0);
+
+        for (Map.Entry<String, IntBoundingBox> volumeEntry : volumes.entrySet())
+        {
+            String regionName = volumeEntry.getKey();
+            IntBoundingBox bb = volumeEntry.getValue();
+            Box box = boxes.get(regionName);
+
+            if (box == null)
+            {
+                Servux.LOGGER.error("null Box for sub-region '{}' while trying to save chunk-wise schematic", regionName);
+                continue;
+            }
+
+            LitematicaBlockStateContainer container = this.blockContainers.get(regionName);
+            Map<BlockPos, CompoundTag> tileEntityMap = this.tileEntities.get(regionName);
+            Map<BlockPos, ScheduledTick<Block>> blockTickMap = this.pendingBlockTicks.get(regionName);
+            Map<BlockPos, ScheduledTick<Fluid>> fluidTickMap = this.pendingFluidTicks.get(regionName);
+
+            if (container == null || tileEntityMap == null || blockTickMap == null || fluidTickMap == null)
+            {
+                Servux.LOGGER.error("null map(s) for sub-region '{}' while trying to save chunk-wise schematic", regionName);
+                continue;
+            }
+
+            // We want to loop nice & easy from 0 to n here, but the per-sub-region pos1 can be at
+            // any corner of the area. Thus we need to offset from the total area origin
+            // to the minimum/negative corner (ie. 0,0 in the loop) corner here.
+            final BlockPos minCorner = PositionUtils.getMinCorner(box.getPos1(), box.getPos2());
+            final int offsetX = minCorner.getX();
+            final int offsetY = minCorner.getY();
+            final int offsetZ = minCorner.getZ();
+            // Relative coordinates within the sub-region container:
+            final int startX = bb.minX() - minCorner.getX();
+            final int startY = bb.minY() - minCorner.getY();
+            final int startZ = bb.minZ() - minCorner.getZ();
+            final int endX = startX + (bb.maxX() - bb.minX());
+            final int endY = startY + (bb.maxY() - bb.minY());
+            final int endZ = startZ + (bb.maxZ() - bb.minZ());
+            final boolean visibleOnly = info.visibleOnly;
+            final boolean includeSupport = info.includeSupportBlocks;
+
+            for (int y = startY; y <= endY; ++y)
+            {
+                for (int z = startZ; z <= endZ; ++z)
+                {
+                    for (int x = startX; x <= endX; ++x)
+                    {
+                        posMutable.set(x + offsetX, y + offsetY, z + offsetZ);
+
+                        if (visibleOnly &&
+                                isExposed(world, posMutable) == false &&
+                                (includeSupport == false || isSupport(world, posMutable) == false))
+                        {
+                            continue;
+                        }
+
+                        BlockState state = world.getBlockState(posMutable);
+                        container.set(x, y, z, state);
+
+                        if (state.isAir() == false)
+                        {
+                            this.totalBlocksReadFromWorld++;
+                        }
+
+                        if (state.hasBlockEntity())
+                        {
+                            BlockEntity te = world.getBlockEntity(posMutable);
+
+                            if (te != null)
+                            {
+                                BlockPos pos = new BlockPos(x, y, z);
+                                CompoundTag tag = te.saveWithFullMetadata(world.registryAccess());
+                                NbtUtils.writeBlockPosToTag(pos, tag);
+                                tileEntityMap.put(pos, tag);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (world instanceof ServerLevel serverWorld)
+            {
+                IntBoundingBox tickBox = IntBoundingBox.createProper(
+                        offsetX + startX  , offsetY + startY  , offsetZ + startZ  ,
+                        offsetX + endX + 1, offsetY + endY + 1, offsetZ + endZ + 1);
+
+                long currentTick = world.getGameTime();
+
+                this.getTicksFromScheduler(((IMixinWorldTickScheduler<Block>) serverWorld.getBlockTicks()).servux_getChunkTickSchedulers(),
+                                           blockTickMap, tickBox, minCorner, currentTick);
+
+                this.getTicksFromScheduler(((IMixinWorldTickScheduler<Fluid>) serverWorld.getFluidTicks()).servux_getChunkTickSchedulers(),
+                                           fluidTickMap, tickBox, minCorner, currentTick);
+            }
+        }
     }
 
     private void setSubRegionPositions(List<Box> boxes, BlockPos areaOrigin)
@@ -2107,7 +2215,7 @@ public class LitematicaSchematic
                 return false;
             }
 
-            NbtUtils.writeCompressed(this.writeToNBT(), fileSchematic);
+            NbtUtils.writeCompoundTagToCompressedFile(this.writeToNBT(), fileSchematic);
 
             return true;
         }
@@ -2173,7 +2281,7 @@ public class LitematicaSchematic
             return null;
         }
 
-        return NbtUtils.readNbtFromFileAsPath(file);
+        return NbtUtils.readNbtFromFile(file);
     }
 
     public static Path fileFromDirAndName(Path dir, String fileName, FileType schematicType)

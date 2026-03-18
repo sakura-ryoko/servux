@@ -35,11 +35,6 @@ public class PlayerListener implements IPlayerListener
         {
             TweaksDataProvider.INSTANCE.sendMetadata(player);
         }
-
-//        if (DebugDataProvider.INSTANCE.isEnabled())
-//        {
-//            DebugDataProvider.INSTANCE.register(player);
-//        }
     }
 
     @Override
@@ -69,10 +64,5 @@ public class PlayerListener implements IPlayerListener
         {
             TweaksDataProvider.INSTANCE.removePlayer(player);
         }
-
-//        if (DebugDataProvider.INSTANCE.isEnabled())
-//        {
-//            DebugDataProvider.INSTANCE.unregister(player);
-//        }
     }
 }

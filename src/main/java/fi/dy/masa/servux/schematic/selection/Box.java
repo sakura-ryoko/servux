@@ -2,7 +2,7 @@ package fi.dy.masa.servux.schematic.selection;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import fi.dy.masa.servux.util.JsonUtils;
+import fi.dy.masa.servux.util.data.json.JsonUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -159,8 +159,8 @@ public class Box
     {
         if (JsonUtils.hasString(obj, "name"))
         {
-            BlockPos pos1 = JsonUtils.blockPosFromJson(obj, "pos1");
-            BlockPos pos2 = JsonUtils.blockPosFromJson(obj, "pos2");
+            BlockPos pos1 = JsonUtils.getBlockPosOrDefault(obj, "pos1", BlockPos.ZERO);
+            BlockPos pos2 = JsonUtils.getBlockPosOrDefault(obj, "pos2", BlockPos.ZERO);
 
             if (pos1 != null || pos2 != null)
             {

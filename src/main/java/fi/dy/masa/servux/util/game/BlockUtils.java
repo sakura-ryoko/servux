@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.game;
 
 import java.util.Iterator;
 import java.util.Optional;

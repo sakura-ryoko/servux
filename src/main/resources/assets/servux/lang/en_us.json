@@ -135,5 +135,12 @@
     "servux.litematics.error.structure_write_to_file_failed.exception": "Failed to write the structure to file '%s' (exception)",
     "servux.litematics.error.structure_write_to_file_failed.exists": "Failed to write the structure to file '%s', file already exists",
     "servux.litematics.success.pasted": "Pasted §b%s§r to world §d%s§r in §a%s§rms.",
+    "servux.scheduler.feedback.aborted": "§cTask: §f'§d%s§f' has been aborted; ran for: §b%d §fms§r",
+    "servux.scheduler.feedback.completed": "§aTask: §f'§d%s§f' §ahas completed in: §b%d §fms§r",
+    "servux.scheduler.task.paste.failed": "§cSchematic Paste to world failed§r",
+    "servux.scheduler.task.paste.successful": "§aSchematic pasted in world§r",
+    "servux.scheduler.task.save.failed": "§cFailed to save schematic to file '§e%s§c'§r",
+    "servux.scheduler.task.save.interrupted": "§6Schematic saving interrupted or stopped§r",
+    "servux.scheduler.task.save.successful": "§aSchematic saved as '§e%s§a'§r",
     "servux.suffix.data_provider": " (Data Provider)"
 }

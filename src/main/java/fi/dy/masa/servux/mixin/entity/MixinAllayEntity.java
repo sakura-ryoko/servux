@@ -27,7 +27,7 @@ public abstract class MixinAllayEntity
 			return (T) (Object) true;
 		}
 
-		return instance.get(gameRule);
+		return original.call(instance, gameRule);
 	}
 
 //	@Inject(method = "isItemPickupCoolingDown",

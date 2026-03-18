@@ -10,6 +10,8 @@ import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
+import fi.dy.masa.servux.util.position.IntBoundingBox;
+import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;

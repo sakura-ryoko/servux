@@ -1,17 +1,10 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.*;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.mojang.serialization.DataResult;
-import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.loggers.DataLogger;
-import fi.dy.masa.servux.loggers.DataLoggerBase;
-import fi.dy.masa.servux.network.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.ServuxHudHandler;
-import fi.dy.masa.servux.network.packet.ServuxHudPacket;
-import fi.dy.masa.servux.settings.*;
-import fi.dy.masa.servux.util.StringUtils;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
@@ -25,9 +18,18 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+
+import fi.dy.masa.servux.Reference;
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.loggers.DataLogger;
+import fi.dy.masa.servux.loggers.DataLoggerBase;
+import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+import fi.dy.masa.servux.network.ServerPlayHandler;
+import fi.dy.masa.servux.network.packet.ServuxHudHandler;
+import fi.dy.masa.servux.network.packet.ServuxHudPacket;
+import fi.dy.masa.servux.settings.*;
+import fi.dy.masa.servux.util.PermissionsUtil;
+import fi.dy.masa.servux.util.StringUtils;
 
 public class HudDataProvider extends DataProviderBase
 {
@@ -739,28 +741,28 @@ public class HudDataProvider extends DataProviderBase
 
     public boolean hasPermissionsForWeather(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
     }
 
     public boolean hasPermissionsForSeed(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
     }
 
     public boolean hasPermissionsForLoggers(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode + ".logger", this.loggerPermissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode + ".logger", this.loggerPermissionLevel.getValue());
     }
 
     public boolean hasPermissionsForLogger(ServerPlayer player, String type)
     {
-        return Permissions.check(player, this.permNode + ".logger."+type, this.loggerPermissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode + ".logger."+type, this.loggerPermissionLevel.getValue());
     }
 
     @Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override

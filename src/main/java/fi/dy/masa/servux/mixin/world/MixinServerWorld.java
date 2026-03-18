@@ -28,23 +28,20 @@ public abstract class MixinServerWorld
         }
     }
 
-    @Inject(method = "advanceWeatherCycle()V", at = @At(value = "INVOKE",
-                                                target = "Lnet/minecraft/world/level/storage/ServerLevelData;setRaining(Z)V"))
+    @Inject(method = "advanceWeatherCycle()V",
+            at = @At(value = "INVOKE",
+                     target = "Lnet/minecraft/world/level/saveddata/WeatherData;setRaining(Z)V")
+    )
     private void servux_onTickWeather(CallbackInfo ci,
-                                      @Local(ordinal = 0) int i, @Local(ordinal = 1) int j, @Local(ordinal = 2) int k,
-                                      @Local(ordinal = 1) boolean bl2, @Local(ordinal = 2) boolean bl3)
+                                      @Local(name = "clearWeatherTime") int clearWeatherTime,
+                                      @Local(name = "thunderTime") int thunderTime,
+                                      @Local(name = "rainTime") int rainTime,
+                                      @Local(name = "thundering") boolean thundering,
+                                      @Local(name = "raining") boolean raining)
     {
-        /*
-        this.worldProperties.setThunderTime(j);
-        this.worldProperties.setRainTime(k);
-        this.worldProperties.setClearWeatherTime(i);
-        this.worldProperties.setThundering(bl2);
-        this.worldProperties.setRaining(bl3);
-         */
-
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.tickWeather(i, k, j, bl3, bl2);
+            HudDataProvider.INSTANCE.tickWeather(clearWeatherTime, rainTime, thunderTime, raining, thundering);
         }
     }
 }

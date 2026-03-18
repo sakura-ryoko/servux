@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.position;
 
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
@@ -17,6 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import fi.dy.masa.servux.util.data.json.JsonUtils;
 
 public class LayerRange
 {
@@ -76,7 +78,7 @@ public class LayerRange
     protected boolean hotkeyRangeMin;
     protected boolean hotkeyRangeMax;
 
-    private LayerRange() { }
+    public LayerRange() { }
 
     private LayerRange(LayerMode mode, Axis axis, int single, int above, int below, int min, int max, boolean minRange, boolean maxRange)
     {

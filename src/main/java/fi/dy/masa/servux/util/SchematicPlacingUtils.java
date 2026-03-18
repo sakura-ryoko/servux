@@ -38,8 +38,11 @@ import fi.dy.masa.servux.schematic.LitematicaSchematic.EntityInfo;
 import fi.dy.masa.servux.schematic.container.LitematicaBlockStateContainer;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.game.EntityUtils;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
+import fi.dy.masa.servux.util.position.IntBoundingBox;
+import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class SchematicPlacingUtils
@@ -53,7 +56,7 @@ public class SchematicPlacingUtils
                                                   boolean notifyNeighbors)
     {
         LitematicaSchematic schematic = schematicPlacement.getSchematic();
-        Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x, chunkPos.z);
+        Set<String> regionsTouchingChunk = schematicPlacement.getRegionsTouchingChunk(chunkPos.x(), chunkPos.z());
         BlockPos origin = schematicPlacement.getOrigin();
         boolean allSuccess = true;
 
@@ -121,7 +124,7 @@ public class SchematicPlacingUtils
                                                  @Nullable LayerRange layerRange,
                                                  boolean notifyNeighbors)
     {
-        IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x, chunkPos.z);
+        IntBoundingBox bounds = schematicPlacement.getBoxWithinChunkForRegion(regionName, chunkPos.x(), chunkPos.z());
         Vec3i regionSize = schematicPlacement.getSchematic().getAreaSize(regionName);
 
         if (bounds == null || container == null || blockEntityMap == null || regionSize == null)
@@ -398,10 +401,10 @@ public class SchematicPlacingUtils
         final int offX = regionPosRelTransformed.getX() + origin.getX();
         final int offY = regionPosRelTransformed.getY() + origin.getY();
         final int offZ = regionPosRelTransformed.getZ() + origin.getZ();
-        final double minX = (chunkPos.x << 4);
-        final double minZ = (chunkPos.z << 4);
-        final double maxX = (chunkPos.x << 4) + 16;
-        final double maxZ = (chunkPos.z << 4) + 16;
+        final double minX = (chunkPos.x() << 4);
+        final double minZ = (chunkPos.z() << 4);
+        final double maxX = (chunkPos.x() << 4) + 16;
+        final double maxZ = (chunkPos.z() << 4) + 16;
 
         final Rotation rotationCombined = schematicPlacement.getRotation().getRotated(placement.getRotation());
         final Mirror mirrorMain = schematicPlacement.getMirror();

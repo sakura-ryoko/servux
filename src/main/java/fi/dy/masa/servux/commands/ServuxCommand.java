@@ -1,7 +1,12 @@
 package fi.dy.masa.servux.commands;
 
 import java.util.*;
-import me.lucko.fabric.api.permissions.v0.Permissions;
+
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -13,17 +18,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.ArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.interfaces.IServerCommand;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.util.PermissionsUtil;
 import fi.dy.masa.servux.util.StringUtils;
 
 public class ServuxCommand implements IServerCommand
@@ -36,21 +38,21 @@ public class ServuxCommand implements IServerCommand
                          Commands.CommandSelection environment)
     {
         dispatcher.register(Commands
-                                    .literal(Reference.MOD_ID).requires(Permissions.require(Reference.MOD_ID + ".commands", 4))
-                                    .then(Commands.literal("reload").requires(Permissions.require(Reference.MOD_ID + ".commands.reload", 4))
+                                    .literal(Reference.MOD_ID).requires(PermissionsUtil.require(Reference.MOD_ID + ".commands", 4))
+                                    .then(Commands.literal("reload").requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.reload", 4))
                                                         .executes((ctx) ->
                                                                   {
                                                                       ServuxConfigProvider.INSTANCE.doReloadConfig(ctx.getSource());
                                                                       return 1;
                                                                   }))
-                                    .then(Commands.literal("save").requires(Permissions.require(Reference.MOD_ID + ".commands.save", 4))
+                                    .then(Commands.literal("save").requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.save", 4))
                                                         .executes((ctx) ->
                                                                   {
                                                                       ServuxConfigProvider.INSTANCE.doSaveConfig(ctx.getSource());
                                                                       return 1;
                                                                   }))
                                     .then(Commands.literal("set")
-                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.set", 4))
+                                                        .requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.set", 4))
                                                         .then(settingsNode().then(Commands.argument("value", StringArgumentType.greedyString())
                                                                                                 .suggests((ctx, builder) ->
                                                                                                           {
@@ -65,10 +67,10 @@ public class ServuxCommand implements IServerCommand
                                                                                                           })
                                                                                                 .executes(ServuxCommand::configModify))))
                                     .then(Commands.literal("info")
-                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.info", 4))
+                                                        .requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.info", 4))
                                                         .then(settingsNode().executes(ServuxCommand::configInfo)))
                                     .then(Commands.literal("list")
-                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
+                                                        .requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.list", 4))
                                                         .executes(ctx -> configList(ctx, DataProviderManager.INSTANCE.getAllProviders().stream()
                                                                                                                      .flatMap(iDataProvider -> iDataProvider.getSettings().stream()).toList()))
                                                         .then(Commands.argument("provider", StringArgumentType.string())
@@ -85,7 +87,7 @@ public class ServuxCommand implements IServerCommand
                                                                                           return configList(ctx, dataProvider.get().getSettings());
                                                                                       })))
                                     .then(Commands.literal("search")
-                                                        .requires(Permissions.require(Reference.MOD_ID + ".commands.list", 4))
+                                                        .requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.list", 4))
                                                         .then(Commands.argument("query", StringArgumentType.greedyString())
                                                                             .executes(ctx ->
                                                                                       {

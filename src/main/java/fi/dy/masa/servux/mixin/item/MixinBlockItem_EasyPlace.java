@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * Should override Carpet-Extra's version with a higher priority
  */
-@Mixin(value = BlockItem.class, priority = 1010)
+@Mixin(value = BlockItem.class, priority = 950)
 public abstract class MixinBlockItem_EasyPlace extends Item
 {
     private MixinBlockItem_EasyPlace(Properties builder)

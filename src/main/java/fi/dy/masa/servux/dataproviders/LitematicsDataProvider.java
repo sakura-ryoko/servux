@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import org.apache.commons.lang3.tuple.Pair;
 
 import net.minecraft.core.BlockPos;
@@ -37,8 +36,10 @@ import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.util.*;
+import fi.dy.masa.servux.util.game.EntityUtils;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
+import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
@@ -254,7 +255,7 @@ public class LitematicsDataProvider extends DataProviderBase
         }
 
         ServerLevel world = player.level();
-        ChunkAccess chunk = world != null ? world.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, false) : null;
+        ChunkAccess chunk = world != null ? world.getChunk(chunkPos.x(), chunkPos.z(), ChunkStatus.FULL, false) : null;
 
         if (chunk == null)
         {
@@ -316,8 +317,8 @@ public class LitematicsDataProvider extends DataProviderBase
             output.putString("Task", "BulkEntityReply");
             output.put("TileEntities", tileList);
             output.put("Entities", entityList);
-            output.putInt("chunkX", chunkPos.x);
-            output.putInt("chunkZ", chunkPos.z);
+            output.putInt("chunkX", chunkPos.x());
+            output.putInt("chunkZ", chunkPos.z());
             long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
@@ -354,7 +355,7 @@ public class LitematicsDataProvider extends DataProviderBase
             placement.pasteTo(player.level(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.displayClientMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
+            player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
         }
     }
 
@@ -388,19 +389,19 @@ public class LitematicsDataProvider extends DataProviderBase
             placement.pasteTo(player.level(), replaceMode, layerBehavior, layerRange);
             long timeElapsed = System.currentTimeMillis() - timeStart;
             //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.displayClientMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
+            player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
         }
     }
 
     @Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
 	public boolean hasPermissionsForPaste(ServerPlayer player)
 	{
-		return this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
+		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
 	}
 
     @Override

@@ -4,7 +4,6 @@
     "compatibilityLevel": "JAVA_21",
     "minVersion": "0.8",
     "mixins": [
-        "server.MixinMain",
         "block.MixinBlock_UpdateSuppression",
         "block.MixinChestBlock",
         "block.MixinHopperBlockEntity",
@@ -14,6 +13,7 @@
         "entity.MixinAllayEntity",
         "entity.MixinItemEntity",
         "entity.MixinMobEntity",
+        "item.IMixinItemInstance",
         "item.MixinBlockItem_EasyPlace",
         "item.MixinItemStack",
         "nbt.IMixinNbtReadView",
@@ -22,6 +22,7 @@
         "network.MixinServerPlayNetworkHandler_QueryNbt",
         "server.IMixinServerTickManager",
         "server.MixinCommandManager",
+        "server.MixinMain",
         "server.MixinMinecraftDedicatedServer",
         "server.MixinMinecraftServer",
         "server.MixinPlayerManager",

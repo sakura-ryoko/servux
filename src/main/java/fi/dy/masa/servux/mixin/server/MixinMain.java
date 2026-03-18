@@ -14,7 +14,7 @@ import fi.dy.masa.servux.dataproviders.DataProviderManager;
 public class MixinMain
 {
     @Inject(method = "main", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;saveDataTag(Lnet/minecraft/core/RegistryAccess;Lnet/minecraft/world/level/storage/WorldData;)V",
+            target = "Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;saveDataTag(Lnet/minecraft/world/level/storage/WorldData;)V",
             shift = At.Shift.AFTER))
     private static void servux_onCaptureImmutable(String[] args, CallbackInfo ci, @Local RegistryAccess.Frozen immutable)
     {

@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.position;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;

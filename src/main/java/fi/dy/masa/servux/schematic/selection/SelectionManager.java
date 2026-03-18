@@ -6,7 +6,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import com.google.gson.JsonElement;
 
-import fi.dy.masa.servux.util.JsonUtils;
+import fi.dy.masa.servux.util.data.json.JsonUtils;
 
 public class SelectionManager
 {
@@ -43,7 +43,7 @@ public class SelectionManager
     @Nullable
     public static AreaSelection tryLoadSelectionFromFile(Path file)
     {
-        JsonElement el = JsonUtils.parseJsonFileAsPath(file);
+        JsonElement el = JsonUtils.parseJsonFile(file);
 
         if (el != null && el.isJsonObject())
         {

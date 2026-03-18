@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
-import fi.dy.masa.servux.util.BlockUtils;
+import fi.dy.masa.servux.util.game.BlockUtils;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.state.BlockState;

@@ -1,22 +1,25 @@
 package fi.dy.masa.servux.util.nbt;
 
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.UUID;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.UUIDUtil;
-import net.minecraft.core.Vec3i;
-import net.minecraft.nbt.*;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.*;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.data.Constants;
@@ -264,13 +267,81 @@ public class NbtUtils
         return null;
     }
 
+    /**
+     * See {@link #readNbtFromFileAsPath}
+     */
     @Nullable
+    public static CompoundTag readNbtFromFile(@Nonnull Path file)
+    {
+        return readNbtFromFile(file, NbtAccounter.unlimitedHeap());
+    }
+
+    @Nullable
+    @Deprecated
     public static CompoundTag readNbtFromFileAsPath(@Nonnull Path file)
     {
         return readNbtFromFileAsPath(file, NbtAccounter.unlimitedHeap());
     }
 
+    /**
+     * See {@link #readNbtFromFileAsPath}
+     */
     @Nullable
+    public static CompoundTag readNbtFromFile(@Nonnull Path file, NbtAccounter tracker)
+    {
+        if (!Files.exists(file) || !Files.isReadable(file))
+        {
+            return null;
+        }
+
+        InputStream is;
+
+        try
+        {
+            is = Files.newInputStream(file, StandardOpenOption.READ);
+        }
+        catch (Exception e)
+        {
+            Servux.LOGGER.warn("readNbtFromFile: Failed to read NBT data from file '{}' (failed to create the input stream)", file.toAbsolutePath());
+            return null;
+        }
+
+        CompoundTag nbt = null;
+
+        if (is != null)
+        {
+            try
+            {
+                nbt = NbtIo.read(new DataInputStream(new BufferedInputStream(new GZIPInputStream(is))), tracker);
+            }
+            catch (Exception e)
+            {
+                try
+                {
+                    is.close();
+                    is = Files.newInputStream(file, StandardOpenOption.READ);
+                    nbt = NbtIo.read(new DataInputStream(new BufferedInputStream(is)), tracker);
+                }
+                catch (Exception ignore) {}
+            }
+
+            try
+            {
+                is.close();
+            }
+            catch (Exception ignore) {}
+        }
+
+        if (nbt == null || nbt.getId() == Constants.NBT.TAG_END)
+        {
+            Servux.LOGGER.warn("readNbtFromFile: Failed to read NBT data from file '{}'", file.toAbsolutePath());
+        }
+
+        return nbt;
+    }
+
+    @Nullable
+    @Deprecated
     public static CompoundTag readNbtFromFileAsPath(@Nonnull Path file, NbtAccounter tracker)
     {
         if (!Files.exists(file) || !Files.isReadable(file))
@@ -293,6 +364,7 @@ public class NbtUtils
     /**
      * Write the compound tag, gzipped, to the output stream.
      */
+    @Deprecated
     public static void writeCompressed(@Nonnull CompoundTag tag, @Nonnull OutputStream outputStream)
     {
         try
@@ -305,6 +377,7 @@ public class NbtUtils
         }
     }
 
+    @Deprecated
     public static void writeCompressed(@Nonnull CompoundTag tag, @Nonnull Path file)
     {
         try
@@ -316,6 +389,76 @@ public class NbtUtils
             Servux.LOGGER.warn("writeCompressed: Failed to write NBT data to file");
         }
     }
+
+    public static boolean writeCompoundTagToCompressedFile(@Nonnull CompoundTag tag, @Nonnull Path file)
+    {
+        return writeCompoundTagToCompressedFile(tag, file, "");
+    }
+
+    public static boolean writeCompoundTagToCompressedFile(@Nonnull CompoundTag tag, @Nonnull Path file, String tagName)
+    {
+        try (DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(Files.newOutputStream(file)))))
+        {
+//			NbtIo.write(tag, dos);
+            return writeToNbtStream(tag, os, tagName);
+        }
+        catch (Exception e)
+        {
+            Servux.LOGGER.warn("writeCompressedTest: Failed to write NBT data to file '{}'; {}", file.toAbsolutePath(), e.getLocalizedMessage());
+        }
+
+        return false;
+    }
+
+    public static boolean writeToNbtStream(@Nonnull Tag tag, @Nonnull DataOutput os)
+    {
+        return writeToNbtStream(tag, os, "");
+    }
+
+    public static boolean writeToNbtStream(@Nonnull Tag tag, @Nonnull DataOutput os, String tagName)
+    {
+        try
+        {
+            os.writeByte(tag.getId());
+
+            if (tag.getId() != Constants.NBT.TAG_END)
+            {
+                os.writeUTF(tagName);
+                tag.write(os);
+            }
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Servux.LOGGER.warn("writeToNbtStream: Exception while writing NBT data; {}", e.getLocalizedMessage());
+        }
+
+        return false;
+    }
+
+    // todo this must have been an older method for this that no longer works
+	/*
+	public static void writeCompressed(@Nonnull NbtCompound tag, String tagName, @Nonnull OutputStream outputStream)
+    {
+		try
+		{
+			DataOutputStream output = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(outputStream)));
+			int typeId = NbtWrap.getTypeId(tag);
+			output.writeByte(typeId);
+
+			if (typeId != 0)
+			{
+				output.writeUTF(tagName);
+				tag.write(output);
+			}
+		}
+		catch (Exception err)
+		{
+			MaLiLib.LOGGER.warn("writeCompressed: Failed to write NBT data to file");
+		}
+	}
+	 */
 
     /**
      * Reads in a Flat Map from NBT -- this way we don't need Mojang's code complexity

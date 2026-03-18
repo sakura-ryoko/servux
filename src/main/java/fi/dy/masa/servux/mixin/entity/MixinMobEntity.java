@@ -48,6 +48,6 @@ public abstract class MixinMobEntity
 		}
 
 		this.isAllay = false;
-		return instance.get(gameRule);
+		return original.call(instance, gameRule);
 	}
 }

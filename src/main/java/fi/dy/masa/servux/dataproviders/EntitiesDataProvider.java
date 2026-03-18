@@ -3,7 +3,7 @@ package fi.dy.masa.servux.dataproviders;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import me.lucko.fabric.api.permissions.v0.Permissions;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.entity.BlockEntity;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
@@ -21,6 +22,7 @@ import fi.dy.masa.servux.network.packet.ServuxEntitiesPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.PermissionsUtil;
 import fi.dy.masa.servux.util.nbt.NbtView;
 
 public class EntitiesDataProvider extends DataProviderBase
@@ -239,7 +241,7 @@ public class EntitiesDataProvider extends DataProviderBase
     {
         if (this.nbtQueryOverride.getValue())
         {
-            return Permissions.check(player, this.permNode+".nbt_query_override", this.nbtQueryPermissionLevel.getValue());
+            return PermissionsUtil.check(player, this.permNode+".nbt_query_override", this.nbtQueryPermissionLevel.getValue());
         }
 
         return player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
@@ -259,7 +261,7 @@ public class EntitiesDataProvider extends DataProviderBase
 	{
 		if (this.hasNbtAllowPlayerInventory())
 		{
-			return Permissions.check(player, this.permNode+".nbt_allow_player_inventory", this.playerInventoryPermissionLevel.getValue());
+			return PermissionsUtil.check(player, this.permNode+".nbt_allow_player_inventory", this.playerInventoryPermissionLevel.getValue());
 		}
 
 		return false;
@@ -274,7 +276,7 @@ public class EntitiesDataProvider extends DataProviderBase
 	{
 		if (this.hasNbtAllowPlayerEnderItems())
 		{
-			return Permissions.check(player, this.permNode+".nbt_allow_player_ender_items", this.playerEnderItemsPermissionLevel.getValue());
+			return PermissionsUtil.check(player, this.permNode+".nbt_allow_player_ender_items", this.playerEnderItemsPermissionLevel.getValue());
 		}
 
 		return false;
@@ -283,7 +285,7 @@ public class EntitiesDataProvider extends DataProviderBase
 	@Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     @Override

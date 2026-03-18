@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.position;
 
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;

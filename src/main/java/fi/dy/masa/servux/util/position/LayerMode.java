@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.util;
+package fi.dy.masa.servux.util.position;
 
 import java.util.function.IntFunction;
 import net.minecraft.network.codec.ByteBufCodecs;
