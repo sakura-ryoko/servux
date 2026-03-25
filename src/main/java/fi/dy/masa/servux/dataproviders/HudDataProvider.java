@@ -651,7 +651,7 @@ public class HudDataProvider extends DataProviderBase
             this.metadata.putInt("spawnPosZ", spawnPos.pos().getZ());
             this.refreshSpawnMetadata = true;
 
-            Servux.debugLog("setSpawnPos(): updating World Spawn [{}] -> [{}]", this.getSpawnPosAsString(), this.getSpawnPosAsString(spawnPos));
+            Servux.debugLog("setSpawnPos(): updating World Spawn {} -> {}", this.getSpawnPosAsString(), this.getSpawnPosAsString(spawnPos));
         }
 
         this.spawnPos = spawnPos;
