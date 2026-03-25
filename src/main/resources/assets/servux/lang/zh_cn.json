@@ -138,8 +138,8 @@
     "servux.scheduler.feedback.aborted": "§c任务：§f“§d%s§f”已中止；运行时间：§b%d §f毫秒§r",
     "servux.scheduler.feedback.completed": "§a任务：§f“§d%s§f”§a已完成，耗时：§b%d §f毫秒§r",
     "servux.scheduler.task.paste.failed": "§c将原理图粘贴至世界失败§r",
-    "servux.scheduler.task.paste.successful": "§c原理图§a已粘贴至世界§r",
-    "servux.scheduler.task.save.failed": "§c保存原理图至文件“§e%s§c”失败§r",
+    "servux.scheduler.task.paste.successful": "§a原理图已粘贴至世界§r",
+    "servux.scheduler.task.save.failed": "§c保存原理图到文件“§e%s§c”失败§r",
     "servux.scheduler.task.save.interrupted": "§6原理图保存已中断或停止§r",
     "servux.scheduler.task.save.successful": "§a原理图已保存为“§e%s§a”§r",
     "servux.suffix.data_provider": "（数据提供者）"
