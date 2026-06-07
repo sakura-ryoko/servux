@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import fi.dy.masa.servux.Reference;
@@ -190,7 +191,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
             if (nbt != null && id != null)
             {
-				if (entity.getType() == EntityType.PLAYER)
+				if (entity.getType() == EntityTypes.PLAYER)
 				{
 					if (!this.hasPlayerInventoryPermission(player))
 					{

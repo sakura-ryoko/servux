@@ -25,15 +25,8 @@ public class Servux implements ModInitializer
     {
         if (ServuxConfigProvider.INSTANCE.hasDebugMode())
         {
-            LOGGER.info(msg, args);
-        }
-    }
-
-    public static void debugLogError(String msg, Object... args)
-    {
-        if (ServuxConfigProvider.INSTANCE.hasDebugMode())
-        {
-            LOGGER.error(msg, args);
+            String message = "[DEBUG] "+msg;
+            LOGGER.info(message, args);
         }
     }
 }

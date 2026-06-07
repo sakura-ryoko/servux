@@ -1,7 +1,5 @@
 package fi.dy.masa.servux.interfaces;
 
-import java.util.concurrent.CompletableFuture;
-
 public interface IThreadTaskBase
 {
 	/**
@@ -15,16 +13,7 @@ public interface IThreadTaskBase
 	 */
 	void finish();
 
-	/**
-	 * Run the task using {@link CompletableFuture}
-	 * @return (null)
-	 */
-	default CompletableFuture<Void> runAsync()
-	{
-		return CompletableFuture.completedFuture(null);
-	}
-
-	/**
+		/**
 	 * Run the task using {@link Runnable}
 	 */
 	default void run()

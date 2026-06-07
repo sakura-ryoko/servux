@@ -39,6 +39,7 @@ public class ServuxCommand implements IServerCommand
     {
         dispatcher.register(Commands
                                     .literal(Reference.MOD_ID).requires(PermissionsUtil.require(Reference.MOD_ID + ".commands", 4))
+                                    .executes(this::sendAbout)
                                     .then(Commands.literal("reload").requires(PermissionsUtil.require(Reference.MOD_ID + ".commands.reload", 4))
                                                         .executes((ctx) ->
                                                                   {
@@ -132,6 +133,12 @@ public class ServuxCommand implements IServerCommand
                                                        }
                                                        return true;
                                                    }).toList();
+    }
+
+    private int sendAbout(CommandContext<CommandSourceStack> ctx)
+    {
+        ctx.getSource().sendSuccess(() -> StringUtils.translate("servux.command.about", Reference.MOD_STRING), false);
+        return 1;
     }
 
     private int configList(CommandContext<CommandSourceStack> ctx, List<IServuxSetting<?>> list)

@@ -32,7 +32,7 @@
     "accessWidener": "servux.accesswidener",
 
 	"depends": {
-		"minecraft": "~26.1",
-		"fabric-networking-api-v1": ">=6.3.0"
+		"minecraft": "26.2-pre.4",
+		"fabric-networking-api-v1": ">=6.3.3"
 	}
 }

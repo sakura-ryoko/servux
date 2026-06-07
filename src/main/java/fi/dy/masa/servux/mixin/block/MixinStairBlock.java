@@ -18,9 +18,9 @@ import static net.minecraft.world.level.block.StairBlock.FACING;
 import static net.minecraft.world.level.block.StairBlock.SHAPE;
 
 @Mixin(StairBlock.class)
-public abstract class MixinStairsBlock extends Block
+public abstract class MixinStairBlock extends Block
 {
-    public MixinStairsBlock(Properties settings)
+    public MixinStairBlock(Properties settings)
     {
         super(settings);
     }

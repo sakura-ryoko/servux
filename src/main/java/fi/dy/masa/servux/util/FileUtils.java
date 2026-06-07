@@ -66,7 +66,7 @@ public class FileUtils
 
         if (Reference.DEV_DEBUG)
         {
-            Servux.debugLogError("createDirectoriesIfMissing: '{}'", dir.toAbsolutePath().toString());
+            Servux.debugLog("createDirectoriesIfMissing: '{}'", dir.toAbsolutePath().toString());
         }
 
         return Files.isDirectory(dir);
@@ -103,7 +103,7 @@ public class FileUtils
 
             if (Reference.DEV_DEBUG)
             {
-                Servux.debugLogError("move: '{}' -> '{}'", srcFile.toAbsolutePath().toString(), dstFile.toAbsolutePath().toString());
+                Servux.debugLog("move: '{}' -> '{}'", srcFile.toAbsolutePath().toString(), dstFile.toAbsolutePath().toString());
             }
 
             return true;
@@ -165,7 +165,7 @@ public class FileUtils
 
             if (Reference.DEV_DEBUG)
             {
-                Servux.debugLogError("writeDataToExactFile: '{}'", file.toAbsolutePath().toString());
+                Servux.debugLog("writeDataToExactFile: '{}'", file.toAbsolutePath().toString());
             }
 
             return true;

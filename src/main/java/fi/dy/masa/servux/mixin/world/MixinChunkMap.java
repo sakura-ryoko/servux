@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 @Mixin(ChunkMap.class)
-public abstract class MixinServerChunkLoadingManager
+public abstract class MixinChunkMap
 {
     @Inject(method = "markChunkPendingToSend(Lnet/minecraft/server/level/ServerPlayer;Lnet/minecraft/world/level/chunk/LevelChunk;)V",
             at = @At("HEAD"))

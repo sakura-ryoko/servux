@@ -13,17 +13,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerLevel.class)
-public abstract class MixinServerWorld
+public abstract class MixinServerLevel
 {
 //    @Shadow private int spawnChunkRadius;
     @Shadow @NotNull public abstract MinecraftServer getServer();
 
     @Inject(method = "setRespawnData", at = @At("TAIL"))
-    private void servux_onSetSpawnPos(LevelData.RespawnData spawnPoint, CallbackInfo ci)
+    private void servux_onSetSpawnPos(LevelData.RespawnData respawnData, CallbackInfo ci)
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.setSpawnPos(spawnPoint.globalPos());
+            HudDataProvider.INSTANCE.setSpawnPos(respawnData.globalPos());
 //            HudDataProvider.INSTANCE.setSpawnChunkRadius((this.spawnChunkRadius - 1));
         }
     }

@@ -815,7 +815,7 @@ public class JsonUtils
             {
                 if (Reference.DEV_DEBUG)
                 {
-                    Servux.debugLogError("parseJsonFile: '{}'", file.toAbsolutePath().toString());
+                    Servux.debugLog("parseJsonFile: '{}'", file.toAbsolutePath().toString());
                 }
 
                 return JsonParser.parseReader(reader);

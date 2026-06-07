@@ -138,7 +138,12 @@ public interface IThreadDaemonExecutor<T extends IThreadTaskBase> extends Runnab
 			}
 			finally
 			{
-				this.resume();
+				if (this.isPaused())
+				{
+					// This is required to avoid spin-lock.
+					Servux.debugLog("IThreadDaemonExecutor#Executor: sleep ended: for '{}'", this.currentThreadName());
+					this.resume();
+				}
 			}
 		}
 	}

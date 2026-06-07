@@ -11,10 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
@@ -90,7 +87,7 @@ public class EntityUtils
         try
         {
             NbtView view = NbtView.getReader(nbt, world.registryAccess());
-            Optional<Entity> optional = EntityType.create(view.getReader(), world, EntitySpawnReason.LOAD);
+            Optional<Entity> optional = EntityType.create(view.getReader(), world, new EntitySpawnRequest(EntitySpawnReason.LOAD, true));
 
             if (optional.isPresent())
             {
@@ -99,9 +96,7 @@ public class EntityUtils
                 return entity;
             }
         }
-        catch (Exception ignore)
-        {
-        }
+        catch (Exception ignore) {}
 
         return null;
     }

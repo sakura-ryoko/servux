@@ -16,8 +16,8 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.storage.*;
 
 import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.mixin.nbt.IMixinNbtReadView;
-import fi.dy.masa.servux.mixin.nbt.IMixinNbtWriteView;
+import fi.dy.masa.servux.mixin.nbt.IMixinTagValueInput;
+import fi.dy.masa.servux.mixin.nbt.IMixinTagValueOutput;
 
 /**
  * This is a wrapper to the new "ReadView / WriteView" that Mojang made; and provides a seamless way to extract an NbtCompound to / from it.
@@ -80,7 +80,7 @@ public class NbtView
     {
         if (this.isReader())
         {
-            return ((IMixinNbtReadView) this.reader).servux_getContext();
+            return ((IMixinTagValueInput) this.reader).servux_getContext();
         }
 
         LOGGER.error("getReaderContext(): Called from a Writer Context");
@@ -91,7 +91,7 @@ public class NbtView
     {
         if (this.isWriter())
         {
-            return ((IMixinNbtWriteView) this.writer).servux_getOps();
+            return ((IMixinTagValueOutput) this.writer).servux_getOps();
         }
 
         LOGGER.error("getWriterOps(): Called from a Reader Context");
@@ -106,11 +106,11 @@ public class NbtView
     {
         if (this.isReader())
         {
-            return ((IMixinNbtReadView) this.reader).servux_getNbt();
+            return ((IMixinTagValueInput) this.reader).servux_getNbt();
         }
         else if (this.isWriter())
         {
-            return ((IMixinNbtWriteView) this.writer).servux_getNbt();
+            return ((IMixinTagValueOutput) this.writer).servux_getNbt();
         }
 
         LOGGER.error("readNbt(): General failure");

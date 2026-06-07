@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(value = ServerGamePacketListenerImpl.class, priority = 1005)
-public class MixinServerPlayNetworkHandler_QueryNbt
+public class MixinServerGamePacketListenerImpl_queryNbt
 {
     @Shadow public ServerPlayer player;
 

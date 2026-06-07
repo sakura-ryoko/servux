@@ -7,18 +7,16 @@ import net.minecraft.util.StringRepresentable;
 
 public enum PasteLayerBehavior implements StringRepresentable
 {
-    ALL             ("all",             "litematica.gui.label.paste_layer_behavior.all"),
-    RENDERED_ONLY   ("rendered_only",   "litematica.gui.label.paste_layer_behavior.rendered_only");
+    ALL             ("all"),
+    RENDERED_ONLY   ("rendered_only");
 
     public static final EnumCodec<@NotNull PasteLayerBehavior> CODEC = StringRepresentable.fromEnum(PasteLayerBehavior::values);
     public static final ImmutableList<@NotNull PasteLayerBehavior> VALUES = ImmutableList.copyOf(values());
     private final String configString;
-    private final String translationKey;
 
-    PasteLayerBehavior(String configString, String translationKey)
+    PasteLayerBehavior(String configString)
     {
         this.configString = configString;
-        this.translationKey = translationKey;
     }
 
     @Override

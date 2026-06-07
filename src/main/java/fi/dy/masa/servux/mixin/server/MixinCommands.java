@@ -13,7 +13,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 
 @Mixin(Commands.class)
-public class MixinCommandManager
+public class MixinCommands
 {
     @Shadow @Final private CommandDispatcher<CommandSourceStack> dispatcher;
 

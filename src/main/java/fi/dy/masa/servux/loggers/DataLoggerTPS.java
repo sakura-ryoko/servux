@@ -8,7 +8,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
 import fi.dy.masa.servux.loggers.data.TPSData;
-import fi.dy.masa.servux.mixin.server.IMixinServerTickManager;
+import fi.dy.masa.servux.mixin.server.IMixinServerTickRateManager;
 
 public class DataLoggerTPS extends DataLoggerBase<CompoundTag>
 {
@@ -47,7 +47,7 @@ public class DataLoggerTPS extends DataLoggerBase<CompoundTag>
         
         return new TPSData(mspt,
                         tps,
-                        ((IMixinServerTickManager) tickManager).servux_getStringTicks(),
+                        ((IMixinServerTickRateManager) tickManager).servux_getStringTicks(),
                         frozen,
                         sprinting,
                         tickManager.isSteppingForward()

@@ -8,6 +8,8 @@ import net.minecraft.server.Services;
 import net.minecraft.server.WorldStem;
 import net.minecraft.server.dedicated.DedicatedServer;
 import net.minecraft.server.dedicated.DedicatedServerSettings;
+import net.minecraft.server.jsonrpc.ManagementServer;
+import net.minecraft.server.notifications.NotificationManager;
 import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -17,12 +19,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DedicatedServer.class)
-public class MixinMinecraftDedicatedServer
+public class MixinDedicatedServer
 {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void servux_DedicatedServerInit(Thread serverThread, LevelStorageSource.LevelStorageAccess levelStorageSource,
                                             PackRepository packRepository, WorldStem worldStem, Optional<GameRules> gameRules,
-                                            DedicatedServerSettings settings, DataFixer fixerUpper, Services services, CallbackInfo ci)
+                                            DedicatedServerSettings settings, DataFixer fixerUpper, Services services,
+                                            ManagementServer jsonRpcServer, NotificationManager notificationManager, CallbackInfo ci)
     {
         ((ServerInitHandler) ServerInitHandler.getInstance()).onServerInit();
     }

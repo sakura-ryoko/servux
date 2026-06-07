@@ -3,7 +3,10 @@ package fi.dy.masa.servux.mixin.entity;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRule;
 import net.minecraft.world.level.gamerules.GameRuleType;
 import net.minecraft.world.level.gamerules.GameRules;
@@ -13,8 +16,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import fi.dy.masa.servux.dataproviders.EntitiesDataProvider;
 
 @Mixin(Allay.class)
-public abstract class MixinAllayEntity
+public abstract class MixinAllay extends PathfinderMob
 {
+	protected MixinAllay(EntityType<? extends PathfinderMob> type, Level level)
+	{
+		super(type, level);
+	}
+
 	@SuppressWarnings("unchecked")
 	@WrapOperation(method = "wantsToPickUp",
 	               at = @At(value = "INVOKE",

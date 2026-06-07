@@ -35,9 +35,6 @@ public class DataLoggerMobCaps extends DataLoggerBase<CompoundTag>
 
             if (info != null)
             {
-                // Fix the math
-//                int spawnableChunks = world.getChunkSource().chunkMap.getDistanceManager().getNaturalSpawnChunkCount();
-//                int divisor = 17 * 17;
                 int spawnableChunks = info.getSpawnableChunkCount();
                 int divisor = NaturalSpawner.MAGIC_NUMBER;
                 long worldTime = world.getGameTime();

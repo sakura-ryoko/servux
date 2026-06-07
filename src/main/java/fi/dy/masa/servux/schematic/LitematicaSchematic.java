@@ -45,7 +45,7 @@ import net.minecraft.world.ticks.TickPriority;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
-import fi.dy.masa.servux.mixin.world.IMixinWorldTickScheduler;
+import fi.dy.masa.servux.mixin.world.IMixinLevelTicks;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.schematic.container.ILitematicaBlockStatePalette;
@@ -677,10 +677,10 @@ public class LitematicaSchematic
                         startX + sizeX, startY + sizeY, startZ + sizeZ);
                 long currentTick = world.getGameTime();
 
-                this.getTicksFromScheduler(((IMixinWorldTickScheduler<Block>) serverWorld.getBlockTicks()).servux_getChunkTickSchedulers(),
+                this.getTicksFromScheduler(((IMixinLevelTicks<Block>) serverWorld.getBlockTicks()).servux_getChunkTickSchedulers(),
                                            blockTickMap, tickBox, minCorner, currentTick);
 
-                this.getTicksFromScheduler(((IMixinWorldTickScheduler<Fluid>) serverWorld.getFluidTicks()).servux_getChunkTickSchedulers(),
+                this.getTicksFromScheduler(((IMixinLevelTicks<Fluid>) serverWorld.getFluidTicks()).servux_getChunkTickSchedulers(),
                                            fluidTickMap, tickBox, minCorner, currentTick);
             }
 
@@ -754,7 +754,7 @@ public class LitematicaSchematic
     public static boolean isGravityBlock(BlockState state)
     {
         return state.is(BlockTags.SAND) ||
-               state.is(BlockTags.CONCRETE_POWDER) ||
+               state.is(BlockTags.CONCRETE_POWDERS) ||
                state.getBlock() == Blocks.GRAVEL;
     }
 
@@ -924,10 +924,10 @@ public class LitematicaSchematic
 
                 long currentTick = world.getGameTime();
 
-                this.getTicksFromScheduler(((IMixinWorldTickScheduler<Block>) serverWorld.getBlockTicks()).servux_getChunkTickSchedulers(),
+                this.getTicksFromScheduler(((IMixinLevelTicks<Block>) serverWorld.getBlockTicks()).servux_getChunkTickSchedulers(),
                                            blockTickMap, tickBox, minCorner, currentTick);
 
-                this.getTicksFromScheduler(((IMixinWorldTickScheduler<Fluid>) serverWorld.getFluidTicks()).servux_getChunkTickSchedulers(),
+                this.getTicksFromScheduler(((IMixinLevelTicks<Fluid>) serverWorld.getFluidTicks()).servux_getChunkTickSchedulers(),
                                            fluidTickMap, tickBox, minCorner, currentTick);
             }
         }
