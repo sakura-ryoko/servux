@@ -14,7 +14,7 @@ public class Reference
     public static final String MC_VERSION = SharedConstants.getCurrentVersion().id();
     public static final String MOD_TYPE = "fabric";
     public static final String MOD_STRING = MOD_ID + "-" + MOD_TYPE + "-" + MC_VERSION + "-" + MOD_VERSION;
-    public static final boolean DEV_DEBUG = true;
+    public static final boolean DEV_DEBUG = false;
 	public static final boolean ANSI_MODE = DEV_DEBUG;
 
     public static final Path DEFAULT_RUN_DIR = FabricLoader.getInstance().getGameDir();
