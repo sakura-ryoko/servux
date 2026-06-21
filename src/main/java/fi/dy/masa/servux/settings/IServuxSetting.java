@@ -28,6 +28,8 @@ public interface IServuxSetting<T>
 
     void setValue(T value) throws CommandSyntaxException;
 
+    void updateExamples(List<String> examples);
+
     /**
      * Set the value from a string representation, this is used when setting the value from commands
      *
