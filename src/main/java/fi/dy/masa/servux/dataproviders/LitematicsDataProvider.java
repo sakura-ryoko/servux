@@ -35,14 +35,9 @@ import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.util.PasteLayerBehavior;
-import fi.dy.masa.servux.util.PermissionsUtil;
-import fi.dy.masa.servux.util.ReplaceBehavior;
-import fi.dy.masa.servux.util.StringUtils;
-import fi.dy.masa.servux.util.game.EntityUtils;
+import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
-import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
@@ -260,7 +255,7 @@ public class LitematicsDataProvider extends DataProviderBase
         }
 
         ServerLevel world = player.level();
-        LevelChunk chunk = world != null ? world.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()) : null;
+        LevelChunk chunk = world != null ? world.getChunkSource().getChunkNow(chunkPos.x, chunkPos.z) : null;
 
         if (chunk == null)
         {
