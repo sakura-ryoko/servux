@@ -5,6 +5,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
+
 public class StringUtils
 {
     public static String getModVersionString(String modId)
@@ -27,7 +29,13 @@ public class StringUtils
 
     public static String translateAsString(String translationKey, Object... args)
     {
-        return i18nLang.getInstance().translateAsString(translationKey, args);
+//        return i18nLang.getInstance().translateAsString(translationKey, args);
+        if (ServuxConfigProvider.LANG != null)
+        {
+            return ServuxConfigProvider.LANG.translate(translationKey, args);
+        }
+
+        throw new IllegalStateException("LANG Manager is null");
     }
 
     /**
@@ -37,7 +45,13 @@ public class StringUtils
      */
     public static MutableComponent translate(String translationKey, Object... args)
     {
-        return i18nLang.getInstance().translate(translationKey, args);
+//        return i18nLang.getInstance().translate(translationKey, args);
+        if (ServuxConfigProvider.LANG != null)
+        {
+            return ServuxConfigProvider.LANG.translateAsText(translationKey, args);
+        }
+
+        throw new IllegalStateException("LANG Manager is null");
     }
 
     public static CommandSyntaxException translateError(String translationKey, Object... args)

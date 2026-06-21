@@ -2,11 +2,11 @@ package fi.dy.masa.servux.servux;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.resources.ResourceManager;
+
 import fi.dy.masa.servux.dataproviders.DataProviderManager;
 import fi.dy.masa.servux.dataproviders.HudDataProvider;
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 import fi.dy.masa.servux.interfaces.IServerListener;
-import fi.dy.masa.servux.util.i18nLang;
 
 public class ServerListener implements IServerListener
 {
@@ -39,7 +39,8 @@ public class ServerListener implements IServerListener
     {
         DataProviderManager.INSTANCE.writeToConfig();
         DataProviderManager.INSTANCE.onCaptureImmutable(server.registryAccess());
-        i18nLang.tryLoadLanguage(ServuxConfigProvider.INSTANCE.getDefaultLanguage());
+//        i18nLang.tryLoadLanguage(ServuxConfigProvider.INSTANCE.getDefaultLanguage());
+        ServuxConfigProvider.INSTANCE.registerHandler();
     }
 
     @Override

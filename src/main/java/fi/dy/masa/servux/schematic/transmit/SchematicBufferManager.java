@@ -1,11 +1,13 @@
 package fi.dy.masa.servux.schematic.transmit;
 
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
@@ -13,28 +15,28 @@ import fi.dy.masa.servux.util.data.FileType;
 
 public class SchematicBufferManager
 {
-    private final HashMap<Long, SchematicBuffer> fileBuffers;
-    private final HashMap<Long, CompoundTag> optionalNbt;
-    private final HashMap<UUID, Long> playerMap;
+    private final ConcurrentHashMap<Long, SchematicBuffer> fileBuffers;
+    private final ConcurrentHashMap<Long, CompoundTag> optionalNbt;
+    private final ConcurrentHashMap<UUID, Long> playerMap;
 
     public SchematicBufferManager()
     {
-        this.fileBuffers = new HashMap<>();
-        this.optionalNbt = new HashMap<>();
-        this.playerMap = new HashMap<>();
+        this.fileBuffers = new ConcurrentHashMap<>(16, 0.9f, 1);
+        this.optionalNbt = new ConcurrentHashMap<>(16, 0.9f, 1);
+        this.playerMap = new ConcurrentHashMap<>(16, 0.9f, 1);
     }
 
-    public void createBuffer(String name, final long sessionKey, ServerPlayer player)
+    public void createBuffer(String name, int totalExpectedSlices, long totalExpectedSize, final long sessionKey, ServerPlayer player)
     {
-        this.createBuffer(name, FileType.LITEMATICA_SCHEMATIC, sessionKey, null, player);
+        this.createBuffer(name, totalExpectedSlices, totalExpectedSize, FileType.LITEMATICA_SCHEMATIC, sessionKey, null, player);
     }
 
-    public void createBuffer(String name, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
+    public void createBuffer(String name, int totalExpectedSlices, long totalExpectedSize, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
     {
-        this.createBuffer(name, FileType.LITEMATICA_SCHEMATIC, sessionKey, optional, player);
+        this.createBuffer(name, totalExpectedSlices, totalExpectedSize, FileType.LITEMATICA_SCHEMATIC, sessionKey, optional, player);
     }
 
-    public void createBuffer(String name, FileType type, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
+    public void createBuffer(String name, int totalExpectedSlices, long totalExpectedSize, FileType type, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
     {
         if (this.fileBuffers.containsKey(sessionKey) || this.optionalNbt.containsKey(sessionKey))
         {
@@ -42,7 +44,7 @@ public class SchematicBufferManager
             return;
         }
 
-        SchematicBuffer newBuf = new SchematicBuffer(name, type);
+        SchematicBuffer newBuf = new SchematicBuffer(name, totalExpectedSlices, totalExpectedSize, type);
         this.fileBuffers.put(sessionKey, newBuf);
 
         if (optional != null && !optional.isEmpty())
@@ -89,9 +91,9 @@ public class SchematicBufferManager
     {
         if (this.fileBuffers.containsKey(sessionKey))
         {
-            try (SchematicBuffer buffer = this.fileBuffers.remove(sessionKey))
+            try
             {
-                buffer.close();
+                this.fileBuffers.remove(sessionKey);
             }
             catch (Exception ignored) {}
         }

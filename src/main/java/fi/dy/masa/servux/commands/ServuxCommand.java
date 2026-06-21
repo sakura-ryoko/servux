@@ -229,7 +229,7 @@ public class ServuxCommand implements IServerCommand
         ctx.getSource().sendSuccess(() ->
                                      {
                                          MutableComponent text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).withStyle(style -> style
-                                                 .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
+                                                 .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_set", setting.name())))
                                                  .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " "))
                                          ).append(" ");
                                          if (Objects.equals(setting.getDefaultValue(), setting.getValue()))
@@ -307,9 +307,12 @@ public class ServuxCommand implements IServerCommand
         setting.setValueFromString(finalValue);
         ctx.getSource().sendSuccess(() ->
                                              StringUtils.translate("servux.command.config.set_value",
-                                                                   setting.shortDisplayName().copy().withStyle(style -> style
-                                                                           .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))),
-                                                                   finalValue),
+//                                                                   setting.shortDisplayName().copy().withStyle(style -> style
+//                                                                           .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))),
+                                                                   setting.name(),
+                                                                   finalValue)
+                                                        .copy().withStyle(style -> style
+                                                                .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))),
                                      true
         );
         return 1;
