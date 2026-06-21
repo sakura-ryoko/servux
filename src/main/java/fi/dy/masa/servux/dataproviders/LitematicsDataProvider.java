@@ -20,8 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.servux.Reference;
@@ -36,9 +35,14 @@ import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.util.*;
+import fi.dy.masa.servux.util.PasteLayerBehavior;
+import fi.dy.masa.servux.util.PermissionsUtil;
+import fi.dy.masa.servux.util.ReplaceBehavior;
+import fi.dy.masa.servux.util.StringUtils;
+import fi.dy.masa.servux.util.game.EntityUtils;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
+import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
@@ -245,19 +249,22 @@ public class LitematicsDataProvider extends DataProviderBase
     {
         if (!this.hasPermission(player) || !this.isEnabled())
         {
-            //Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            Servux.LOGGER.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
+            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
             return;
         }
         if (req == null || req.isEmpty())
         {
+//            Servux.LOGGER.warn("litematic_data: Litematic onBulkEntityRequest from player {}, request is empty.", player.getName().getString());
             return;
         }
 
         ServerLevel world = player.level();
-        ChunkAccess chunk = world != null ? world.getChunk(chunkPos.x, chunkPos.z, ChunkStatus.FULL, false) : null;
+        LevelChunk chunk = world != null ? world.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()) : null;
 
         if (chunk == null)
         {
+            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.chunk_not_loaded", chunkPos.toString()));
             return;
         }
 
@@ -266,7 +273,7 @@ public class LitematicsDataProvider extends DataProviderBase
         if ((req.contains("Task") && req.getStringOr("Task", "").equals("BulkEntityRequest")) ||
             !req.contains("Task"))
         {
-            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos [{}] to player {}", chunkPos.toString(), player.getName().tryCollapseToString());
+            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos {} to player {}", chunkPos.toString(), player.getName().tryCollapseToString());
 
             long timeStart = System.currentTimeMillis();
             ListTag tileList = new ListTag();
@@ -321,7 +328,12 @@ public class LitematicsDataProvider extends DataProviderBase
             long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-            //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
+            player.sendSystemMessage(
+                    StringUtils.translate("servux.litematics.feedback.bulk_request.acknowledge",
+                                          world.dimension().identifier().toString(), chunkPos.toString(),
+                                          tileList.size(), entityList.size(),
+                                          timeElapsed), false
+            );
         }
     }
 
