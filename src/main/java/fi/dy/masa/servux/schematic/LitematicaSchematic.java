@@ -1,5 +1,11 @@
 package fi.dy.masa.servux.schematic;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -58,13 +64,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.tick.ChunkTickScheduler;
 import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.TickPriority;
-
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
 
 public class LitematicaSchematic
 {
@@ -1037,7 +1036,7 @@ public class LitematicaSchematic
             int bytesRead = 0;
             output.putString("Task", "Litematic-TransmitData");
 
-            while (bytesRead != -1)
+            while ((bytesRead = is.read(buffer, 0, bufferSize)) != -1)
             {
                 output.remove("Slice");
                 output.remove("Size");
