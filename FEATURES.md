@@ -23,7 +23,6 @@ Servux New Features (0.3.7+)
 * `tweaks_data` - Provides Tweakeroo with entity/tile entity NBT information for `inventoryPreview`.  Can be expanded in the future to support more advanced Tweaks.  It can be activated by enabling `entityDataSync`.
   * Can provide the server side method for `stackable_shulkers` with the related `stackable_shulkers_count`, simillar to how Carpet can provide this.
   * This implementation also provides a lightweight `stackable_shulkers_fix` config for hoppers coded for Carpet by [KikuGie] under their [stackable-shulkers-fix] mod.
-  ~~* `debug_data` (_Disabled by default_) - Provides MiniHUD with the server-side data for the Vanilla debug rendering.  It can be activated by `RenderToggle` -> `debugDataMainToggle`.~~
 * _**NOTE**_:  All Data Providers also has their related `permission` configs for controlling OP level style permissions.  All Data Providers and permissions are also compatible with Luck Permissions API.
   * Example Luck Permissions API node: `servux.provider.entity_data.nbt_query_override`.
 
