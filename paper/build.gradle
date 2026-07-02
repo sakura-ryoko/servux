@@ -1,0 +1,52 @@
+plugins {
+	id 'java'
+	id 'io.papermc.paperweight.userdev' version '2.0.0-beta.21'
+}
+
+// Reuses the mod_version / minecraft_version properties from the root gradle.properties
+// (Gradle properties files at the root apply to all subprojects).
+base {
+	archivesName = 'servux-paper'
+}
+
+version = project.mod_version
+
+repositories {
+	maven {
+		name = 'papermc'
+		url = 'https://repo.papermc.io/repository/maven-public/'
+	}
+}
+
+dependencies {
+	// Mojang-mapped dev bundle for the exact Minecraft version the Fabric build targets.
+	// Version format changed for Paper 26.1+ (no more "-R0.1-SNAPSHOT"); see paper/gradle.properties.
+	paperweight.paperDevBundle(project.paper_dev_bundle_version)
+
+	// PacketEvents is NOT required for the hud_data MVP (Phase 1) - it's only needed starting
+	// Phase 3 (structures chunk-watch trigger / entity_data NbtQuery permission override).
+	// See paper/IMPLEMENTATION_PLAN.md. Uncomment when Phase 3 work begins:
+	// compileOnly 'com.github.retrooper:packetevents-spigot:2.13.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	// Minecraft 26.1+ uses Java 25.
+	options.release = 25
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+processResources {
+	inputs.property 'version', project.version
+
+	filesMatching('plugin.yml') {
+		expand 'version': project.version
+	}
+}
+
+// No reobfJar: Paper 26.1+'s dev bundle ships Mojang-mapped runtime classes directly
+// (no obfuscation remapping step needed), so the plain `jar` task output is deployable as-is.

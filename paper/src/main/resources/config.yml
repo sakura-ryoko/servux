@@ -1,0 +1,38 @@
+# Servux Paper - configuration
+# Apply changes with `/servux reload` after editing, or restart the server.
+
+# Enables verbose per-request debug logging on the console (mirrors Fabric's servux_main.debug_log).
+debug_log: false
+
+hud_data:
+  # Ticks between periodic broadcasts (weather ticks, data-logger ticks).
+  update_interval: 40
+  # Whether the world seed may be shared (still requires the servux.hud_data.share_seed permission).
+  share_seed: false
+  # Whether weather status (rain/thunder/clear timers) may be shared (still requires the
+  # servux.hud_data.share_weather_status permission).
+  share_weather_status: false
+  # Master toggle for the TPS/mob-cap data loggers.
+  loggers_enabled: false
+  # Which loggers are offered to clients when loggers_enabled is true.
+  loggers_enable_list:
+    - tps
+    - mob_caps
+
+structures:
+  # Ticks between periodic re-sync passes for tracked chunks (mirrors Fabric's update_interval).
+  update_interval: 40
+  # Ticks before a tracked chunk's structure data is considered stale and re-sent.
+  timeout: 600
+  blacklist_enabled: false
+  whitelist_enabled: false
+  blacklist:
+    - minecraft:buried_treasure
+  whitelist: []
+
+entity_data:
+  # Whether entity NBT responses for players may include their main inventory contents
+  # (still requires the servux.entity_data.nbt_allow_player_inventory permission node).
+  nbt_allow_player_inventory: true
+  # Same as above, for ender chest contents.
+  nbt_allow_player_ender_items: true

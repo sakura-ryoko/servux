@@ -7,3 +7,7 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
+
+// Additive Paper plugin subproject (MiniHUD protocol port MVP) - see paper/IMPLEMENTATION_PLAN.md.
+// The root project remains the untouched Fabric mod build.
+include 'paper'

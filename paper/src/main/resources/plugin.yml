@@ -1,0 +1,49 @@
+name: ServuxPaper
+version: '${version}'
+main: fi.dy.masa.servux.paper.ServuxPaperPlugin
+api-version: '26.1'
+description: 'PaperMC port of Servux''s MiniHUD server-side protocol support'
+author: masa
+website: https://github.com/maruohon/servux
+
+permissions:
+  servux.hud_data:
+    description: Allows receiving MiniHUD hud_data sync (spawn position, metadata handshake, etc.)
+    default: true
+  servux.hud_data.share_seed:
+    description: Allows receiving the world seed via hud_data sync
+    default: op
+  servux.hud_data.share_weather_status:
+    description: Allows receiving weather status via hud_data sync
+    default: true
+  servux.hud_data.loggers:
+    description: Allows subscribing to TPS/mob-cap data loggers via hud_data sync
+    default: true
+  servux.hud_data.recipe_manager:
+    description: Allows requesting the server recipe manager dump via hud_data sync
+    default: true
+  servux.structures:
+    description: Allows receiving MiniHUD structure bounding box sync
+    default: true
+  servux.entity_data:
+    description: Allows receiving MiniHUD entity/block-entity NBT sync
+    default: true
+  servux.entity_data.nbt_allow_player_inventory:
+    description: Allows entity_data responses to include player main inventory contents
+    default: op
+  servux.entity_data.nbt_allow_player_ender_items:
+    description: Allows entity_data responses to include player ender chest contents
+    default: op
+  servux.commands:
+    description: Allows use of the /servux command
+    default: op
+  servux.commands.reload:
+    description: Allows /servux reload
+    default: op
+  servux.commands.save:
+    description: Allows /servux save
+    default: op
+  servux.commands.list:
+    description: Allows /servux list
+    default: op
+
