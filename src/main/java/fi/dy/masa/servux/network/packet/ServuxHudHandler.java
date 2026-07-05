@@ -74,7 +74,7 @@ public abstract class ServuxHudHandler<T extends CustomPayload> implements IPlug
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> HudDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_METADATA_REQUEST -> HudDataProvider.INSTANCE.register(player);
             case PACKET_C2S_SPAWN_DATA_REQUEST -> HudDataProvider.INSTANCE.refreshSpawnMetadata(player, packet.getCompound());
             case PACKET_C2S_RECIPE_MANAGER_REQUEST -> HudDataProvider.INSTANCE.refreshRecipeManager(player, packet.getCompound());
             case PACKET_C2S_DATA_LOGGER_REQUEST -> HudDataProvider.INSTANCE.refreshLoggers(player, packet.getCompound());

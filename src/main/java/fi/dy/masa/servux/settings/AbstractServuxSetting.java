@@ -1,13 +1,15 @@
 package fi.dy.masa.servux.settings;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import fi.dy.masa.servux.dataproviders.IDataProvider;
-import fi.dy.masa.servux.util.i18nLang;
-import net.minecraft.text.Text;
-
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
+
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.text.Text;
+
+import fi.dy.masa.servux.dataproviders.IDataProvider;
+import fi.dy.masa.servux.util.StringUtils;
 
 public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
 {
@@ -19,7 +21,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     private final IDataProvider dataProvider;
     private final @Nullable IServuxSettingCallback<T> callback;
 
-    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples, IServuxSettingCallback<T> callback)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples, @Nullable IServuxSettingCallback<T> callback)
     {
         Objects.requireNonNull(name);
         this.name = name;
@@ -27,7 +29,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
         this.comment = comment;
         this.defaultValue = defaultValue;
         this.value = defaultValue;
-        this.examples = examples;
+        this.examples = examples != null ? new ArrayList<>(examples) : new ArrayList<>();
         this.dataProvider = dataProvider;
         this.callback = callback;
     }
@@ -75,6 +77,13 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     }
 
     @Override
+    public void updateExamples(List<String> examples)
+    {
+        this.examples.clear();
+        this.examples.addAll(examples);
+    }
+
+    @Override
     public IDataProvider dataProvider()
     {
         return dataProvider;
@@ -108,7 +117,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     {
         if (prettyName == null)
         {
-            return i18nLang.getInstance().translate("servux.config."+dataProvider.getName()+"."+name+".name");
+            return StringUtils.translate("servux.config."+dataProvider.getName()+"."+name+".name");
         }
         return prettyName;
     }
@@ -118,7 +127,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     {
         if (comment == null)
         {
-            return i18nLang.getInstance().translate("servux.config."+dataProvider.getName()+"."+name+".comment");
+            return StringUtils.translate("servux.config."+dataProvider.getName()+"."+name+".comment");
         }
         return comment;
     }
