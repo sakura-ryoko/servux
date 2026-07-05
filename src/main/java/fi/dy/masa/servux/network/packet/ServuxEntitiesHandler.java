@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -27,7 +28,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPacketPayload> imple
     private static final ServuxEntitiesHandler<ServuxEntitiesPacket.Payload> INSTANCE = new ServuxEntitiesHandler<>()
     {
         @Override
-        public void receive(ServuxEntitiesPacket.Payload payload, ServerPlayNetworking.@NotNull Context context)
+        public void receive(ServuxEntitiesPacket.@NonNull Payload payload, ServerPlayNetworking.@NotNull Context context)
         {
             ServuxEntitiesHandler.INSTANCE.receivePlayPayload(payload, context);
         }
@@ -75,7 +76,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPacketPayload> imple
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.register(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             /*
