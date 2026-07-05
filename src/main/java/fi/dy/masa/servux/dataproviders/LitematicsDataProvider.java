@@ -57,6 +57,7 @@ public class LitematicsDataProvider extends DataProviderBase
     public ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
     private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations, this.fixStairMirror, this.fixChestMirror);
 
+    private final List<UUID> registeredPlayers = new ArrayList<>();
     private final List<UUID> invalidPlayers = new ArrayList<>();
     private final SchematicBufferManager bufferManager = new SchematicBufferManager();
     private final Path transmitDir;
@@ -149,10 +150,10 @@ public class LitematicsDataProvider extends DataProviderBase
     @Override
     public boolean isPlayerRegistered(ServerPlayerEntity player)
     {
-        return !this.isPlayerInvalid(player);
+        return this.registeredPlayers.contains(player.getUuid()) && !this.isPlayerInvalid(player);
     }
 
-    public void sendMetadata(ServerPlayerEntity player)
+    public void registerPlayer(ServerPlayerEntity player)
     {
         if (!this.isEnabled()) return;
 
@@ -164,6 +165,8 @@ public class LitematicsDataProvider extends DataProviderBase
         }
 
         Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().getLiteralString());
+
+        this.registeredPlayers.add(player.getUuid());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -179,11 +182,13 @@ public class LitematicsDataProvider extends DataProviderBase
     public void onPacketFailure(ServerPlayerEntity player)
     {
         this.setPlayerInvalid(player);
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     public void removePlayer(ServerPlayerEntity player)
     {
         this.removeInvalidPlayer(player);
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     private void setPlayerInvalid(ServerPlayerEntity player)
@@ -206,7 +211,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBlockEntityRequest(ServerPlayerEntity player, BlockPos pos)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
@@ -220,7 +225,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayerEntity player, int entityId)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
@@ -252,13 +257,15 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBulkEntityRequest(ServerPlayerEntity player, ChunkPos chunkPos, NbtCompound req)
     {
-        if (this.hasPermission(player) == false || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
-            //Servux.logger.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getLiteralString());
+            Servux.LOGGER.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
+            player.sendMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
             return;
         }
         if (req == null || req.isEmpty())
         {
+//            Servux.LOGGER.warn("litematic_data: Litematic onBulkEntityRequest from player {}, request is empty.", player.getName().getString());
             return;
         }
 
@@ -267,6 +274,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
         if (chunk == null)
         {
+            player.sendMessage(StringUtils.translate("servux.litematics.error.bulk_request.chunk_not_loaded", chunkPos.toString()));
             return;
         }
 
@@ -275,7 +283,7 @@ public class LitematicsDataProvider extends DataProviderBase
         if ((req.contains("Task") && req.getString("Task", "").equals("BulkEntityRequest")) ||
             !req.contains("Task"))
         {
-            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos [{}] to player {}", chunkPos.toString(), player.getName().getLiteralString());
+            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos {} to player {}", chunkPos.toString(), player.getName().getString());
 
             long timeStart = System.currentTimeMillis();
             NbtList tileList = new NbtList();
@@ -324,13 +332,21 @@ public class LitematicsDataProvider extends DataProviderBase
             long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-            //player.sendMessage(Text.of("ChunkPos "+chunkPos.toString()+" --> Read TE: §a"+tileList.size()+"§r, E: §b"+entityList.size()+"§r from server world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
+            player.sendMessage(
+                    StringUtils.translate("servux.litematics.feedback.bulk_request.acknowledge",
+                                          world.getDimensionEntry().getIdAsString(), chunkPos.toString(),
+                                          tileList.size(), entityList.size(),
+                                          timeElapsed), false
+            );
         }
     }
 
     public void handleClientPasteRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
     {
-        if (!this.isEnabled()) return;
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
+        {
+            return;
+        }
 
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
@@ -363,7 +379,10 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void handleClientPasteRequestPair(ServerPlayerEntity player, int transactionId, Pair<LitematicaSchematic, NbtCompound> schemPair)
     {
-        if (!this.isEnabled()) return;
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
+        {
+            return;
+        }
 
         if (this.hasPermission(player) == false || this.hasPermissionsForPaste(player) == false)
         {
@@ -401,6 +420,11 @@ public class LitematicsDataProvider extends DataProviderBase
         return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
+	public boolean hasPermissionsForPaste(ServerPlayerEntity player)
+	{
+		return this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
+	}
+
     @Override
     public void onTickEndPre()
     {
@@ -411,10 +435,5 @@ public class LitematicsDataProvider extends DataProviderBase
     public void onTickEndPost()
     {
         // NO-OP
-    }
-
-    public boolean hasPermissionsForPaste(ServerPlayerEntity player)
-    {
-        return this.hasPermission(player) && Permissions.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
     }
 }
