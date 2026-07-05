@@ -991,15 +991,33 @@ public class LitematicaSchematic
         return tagList;
     }
 
+    @Deprecated(forRemoval = true)
+    @ApiStatus.Experimental
     public void sendTransmitFile(NbtCompound nbtIn, final long sessionKey, ServerPlayerEntity player)
     {
         Path file = this.getFile();
         NbtCompound output = new NbtCompound();
+        CompoundTag output = new CompoundTag();
+        final int bufferSize = SchematicBuffer.BUFFER_SIZE;
+        long totalBytes;
+        int totalSlices;
+
+        try
+        {
+            totalBytes = Files.size(file);
+            totalSlices = (int) ((totalBytes + bufferSize - 1) / bufferSize);
+        }
+        catch (IOException e)
+        {
+            Servux.LOGGER.error("sendTransmitFile: Unable to read file size; {}", e.getLocalizedMessage());
+            return;
+        }
 
         output.putString("Task", "Litematic-TransmitStart");
-        output.putString("FileName", file.getFileName().toString());
         output.put("FileType", FileType.CODEC, this.schematicType);
         output.putLong("SliceKey", sessionKey);
+        output.putInt("TotalSlices", totalSlices);
+        output.putLong("TotalSize", totalBytes);
 
         if (!nbtIn.isEmpty())
         {
@@ -1009,11 +1027,9 @@ public class LitematicaSchematic
         ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
 
         // File Stream
-        final int bufferSize = SchematicBuffer.BUFFER_SIZE;
-        byte[] buffer = new byte[bufferSize];
-        int totalBytes = 0;
-        int totalSlices = 0;
         output.putLong("SliceKey", sessionKey);
+        byte[] buffer = new byte[bufferSize];
+        int currentSlice = 0;
 
         try (InputStream is = Files.newInputStream(file))
         {
@@ -1025,14 +1041,14 @@ public class LitematicaSchematic
                 output.remove("Slice");
                 output.remove("Size");
                 output.remove("Data");
-
-                bytesRead = is.read(buffer, 0, bufferSize);
                 output.putInt("Slice", totalSlices);
                 output.putInt("Size", bytesRead);
-                output.putByteArray("Data", buffer);
+
+                byte[] correctedData = new byte[bytesRead];
+                System.arraycopy(buffer, 0, correctedData, 0, bytesRead);
+                output.putByteArray("Data", correctedData);
                 ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
-                totalBytes += bytesRead;
-                totalSlices++;
+                currentSlice++;
             }
         }
         catch (Exception err)
@@ -1056,6 +1072,8 @@ public class LitematicaSchematic
         ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
     }
 
+    @Deprecated(forRemoval = true)
+    @ApiStatus.Experimental
     public static @Nullable Pair<LitematicaSchematic, NbtCompound> receiveFileTransmit(NbtCompound nbt, ServerPlayerEntity player)
     {
         SchematicBufferManager manager = LitematicsDataProvider.INSTANCE.getBufferManager();
@@ -1072,10 +1090,11 @@ public class LitematicaSchematic
         {
             case "Litematic-TransmitStart" ->
             {
-                FileType type = nbt.get("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
-                String name = nbt.getString("FileName", "default_file");
+                FileType type = nbt.read("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
+                final int totalSlices = nbt.getIntOr("TotalSlices", 1);
+                final long totalSize = nbt.getLongOr("TotalSize", -1L);
 
-                manager.createBuffer(name, type, key, nbt.getCompoundOrEmpty("PlacementData"), player);
+                manager.createBuffer(totalSlices, totalSize, type, key, nbt.getCompoundOrEmpty("PlacementData"), player);
             }
             case "Litematic-TransmitData" ->
             {
@@ -1112,7 +1131,7 @@ public class LitematicaSchematic
                 }
 
                 // Successful transmission
-                Servux.debugLog("receiveFileTransmit: Received file '{}', [tS: {}, tB: {}]", schematic.getFile().toAbsolutePath().toString(), totalSlices, totalSize);
+                Servux.LOGGER.warn("receiveFileTransmit: Received file '{}', [tS: {}, tB: {}]", schematic.getFile().toAbsolutePath().toString(), totalSlices, totalSize);
                 return Pair.of(schematic, optional);
             }
             default ->

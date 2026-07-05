@@ -14,7 +14,7 @@ public class PlayerListener implements IPlayerListener
     {
         if (HudDataProvider.INSTANCE.isEnabled())
         {
-            HudDataProvider.INSTANCE.sendMetadata(player);
+            HudDataProvider.INSTANCE.register(player);
         }
 
         if (StructureDataProvider.INSTANCE.isEnabled())
@@ -24,17 +24,17 @@ public class PlayerListener implements IPlayerListener
 
         if (EntitiesDataProvider.INSTANCE.isEnabled())
         {
-            EntitiesDataProvider.INSTANCE.sendMetadata(player);
+            EntitiesDataProvider.INSTANCE.register(player);
         }
 
         if (LitematicsDataProvider.INSTANCE.isEnabled())
         {
-            LitematicsDataProvider.INSTANCE.sendMetadata(player);
+            LitematicsDataProvider.INSTANCE.registerPlayer(player);
         }
 
         if (TweaksDataProvider.INSTANCE.isEnabled())
         {
-            TweaksDataProvider.INSTANCE.sendMetadata(player);
+            TweaksDataProvider.INSTANCE.register(player);
         }
 
 //        if (DebugDataProvider.INSTANCE.isEnabled())
