@@ -56,6 +56,7 @@ public class LitematicsDataProvider extends DataProviderBase
     public ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
     private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations, this.fixStairMirror, this.fixChestMirror);
 
+    private final List<UUID> registeredPlayers = new ArrayList<>();
     private final List<UUID> invalidPlayers = new ArrayList<>();
     private final SchematicBufferManager bufferManager = new SchematicBufferManager();
     private final Path transmitDir;
@@ -149,10 +150,10 @@ public class LitematicsDataProvider extends DataProviderBase
     @Override
     public boolean isPlayerRegistered(ServerPlayer player)
     {
-        return !this.isPlayerInvalid(player);
+        return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
     }
 
-    public void sendMetadata(ServerPlayer player)
+    public void registerPlayer(ServerPlayer player)
     {
         if (!this.isEnabled()) return;
 
@@ -164,6 +165,8 @@ public class LitematicsDataProvider extends DataProviderBase
         }
 
         Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().tryCollapseToString());
+
+        this.registeredPlayers.add(player.getUUID());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.connection != null)
@@ -179,11 +182,13 @@ public class LitematicsDataProvider extends DataProviderBase
     public void onPacketFailure(ServerPlayer player)
     {
         this.setPlayerInvalid(player);
+        this.registeredPlayers.remove(player.getUUID());
     }
 
     public void removePlayer(ServerPlayer player)
     {
         this.removeInvalidPlayer(player);
+        this.registeredPlayers.remove(player.getUUID());
     }
 
     private void setPlayerInvalid(ServerPlayer player)
@@ -206,7 +211,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBlockEntityRequest(ServerPlayer player, BlockPos pos)
     {
-        if (!this.hasPermission(player) || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
@@ -220,7 +225,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayer player, int entityId)
     {
-        if (!this.hasPermission(player) || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
@@ -246,7 +251,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void onBulkEntityRequest(ServerPlayer player, ChunkPos chunkPos, CompoundTag req)
     {
-        if (!this.hasPermission(player) || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             Servux.LOGGER.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
             player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
@@ -338,7 +343,10 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void handleClientPasteRequest(ServerPlayer player, int transactionId, CompoundTag tags)
     {
-        if (!this.isEnabled()) return;
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
+        {
+            return;
+        }
 
         if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
         {
@@ -371,7 +379,10 @@ public class LitematicsDataProvider extends DataProviderBase
 
     public void handleClientPasteRequestPair(ServerPlayer player, int transactionId, Pair<LitematicaSchematic, CompoundTag> schemPair)
     {
-        if (!this.isEnabled()) return;
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
+        {
+            return;
+        }
 
         if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
         {
