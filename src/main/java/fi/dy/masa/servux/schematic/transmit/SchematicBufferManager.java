@@ -17,7 +17,7 @@ import fi.dy.masa.servux.util.data.FileType;
 public class SchematicBufferManager
 {
     private final ConcurrentHashMap<Long, SchematicBuffer> fileBuffers;
-    private final ConcurrentHashMap<Long, CompoundTag> optionalNbt;
+    private final ConcurrentHashMap<Long, NbtCompound> optionalNbt;
     private final ConcurrentHashMap<UUID, Long> playerMap;
 
     public SchematicBufferManager()
@@ -27,17 +27,17 @@ public class SchematicBufferManager
         this.playerMap = new ConcurrentHashMap<>(16, 0.9f, 1);
     }
 
-    public void createBuffer(int totalExpectedSlices, long totalExpectedSize, final long sessionKey, ServerPlayer player)
+    public void createBuffer(int totalExpectedSlices, long totalExpectedSize, final long sessionKey, ServerPlayerEntity player)
     {
         this.createBuffer(totalExpectedSlices, totalExpectedSize, FileType.LITEMATICA_SCHEMATIC, sessionKey, null, player);
     }
 
-    public void createBuffer(int totalExpectedSlices, long totalExpectedSize, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
+    public void createBuffer(int totalExpectedSlices, long totalExpectedSize, final long sessionKey, @Nullable NbtCompound optional, ServerPlayerEntity player)
     {
         this.createBuffer(totalExpectedSlices, totalExpectedSize, FileType.LITEMATICA_SCHEMATIC, sessionKey, optional, player);
     }
 
-    public void createBuffer(int totalExpectedSlices, long totalExpectedSize, FileType type, final long sessionKey, @Nullable CompoundTag optional, ServerPlayer player)
+    public void createBuffer(int totalExpectedSlices, long totalExpectedSize, FileType type, final long sessionKey, @Nullable NbtCompound optional, ServerPlayerEntity player)
     {
         if (this.fileBuffers.containsKey(sessionKey) || this.optionalNbt.containsKey(sessionKey))
         {
@@ -92,9 +92,9 @@ public class SchematicBufferManager
     {
         if (this.fileBuffers.containsKey(sessionKey))
         {
-            try (SchematicBuffer buffer = this.fileBuffers.remove(sessionKey))
+            try
             {
-                buffer.close();
+                this.fileBuffers.remove(sessionKey);
             }
             catch (Exception ignored) {}
         }

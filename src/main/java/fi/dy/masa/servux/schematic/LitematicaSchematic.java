@@ -20,6 +20,7 @@ import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.util.*;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.ApiStatus;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.block.Block;
@@ -59,6 +60,7 @@ import net.minecraft.world.tick.OrderedTick;
 import net.minecraft.world.tick.TickPriority;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -997,7 +999,6 @@ public class LitematicaSchematic
     {
         Path file = this.getFile();
         NbtCompound output = new NbtCompound();
-        CompoundTag output = new CompoundTag();
         final int bufferSize = SchematicBuffer.BUFFER_SIZE;
         long totalBytes;
         int totalSlices;
@@ -1066,7 +1067,7 @@ public class LitematicaSchematic
         output.remove("Size");
         output.remove("Data");
 
-        output.putInt("TotalSize", totalBytes);
+        output.putLong("TotalSize", totalBytes);
         output.putInt("TotalSlices", totalSlices);
         output.putString("Task", "Litematic-TransmitEnd");
         ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
@@ -1090,9 +1091,9 @@ public class LitematicaSchematic
         {
             case "Litematic-TransmitStart" ->
             {
-                FileType type = nbt.read("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
-                final int totalSlices = nbt.getIntOr("TotalSlices", 1);
-                final long totalSize = nbt.getLongOr("TotalSize", -1L);
+                FileType type = nbt.get("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
+                final int totalSlices = nbt.getInt("TotalSlices", 1);
+                final long totalSize = nbt.getLong("TotalSize", -1L);
 
                 manager.createBuffer(totalSlices, totalSize, type, key, nbt.getCompoundOrEmpty("PlacementData"), player);
             }
@@ -1117,7 +1118,7 @@ public class LitematicaSchematic
             }
             case "Litematic-TransmitEnd" ->
             {
-                final int totalSize = nbt.getInt("TotalSize", -1);
+                final long totalSize = nbt.getLong("TotalSize", -1);
                 final int totalSlices = nbt.getInt("TotalSlices", -1);
                 Path dir = LitematicsDataProvider.INSTANCE.getTransmitDir();
                 NbtCompound optional = manager.getOptionalNbt(key);

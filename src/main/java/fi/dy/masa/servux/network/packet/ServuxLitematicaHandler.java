@@ -87,7 +87,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
                 if (!LitematicsDataProvider.INSTANCE.isPlayerRegistered(player)) { return; }
-                UUID uuid = player.getUUID();
+                UUID uuid = player.getUuid();
                 long readingSessionKey;
 
                 if (!this.readingSessionKeys.containsKey(uuid))

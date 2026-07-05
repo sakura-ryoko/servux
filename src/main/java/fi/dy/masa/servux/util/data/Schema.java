@@ -155,13 +155,13 @@ public enum Schema implements StringIdentifiable
     public static final PacketCodec<ByteBuf, Schema> PACKET_CODEC = new PacketCodec<>()
     {
         @Override
-        public void encode(@NonNull ByteBuf buf, Schema value)
+        public void encode(ByteBuf buf, Schema value)
         {
             PacketCodecs.INTEGER.encode(buf, value.schemaId);
         }
 
         @Override
-        public @NonNull Schema decode(@NonNull ByteBuf buf)
+        public Schema decode(ByteBuf buf)
         {
             return Schema.getSchemaByDataVersion(PacketCodecs.INTEGER.decode(buf));
         }

@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.data.FileType;
 
-public class SchematicBuffer implements AutoCloseable
+public class SchematicBuffer
 {
     public static final int BUFFER_SIZE = 16384;
     private final FileType type;

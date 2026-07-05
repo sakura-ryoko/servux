@@ -148,7 +148,7 @@ public class LitematicsDataProvider extends DataProviderBase
     @Override
     public boolean isPlayerRegistered(ServerPlayerEntity player)
     {
-        return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
+        return this.registeredPlayers.contains(player.getUuid()) && !this.isPlayerInvalid(player);
     }
 
     public void registerPlayer(ServerPlayerEntity player)
@@ -164,7 +164,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
         Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().getLiteralString());
 
-        this.registeredPlayers.add(player.getUUID());
+        this.registeredPlayers.add(player.getUuid());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -180,13 +180,13 @@ public class LitematicsDataProvider extends DataProviderBase
     public void onPacketFailure(ServerPlayerEntity player)
     {
         this.setPlayerInvalid(player);
-        this.registeredPlayers.remove(player.getUUID());
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     public void removePlayer(ServerPlayerEntity player)
     {
         this.removeInvalidPlayer(player);
-        this.registeredPlayers.remove(player.getUUID());
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     private void setPlayerInvalid(ServerPlayerEntity player)

@@ -156,7 +156,7 @@ public class HudDataProvider extends DataProviderBase
     @Override
     public boolean isPlayerRegistered(ServerPlayerEntity player)
     {
-        return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
+        return this.registeredPlayers.contains(player.getUuid()) && !this.isPlayerInvalid(player);
     }
 
     @Override
@@ -435,7 +435,7 @@ public class HudDataProvider extends DataProviderBase
 
         Servux.debugLog("hudDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
-        this.registeredPlayers.add(player.getUUID());
+        this.registeredPlayers.add(player.getUuid());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
@@ -502,14 +502,14 @@ public class HudDataProvider extends DataProviderBase
     {
         this.setPlayerInvalid(player);
         this.removePlayerLoggers(player);
-        this.registeredPlayers.remove(player.getUUID());
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     public void removePlayer(ServerPlayerEntity player)
     {
         this.removeInvalidPlayer(player);
         this.removePlayerLoggers(player);
-        this.registeredPlayers.remove(player.getUUID());
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     private void removePlayerLoggers(ServerPlayerEntity player)
