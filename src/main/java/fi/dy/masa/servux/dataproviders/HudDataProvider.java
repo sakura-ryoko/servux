@@ -63,6 +63,7 @@ public class HudDataProvider extends DataProviderBase
     private long lastWeatherTick;
     private boolean refreshSpawnMetadata;
     private boolean refreshWeatherData;
+    private final List<UUID> registeredPlayers = new ArrayList<>();
     private final List<UUID> invalidPlayers = new ArrayList<>();
 
     private final HashMap<UUID, List<DataLogger>> loggerPlayers = new HashMap<>();
@@ -154,7 +155,7 @@ public class HudDataProvider extends DataProviderBase
     @Override
     public boolean isPlayerRegistered(ServerPlayerEntity player)
     {
-        return !this.isPlayerInvalid(player);
+        return this.registeredPlayers.contains(player.getUuid()) && !this.isPlayerInvalid(player);
     }
 
     @Override
@@ -410,7 +411,7 @@ public class HudDataProvider extends DataProviderBase
         }
     }
 
-    public void sendMetadata(ServerPlayerEntity player)
+    public void register(ServerPlayerEntity player)
     {
         if (!this.isEnabled()) return;
 
@@ -433,6 +434,8 @@ public class HudDataProvider extends DataProviderBase
 
         Servux.debugLog("hudDataChannel: sendMetadata to player {}", player.getName().getLiteralString());
 
+        this.registeredPlayers.add(player.getUuid());
+
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.networkHandler != null)
         {
@@ -446,6 +449,10 @@ public class HudDataProvider extends DataProviderBase
 
     public void refreshLoggers(ServerPlayerEntity player, @Nonnull NbtCompound nbt)
     {
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
+        {
+            return;
+        }
         if (!this.hasPermissionsForLoggers(player))
         {
             player.sendMessage(StringUtils.translate("servux.hud_data.error.insufficient_for_loggers", "any"));
@@ -494,12 +501,14 @@ public class HudDataProvider extends DataProviderBase
     {
         this.setPlayerInvalid(player);
         this.removePlayerLoggers(player);
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     public void removePlayer(ServerPlayerEntity player)
     {
         this.removeInvalidPlayer(player);
         this.removePlayerLoggers(player);
+        this.registeredPlayers.remove(player.getUuid());
     }
 
     private void removePlayerLoggers(ServerPlayerEntity player)
@@ -509,7 +518,10 @@ public class HudDataProvider extends DataProviderBase
 
     public void refreshSpawnMetadata(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
-        if (!this.isEnabled()) return;
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
+        {
+            return;
+        }
 
         BlockPos spawnPos = this.getSpawnPos();
         NbtCompound nbt = new NbtCompound();
@@ -537,7 +549,7 @@ public class HudDataProvider extends DataProviderBase
 
     public void refreshWeatherData(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
-        if (!this.hasPermissionsForWeather(player) || !this.isEnabled())
+        if (!this.hasPermissionsForWeather(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
@@ -577,7 +589,7 @@ public class HudDataProvider extends DataProviderBase
 
     public void refreshRecipeManager(ServerPlayerEntity player, @Nullable NbtCompound data)
     {
-        if (!this.hasPermission(player))
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }

@@ -74,7 +74,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPayload> implements IP
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> TweaksDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_METADATA_REQUEST -> TweaksDataProvider.INSTANCE.register(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             /*

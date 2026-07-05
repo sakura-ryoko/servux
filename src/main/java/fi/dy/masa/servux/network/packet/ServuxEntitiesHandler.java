@@ -74,7 +74,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPayload> implements 
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_METADATA_REQUEST -> EntitiesDataProvider.INSTANCE.register(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> EntitiesDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             /*
