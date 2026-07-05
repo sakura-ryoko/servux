@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -27,7 +28,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPacketPayload> impleme
     private static final ServuxTweaksHandler<ServuxTweaksPacket.Payload> INSTANCE = new ServuxTweaksHandler<>()
     {
         @Override
-        public void receive(ServuxTweaksPacket.Payload payload, ServerPlayNetworking.@NotNull Context context)
+        public void receive(ServuxTweaksPacket.@NonNull Payload payload, ServerPlayNetworking.@NotNull Context context)
         {
             ServuxTweaksHandler.INSTANCE.receivePlayPayload(payload, context);
         }
@@ -75,7 +76,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPacketPayload> impleme
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> TweaksDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_METADATA_REQUEST -> TweaksDataProvider.INSTANCE.register(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> TweaksDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             /*
