@@ -230,7 +230,7 @@ public class ServuxCommand implements IServerCommand
         ctx.getSource().sendFeedback(() ->
         {
             MutableText text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).styled(style -> style
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.prettyName())))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, StringUtils.translate("servux.command.info.click_to_set", setting.name())))
                 .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/servux set " + setting.qualifiedName() + " "))
             ).append(" ");
             if (Objects.equals(setting.getDefaultValue(), setting.getValue()))
@@ -306,10 +306,13 @@ public class ServuxCommand implements IServerCommand
         String finalValue = value;
         setting.setValueFromString(finalValue);
         ctx.getSource().sendFeedback(() ->
-            StringUtils.translate("servux.command.config.set_value",
-                setting.shortDisplayName().copy().styled(style -> style
-                    .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))),
-                                  finalValue),
+                                             StringUtils.translate("servux.command.config.set_value",
+//                                                                   setting.shortDisplayName().copy().withStyle(style -> style
+//                                                                           .withClickEvent(new ClickEvent.RunCommand("/servux info " + setting.qualifiedName()))),
+                                                                   setting.name(),
+                                                                   finalValue)
+                                                        .copy().styled(style -> style
+                                                                .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/servux info " + setting.qualifiedName()))),
                                      true
         );
         return 1;

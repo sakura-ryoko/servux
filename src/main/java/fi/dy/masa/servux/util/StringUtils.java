@@ -5,6 +5,8 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Identifier;
 
+import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
+
 public class StringUtils
 {
     public static String getModVersionString(String modId)
@@ -25,6 +27,17 @@ public class StringUtils
         return settingId.getNamespace().equals("minecraft") ? settingId.getPath() : settingId.toString();
     }
 
+    public static String translateAsString(String translationKey, Object... args)
+    {
+//        return i18nLang.getInstance().translateAsString(translationKey, args);
+        if (ServuxConfigProvider.LANG != null)
+        {
+            return ServuxConfigProvider.LANG.translate(translationKey, args);
+        }
+
+        throw new IllegalStateException("LANG Manager is null");
+    }
+
     /**
      * Can replace I18n
      * @param translationKey (key)
@@ -32,7 +45,13 @@ public class StringUtils
      */
     public static MutableText translate(String translationKey, Object... args)
     {
-        return i18nLang.getInstance().translate(translationKey, args);
+//        return i18nLang.getInstance().translate(translationKey, args);
+        if (ServuxConfigProvider.LANG != null)
+        {
+            return ServuxConfigProvider.LANG.translateAsText(translationKey, args);
+        }
+
+        throw new IllegalStateException("LANG Manager is null");
     }
 
     public static CommandSyntaxException translateError(String translationKey, Object... args)

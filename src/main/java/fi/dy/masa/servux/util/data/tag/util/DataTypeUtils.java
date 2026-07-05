@@ -6,23 +6,21 @@ import java.util.UUID;
 import java.util.function.Function;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.jetbrains.annotations.ApiStatus;
 
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtOps;
+
 import net.minecraft.util.Uuids;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.*;
-import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.servux.util.nbt.NbtKeys;
 
-@ApiStatus.Experimental
 public class DataTypeUtils
 {
     @Nullable
@@ -75,7 +73,7 @@ public class DataTypeUtils
 	{
 		if (data.contains(key, Constants.NBT.TAG_INT_ARRAY))
 		{
-			return data.getCodec(key, Uuids.INT_STREAM_CODEC).orElse(null);
+			return data.getCodec(key, Uuids.CODEC).orElse(null);
 		}
 
 		return null;
@@ -91,7 +89,7 @@ public class DataTypeUtils
 	 */
 	public static CompoundData putUUIDCodec(@Nonnull CompoundData dataIn, @Nonnull UUID uuid, String key)
 	{
-		return dataIn.putCodec(key, Uuids.INT_STREAM_CODEC, uuid);
+		return dataIn.putCodec(key, Uuids.CODEC, uuid);
 	}
 
 	public static CompoundData getOrCreateCompound(CompoundData tagIn, String tagName)
@@ -169,12 +167,6 @@ public class DataTypeUtils
         return tag;
     }
 
-//	public static @Nonnull CompoundData putVec2fCodec(@Nonnull CompoundData tag, @Nonnull Vec2f pos, String key)
-//	{
-//		tag.putCodec(key, Vec2f.CODEC, pos);
-//		return tag;
-//	}
-
 	public static @Nonnull CompoundData putVec3iCodec(@Nonnull CompoundData tag, @Nonnull Vec3i pos, String key)
 	{
 		tag.putCodec(key, Vec3i.CODEC, pos);
@@ -192,11 +184,6 @@ public class DataTypeUtils
 		tag.putCodec(key, BlockPos.CODEC, pos);
 		return tag;
 	}
-
-//	public static Vec2f getVec2fCodec(@Nonnull CompoundData tag, String key)
-//	{
-//		return tag.getCodec(key, Vec2f.CODEC).orElse(Vec2f.ZERO);
-//	}
 
 	public static Vec3i getVec3iCodec(@Nonnull CompoundData tag, String key)
 	{
@@ -516,10 +503,9 @@ public class DataTypeUtils
 	 */
 	public static <T> Optional<T> readFlatMap(@Nonnull CompoundData data, MapCodec<T> mapCodec)
 	{
-		DynamicOps<NbtElement> ops = NbtOps.INSTANCE;
-		NbtCompound nbt = DataConverterNbt.toVanillaCompound(data);
+		DynamicOps<BaseData> ops = DataOps.INSTANCE;
 
-		return switch (ops.getMap(nbt).flatMap(map -> mapCodec.decode(ops, map)))
+		return switch (ops.getMap(data).flatMap(map -> mapCodec.decode(ops, map)))
 		{
 			case DataResult.Success<T> result -> Optional.of(result.value());
 			case DataResult.Error<T> error -> error.partialValue();
@@ -536,15 +522,15 @@ public class DataTypeUtils
 	 */
 	public static <T> CompoundData writeFlatMap(MapCodec<T> mapCodec, T value)
 	{
-		DynamicOps<NbtElement> ops = NbtOps.INSTANCE;
-		NbtCompound nbt = new NbtCompound();
+		DynamicOps<BaseData> ops = DataOps.INSTANCE;
+		CompoundData data = new CompoundData();
 
 		switch (mapCodec.encoder().encodeStart(ops, value))
 		{
-			case DataResult.Success<NbtElement> result -> nbt.copyFrom((NbtCompound) result.value());
-			case DataResult.Error<NbtElement> error -> error.partialValue().ifPresent(partial -> nbt.copyFrom((NbtCompound) partial));
+			case DataResult.Success<BaseData> result -> data.combine((CompoundData) result.value());
+			case DataResult.Error<BaseData> error -> error.partialValue().ifPresent(partial -> data.combine((CompoundData) partial));
 		}
 
-		return DataConverterNbt.fromVanillaCompound(nbt);
+		return data;
 	}
 }
