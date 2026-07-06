@@ -130,7 +130,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPayload> implement
 
     private void handleBulkData(ServerPlayerEntity player, final int type, NbtCompound nbt)
     {
-        String task = nbt.getString("Task", "LitematicaPaste");
+        String task = nbt.getString("Task");
         Servux.debugLog("handleBulkData: received task: {} from {}", task, player.getName().getString());
 
         // For future Granular Task Management

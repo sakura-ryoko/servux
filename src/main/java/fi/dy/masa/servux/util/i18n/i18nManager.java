@@ -279,7 +279,7 @@ public class i18nManager
 			return Text.literal(key)
 							.styled(style ->
 											   style.withColor(Formatting.RED)
-													.withHoverEvent(new HoverEvent.ShowText(Text.of("Missing translation: " + key)))
+													.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (Text.of("Missing translation: " + key))))
 									  );
 		}
 	}

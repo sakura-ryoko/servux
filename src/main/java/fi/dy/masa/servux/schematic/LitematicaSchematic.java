@@ -998,7 +998,8 @@ public class LitematicaSchematic
         }
 
         output.putString("Task", "Litematic-TransmitStart");
-        output.put("FileType", FileType.CODEC, this.schematicType);
+//        output.put("FileType", FileType.CODEC, this.schematicType);
+        output.put("FileType", FileType.CODEC.encodeStart(NbtOps.INSTANCE, this.schematicType).getOrThrow());
         output.putLong("SliceKey", sessionKey);
         output.putInt("TotalSlices", totalSlices);
         output.putLong("TotalSize", totalBytes);
@@ -1074,11 +1075,12 @@ public class LitematicaSchematic
         {
             case "Litematic-TransmitStart" ->
             {
-                FileType type = nbt.get("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
+//                FileType type = nbt.get("FileType", FileType.CODEC).orElse(FileType.LITEMATICA_SCHEMATIC);
+                FileType type = FileType.CODEC.parse(NbtOps.INSTANCE, nbt.get("FileType")).getOrThrow();
                 final int totalSlices = nbt.getInt("TotalSlices");
                 final long totalSize = nbt.getLong("TotalSize");
 
-                manager.createBuffer(totalSlices, totalSize, type, key, nbt.getCompoundOrEmpty("PlacementData"), player);
+                manager.createBuffer(totalSlices, totalSize, type, key, nbt.getCompound("PlacementData"), player);
             }
             case "Litematic-TransmitData" ->
             {

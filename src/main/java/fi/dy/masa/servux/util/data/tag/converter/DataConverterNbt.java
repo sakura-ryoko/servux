@@ -20,18 +20,18 @@ public class DataConverterNbt
 
 	    return switch (vanillaTag.getType())
 	    {
-		    case Constants.NBT.TAG_BYTE -> new ByteData(((NbtByte) vanillaTag).value());
-		    case Constants.NBT.TAG_SHORT -> new ShortData(((NbtShort) vanillaTag).value());
-		    case Constants.NBT.TAG_INT -> new IntData(((NbtInt) vanillaTag).value());
-		    case Constants.NBT.TAG_LONG -> new LongData(((NbtLong) vanillaTag).value());
-		    case Constants.NBT.TAG_FLOAT -> new FloatData(((NbtFloat) vanillaTag).value());
-		    case Constants.NBT.TAG_DOUBLE -> new DoubleData(((NbtDouble) vanillaTag).value());
-		    case Constants.NBT.TAG_STRING -> new StringData(((NbtString) vanillaTag).value());
+		    case Constants.NBT.TAG_BYTE -> new ByteData(((NbtByte) vanillaTag).byteValue());
+		    case Constants.NBT.TAG_SHORT -> new ShortData(((NbtShort) vanillaTag).shortValue());
+		    case Constants.NBT.TAG_INT -> new IntData(((NbtInt) vanillaTag).intValue());
+		    case Constants.NBT.TAG_LONG -> new LongData(((NbtLong) vanillaTag).longValue());
+		    case Constants.NBT.TAG_FLOAT -> new FloatData(((NbtFloat) vanillaTag).floatValue());
+		    case Constants.NBT.TAG_DOUBLE -> new DoubleData(((NbtDouble) vanillaTag).doubleValue());
+		    case Constants.NBT.TAG_STRING -> new StringData(((NbtString) vanillaTag).asString());
 		    case Constants.NBT.TAG_BYTE_ARRAY -> new ByteArrayData(((NbtByteArray) vanillaTag).getByteArray());
 		    case Constants.NBT.TAG_INT_ARRAY -> new IntArrayData(((NbtIntArray) vanillaTag).getIntArray());
 		    case Constants.NBT.TAG_LONG_ARRAY -> new LongArrayData(((NbtLongArray) vanillaTag).getLongArray());
-		    case Constants.NBT.TAG_COMPOUND -> fromVanillaCompound(vanillaTag.asCompound().orElse(new NbtCompound()));
-		    case Constants.NBT.TAG_LIST -> fromVanillaList(vanillaTag.asNbtList().orElse(new NbtList()));
+		    case Constants.NBT.TAG_COMPOUND -> fromVanillaCompound(((NbtCompound) vanillaTag).copy());
+		    case Constants.NBT.TAG_LIST -> fromVanillaList(((NbtList) vanillaTag).copy());
 		    default -> EmptyData.INSTANCE;
 	    };
     }
