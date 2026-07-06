@@ -1,17 +1,12 @@
 package fi.dy.masa.servux.settings;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import fi.dy.masa.servux.dataproviders.IDataProvider;
-import fi.dy.masa.servux.util.i18nLang;
-import net.minecraft.text.Text;
-
-import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.network.chat.Component;
+import net.minecraft.text.Text;
 
 import fi.dy.masa.servux.dataproviders.IDataProvider;
 import fi.dy.masa.servux.util.StringUtils;
@@ -26,7 +21,7 @@ public abstract class AbstractServuxSetting<T> implements IServuxSetting<T>
     private final IDataProvider dataProvider;
     private final @Nullable IServuxSettingCallback<T> callback;
 
-    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples, IServuxSettingCallback<T> callback)
+    public AbstractServuxSetting(IDataProvider dataProvider, String name, Text prettyName, Text comment, T defaultValue, List<String> examples, @Nullable IServuxSettingCallback<T> callback)
     {
         Objects.requireNonNull(name);
         this.name = name;

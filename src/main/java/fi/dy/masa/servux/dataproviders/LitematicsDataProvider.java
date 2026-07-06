@@ -17,7 +17,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -37,14 +36,9 @@ import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
-import fi.dy.masa.servux.util.PasteLayerBehavior;
-import fi.dy.masa.servux.util.PermissionsUtil;
-import fi.dy.masa.servux.util.ReplaceBehavior;
-import fi.dy.masa.servux.util.StringUtils;
-import fi.dy.masa.servux.util.game.EntityUtils;
+import fi.dy.masa.servux.util.*;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
-import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
@@ -257,7 +251,7 @@ public class LitematicsDataProvider extends DataProviderBase
         if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             Servux.LOGGER.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
+            player.sendMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
             return;
         }
         if (req == null || req.isEmpty())
@@ -271,7 +265,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
         if (chunk == null)
         {
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.chunk_not_loaded", chunkPos.toString()));
+            player.sendMessage(StringUtils.translate("servux.litematics.error.bulk_request.chunk_not_loaded", chunkPos.toString()));
             return;
         }
 
@@ -280,7 +274,7 @@ public class LitematicsDataProvider extends DataProviderBase
         if ((req.contains("Task") && req.getString("Task", "").equals("BulkEntityRequest")) ||
             !req.contains("Task"))
         {
-            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos {} to player {}", chunkPos.toString(), player.getName().tryCollapseToString());
+            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos {} to player {}", chunkPos.toString(), player.getName().getString());
 
             long timeStart = System.currentTimeMillis();
             NbtList tileList = new NbtList();
@@ -335,9 +329,9 @@ public class LitematicsDataProvider extends DataProviderBase
             long timeElapsed = System.currentTimeMillis() - timeStart;
 
             HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-            player.sendSystemMessage(
+            player.sendMessage(
                     StringUtils.translate("servux.litematics.feedback.bulk_request.acknowledge",
-                                          world.dimension().identifier().toString(), chunkPos.toString(),
+                                          world.getDimensionEntry().getIdAsString(), chunkPos.toString(),
                                           tileList.size(), entityList.size(),
                                           timeElapsed), false
             );

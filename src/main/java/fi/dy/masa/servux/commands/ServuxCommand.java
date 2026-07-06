@@ -229,7 +229,7 @@ public class ServuxCommand implements IServerCommand
         ctx.getSource().sendFeedback(() -> setting.comment().copy().formatted(Formatting.GRAY), false);
         ctx.getSource().sendFeedback(() ->
                                      {
-                                         MutableText text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).withStyle(style -> style
+                                         MutableText text = StringUtils.translate("servux.command.info.value", setting.valueToString(setting.getValue())).styled(style -> style
                                                  .withHoverEvent(new HoverEvent.ShowText(StringUtils.translate("servux.command.info.click_to_set", setting.name())))
                                                  .withClickEvent(new ClickEvent.SuggestCommand("/servux set " + setting.qualifiedName() + " "))
                                          ).append(" ");

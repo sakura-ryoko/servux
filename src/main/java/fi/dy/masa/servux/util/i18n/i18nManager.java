@@ -8,10 +8,10 @@ import java.util.*;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
@@ -266,20 +266,20 @@ public class i18nManager
 		}
 	}
 
-	public MutableComponent translateAsText(String key, Object... args)
+	public MutableText translateAsText(String key, Object... args)
 	{
 		this.ensureLang();
 
 		if (this.hasTranslation(key))
 		{
-			return Component.literal(this.translate(key, args));
+			return Text.literal(this.translate(key, args));
 		}
 		else
 		{
-			return Component.literal(key)
-							.withStyle((style) ->
-											   style.withColor(ChatFormatting.RED)
-													.withHoverEvent(new HoverEvent.ShowText(Component.nullToEmpty("Missing translation: " + key)))
+			return Text.literal(key)
+							.styled(style ->
+											   style.withColor(Formatting.RED)
+													.withHoverEvent(new HoverEvent.ShowText(Text.of("Missing translation: " + key)))
 									  );
 		}
 	}
