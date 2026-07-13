@@ -51,6 +51,7 @@ public class TweaksDataProvider extends DataProviderBase
             this.stackableShulkersFix
     );
 
+    private final List<UUID> registeredPlayers = new ArrayList<>();
     private final List<UUID> invalidPlayers = new ArrayList<>();
     private boolean configDirty = false;
 
@@ -132,7 +133,7 @@ public class TweaksDataProvider extends DataProviderBase
     @Override
     public boolean isPlayerRegistered(ServerPlayer player)
     {
-        return !this.isPlayerInvalid(player);
+        return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
     }
 
     private void checkTweaksMetadata()
@@ -169,12 +170,12 @@ public class TweaksDataProvider extends DataProviderBase
         {
             if (this.isPlayerRegistered(player))
             {
-                this.sendMetadata(player);
+                this.register(player);
             }
         }
     }
 
-    public void sendMetadata(ServerPlayer player)
+    public void register(ServerPlayer player)
     {
         if (!this.isEnabled()) return;
 
@@ -187,6 +188,8 @@ public class TweaksDataProvider extends DataProviderBase
 
         Servux.debugLog("tweaksDataChannel: sendMetadata to player {}", player.getName().tryCollapseToString());
         this.checkTweaksMetadata();
+
+        this.registeredPlayers.add(player.getUUID());
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.connection != null)
@@ -202,11 +205,13 @@ public class TweaksDataProvider extends DataProviderBase
     public void onPacketFailure(ServerPlayer player)
     {
         this.setPlayerInvalid(player);
+        this.registeredPlayers.remove(player.getUUID());
     }
 
     public void removePlayer(ServerPlayer player)
     {
         this.removeInvalidPlayer(player);
+        this.registeredPlayers.remove(player.getUUID());
     }
 
     private void setPlayerInvalid(ServerPlayer player)
@@ -229,7 +234,7 @@ public class TweaksDataProvider extends DataProviderBase
 
     public void onBlockEntityRequest(ServerPlayer player, BlockPos pos)
     {
-        if (!this.hasPermission(player) || !this.isEnabled())
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
@@ -243,7 +248,7 @@ public class TweaksDataProvider extends DataProviderBase
 
     public void onEntityRequest(ServerPlayer player, int entityId)
     {
-        if (!this.hasPermission(player))
+        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }

@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import io.netty.buffer.Unpooled;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -25,7 +25,6 @@ import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.network.PacketSplitter;
-import fi.dy.masa.servux.schematic.LitematicaSchematic;
 
 @Environment(EnvType.SERVER)
 public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> implements IPluginServerPlayHandler<T>
@@ -33,7 +32,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> imp
     private static final ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> INSTANCE = new ServuxLitematicaHandler<>()
     {
         @Override
-        public void receive(ServuxLitematicaPacket.Payload payload, ServerPlayNetworking.@NotNull Context context)
+        public void receive(ServuxLitematicaPacket.@NonNull Payload payload, ServerPlayNetworking.@NotNull Context context)
         {
             ServuxLitematicaHandler.INSTANCE.receivePlayPayload(payload, context);
         }
@@ -81,12 +80,13 @@ public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> imp
         }
         switch (packet.getType())
         {
-            case PACKET_C2S_METADATA_REQUEST -> LitematicsDataProvider.INSTANCE.sendMetadata(player);
+            case PACKET_C2S_METADATA_REQUEST -> LitematicsDataProvider.INSTANCE.registerPlayer(player);
             case PACKET_C2S_BLOCK_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onBlockEntityRequest(player, packet.getPos());
             case PACKET_C2S_ENTITY_REQUEST -> LitematicsDataProvider.INSTANCE.onEntityRequest(player, packet.getEntityId());
             case PACKET_C2S_BULK_ENTITY_NBT_REQUEST -> LitematicsDataProvider.INSTANCE.onBulkEntityRequest(player, packet.getChunkPos(), packet.getCompound());
             case PACKET_C2S_NBT_RESPONSE_DATA ->
             {
+                if (!LitematicsDataProvider.INSTANCE.isPlayerRegistered(player)) { return; }
                 UUID uuid = player.getUUID();
                 long readingSessionKey;
 
@@ -131,22 +131,26 @@ public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> imp
     private void handleBulkData(ServerPlayer player, final int type, CompoundTag nbt)
     {
         String task = nbt.getStringOr("Task", "LitematicaPaste");
+        Servux.debugLog("handleBulkData: received task: {} from {}", task, player.getName().getString());
 
-        switch (task)
-        {
-            // File-Transmit support
-            case "Litematic-TransmitStart", "Litematic-TransmitCancel", "Litematic-TransmitData", "Litematic-TransmitEnd" ->
-            {
-                Pair<LitematicaSchematic, CompoundTag> schemPair = LitematicaSchematic.receiveFileTransmit(nbt, player);
+        // For future Granular Task Management
+//        switch (task)
+//        {
+//            // File-Transmit support
+//            case "Litematic-TransmitStart", "Litematic-TransmitCancel", "Litematic-TransmitData", "Litematic-TransmitEnd" ->
+//            {
+//                Pair<LitematicaSchematic, CompoundTag> schemPair = LitematicaSchematic.receiveFileTransmit(nbt, player);
+//
+//                if (schemPair != null && schemPair.getLeft().getFile() != null)
+//                {
+//                    Servux.debugLog("handleBulkData(): Received litematic '{}' from player {}", schemPair.getLeft().getFile().toAbsolutePath().toString(), player.getName().tryCollapseToString());
+//                    LitematicsDataProvider.INSTANCE.handleClientPasteRequestPair(player, type, schemPair);
+//                }
+//            }
+//            default -> LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, type, nbt);
+//        }
 
-                if (schemPair != null && schemPair.getLeft().getFile() != null)
-                {
-                    Servux.debugLog("handleBulkData(): Received litematic '{}' from player {}", schemPair.getLeft().getFile().toAbsolutePath().toString(), player.getName().tryCollapseToString());
-                    LitematicsDataProvider.INSTANCE.handleClientPasteRequestPair(player, type, schemPair);
-                }
-            }
-            default -> LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, type, nbt);
-        }
+        LitematicsDataProvider.INSTANCE.handleClientPasteRequest(player, type, nbt);
     }
 
     @Override
