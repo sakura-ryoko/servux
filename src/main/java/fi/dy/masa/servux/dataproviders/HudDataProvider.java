@@ -1,10 +1,31 @@
 package fi.dy.masa.servux.dataproviders;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.mojang.serialization.DataResult;
+
+import fi.dy.masa.servux.Reference;
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.loggers.DataLogger;
+import fi.dy.masa.servux.loggers.DataLoggerBase;
+import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+import fi.dy.masa.servux.network.ServerPlayHandler;
+import fi.dy.masa.servux.network.packet.ServuxHudHandler;
+import fi.dy.masa.servux.network.packet.ServuxHudPacket;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.IServuxSettingCallback;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
+import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.settings.ServuxStringListSetting;
+import fi.dy.masa.servux.util.PermissionsUtil;
+import fi.dy.masa.servux.util.StringUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
@@ -18,18 +39,6 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
-
-import fi.dy.masa.servux.Reference;
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.loggers.DataLogger;
-import fi.dy.masa.servux.loggers.DataLoggerBase;
-import fi.dy.masa.servux.network.IPluginServerPlayHandler;
-import fi.dy.masa.servux.network.ServerPlayHandler;
-import fi.dy.masa.servux.network.packet.ServuxHudHandler;
-import fi.dy.masa.servux.network.packet.ServuxHudPacket;
-import fi.dy.masa.servux.settings.*;
-import fi.dy.masa.servux.util.PermissionsUtil;
-import fi.dy.masa.servux.util.StringUtils;
 
 public class HudDataProvider extends DataProviderBase
 {
@@ -582,9 +591,12 @@ public class HudDataProvider extends DataProviderBase
             nbt.putBoolean("isThundering", false);
         }
 
-        if (this.clearWeatherTime > -1)
+        if (!this.isRaining && !this.isThundering)
         {
-            nbt.putInt("SetClear", this.clearWeatherTime);
+            // Weather is clear, whether or not there is an explicit /weather clear timer running.
+            // MiniHUD's hasValidWeatherCycle() requires a non-negative clear time to consider the
+            // weather cycle "known"; otherwise it renders the weather info-line as disabled/unknown.
+            nbt.putInt("SetClear", Math.max(this.clearWeatherTime, 0));
         }
 
         HANDLER.encodeServerData(player, ServuxHudPacket.WeatherTick(nbt));

@@ -176,9 +176,12 @@ public class HudDataProvider
 
         int clearTime = world.getClearWeatherDuration();
 
-        if (clearTime > 0)
+        if (!isRaining && !isThundering)
         {
-            nbt.putInt("SetClear", clearTime);
+            // Weather is clear, whether or not there is an explicit /weather clear timer running.
+            // MiniHUD's hasValidWeatherCycle() requires a non-negative clear time to consider the
+            // weather cycle "known"; otherwise it renders the weather info-line as disabled/unknown.
+            nbt.putInt("SetClear", Math.max(clearTime, 0));
         }
 
         return nbt;
