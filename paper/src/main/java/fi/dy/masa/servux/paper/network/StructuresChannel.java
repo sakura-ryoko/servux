@@ -3,7 +3,10 @@ package fi.dy.masa.servux.paper.network;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -15,10 +18,11 @@ import io.papermc.paper.event.packet.PlayerChunkLoadEvent;
 
 /**
  * Registers and handles the {@code servux:structures} plugin channel via the plain Bukkit
- * {@link org.bukkit.plugin.messaging.Messenger} API, and drives the chunk-watch trigger via
- * Paper's {@link PlayerChunkLoadEvent} - the public-API replacement for Fabric's
- * {@code MixinServerChunkLoadingManager} mixin. No PacketEvents/Netty interception is needed for
- * this channel.
+ * {@link org.bukkit.plugin.messaging.Messenger} API, drives the chunk-watch trigger via
+ * Paper's {@link PlayerChunkLoadEvent} (the public-API replacement for Fabric's
+ * {@code MixinServerChunkLoadingManager} mixin), and mirrors Fabric's proactive player-join
+ * registration so the structures handshake completes immediately on login instead of only after
+ * a dimension change. No PacketEvents/Netty interception is needed for this channel.
  */
 public class StructuresChannel implements PluginMessageListener, Listener
 {
@@ -57,12 +61,36 @@ public class StructuresChannel implements PluginMessageListener, Listener
 
         Bukkit.getMessenger().unregisterOutgoingPluginChannel(this.plugin, CHANNEL);
         Bukkit.getMessenger().unregisterIncomingPluginChannel(this.plugin, CHANNEL, this);
+        HandlerList.unregisterAll(this);
     }
 
     @EventHandler
     public void onPlayerChunkLoad(PlayerChunkLoadEvent event)
     {
         StructureDataProvider.INSTANCE.onStartedWatchingChunk(event.getPlayer(), event.getChunk());
+    }
+
+    /**
+     * Mirrors Fabric's {@code PlayerListener.onPlayerJoin()} behaviour: send the structures
+     * metadata handshake immediately when a player joins, so MiniHUD does not have to wait for
+     * a dimension change (or rely on its retry loop) before it can start rendering structures.
+     */
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event)
+    {
+        Player player = event.getPlayer();
+
+        if (player.hasPermission(PERMISSION))
+        {
+            ServuxPaperReference.debugLog("structures: sending metadata handshake to player {} on join", player.getName());
+            StructureDataProvider.INSTANCE.registerFresh(player);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event)
+    {
+        StructureDataProvider.INSTANCE.unregister(event.getPlayer());
     }
 
     @Override
