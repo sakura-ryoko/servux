@@ -1,5 +1,9 @@
 package fi.dy.masa.servux.paper.network;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -7,7 +11,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.plugin.messaging.PluginMessageListener;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import fi.dy.masa.servux.paper.ServuxPaperConfig;
@@ -28,9 +34,16 @@ public class StructuresChannel implements PluginMessageListener, Listener
 {
     public static final String CHANNEL = StructureDataProvider.CHANNEL_ID;
     private static final String PERMISSION = "servux.structures";
+    // Delay the join handshake slightly: the client may not have finished registering
+    // plugin channels when PlayerJoinEvent fires, so an immediate send can be dropped.
+    private static final long JOIN_HANDSHAKE_DELAY_TICKS = 5L;
+    // Retry a few times if the client hasn't sent its own register packet yet.
+    private static final long JOIN_HANDSHAKE_PERIOD_TICKS = 10L;
+    private static final int JOIN_HANDSHAKE_REPEATS = 3;
 
     private final ServuxPaperPlugin plugin;
     private BukkitTask tickTask;
+    private final Set<UUID> handshakeInProgress = new HashSet<>();
 
     public StructuresChannel(ServuxPaperPlugin plugin)
     {
@@ -72,25 +85,85 @@ public class StructuresChannel implements PluginMessageListener, Listener
 
     /**
      * Mirrors Fabric's {@code PlayerListener.onPlayerJoin()} behaviour: send the structures
-     * metadata handshake immediately when a player joins, so MiniHUD does not have to wait for
-     * a dimension change (or rely on its retry loop) before it can start rendering structures.
+     * metadata handshake when a player joins. On Paper the client may not have finished its
+     * plugin-channel registration handshake when PlayerJoinEvent fires, so the send is delayed
+     * and retried a few times unless the client registers the channel or sends its own register
+     * packet first.
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event)
     {
         Player player = event.getPlayer();
 
-        if (player.hasPermission(PERMISSION))
+        if (!player.hasPermission(PERMISSION))
         {
-            ServuxPaperReference.debugLog("structures: sending metadata handshake to player {} on join", player.getName());
-            StructureDataProvider.INSTANCE.registerFresh(player);
+            return;
         }
+
+        UUID uuid = player.getUniqueId();
+        this.handshakeInProgress.add(uuid);
+
+        new BukkitRunnable()
+        {
+            private int count = 0;
+
+            @Override
+            public void run()
+            {
+                if (!player.isOnline())
+                {
+                    StructuresChannel.this.handshakeInProgress.remove(uuid);
+                    this.cancel();
+                    return;
+                }
+
+                if (!StructuresChannel.this.handshakeInProgress.contains(uuid))
+                {
+                    this.cancel();
+                    return;
+                }
+
+                StructuresChannel.this.sendHandshake(player);
+                this.count++;
+
+                if (this.count >= JOIN_HANDSHAKE_REPEATS)
+                {
+                    StructuresChannel.this.handshakeInProgress.remove(uuid);
+                    this.cancel();
+                }
+            }
+        }.runTaskTimer(this.plugin, JOIN_HANDSHAKE_DELAY_TICKS, JOIN_HANDSHAKE_PERIOD_TICKS);
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event)
     {
+        this.handshakeInProgress.remove(event.getPlayer().getUniqueId());
         StructureDataProvider.INSTANCE.unregister(event.getPlayer());
+    }
+
+    /**
+     * Send the metadata handshake as soon as the client tells the server it can receive on the
+     * structures channel. This is the most reliable trigger because it guarantees the channel is
+     * registered on the client side (Bukkit plugin messages are ignored for unregistered channels).
+     */
+    @EventHandler
+    public void onPlayerRegisterChannel(PlayerRegisterChannelEvent event)
+    {
+        if (!CHANNEL.equals(event.getChannel()))
+        {
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        if (!player.hasPermission(PERMISSION))
+        {
+            return;
+        }
+
+        ServuxPaperReference.debugLog("structures: client registered channel for player {}", player.getName());
+        this.sendHandshake(player);
     }
 
     @Override
@@ -105,6 +178,7 @@ public class StructuresChannel implements PluginMessageListener, Listener
 
         if (packet == null)
         {
+            ServuxPaperReference.debugLog("structures: received null/invalid packet from player {}", player.getName());
             return;
         }
 
@@ -114,11 +188,32 @@ public class StructuresChannel implements PluginMessageListener, Listener
             return;
         }
 
+        ServuxPaperReference.debugLog("structures: received packet type '{}' from player {}", packet.getType(), player.getName());
+
         switch (packet.getType())
         {
-            case PACKET_C2S_STRUCTURES_REGISTER -> StructureDataProvider.INSTANCE.registerFresh(player);
-            case PACKET_C2S_STRUCTURES_UNREGISTER -> StructureDataProvider.INSTANCE.unregister(player);
+            case PACKET_C2S_STRUCTURES_REGISTER ->
+            {
+                this.handshakeInProgress.remove(player.getUniqueId());
+                StructureDataProvider.INSTANCE.registerFresh(player);
+            }
+            case PACKET_C2S_STRUCTURES_UNREGISTER ->
+            {
+                this.handshakeInProgress.remove(player.getUniqueId());
+                StructureDataProvider.INSTANCE.unregister(player);
+            }
             default -> ServuxPaperReference.logger().warn("StructuresChannel#onPluginMessageReceived: unexpected packet type '{}' from player {}", packet.getType(), player.getName());
         }
+    }
+
+    private void sendHandshake(Player player)
+    {
+        if (StructureDataProvider.INSTANCE.isRegistered(player))
+        {
+            return;
+        }
+
+        ServuxPaperReference.debugLog("structures: sending metadata handshake to player {}", player.getName());
+        StructureDataProvider.INSTANCE.registerFresh(player);
     }
 }
