@@ -10,8 +10,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.util.SizeTracker;
 
-public class IntArrayData extends BaseData
-        implements ArrayData
+public class IntArrayData extends BaseData implements ArrayData
 {
     public static final String TAG_NAME = "TAG_IntArray";
 
@@ -59,6 +58,12 @@ public class IntArrayData extends BaseData
     public boolean isEmpty()
     {
         return this.value.length == 0;
+    }
+
+    @Override
+    public int sizeInBytes()
+    {
+        return Integer.BYTES * this.value.length;
     }
 
     @Override

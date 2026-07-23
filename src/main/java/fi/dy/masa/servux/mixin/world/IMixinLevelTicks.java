@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(LevelTicks.class)
-public interface IMixinWorldTickScheduler<T>
+public interface IMixinLevelTicks<T>
 {
     @Accessor("allContainers")
     Long2ObjectMap<LevelChunkTicks<@NotNull T>> servux_getChunkTickSchedulers();

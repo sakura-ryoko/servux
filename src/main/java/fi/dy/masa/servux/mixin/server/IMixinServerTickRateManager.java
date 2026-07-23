@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ServerTickRateManager.class)
-public interface IMixinServerTickManager
+public interface IMixinServerTickRateManager
 {
     @Accessor("remainingSprintTicks")
     long servux_getStringTicks();

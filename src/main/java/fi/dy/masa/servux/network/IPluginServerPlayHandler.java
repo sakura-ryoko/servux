@@ -1,13 +1,10 @@
 package fi.dy.masa.servux.network;
 
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Objects;
 import org.jetbrains.annotations.NotNull;
 
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -17,7 +14,10 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import fi.dy.masa.servux.Servux;
 
 /**
@@ -32,6 +32,7 @@ public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends
     int TO_CLIENT = 4;
     int FROM_CLIENT = 5;
     int BOTH_CLIENT = 6;
+    int MAX_FAILURES = 2;
 
     /**
      * Returns your HANDLER's CHANNEL ID
@@ -162,8 +163,6 @@ public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends
      * @param player (Player received from)
      * @param data (Data Codec)
      */
-    default void decodeNbtCompound(Identifier channel, ServerPlayer player, CompoundTag data) {}
-    default <D> void decodeObject(Identifier channel, ServerPlayer player, D data1) {}
     default <P extends IServerPayloadData> void decodeServerData(Identifier channel, ServerPlayer player, P data) {}
 
     /**
@@ -173,8 +172,6 @@ public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends
      * @param player (Player to send the data to)
      * @param data (Data Codec)
      */
-    default void encodeNbtCompound(ServerPlayer player, CompoundTag data) {}
-    default <D> void encodeObject(ServerPlayer player, D data1) {}
     default <P extends IServerPayloadData> void encodeServerData(ServerPlayer player, P data) {}
 
     /**
@@ -194,7 +191,9 @@ public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends
      */
     default boolean sendPlayPayload(@Nonnull ServerPlayer player, @Nonnull T payload)
     {
-        if (payload.type().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
+        if (payload.type().id().equals(this.getPayloadChannel()) &&
+            this.isPlayRegistered(this.getPayloadChannel()) &&
+            this.checkFailures(player))
         {
             if (ServerPlayNetworking.canSend(player, payload.type()))
             {
@@ -218,7 +217,9 @@ public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends
      */
     default boolean sendPlayPayload(@Nonnull ServerGamePacketListenerImpl handler, @Nonnull T payload)
     {
-        if (payload.type().id().equals(this.getPayloadChannel()) && this.isPlayRegistered(this.getPayloadChannel()))
+        if (payload.type().id().equals(this.getPayloadChannel()) &&
+            this.isPlayRegistered(this.getPayloadChannel()) &&
+            this.checkFailures(handler.getPlayer()))
         {
             Packet<?> packet = new ClientboundCustomPayloadPacket(payload);
 
@@ -235,4 +236,23 @@ public interface IPluginServerPlayHandler<T extends CustomPacketPayload> extends
 
         return false;
     }
+
+    /**
+     * Max Failures
+     * @return -
+     */
+    default int maxFailures() { return MAX_FAILURES; }
+
+    /**
+     * Tick the Failure Counter
+     * @param player -
+     */
+    void tickFailures(ServerPlayer player);
+
+    /**
+     * Return if it is safe to proceed processing packets.
+     * @param player -
+     * @return True for safe; False for unsafe.
+     */
+    boolean checkFailures(ServerPlayer player);
 }

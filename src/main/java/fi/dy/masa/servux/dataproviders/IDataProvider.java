@@ -1,14 +1,16 @@
 package fi.dy.masa.servux.dataproviders;
 
+import java.util.List;
 import com.google.gson.JsonObject;
-import fi.dy.masa.servux.settings.IServuxSetting;
+
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.profiling.ProfilerFiller;
-import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 
-import java.util.List;
+import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
 
 public interface IDataProvider
 {
@@ -125,11 +127,37 @@ public interface IDataProvider
     boolean hasPermission(ServerPlayer player);
 
     /**
+     * Register a Player
+     * @param player -
+     * @param tags -
+     */
+    void register(ServerPlayer player, CompoundData tags);
+
+    /**
+     * Unregister a Player
+     * @param player -
+     * @param tags -
+     */
+    void unregister(ServerPlayer player, CompoundData tags);
+
+    /**
+     * Trigger a Packet Failure condition.
+     * @param player -
+     */
+    void onPacketFailure(ServerPlayer player);
+
+    /**
+     * Remove Player.
+     * @param player -
+     */
+    void removePlayer(ServerPlayer player);
+
+    /**
      * Signal The Data Providers when the server is shutting down
      * (Pre / Post)
      */
-    void onTickEndPre();
-    void onTickEndPost();
+    default void onTickEndPre() {}
+    default void onTickEndPost() {}
 
     /**
      * Config file handling

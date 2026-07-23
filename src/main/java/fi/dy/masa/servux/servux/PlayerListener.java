@@ -11,30 +11,31 @@ public class PlayerListener implements IPlayerListener
     @Override
     public void onPlayerJoin(SocketAddress addr, GameProfile profile, ServerPlayer player)
     {
-        if (HudDataProvider.INSTANCE.isEnabled())
-        {
-            HudDataProvider.INSTANCE.register(player);
-        }
-
-        if (StructureDataProvider.INSTANCE.isEnabled())
-        {
-            StructureDataProvider.INSTANCE.register(player);
-        }
-
-        if (EntitiesDataProvider.INSTANCE.isEnabled())
-        {
-            EntitiesDataProvider.INSTANCE.register(player);
-        }
-
-        if (LitematicsDataProvider.INSTANCE.isEnabled())
-        {
-            LitematicsDataProvider.INSTANCE.registerPlayer(player);
-        }
-
-        if (TweaksDataProvider.INSTANCE.isEnabled())
-        {
-            TweaksDataProvider.INSTANCE.register(player);
-        }
+        // todo -- Stop automatically registering clients
+//        if (HudDataProvider.INSTANCE.isEnabled())
+//        {
+//            HudDataProvider.INSTANCE.register(player);
+//        }
+//
+//        if (StructureDataProvider.INSTANCE.isEnabled())
+//        {
+//            StructureDataProvider.INSTANCE.register(player);
+//        }
+//
+//        if (EntitiesDataProvider.INSTANCE.isEnabled())
+//        {
+//            EntitiesDataProvider.INSTANCE.register(player);
+//        }
+//
+//        if (LitematicsDataProvider.INSTANCE.isEnabled())
+//        {
+//            LitematicsDataProvider.INSTANCE.registerPlayer(player);
+//        }
+//
+//        if (TweaksDataProvider.INSTANCE.isEnabled())
+//        {
+//            TweaksDataProvider.INSTANCE.register(player);
+//        }
     }
 
     @Override
@@ -47,7 +48,7 @@ public class PlayerListener implements IPlayerListener
 
         if (StructureDataProvider.INSTANCE.isEnabled())
         {
-            StructureDataProvider.INSTANCE.unregister(player);
+            StructureDataProvider.INSTANCE.removePlayer(player);
         }
 
         if (EntitiesDataProvider.INSTANCE.isEnabled())

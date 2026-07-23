@@ -4,11 +4,16 @@ import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.ParseResults;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Util;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.gamerules.GameRules;
 
 import fi.dy.masa.servux.scheduler.TaskContext;
 import fi.dy.masa.servux.util.position.IntBoundingBox;
@@ -24,9 +29,14 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 	protected int maxCommandsPerTick = 16;
 	protected int processedChunksThisTick;
 	protected int sentCommandsThisTick;
+	protected long gameRuleProbeTimeout;
+	protected long maxGameRuleProbeTime = 2000000000L; // 2 second timeout
 	protected long taskStartTimeForCurrentTick;
+	protected boolean shouldEnableFeedback;
 
-	protected Runnable initTask = this::initPhase;
+//	protected final Queue<String> queuedCommands = Queues.newArrayDeque();
+	protected Runnable initTask = this::initPhaseStartProbe;
+//	protected Runnable probeTask = this::probePhase;
 	protected Runnable waitForChunkTask = this::fetchNextChunk;
 	protected Runnable processBoxBlocksTask;
 	protected Runnable processBoxEntitiesTask;
@@ -34,6 +44,7 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 	public enum TaskPhase
 	{
 		INIT,
+//		GAME_RULE_PROBE,
 		WAIT_FOR_CHUNKS,
 		PROCESS_BOX_BLOCKS,
 		PROCESS_BOX_ENTITIES,
@@ -56,6 +67,13 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 		{
 			this.initTask.run();
 		}
+
+//		if (this.phase == TaskPhase.GAME_RULE_PROBE)
+//		{
+//			this.probeTask.run();
+//			profiler.pop();
+//			return false;
+//		}
 
 		if (this.currentChunkPos != null && this.canProcessChunk(this.currentChunkPos) == false)
 		{
@@ -104,16 +122,54 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 
 		if (this.processedChunksThisTick > 0)
 		{
-//			this.updateInfoHudLines();
+			this.updateInfoHudLines();
 		}
 
 		profiler.pop();
 		return false;
 	}
 
-	protected void initPhase()
+	protected void initPhaseStartProbe()
 	{
+		this.checkCommandFeedbackGameRuleState(this.context.server());
+		this.gameRuleProbeTimeout = Util.getNanos() + this.maxGameRuleProbeTime;
+//		this.phase = TaskPhase.GAME_RULE_PROBE;
+		this.shouldEnableFeedback = false;
 		this.phase = TaskPhase.WAIT_FOR_CHUNKS;
+	}
+
+	protected void probePhase()
+	{
+		if (Util.getNanos() > this.gameRuleProbeTimeout)
+		{
+			this.shouldEnableFeedback = false;
+			this.phase = TaskPhase.WAIT_FOR_CHUNKS;
+		}
+	}
+
+	private void checkCommandFeedbackGameRuleState(MinecraftServer server)
+	{
+		boolean value = server.getGameRules().get(GameRules.SEND_COMMAND_FEEDBACK);
+
+		if (value)
+		{
+			server.getGameRules().set(GameRules.SEND_COMMAND_FEEDBACK, Boolean.FALSE, server);
+			this.shouldEnableFeedback = true;
+		}
+		else
+		{
+			this.shouldEnableFeedback = false;
+		}
+
+		this.phase = TaskPhase.WAIT_FOR_CHUNKS;
+	}
+
+	private void enableCommandFeedback(MinecraftServer server)
+	{
+		if (this.shouldEnableFeedback)
+		{
+			server.getGameRules().set(GameRules.SEND_COMMAND_FEEDBACK, Boolean.TRUE, server);
+		}
 	}
 
 	protected void fetchNextChunk()
@@ -122,7 +178,7 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 		{
 			this.sortChunkList();
 
-			ChunkPos pos = this.pendingChunks.get(0);
+			ChunkPos pos = this.pendingChunks.getFirst();
 
 			if (this.canProcessChunk(pos))
 			{
@@ -147,7 +203,7 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 
 		if (list.isEmpty() == false)
 		{
-			this.currentBox = list.get(0);
+			this.currentBox = list.getFirst();
 			this.onStartNextBox(this.currentBox);
 		}
 		else
@@ -190,5 +246,41 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 
 	protected void onFinishedProcessingChunk(ChunkPos pos)
 	{
+	}
+
+	protected void sendCommand(final String cmd)
+	{
+		MinecraftServer server = this.context.server();
+		ParseResults<CommandSourceStack> parsed = this.parseCommand(server, cmd);
+		server.execute(() -> server.getCommands().performCommand(parsed, cmd));
+		++this.sentCommandsThisTick;
+	}
+
+	private ParseResults<CommandSourceStack> parseCommand(MinecraftServer server, final String cmd)
+	{
+		CommandDispatcher<CommandSourceStack> dispatch = server.getCommands().getDispatcher();
+		return dispatch.parse(cmd, this.context.player().createCommandSourceStack());
+	}
+
+//	protected void sendQueuedCommands()
+//	{
+//		while (this.sentCommandsThisTick < this.maxCommandsPerTick &&
+//				this.queuedCommands.isEmpty() == false)
+//		{
+//			this.sendCommand(this.queuedCommands.poll());
+//		}
+//
+//		if (this.queuedCommands.isEmpty())
+//		{
+//			this.finishProcessingChunk(this.currentChunkPos);
+//		}
+//	}
+
+	protected void sendTaskEndCommands()
+	{
+		if (this.shouldEnableFeedback)
+		{
+			this.enableCommandFeedback(this.context.server());
+		}
 	}
 }

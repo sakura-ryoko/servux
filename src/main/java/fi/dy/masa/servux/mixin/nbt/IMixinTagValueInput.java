@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(TagValueInput.class)
-public interface IMixinNbtReadView
+public interface IMixinTagValueInput
 {
     @Accessor("context")
     ValueInputContextHelper servux_getContext();

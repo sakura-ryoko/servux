@@ -32,8 +32,8 @@ public abstract class MixinMinecraftServer
                                   @Local(name = "profiler") ProfilerFiller profiler)
     {
         profiler.push("servux_tick");
-        DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.tickCount, profiler);
         TaskScheduler.getInstance().runTasks(profiler);
+        DataProviderManager.INSTANCE.tickProviders((MinecraftServer) (Object) this, this.tickCount, profiler);
         profiler.pop();
     }
 

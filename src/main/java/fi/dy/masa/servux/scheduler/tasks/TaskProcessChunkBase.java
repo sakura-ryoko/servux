@@ -43,7 +43,9 @@ public abstract class TaskProcessChunkBase extends TaskBase
 
 	protected void onStop()
 	{
+		this.infoHudSync.onStop(this.context);
 		this.notifyListener();
+		this.runWhenDone();
 	}
 
 	protected abstract boolean canProcessChunk(ChunkPos pos);
@@ -75,7 +77,7 @@ public abstract class TaskProcessChunkBase extends TaskBase
 
 		if (processed > 0)
 		{
-//			this.updateInfoHudLinesPendingChunks(this.pendingChunks);
+			this.updateInfoHudLinesPendingChunks(this.pendingChunks);
 		}
 
 		this.finished = this.pendingChunks.isEmpty();
@@ -110,7 +112,7 @@ public abstract class TaskProcessChunkBase extends TaskBase
 
 	protected void clampToWorldHeightAndAddBox(ChunkPos pos, IntBoundingBox box)
 	{
-		box = PositionUtils.clampBoxToWorldHeightRange(box, this.context.world());
+		box = PositionUtils.clampBoxToWorldHeightRange(box, this.context.level());
 
 		if (box != null)
 		{
@@ -211,5 +213,10 @@ public abstract class TaskProcessChunkBase extends TaskBase
 
 	protected void onChunkListSorted()
 	{
+	}
+
+	protected void updateInfoHudLines()
+	{
+		this.updateInfoHudLinesPendingChunks(this.pendingChunks);
 	}
 }

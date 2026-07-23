@@ -20,12 +20,18 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
 	protected final LayerRange layerRange;
 	protected final ReplaceBehavior replaceBehavior;
 	protected final PasteLayerBehavior layerBehavior;
+	protected final boolean changedBlockOnly;
+	protected final boolean ignoreBlocks;
+	protected final boolean ignoreEntities;
 
 	public TaskPasteSchematicPerChunkBase(TaskContext context,
-	                                      Collection<SchematicPlacement> placements,
-	                                      LayerRange layerRange,
-	                                      ReplaceBehavior replaceBehavior,
-	                                      PasteLayerBehavior layerBehavior)
+	                                      final Collection<SchematicPlacement> placements,
+	                                      final LayerRange layerRange,
+	                                      final ReplaceBehavior replaceBehavior,
+	                                      final PasteLayerBehavior layerBehavior,
+	                                      final boolean changedBlockOnly,
+	                                      final boolean ignoreBlocks,
+	                                      final boolean ignoreEntities)
 	{
 		super(context);
 
@@ -33,6 +39,9 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
 		this.layerRange = layerRange;
 		this.replaceBehavior = replaceBehavior;
 		this.layerBehavior = layerBehavior;
+		this.changedBlockOnly = changedBlockOnly;
+		this.ignoreBlocks = ignoreBlocks;
+		this.ignoreEntities = ignoreEntities;
 	}
 
 	@Override
@@ -65,7 +74,7 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
 					// Clamp the box to the world bounds.
 					// This is also important for the fill-based strip generation code to not
 					// overflow the work array bounds.
-					box = PositionUtils.clampBoxToWorldHeightRange(box, this.context.world());
+					box = PositionUtils.clampBoxToWorldHeightRange(box, this.context.level());
 
 					if (box != null)
 					{
@@ -89,6 +98,6 @@ public abstract class TaskPasteSchematicPerChunkBase extends TaskProcessChunkMul
 	@Override
 	protected boolean canProcessChunk(ChunkPos pos)
 	{
-		return this.areSurroundingChunksLoaded(pos, this.context.world(), 1);
+		return this.areSurroundingChunksLoaded(pos, this.context.level(), 1);
 	}
 }

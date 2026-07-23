@@ -20,7 +20,17 @@ public class TaskScheduler
 		{
 			task.createTimer(interval);
 			task.getTimer().setNextDelay(0);
-			this.tasksToAdd.add(task);
+
+			if (this.tasks.isEmpty())
+			{
+				task.init();
+				this.tasks.add(task);
+			}
+			else
+			{
+				// Adds Delay
+				this.tasksToAdd.add(task);
+			}
 		}
 	}
 
