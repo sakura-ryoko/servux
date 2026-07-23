@@ -35,6 +35,18 @@ public abstract class BaseData
 
     public abstract boolean isEmpty();
 
+	public abstract int sizeInBytes();
+
+	public Optional<ListData> asList()
+	{
+		return Optional.empty();
+	}
+
+	public Optional<CompoundData> asCompound()
+	{
+		return Optional.empty();
+	}
+
     public Optional<Number> asNumber()
     {
         return Optional.empty();

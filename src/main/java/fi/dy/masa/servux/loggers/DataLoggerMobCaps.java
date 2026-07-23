@@ -2,29 +2,27 @@ package fi.dy.masa.servux.loggers;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 
-import com.mojang.serialization.Codec;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.level.NaturalSpawner;
+
 import fi.dy.masa.servux.loggers.data.MobCapData;
 import fi.dy.masa.servux.util.MathUtils;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.util.DataOps;
 
-public class DataLoggerMobCaps extends DataLoggerBase<CompoundTag>
+public class DataLoggerMobCaps extends DataLoggerBase<CompoundData>
 {
-    public static final Codec<CompoundTag> CODEC = CompoundTag.CODEC;
-
     public DataLoggerMobCaps(DataLogger type)
     {
         super(type);
     }
 
     @Override
-    public CompoundTag getResult(MinecraftServer server)
+    public CompoundData getResult(MinecraftServer server)
     {
-        CompoundTag nbt = new CompoundTag();
+        CompoundData nbt = new CompoundData();
 
         for (ServerLevel world : server.getAllLevels())
         {
@@ -67,7 +65,7 @@ public class DataLoggerMobCaps extends DataLoggerBase<CompoundTag>
 
                 try
                 {
-                    CompoundTag nbtEntry = (CompoundTag) MobCapData.CODEC.encodeStart(world.registryAccess().createSerializationContext(NbtOps.INSTANCE), mobCapData).getPartialOrThrow();
+                    CompoundData nbtEntry = (CompoundData) MobCapData.CODEC.encodeStart(world.registryAccess().createSerializationContext(DataOps.INSTANCE), mobCapData).getPartialOrThrow();
                     nbtEntry.putLong("WorldTick", worldTime);
                     nbt.put(dimKey, nbtEntry);
                 }

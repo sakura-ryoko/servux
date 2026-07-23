@@ -76,7 +76,7 @@ public class LayerRange
     protected boolean hotkeyRangeMin;
     protected boolean hotkeyRangeMax;
 
-    private LayerRange() { }
+    public LayerRange() { }
 
     private LayerRange(LayerMode mode, Axis axis, int single, int above, int below, int min, int max, boolean minRange, boolean maxRange)
     {

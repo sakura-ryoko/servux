@@ -1,120 +1,78 @@
 package fi.dy.masa.servux.schematic.placement;
 
+import java.util.*;
+import javax.annotation.Nullable;
 import com.google.common.collect.ImmutableMap;
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import fi.dy.masa.servux.Servux;
-import fi.dy.masa.servux.schematic.LitematicaSchematic;
-import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
-import fi.dy.masa.servux.schematic.selection.Box;
-import fi.dy.masa.servux.util.*;
-import fi.dy.masa.servux.util.nbt.NbtUtils;
-import fi.dy.masa.servux.util.position.PositionUtils;
-import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
-import java.util.*;
+
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.schematic.LitematicaSchematic;
+import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
+import fi.dy.masa.servux.schematic.selection.Box;
+import fi.dy.masa.servux.util.PasteLayerBehavior;
+import fi.dy.masa.servux.util.ReplaceBehavior;
+import fi.dy.masa.servux.util.SchematicPlacingUtils;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
+import fi.dy.masa.servux.util.IntBoundingBox;
+import fi.dy.masa.servux.util.LayerRange;
+import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class SchematicPlacement
 {
-    private static final Set<Integer> USED_COLORS = new HashSet<>();
-
-    private final Map<String, SubRegionPlacement> relativeSubRegionPlacements = new HashMap<>();
+    private final UUID hashId;      // This is meant to uniquely identify each Placement at creation.
+    private final Map<String, SubRegionPlacement> relativeSubRegionPlacements;
     private final int subRegionCount;
     private final LitematicaSchematic schematic;
     private BlockPos origin;
     private String name;
-    private Rotation rotation = Rotation.NONE;
-    private Mirror mirror = Mirror.NONE;
+    private Rotation rotation;
+    private Mirror mirror;
     private boolean ignoreEntities;
+    private boolean enabled;
     private boolean regionPlacementsModified;
+    private boolean locked;
     private int coordinateLockMask;
     @Nullable
     private Box enclosingBox;
 
-    private SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean ignoreEntities)
+    private SchematicPlacement(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, @Nullable UUID hash)
     {
+        this.relativeSubRegionPlacements = new HashMap<>();
+        this.hashId = hash != null ? hash : UUID.randomUUID();
         this.schematic = schematic;
         this.origin = origin;
         this.name = name;
+        this.rotation = Rotation.NONE;
+        this.mirror = Mirror.NONE;
         this.subRegionCount = schematic.getSubRegionCount();
-        this.ignoreEntities = ignoreEntities;
+        this.enabled = enabled;
     }
 
-    public static SchematicPlacement createFor(LitematicaSchematic schematic, BlockPos origin, String name, boolean ignoreEntities)
+    public static SchematicPlacement createFor(LitematicaSchematic schematic, BlockPos origin, String name, boolean enabled, @Nullable UUID hash)
     {
-        SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, ignoreEntities);
+        SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, enabled, hash);
         placement.resetAllSubRegionsToSchematicValues();
 
         return placement;
     }
 
-    public static SchematicPlacement createFromNbt(CompoundTag tags)
+    public boolean isEnabled()
     {
-        try
-        {
-            LitematicaSchematic schematic = new LitematicaSchematic(tags.getCompoundOrEmpty("Schematics"));
-            BlockPos origin = NbtUtils.readBlockPosFromIntArray(tags, "Origin");
-            String name = tags.getStringOr("Name", "?");
-            SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false);
-            placement.mirror = Mirror.values()[tags.getIntOr("Mirror", 0)];
-            placement.rotation = Rotation.values()[tags.getIntOr("Rotation", 0)];
-
-            for (String entry : tags.getCompoundOrEmpty("SubRegions").keySet())
-            {
-                CompoundTag compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
-                origin = NbtUtils.readBlockPosFromIntArray(compound, "Pos");
-                name = compound.getStringOr("Name", "?");
-                SubRegionPlacement sub = new SubRegionPlacement(origin, name);
-                sub.mirror = Mirror.values()[compound.getIntOr("Mirror", 0)];
-                sub.rotation = Rotation.values()[compound.getIntOr("Rotation", 0)];
-                sub.ignoreEntities = compound.getBooleanOr("IgnoreEntities", false);
-                sub.enabled = compound.getBooleanOr("Enabled", true);
-                placement.relativeSubRegionPlacements.put(entry, sub);
-            }
-
-            return placement;
-        }
-        catch (CommandSyntaxException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return this.enabled;
     }
 
-    public static SchematicPlacement createFromNbt(LitematicaSchematic schematic, CompoundTag tags)
+    public boolean isLocked()
     {
-        try
-        {
-            BlockPos origin = NbtUtils.readBlockPosFromIntArray(tags, "Origin");
-            String name = tags.getStringOr("Name", "?");
-            SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false);
-            placement.mirror = Mirror.values()[tags.getIntOr("Mirror", 0)];
-            placement.rotation = Rotation.values()[tags.getIntOr("Rotation", 0)];
-
-            for (String entry : tags.getCompoundOrEmpty("SubRegions").keySet())
-            {
-                CompoundTag compound = tags.getCompoundOrEmpty("SubRegions").getCompoundOrEmpty(entry);
-                origin = NbtUtils.readBlockPosFromIntArray(compound, "Pos");
-                name = compound.getStringOr("Name", "?");
-                SubRegionPlacement sub = new SubRegionPlacement(origin, name);
-                sub.mirror = Mirror.values()[compound.getIntOr("Mirror", 0)];
-                sub.rotation = Rotation.values()[compound.getIntOr("Rotation", 0)];
-                sub.ignoreEntities = compound.getBooleanOr("IgnoreEntities", false);
-                sub.enabled = compound.getBooleanOr("Enabled", true);
-                placement.relativeSubRegionPlacements.put(entry, sub);
-            }
-
-            return placement;
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        return this.locked;
     }
 
     public boolean shouldRenderEnclosingBox()
@@ -130,6 +88,16 @@ public class SchematicPlacement
     public boolean ignoreEntities()
     {
         return this.ignoreEntities;
+    }
+
+    public void toggleIgnoreEntities(boolean toggle)
+    {
+        this.ignoreEntities = toggle;
+    }
+
+    public void toggleLocked()
+    {
+        this.locked = !this.locked;
     }
 
     public String getName()
@@ -153,22 +121,164 @@ public class SchematicPlacement
         this.name = name;
     }
 
+    public UUID getHashId() { return this.hashId; }
 
     public BlockPos getOrigin()
     {
-        return origin;
+        return this.origin;
     }
 
     public Rotation getRotation()
     {
-        return rotation;
+        return this.rotation;
     }
 
     public Mirror getMirror()
     {
-        return mirror;
+        return this.mirror;
     }
 
+    public CompoundData toData(boolean withSchematic)
+    {
+        CompoundData compound = new CompoundData();
+        compound.putString("Name", this.name);
+        compound.putString("HashCode", this.hashId.toString());
+
+        if (withSchematic)
+        {
+            compound.put("Schematics", this.schematic.writeToData());
+        }
+
+//        NbtUtils.writeBlockPosToArrayTag(this.origin, compound, "Origin");
+        DataTypeUtils.writeVec3iToArrayTag(compound, "Origin", this.origin);
+        compound.putInt("Rotation", this.rotation.ordinal());
+        compound.putInt("Mirror", this.mirror.ordinal());
+        CompoundData subs = new CompoundData();
+
+        for (String name : this.relativeSubRegionPlacements.keySet())
+        {
+            CompoundData sub = new CompoundData();
+            SubRegionPlacement subRegionPlacement = this.relativeSubRegionPlacements.get(name);
+            subs.put(name, sub);
+
+//            NbtUtils.writeBlockPosToArrayTag(subRegionPlacement.getPos(), sub, "Pos");
+            DataTypeUtils.writeVec3iToArrayTag(sub, "Pos", subRegionPlacement.getPos());
+            sub.putInt("Rotation", subRegionPlacement.getRotation().ordinal());
+            sub.putInt("Mirror", subRegionPlacement.getMirror().ordinal());
+            sub.putString("Name", subRegionPlacement.getName());
+            sub.putBoolean("Enabled", subRegionPlacement.isEnabled());
+            sub.putBoolean("IgnoreEntities", subRegionPlacement.ignoreEntities());
+        }
+
+        compound.put("SubRegions", subs);
+
+        return compound;
+    }
+
+    public static @Nullable SchematicPlacement createFromData(CompoundData tags)
+    {
+        try
+        {
+            String name = tags.getStringOrDefault("Name", "?");
+            UUID hashCode = tags.containsLenient("HashCode") ? UUID.fromString(tags.getStringOrDefault("HashCode", "")) : null;
+            LitematicaSchematic schematic = new LitematicaSchematic(tags.getCompound("Schematics"));
+//        BlockPos origin = NbtUtils.readBlockPosFromArrayTag(nbt, "Origin");
+            BlockPos origin = DataTypeUtils.readBlockPosFromArrayTag(tags, "Origin");
+            Rotation rot = Rotation.values()[tags.getIntOrDefault("Rotation", 0)];
+            Mirror mirror = Mirror.values()[tags.getIntOrDefault("Mirror", 0)];
+
+            SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, true, hashCode);
+            placement.rotation = rot;
+            placement.mirror = mirror;
+            CompoundData subs = tags.getCompound("SubRegions");
+
+            for (String key : subs.getKeys())
+            {
+                CompoundData entry = subs.getCompound(key);
+
+                if (!entry.isEmpty() && entry.contains("Pos", Constants.NBT.TAG_INT_ARRAY))
+                {
+                    name = entry.getStringOrDefault("Name", "?");
+//                origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");
+                    origin = DataTypeUtils.readBlockPosFromArrayTag(entry, "Pos");
+                    rot = Rotation.values()[entry.getIntOrDefault("Rotation", 0)];
+                    mirror = Mirror.values()[entry.getIntOrDefault("Mirror", 0)];
+                    boolean enabled = entry.getBooleanOrDefault("Enabled", true);
+                    boolean ignore = entry.getBooleanOrDefault("IgnoreEntities", false);
+
+                    SubRegionPlacement subRegion = new SubRegionPlacement(origin, name);
+                    subRegion.setMirror(mirror);
+                    subRegion.setRotation(rot);
+                    subRegion.setEnabled(enabled);
+
+                    if (ignore)
+                    {
+                        subRegion.toggleIgnoreEntities();
+                    }
+
+                    placement.relativeSubRegionPlacements.put(key, subRegion);
+                }
+            }
+
+            return placement;
+        }
+        catch (CommandSyntaxException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static SchematicPlacement createFromData(LitematicaSchematic schematic, CompoundData tags)
+    {
+        try
+        {
+            String name = tags.getStringOrDefault("Name", "?");
+            UUID hashCode = tags.containsLenient("HashCode") ? UUID.fromString(tags.getStringOrDefault("HashCode", "")) : null;
+//        BlockPos origin = NbtUtils.readBlockPosFromArrayTag(nbt, "Origin");
+            BlockPos origin = DataTypeUtils.readBlockPosFromArrayTag(tags, "Origin");
+            Rotation rot = Rotation.values()[tags.getIntOrDefault("Rotation", 0)];
+            Mirror mirror = Mirror.values()[tags.getIntOrDefault("Mirror", 0)];
+
+            SchematicPlacement placement = new SchematicPlacement(schematic, origin, name, false, hashCode);
+            placement.rotation = rot;
+            placement.mirror = mirror;
+            CompoundData subs = tags.getCompound("SubRegions");
+
+            for (String key : subs.getKeys())
+            {
+                CompoundData entry = subs.getCompound(key);
+
+                if (!entry.isEmpty() && entry.contains("Pos", Constants.NBT.TAG_INT_ARRAY))
+                {
+                    name = entry.getStringOrDefault("Name", "?");
+//                origin = NbtUtils.readBlockPosFromArrayTag(entry, "Pos");
+                    origin = DataTypeUtils.readBlockPosFromArrayTag(entry, "Pos");
+                    rot = Rotation.values()[entry.getIntOrDefault("Rotation", 0)];
+                    mirror = Mirror.values()[entry.getIntOrDefault("Mirror", 0)];
+                    boolean enabled = entry.getBooleanOrDefault("Enabled", true);
+                    boolean ignore = entry.getBooleanOrDefault("IgnoreEntities", false);
+
+                    SubRegionPlacement subRegion = new SubRegionPlacement(origin, name);
+                    subRegion.setMirror(mirror);
+                    subRegion.setRotation(rot);
+                    subRegion.setEnabled(enabled);
+
+                    if (ignore)
+                    {
+                        subRegion.toggleIgnoreEntities();
+                    }
+
+                    placement.relativeSubRegionPlacements.put(key, subRegion);
+                }
+            }
+
+            return placement;
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
 
     public int getSubRegionCount()
     {
@@ -212,8 +322,8 @@ public class SchematicPlacement
 
     private void updateEnclosingBox()
     {
-        if (this.shouldRenderEnclosingBox())
-        {
+//        if (this.shouldRenderEnclosingBox())
+//        {
             ImmutableMap<@NotNull String, @NotNull Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
             BlockPos pos1 = null;
             BlockPos pos2 = null;
@@ -246,7 +356,7 @@ public class SchematicPlacement
             {
                 this.enclosingBox = new Box(pos1, pos2, "Enclosing Box");
             }
-        }
+//        }
     }
 
     public ImmutableMap<@NotNull String, @NotNull Box> getSubRegionBoxes(RequiredEnabled required)
@@ -439,7 +549,6 @@ public class SchematicPlacement
         }
     }
 
-
     public void resetAllSubRegionsToSchematicValues()
     {
         this.resetAllSubRegionsToSchematicValues(true);
@@ -539,13 +648,6 @@ public class SchematicPlacement
         this.updateEnclosingBox();
     }
 
-    public void onRemoved()
-    {
-        if (USED_COLORS.isEmpty())
-        {
-        }
-    }
-
     private Box getEnclosingBox()
     {
         ImmutableMap<@NotNull String, @NotNull Box> boxes = this.getSubRegionBoxes(RequiredEnabled.ANY);
@@ -584,20 +686,23 @@ public class SchematicPlacement
         return null;
     }
 
-    public void pasteTo(ServerLevel serverWorld, ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
+    /**
+     * @deprecated This was too direct ... Use Task Scheduler, PLEASE!
+     */
+    @Deprecated(forRemoval = true)
+    private void pasteTo(ServerLevel serverWorld, ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
     {
-		Box bb = this.getEnclosingBox();
+        Box bb = this.getEnclosingBox();
 
-		if (bb != null)
-		{
-			bb.toVanilla().intersectingChunks().forEach(chunkPos ->
-					                                            SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos,
-					                                                                                          this,
-					                                                                                          replaceBehavior,
-					                                                                                          layerBehavior,
-					                                                                                          layerRange, false)
-			);
-		}
-        // todo CREATE TASK MANAGER
+        if (bb != null)
+        {
+            bb.toVanilla().intersectingChunks().forEach(chunkPos ->
+                                                                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos,
+                                                                                                              this,
+                                                                                                              replaceBehavior,
+                                                                                                              layerBehavior,
+                                                                                                              layerRange, false)
+            );
+        }
     }
 }

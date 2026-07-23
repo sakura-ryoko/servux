@@ -26,6 +26,7 @@ import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.servux.schematic.selection.AreaSelection;
 import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.util.IntBoundingBox;
+import fi.dy.masa.servux.util.LayerRange;
 
 public class PositionUtils
 {
@@ -1311,5 +1312,126 @@ public class PositionUtils
         CORNER_1,
         CORNER_2;
     }
-}
 
+    public static void getLayerRangeClampedPerChunkBoxes(Collection<Box> boxes,
+                                                         LayerRange range,
+                                                         BiConsumer<ChunkPos, IntBoundingBox> consumer)
+    {
+        for (Box box : boxes)
+        {
+            final int rangeMin = range.getLayerMin();
+            final int rangeMax = range.getLayerMax();
+            int boxMinX = Math.min(box.getPos1().getX(), box.getPos2().getX());
+            int boxMinY = Math.min(box.getPos1().getY(), box.getPos2().getY());
+            int boxMinZ = Math.min(box.getPos1().getZ(), box.getPos2().getZ());
+            int boxMaxX = Math.max(box.getPos1().getX(), box.getPos2().getX());
+            int boxMaxY = Math.max(box.getPos1().getY(), box.getPos2().getY());
+            int boxMaxZ = Math.max(box.getPos1().getZ(), box.getPos2().getZ());
+
+            switch (range.getAxis())
+            {
+                case X:
+                    if (rangeMax < boxMinX || rangeMin > boxMaxX) { continue; }
+                    boxMinX = Math.max(boxMinX, rangeMin);
+                    boxMaxX = Math.min(boxMaxX, rangeMax);
+                    break;
+                case Y:
+                    if (rangeMax < boxMinY || rangeMin > boxMaxY) { continue; }
+                    boxMinY = Math.max(boxMinY, rangeMin);
+                    boxMaxY = Math.min(boxMaxY, rangeMax);
+                    break;
+                case Z:
+                    if (rangeMax < boxMinZ || rangeMin > boxMaxZ) { continue; }
+                    boxMinZ = Math.max(boxMinZ, rangeMin);
+                    boxMaxZ = Math.min(boxMaxZ, rangeMax);
+                    break;
+            }
+
+            final int boxMinChunkX = boxMinX >> 4;
+            final int boxMinChunkZ = boxMinZ >> 4;
+            final int boxMaxChunkX = boxMaxX >> 4;
+            final int boxMaxChunkZ = boxMaxZ >> 4;
+
+            for (int cz = boxMinChunkZ; cz <= boxMaxChunkZ; ++cz)
+            {
+                for (int cx = boxMinChunkX; cx <= boxMaxChunkX; ++cx)
+                {
+                    final int chunkMinX = cx << 4;
+                    final int chunkMinZ = cz << 4;
+                    final int chunkMaxX = chunkMinX + 15;
+                    final int chunkMaxZ = chunkMinZ + 15;
+                    final int minX = Math.max(chunkMinX, boxMinX);
+                    final int minZ = Math.max(chunkMinZ, boxMinZ);
+                    final int maxX = Math.min(chunkMaxX, boxMaxX);
+                    final int maxZ = Math.min(chunkMaxZ, boxMaxZ);
+
+                    consumer.accept(new ChunkPos(cx, cz), new IntBoundingBox(minX, boxMinY, minZ, maxX, boxMaxY, maxZ));
+                }
+            }
+        }
+    }
+
+    /**
+     * Clamps the given box to the layer range bounds.
+     * @return the clamped box, or null, if the range does not intersect the original box
+     */
+    @Nullable
+    public static IntBoundingBox getClampedBox(IntBoundingBox box, LayerRange range)
+    {
+        return getClampedArea(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ(), range);
+    }
+
+    /**
+     * Clamps the given box to the layer range bounds.
+     * @return the clamped box, or null, if the range does not intersect the original box
+     */
+    @Nullable
+    public static IntBoundingBox getClampedArea(BlockPos posMin, BlockPos posMax, LayerRange range)
+    {
+        int minX = Math.min(posMin.getX(), posMax.getX());
+        int minY = Math.min(posMin.getY(), posMax.getY());
+        int minZ = Math.min(posMin.getZ(), posMax.getZ());
+        int maxX = Math.max(posMin.getX(), posMax.getX());
+        int maxY = Math.max(posMin.getY(), posMax.getY());
+        int maxZ = Math.max(posMin.getZ(), posMax.getZ());
+
+        return getClampedArea(minX, minY, minZ, maxX, maxY, maxZ, range);
+    }
+
+    /**
+     * Clamps the given box to the layer range bounds.
+     * @return the clamped box, or null, if the range does not intersect the original box
+     */
+    @Nullable
+    public static IntBoundingBox getClampedArea(int minX, int minY, int minZ, int maxX, int maxY, int maxZ, LayerRange range)
+    {
+        if (range.intersectsBox(minX, minY, minZ, maxX, maxY, maxZ) == false)
+        {
+            return null;
+        }
+
+        switch (range.getAxis())
+        {
+            case X:
+            {
+                final int clampedMinX = Math.max(minX, range.getLayerMin());
+                final int clampedMaxX = Math.min(maxX, range.getLayerMax());
+                return IntBoundingBox.createProper(clampedMinX, minY, minZ, clampedMaxX, maxY, maxZ);
+            }
+            case Y:
+            {
+                final int clampedMinY = Math.max(minY, range.getLayerMin());
+                final int clampedMaxY = Math.min(maxY, range.getLayerMax());
+                return IntBoundingBox.createProper(minX, clampedMinY, minZ, maxX, clampedMaxY, maxZ);
+            }
+            case Z:
+            {
+                final int clampedMinZ = Math.max(minZ, range.getLayerMin());
+                final int clampedMaxZ = Math.min(maxZ, range.getLayerMax());
+                return IntBoundingBox.createProper(minX, minY, clampedMinZ, maxX, maxY, clampedMaxZ);
+            }
+            default:
+                return null;
+        }
+    }
+}

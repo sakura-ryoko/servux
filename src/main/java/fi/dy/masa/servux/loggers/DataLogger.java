@@ -7,10 +7,13 @@ import com.mojang.serialization.Codec;
 import javax.annotation.Nullable;
 import net.minecraft.util.StringRepresentable;
 
+import fi.dy.masa.servux.loggers.data.MobCapData;
+import fi.dy.masa.servux.loggers.data.TPSData;
+
 public enum DataLogger implements StringRepresentable
 {
-    TPS             ("tps",             DataLoggerType.TPS, DataLoggerTPS.CODEC),
-    MOB_CAPS        ("mob_caps",        DataLoggerType.MOB_CAPS, DataLoggerMobCaps.CODEC)
+    TPS             ("tps",             DataLoggerType.TPS,         TPSData.CODEC),
+    MOB_CAPS        ("mob_caps",        DataLoggerType.MOB_CAPS,    MobCapData.CODEC)
     ;
 
     public static final EnumCodec<@NotNull DataLogger> CODEC = StringRepresentable.fromEnum(DataLogger::values);

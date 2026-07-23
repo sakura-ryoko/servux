@@ -3,15 +3,10 @@ package fi.dy.masa.servux.dataproviders;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import javax.annotation.Nullable;
 
-import fi.dy.masa.servux.settings.IServuxSettingCallback;
-import fi.dy.masa.servux.settings.ServuxBoolSetting;
-import fi.dy.masa.servux.util.InventoryUtils;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -27,14 +22,23 @@ import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksHandler;
 import fi.dy.masa.servux.network.packet.ServuxTweaksPacket;
 import fi.dy.masa.servux.settings.IServuxSetting;
+import fi.dy.masa.servux.settings.IServuxSettingCallback;
+import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
+import fi.dy.masa.servux.util.InventoryUtils;
+import fi.dy.masa.servux.util.PermissionsUtil;
+import fi.dy.masa.servux.util.StringUtils;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.ListData;
+import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.servux.util.nbt.NbtView;
 
 public class TweaksDataProvider extends DataProviderBase
 {
     public static final TweaksDataProvider INSTANCE = new TweaksDataProvider();
 	private final static ServuxTweaksHandler<ServuxTweaksPacket.Payload> HANDLER = ServuxTweaksHandler.getInstance();
-    private final CompoundTag metadata = new CompoundTag();
+    private final CompoundData metadata = new CompoundData();
     private final BoolCallbacks boolCallback = new BoolCallbacks();
     private final IntCallbacks intCallback = new IntCallbacks();
 	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0, this.intCallback);
@@ -146,12 +150,12 @@ public class TweaksDataProvider extends DataProviderBase
         }
         else
         {
-            if (this.metadata.contains("stackingShulkers"))
+            if (this.metadata.contains("stackingShulkers", Constants.NBT.TAG_BYTE))
             {
                 this.metadata.remove("stackingShulkers");
             }
 
-            if (this.metadata.contains("stackingShulkersMax"))
+            if (this.metadata.contains("stackingShulkersMax", Constants.NBT.TAG_INT))
             {
                 this.metadata.remove("stackingShulkersMax");
             }
@@ -169,55 +173,103 @@ public class TweaksDataProvider extends DataProviderBase
         {
             if (this.isPlayerRegistered(player))
             {
-                this.register(player);
+                this.sendMetadataOnly(player);
             }
         }
     }
 
-    public void register(ServerPlayer player)
+    @Override
+    public void register(ServerPlayer player, CompoundData tags)
     {
-        if (!this.isEnabled()) return;
+        if (!this.isEnabled()) { return; }
+        UUID uuid = player.getUUID();
+
+        if (tags == null || tags.getIntOrDefault("version", -1) < this.getProtocolVersion())
+        {
+            Servux.LOGGER.warn("tweaks_data: Denying access for player {}, Insufficient Protocol Version; This Server Requires: Version {}", player.getName().tryCollapseToString(), this.getProtocolVersion());
+            player.sendSystemMessage(StringUtils.translate("servux.general.error.protocol_version_too_low", this.getName()));
+            HANDLER.tickFailures(player);
+            return;
+        }
 
         if (!this.hasPermission(player))
         {
             // No Permission
-            Servux.debugLog("tweaks_service: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
+            Servux.debugLog("tweaks_data: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
             return;
         }
 
-        Servux.debugLog("tweaksDataChannel: sendMetadata to player {}", player.getName().tryCollapseToString());
-        this.checkTweaksMetadata();
+//        player.sendSystemMessage(StringUtils.translate("servux.general.error.protocol_version_too_low", this.getName()));
 
-        this.registeredPlayers.add(player.getUUID());
+        Servux.debugLog("tweaks_data: sendMetadata to player {}", player.getName().tryCollapseToString());
+        this.checkTweaksMetadata();
+        this.registeredPlayers.add(uuid);
+        this.sendMetadataOnly(player);
+    }
+
+    private void sendMetadataOnly(ServerPlayer player)
+    {
+        if (!this.isEnabled()) { return; }
+
+        if (!this.hasPermission(player))
+        {
+            // No Permission
+            Servux.debugLog("tweaks_data: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
+            return;
+        }
+
+        CompoundData tags = new CompoundData();
+
+        tags.combine(this.metadata);
 
         // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
         if (player.connection != null)
         {
-            HANDLER.sendPlayPayload(player.connection, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(this.metadata)));
+            HANDLER.sendPlayPayload(player.connection, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(tags)));
         }
         else
         {
-            HANDLER.sendPlayPayload(player, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(this.metadata)));
+            HANDLER.sendPlayPayload(player, new ServuxTweaksPacket.Payload(ServuxTweaksPacket.MetadataResponse(tags)));
         }
     }
 
-    public void onPacketFailure(ServerPlayer player)
+    @Override
+    public void unregister(ServerPlayer player, CompoundData tags)
     {
-        this.setPlayerInvalid(player);
-        this.registeredPlayers.remove(player.getUUID());
+        if (this.isEnabled())
+        {
+            Servux.debugLog("tweaks_data: Unregistered player {}", player.getName().tryCollapseToString());
+        }
+
+        UUID uuid = player.getUUID();
+        HANDLER.resetFailures(this.getNetworkChannel(), player);
+        this.registeredPlayers.remove(uuid);
     }
 
+    @Override
+    public void onPacketFailure(ServerPlayer player)
+    {
+        UUID uuid = player.getUUID();
+        this.setPlayerInvalid(player);
+        this.registeredPlayers.remove(uuid);
+    }
+
+    @Override
     public void removePlayer(ServerPlayer player)
     {
+        UUID uuid = player.getUUID();
         this.removeInvalidPlayer(player);
-        this.registeredPlayers.remove(player.getUUID());
+        this.registeredPlayers.remove(uuid);
+        HANDLER.resetFailures(this.getNetworkChannel(), player);
     }
 
     private void setPlayerInvalid(ServerPlayer player)
     {
-        if (!this.invalidPlayers.contains(player.getUUID()))
+        UUID uuid = player.getUUID();
+
+        if (!this.invalidPlayers.contains(uuid))
         {
-            this.invalidPlayers.add(player.getUUID());
+            this.invalidPlayers.add(uuid);
         }
     }
 
@@ -231,24 +283,39 @@ public class TweaksDataProvider extends DataProviderBase
         this.invalidPlayers.remove(player.getUUID());
     }
 
-    public void onBlockEntityRequest(ServerPlayer player, BlockPos pos)
+    public void onBlockEntityRequest(ServerPlayer player, BlockPos pos, @Nullable CompoundData tags)
     {
-        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
         {
             return;
         }
 
-        //Servux.logger.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
+        if (!this.hasPermission(player))
+        {
+            Servux.debugLog("tweaks_data: Denying onBlockEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
+            return;
+        }
 
+        //Servux.LOGGER.warn("onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
         BlockEntity be = player.level().getBlockEntity(pos);
-        CompoundTag nbt = be != null ? be.saveWithoutMetadata(player.registryAccess()) : new CompoundTag();
-        HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleBlockResponse(pos, nbt));
+
+        if (be != null)
+        {
+            CompoundData nbt = DataConverterNbt.fromVanillaCompound(be.saveWithFullMetadata(player.registryAccess()));
+            HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleBlockResponse(pos, nbt));
+        }
     }
 
-    public void onEntityRequest(ServerPlayer player, int entityId)
+    public void onEntityRequest(ServerPlayer player, int entityId, @Nullable CompoundData tags)
     {
-        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
+        if (!this.isPlayerRegistered(player) || !this.isEnabled())
         {
+            return;
+        }
+
+        if (!this.hasPermission(player))
+        {
+            Servux.debugLog("tweaks_data: Denying onEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
             return;
         }
 
@@ -261,49 +328,39 @@ public class TweaksDataProvider extends DataProviderBase
             Identifier id = EntityType.getKey(entity.getType());
 
             entity.saveWithoutId(view.getWriter());
-            CompoundTag nbt = view.readNbt();
+            CompoundData nbt = view.readData();
 
             if (nbt != null && id != null)
             {
-	            if (entity.getType() == EntityType.PLAYER)
-	            {
-		            if (!EntitiesDataProvider.INSTANCE.hasPlayerInventoryPermission(player))
-		            {
-			            nbt.remove("Inventory");
-			            nbt.put("Inventory", new ListTag());
-		            }
-		            if (!EntitiesDataProvider.INSTANCE.hasPlayerEnderItemsPermission(player))
-		            {
-			            nbt.remove("EnderItems");
-			            nbt.put("EnderItems", new ListTag());
-		            }
-	            }
+                if (entity.getType() == EntityType.PLAYER)
+                {
+                    if (!EntitiesDataProvider.INSTANCE.hasPlayerInventoryPermission(player))
+                    {
+                        nbt.remove("Inventory");
+                        nbt.put("Inventory", new ListData());
+                    }
+                    if (!EntitiesDataProvider.INSTANCE.hasPlayerEnderItemsPermission(player))
+                    {
+                        nbt.remove("EnderItems");
+                        nbt.put("EnderItems", new ListData());
+                    }
+                }
 
-	            nbt.putString("id", id.toString());
-                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt.copy()));
+                nbt.putString("id", id.toString());
+                HANDLER.encodeServerData(player, ServuxTweaksPacket.SimpleEntityResponse(entityId, nbt));
             }
         }
     }
 
     /*
-    public void handleBulkClientRequest(ServerPlayerEntity player, int transactionId, NbtCompound tags)
+    public void handleBulkClientRequest(ServerPlayer player, CompoundTag tags)
     {
         if (this.hasPermission(player) == false)
         {
             return;
         }
 
-        Servux.logger.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
-    }
-
-    public void handleClientBulkData(ServerPlayerEntity player, int transactionId, NbtCompound nbtCompound)
-    {
-        if (this.hasPermission(player) == false)
-        {
-            return;
-        }
-
-        Servux.logger.warn("handleClientBulkData(): from player {} -- Not Implemented!", player.getName().getLiteralString());
+        Servux.LOGGER.warn("handleBulkClientRequest(): from player {} -- Not Implemented!", player.getName().getLiteralString());
     }
      */
 
@@ -340,19 +397,7 @@ public class TweaksDataProvider extends DataProviderBase
 	@Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return Permissions.check(player, this.permNode, this.permissionLevel.getValue());
-    }
-
-    @Override
-    public void onTickEndPre()
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void onTickEndPost()
-    {
-        // NO-OP
+        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
     }
 
     // Callbacks marks the config as dirty so that we can broadcast the config changes

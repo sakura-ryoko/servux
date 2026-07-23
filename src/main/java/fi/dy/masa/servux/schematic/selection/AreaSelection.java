@@ -18,20 +18,84 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 public class AreaSelection
 {
-    protected final Map<String, Box> subRegionBoxes = new HashMap<>();
-    protected String name = "Unnamed";
+    public static final Codec<SubRegionBox> SUB_REGION_BOX_CODEC = RecordCodecBuilder.create(
+            inst ->
+                    inst.group(
+                            PrimitiveCodec.STRING.fieldOf("name").forGetter(get -> get.name),
+                            Box.CODEC.fieldOf("box").forGetter(get -> get.box)
+                    ).apply(inst, SubRegionBox::new)
+    );
+    public static final Codec<AreaSelection> CODEC = RecordCodecBuilder.create(
+            inst ->
+                    inst.group(
+                            PrimitiveCodec.STRING.fieldOf("name").forGetter(get -> get.name),
+                            Codec.list(SUB_REGION_BOX_CODEC).fieldOf("sub_region_boxes").forGetter(AreaSelection::boxesToList),
+                            PrimitiveCodec.BOOL.fieldOf("origin_selected").forGetter(get -> get.originSelected),
+                            BlockPos.CODEC.fieldOf("calculated_origin").forGetter(get -> get.calculatedOrigin),
+                            BlockPos.CODEC.optionalFieldOf("explicit_origin", null).forGetter(get -> get.explicitOrigin),
+                            PrimitiveCodec.STRING.optionalFieldOf("current_box", null).forGetter(get -> get.currentBox)
+                    ).apply(inst, AreaSelection::new)
+    );
+
+    protected final Map<String, Box> subRegionBoxes;
+    protected String name;
     protected boolean originSelected;
-    protected BlockPos calculatedOrigin = BlockPos.ZERO;
-    protected boolean calculatedOriginDirty = true;
-    @Nullable protected BlockPos explicitOrigin = null;
+    protected BlockPos calculatedOrigin;
+    protected boolean calculatedOriginDirty;
+    @Nullable protected BlockPos explicitOrigin;
     @Nullable protected String currentBox;
+
+    public AreaSelection()
+    {
+        this.subRegionBoxes = new HashMap<>();
+        this.name = "Unnamed";
+        this.calculatedOrigin = BlockPos.ZERO;
+        this.calculatedOriginDirty = true;
+        this.explicitOrigin = null;
+    }
+
+    private AreaSelection(String name, List<SubRegionBox> boxes, boolean originSelected, BlockPos calcOrigin, @Nullable BlockPos explicitOrigin, @Nullable String currentBox)
+    {
+        this.subRegionBoxes = new HashMap<>();
+        this.name = name;
+        this.originSelected = originSelected;
+        this.calculatedOrigin = calcOrigin;
+        this.calculatedOriginDirty = true;
+        this.explicitOrigin = explicitOrigin;
+        this.currentBox = currentBox;
+
+        for (SubRegionBox subBox : boxes)
+        {
+            this.subRegionBoxes.put(subBox.name(), subBox.box());
+        }
+    }
+
+    public record SubRegionBox(String name, Box box) {}
+
+    private List<SubRegionBox> boxesToList()
+    {
+        if (this.subRegionBoxes.isEmpty())
+        {
+            return List.of();
+        }
+
+        List<SubRegionBox> list = new ArrayList<>();
+        this.subRegionBoxes.forEach(
+                (name, box) ->
+                        list.add(new SubRegionBox(name, box))
+        );
+
+        return list;
+    }
 
     public static AreaSelection fromPlacement(SchematicPlacement placement)
     {
@@ -254,7 +318,15 @@ public class AreaSelection
         return success;
     }
 
-    public void moveEntireSelectionTo(BlockPos newOrigin, boolean printMessage)
+    public boolean removeSelectedSubRegionBox()
+    {
+        boolean success = this.currentBox != null ? this.subRegionBoxes.remove(this.currentBox) != null : false;
+        this.currentBox = null;
+        this.markDirty();
+        return success;
+    }
+
+    public void moveEntireSelectionTo(BlockPos newOrigin)
     {
         BlockPos old = this.getEffectiveOrigin();
         BlockPos diff = newOrigin.subtract(old);
@@ -275,12 +347,6 @@ public class AreaSelection
         if (this.getExplicitOrigin() != null)
         {
             this.setExplicitOrigin(newOrigin);
-        }
-
-        if (printMessage)
-        {
-            String oldStr = String.format("x: %d, y: %d, z: %d", old.getX(), old.getY(), old.getZ());
-            String newStr = String.format("x: %d, y: %d, z: %d", newOrigin.getX(), newOrigin.getY(), newOrigin.getZ());
         }
     }
 

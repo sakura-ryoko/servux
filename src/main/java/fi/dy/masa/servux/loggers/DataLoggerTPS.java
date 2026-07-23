@@ -2,33 +2,31 @@ package fi.dy.masa.servux.loggers;
 
 import java.util.concurrent.TimeUnit;
 
-import com.mojang.serialization.Codec;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
+
 import fi.dy.masa.servux.loggers.data.TPSData;
-import fi.dy.masa.servux.mixin.server.IMixinServerTickManager;
+import fi.dy.masa.servux.mixin.server.IMixinServerTickRateManager;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.util.DataOps;
 
-public class DataLoggerTPS extends DataLoggerBase<CompoundTag>
+public class DataLoggerTPS extends DataLoggerBase<CompoundData>
 {
-    public static final Codec<CompoundTag> CODEC = CompoundTag.CODEC;
-
     public DataLoggerTPS(DataLogger type)
     {
         super(type);
     }
 
     @Override
-    public CompoundTag getResult(MinecraftServer server)
+    public CompoundData getResult(MinecraftServer server)
     {
         try
         {
-            return (CompoundTag) TPSData.CODEC.encodeStart(server.registryAccess().createSerializationContext(NbtOps.INSTANCE), this.build(server)).getOrThrow();
+            return (CompoundData) TPSData.CODEC.encodeStart(server.registryAccess().createSerializationContext(DataOps.INSTANCE), this.build(server)).getOrThrow();
         }
         catch (Exception e)
         {
-            return new CompoundTag();
+            return new CompoundData();
         }
     }
     
@@ -47,7 +45,7 @@ public class DataLoggerTPS extends DataLoggerBase<CompoundTag>
         
         return new TPSData(mspt,
                         tps,
-                        ((IMixinServerTickManager) tickManager).servux_getStringTicks(),
+                        ((IMixinServerTickRateManager) tickManager).servux_getStringTicks(),
                         frozen,
                         sprinting,
                         tickManager.isSteppingForward()

@@ -1,19 +1,17 @@
 package fi.dy.masa.servux.schematic.placement;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.PrimitiveCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import fi.dy.masa.servux.Servux;
 
@@ -36,7 +34,7 @@ public class SubRegionPlacement
     public static final StreamCodec<@NotNull ByteBuf, @NotNull SubRegionPlacement> PACKET_CODEC = new StreamCodec<>()
     {
         @Override
-        public void encode(ByteBuf buf, SubRegionPlacement value)
+        public void encode(@NonNull ByteBuf buf, SubRegionPlacement value)
         {
             ByteBufCodecs.STRING_UTF8.encode(buf, value.name);
             BlockPos.STREAM_CODEC.encode(buf, value.defaultPos);
@@ -50,7 +48,7 @@ public class SubRegionPlacement
         }
 
         @Override
-        public SubRegionPlacement decode(ByteBuf buf)
+        public @NonNull SubRegionPlacement decode(@NonNull ByteBuf buf)
         {
             return new SubRegionPlacement(
                     ByteBufCodecs.STRING_UTF8.decode(buf),
@@ -141,6 +139,16 @@ public class SubRegionPlacement
         return this.mirror;
     }
 
+    void setEnabled(boolean enabled)
+    {
+        this.enabled = enabled;
+    }
+
+    void toggleEnabled()
+    {
+        this.setEnabled(! this.isEnabled());
+    }
+
     void toggleIgnoreEntities()
     {
         this.ignoreEntities = ! this.ignoreEntities;
@@ -183,28 +191,6 @@ public class SubRegionPlacement
                this.getRotation() != Rotation.NONE ||
                this.getPos().equals(originalPosition) == false;
     }
-
-    public JsonObject toJson()
-    {
-        JsonObject obj = new JsonObject();
-        JsonArray arr = new JsonArray();
-
-        arr.add(this.pos.getX());
-        arr.add(this.pos.getY());
-        arr.add(this.pos.getZ());
-
-        obj.add("pos", arr);
-        obj.add("name", new JsonPrimitive(this.getName()));
-        obj.add("rotation", new JsonPrimitive(this.rotation.name()));
-        obj.add("mirror", new JsonPrimitive(this.mirror.name()));
-        obj.add("locked_coords", new JsonPrimitive(0));
-        obj.add("enabled", new JsonPrimitive(this.enabled));
-        obj.add("rendering_enabled", new JsonPrimitive(true));
-        obj.add("ignore_entities", new JsonPrimitive(this.ignoreEntities));
-
-        return obj;
-    }
-
 
     public enum RequiredEnabled
     {

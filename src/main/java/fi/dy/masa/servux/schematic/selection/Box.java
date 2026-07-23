@@ -2,16 +2,53 @@ package fi.dy.masa.servux.schematic.selection;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import io.netty.buffer.ByteBuf;
+
 import fi.dy.masa.servux.util.JsonUtils;
 import fi.dy.masa.servux.util.position.PositionUtils;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.PrimitiveCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public class Box
 {
-    private BlockPos pos1;
-    private BlockPos pos2;
+    public static final Codec<Box> CODEC = RecordCodecBuilder.create(
+            inst -> inst.group(
+                    BlockPos.CODEC.fieldOf("pos1").forGetter(get -> get.pos1 != null ? get.pos1 : BlockPos.ZERO),
+                    BlockPos.CODEC.fieldOf("pos2").forGetter(get -> get.pos2 != null ? get.pos2 : BlockPos.ZERO),
+                    PrimitiveCodec.STRING.fieldOf("name").forGetter(get -> get.name)
+            ).apply(inst, Box::new)
+    );
+    public static final StreamCodec<ByteBuf, Box> PACKET_CODEC = new StreamCodec<>()
+    {
+        @Override
+        public @Nonnull Box decode(@Nonnull ByteBuf buf)
+        {
+            return new Box(
+                    BlockPos.STREAM_CODEC.decode(buf),
+                    BlockPos.STREAM_CODEC.decode(buf),
+                    ByteBufCodecs.STRING_UTF8.decode(buf)
+            );
+        }
+
+        @Override
+        public void encode(@Nonnull ByteBuf buf, Box value)
+        {
+            BlockPos.STREAM_CODEC.encode(buf, value.pos1 != null ? value.pos1 : BlockPos.ZERO);
+            BlockPos.STREAM_CODEC.encode(buf, value.pos2 != null ? value.pos2 : BlockPos.ZERO);
+            ByteBufCodecs.STRING_UTF8.encode(buf, value.name);
+        }
+    };
+    @Nullable private BlockPos pos1;
+    @Nullable private BlockPos pos2;
     private BlockPos size = BlockPos.ZERO;
     private String name = "Unnamed";
     private PositionUtils.Corner selectedCorner = PositionUtils.Corner.NONE;
@@ -23,7 +60,7 @@ public class Box
         this.updateSize();
     }
 
-    public Box(BlockPos pos1, BlockPos pos2, String name)
+    public Box(@Nullable BlockPos pos1, @Nullable BlockPos pos2, String name)
     {
         this.pos1 = pos1;
         this.pos2 = pos2;
@@ -39,11 +76,13 @@ public class Box
         return box;
     }
 
+    @Nullable
     public BlockPos getPos1()
     {
         return this.pos1;
     }
 
+    @Nullable
     public BlockPos getPos2()
     {
         return this.pos2;
@@ -105,10 +144,12 @@ public class Box
         if (this.pos1 != null && this.pos2 != null)
         {
             this.size = PositionUtils.getAreaSizeFromRelativeEndPosition(this.pos2.subtract(this.pos1));
-        } else if (this.pos1 == null && this.pos2 == null)
+        }
+        else if (this.pos1 == null && this.pos2 == null)
         {
             this.size = BlockPos.ZERO;
-        } else
+        }
+        else
         {
             this.size = new BlockPos(1, 1, 1);
         }
@@ -123,17 +164,12 @@ public class Box
     {
         BlockPos pos = this.getPosition(corner);
 
-        switch (type)
-        {
-            case X:
-                return pos.getX();
-            case Y:
-                return pos.getY();
-            case Z:
-                return pos.getZ();
-        }
-
-        return 0;
+	    return switch (type)
+	    {
+		    case X -> pos.getX();
+		    case Y -> pos.getY();
+		    case Z -> pos.getZ();
+	    };
     }
 
     protected void setPosition(BlockPos pos, PositionUtils.Corner corner)
@@ -141,7 +177,8 @@ public class Box
         if (corner == PositionUtils.Corner.CORNER_1)
         {
             this.setPos1(pos);
-        } else if (corner == PositionUtils.Corner.CORNER_2)
+        }
+        else if (corner == PositionUtils.Corner.CORNER_2)
         {
             this.setPos2(pos);
         }
@@ -152,6 +189,15 @@ public class Box
         BlockPos pos = this.getPosition(corner);
         pos = PositionUtils.getModifiedPosition(pos, value, type);
         this.setPosition(pos, corner);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Box[name='" + this.name + "',"
+                + ",pos1={" + (this.pos1 != null ? this.pos1.toString() : "<>") + "},"
+                + ",pos2={" + (this.pos2 != null ? this.pos2.toString() : "<>") + "}"
+                + "]";
     }
 
     @Nullable
