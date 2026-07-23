@@ -1,18 +1,17 @@
 package fi.dy.masa.servux.dataproviders;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
@@ -27,6 +26,7 @@ import net.minecraft.world.level.levelgen.structure.pieces.StructurePieceSeriali
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IPluginServerPlayHandler;
+import fi.dy.masa.servux.network.PacketSplitter;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresHandler;
 import fi.dy.masa.servux.network.packet.ServuxStructuresPacket;
@@ -35,525 +35,624 @@ import fi.dy.masa.servux.settings.ServuxBoolSetting;
 import fi.dy.masa.servux.settings.ServuxIntSetting;
 import fi.dy.masa.servux.settings.ServuxStringListSetting;
 import fi.dy.masa.servux.util.PermissionsUtil;
-import fi.dy.masa.servux.util.position.PlayerDimensionPosition;
+import fi.dy.masa.servux.util.StringUtils;
 import fi.dy.masa.servux.util.Timeout;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.ListData;
+import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
+import fi.dy.masa.servux.util.position.PlayerDimensionPosition;
 
 public class StructureDataProvider extends DataProviderBase
 {
-    public static final StructureDataProvider INSTANCE = new StructureDataProvider();
+	public static final StructureDataProvider INSTANCE = new StructureDataProvider();
 	private final static ServuxStructuresHandler<ServuxStructuresPacket.Payload> HANDLER = ServuxStructuresHandler.getInstance();
-	private final CompoundTag metadata = new CompoundTag();
-    private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    private final ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
-    private final ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
-    private final ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
-    private final ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
-    private final ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
-    private final ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
-    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
+	private final CompoundData metadata = new CompoundData();
+	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
+	private final ServuxBoolSetting structureBlacklistEnabled = new ServuxBoolSetting(this, "structures_blacklist_enabled", false);
+	private final ServuxBoolSetting structureWhitelistEnabled = new ServuxBoolSetting(this, "structures_whitelist_enabled", false);
+	private final ServuxStringListSetting structureBlacklist = new ServuxStringListSetting(this, "structures_blacklist", List.of("minecraft:buried_treasure"));
+	private final ServuxStringListSetting structureWhitelist = new ServuxStringListSetting(this, "structures_whitelist", List.of());
+	private final ServuxIntSetting updateInterval = new ServuxIntSetting(this, "update_interval", 40, 1200, 1);
+	private final ServuxIntSetting timeout = new ServuxIntSetting(this, "timeout", 600, 1200, 40);
+	private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.structureBlacklistEnabled, this.structureWhitelistEnabled, this.structureBlacklist, this.structureWhitelist, this.updateInterval, this.timeout);
 
-	private final Map<UUID, PlayerDimensionPosition> registeredPlayers = new HashMap<>();
-	private final Map<UUID, Map<ChunkPos, Timeout>> timeouts = new HashMap<>();
+	private final List<UUID> registeredPlayers = new ArrayList<>();
+	private final List<UUID> invalidPlayers = new ArrayList<>();
+	private final ConcurrentHashMap<UUID, PlayerDimensionPosition> playerPositons = new ConcurrentHashMap<>(16, 0.9f, 2);
+	private final ConcurrentHashMap<UUID, Map<ChunkPos, Timeout>> timeouts = new ConcurrentHashMap<>(16, 0.9f, 2);
+	private final ConcurrentHashMap<UUID, Integer> maxPacketSize = new ConcurrentHashMap<>(16, 0.9f, 2);
 	private int retainDistance;
 
 	protected StructureDataProvider()
-    {
-        super("structure_bounding_boxes",
-                ServuxStructuresHandler.CHANNEL_ID,
-                ServuxStructuresPacket.PROTOCOL_VERSION,
-                0, Reference.MOD_ID+ ".provider.structure_bounding_boxes",
-                "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
+	{
+		super("structure_bounding_boxes",
+		      ServuxStructuresHandler.CHANNEL_ID,
+		      ServuxStructuresPacket.PROTOCOL_VERSION,
+		      0, Reference.MOD_ID + ".provider.structure_bounding_boxes",
+		      "Structure Bounding Boxes data for structures such as Witch Huts, Ocean Monuments, Nether Fortresses etc.");
 
-        this.metadata.putString("name", this.getName());
-        this.metadata.putString("id", this.getNetworkChannel().toString());
-        this.metadata.putInt("version", this.getProtocolVersion());
-        this.metadata.putString("servux", Reference.MOD_STRING);
-        this.metadata.putInt("timeout", timeout.getValue());
+		this.metadata.putString("name", this.getName());
+		this.metadata.putString("id", this.getNetworkChannel().toString());
+		this.metadata.putInt("version", this.getProtocolVersion());
+		this.metadata.putString("servux", Reference.MOD_STRING);
+		this.metadata.putInt("timeout", timeout.getValue());
 
-        this.setTickRate(40);
-    }
+		this.setTickRate(40);
+	}
 
-    @Override
-    public List<IServuxSetting<?>> getSettings()
-    {
-        return settings;
-    }
+	@Override
+	public List<IServuxSetting<?>> getSettings()
+	{
+		return settings;
+	}
 
-    @Override
-    public void registerHandler()
-    {
-        ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
+	@Override
+	public void registerHandler()
+	{
+		ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
 
-        if (!this.isRegistered())
-        {
-            HANDLER.registerPlayPayload(ServuxStructuresPacket.Payload.ID, ServuxStructuresPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
-            this.setRegistered(true);
-        }
+		if (!this.isRegistered())
+		{
+			HANDLER.registerPlayPayload(ServuxStructuresPacket.Payload.ID, ServuxStructuresPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+			this.setRegistered(true);
+		}
 
-        HANDLER.registerPlayReceiver(ServuxStructuresPacket.Payload.ID, HANDLER::receivePlayPayload);
-    }
+		HANDLER.registerPlayReceiver(ServuxStructuresPacket.Payload.ID, HANDLER::receivePlayPayload);
+	}
 
-    @Override
-    public void unregisterHandler()
-    {
-        HANDLER.unregisterPlayReceiver();
-        ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
-    }
+	@Override
+	public void unregisterHandler()
+	{
+		HANDLER.unregisterPlayReceiver();
+		ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
+	}
 
-    @Override
-    public IPluginServerPlayHandler<ServuxStructuresPacket.Payload> getPacketHandler()
-    {
-        return HANDLER;
-    }
+	@Override
+	public IPluginServerPlayHandler<ServuxStructuresPacket.Payload> getPacketHandler()
+	{
+		return HANDLER;
+	}
 
-    @Override
-    public boolean isPlayerRegistered(ServerPlayer player)
-    {
-        return this.registeredPlayers.containsKey(player.getUUID());
-    }
+	@Override
+	public boolean isPlayerRegistered(ServerPlayer player)
+	{
+		return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
+	}
 
-    @Override
-    public boolean shouldTick()
-    {
-        return this.enabled;
-    }
+	@Override
+	public boolean shouldTick()
+	{
+		return this.enabled;
+	}
 
-    @Override
-    public void tick(MinecraftServer server, int tickCounter, ProfilerFiller profiler)
-    {
-        if (!this.isEnabled()) return;
+	@Override
+	public void tick(MinecraftServer server, int tickCounter, ProfilerFiller profiler)
+	{
+		if (!this.isEnabled()) { return; }
+		if ((tickCounter % this.updateInterval.getValue()) == 0)
+		{
+			profiler.push(this.getName());
+			//Servux.printDebug("=======================\n");
+			//Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
 
-        if ((tickCounter % this.updateInterval.getValue()) == 0)
-        {
-            profiler.push(this.getName());
-            //Servux.printDebug("=======================\n");
-            //Servux.printDebug("tick: %d - %s\n", tickCounter, this.isEnabled());
+			PlayerList playerList = server.getPlayerList();
+			List<ServerPlayer> players = playerList.getPlayers();
+			this.retainDistance = playerList.getViewDistance() + 2;
+			//this.lastTick = tickCounter;
 
-            List<ServerPlayer> playerList = server.getPlayerList().getPlayers();
-            this.retainDistance = server.getPlayerList().getViewDistance() + 2;
-            //this.lastTick = tickCounter;
+			profiler.popPush(this.getName() + "_players");
 
-            profiler.popPush(this.getName() + "_players");
+			for (ServerPlayer player : players)
+			{
+				if (this.isPlayerRegistered(player))
+				{
+					if (!this.hasPermission(player))
+					{
+						this.removePlayer(player);
+					}
+					else
+					{
+						this.checkForDimensionChange(player);
+						this.refreshTrackedChunks(player, tickCounter);
+					}
+				}
+			}
 
-            for (ServerPlayer player : playerList)
-            {
-                UUID uuid = player.getUUID();
+			this.checkForInvalidPlayers(server);
+			profiler.pop();
+		}
+	}
 
-                if (this.registeredPlayers.containsKey(uuid))
-                {
-                    if (!this.hasPermission(player))
-                    {
-                        this.unregister(player);
-                    }
-                    else
-                    {
-                        this.checkForDimensionChange(player);
-                        this.refreshTrackedChunks(player, tickCounter);
-                    }
-                }
-            }
+	public void checkForInvalidPlayers(MinecraftServer server)
+	{
+		if (!this.playerPositons.isEmpty())
+		{
+			Set<UUID> keys = this.playerPositons.keySet();
 
-            this.checkForInvalidPlayers(server);
-            profiler.pop();
-        }
-    }
+			for (UUID uuid : keys)
+			{
+				if (server.getPlayerList().getPlayer(uuid) == null)
+				{
+					this.playerPositons.remove(uuid);
+					this.timeouts.remove(uuid);
+					this.maxPacketSize.remove(uuid);
+					this.registeredPlayers.remove(uuid);
+				}
+			}
+		}
+	}
 
-    public void checkForInvalidPlayers(MinecraftServer server)
-    {
-        if (!this.registeredPlayers.isEmpty())
-        {
-            Iterator<UUID> iter = this.registeredPlayers.keySet().iterator();
+	public void onStartedWatchingChunk(ServerPlayer player, LevelChunk chunk)
+	{
+		UUID uuid = player.getUUID();
 
-            while (iter.hasNext())
-            {
-                UUID uuid = iter.next();
+		if (this.playerPositons.containsKey(uuid))
+		{
+			this.addChunkTimeoutIfHasReferences(uuid, chunk, player.createCommandSourceStack().getServer().getTickCount());
+		}
+	}
 
-                if (server.getPlayerList().getPlayer(uuid) == null)
-                {
-                    this.timeouts.remove(uuid);
-                    iter.remove();
-                }
-            }
-        }
-    }
+	@Override
+	public void register(ServerPlayer player, CompoundData tags)
+	{
+		if (!this.isEnabled()) { return; }
 
-    public void onStartedWatchingChunk(ServerPlayer player, LevelChunk chunk)
-    {
-        UUID uuid = player.getUUID();
+		if (tags == null || tags.getIntOrDefault("version", -1) < this.getProtocolVersion())
+		{
+			Servux.LOGGER.warn("structure_bounding_boxes: Denying access for player {}, Insufficient Protocol Version; This Server Requires: Version {}", player.getName().tryCollapseToString(), this.getProtocolVersion());
+			player.sendSystemMessage(StringUtils.translate("servux.general.error.protocol_version_too_low", this.getName()));
+			HANDLER.tickFailures(player);
+			return;
+		}
 
-        if (this.registeredPlayers.containsKey(uuid))
-        {
-            this.addChunkTimeoutIfHasReferences(uuid, chunk, player.createCommandSourceStack().getServer().getTickCount());
-        }
-    }
+		if (!this.hasPermission(player))
+		{
+			// No Permission
+			Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
+			player.sendSystemMessage(StringUtils.translate("servux.general.error.protocol_version_too_low", this.getName()));
+			return;
+		}
 
-    public boolean register(ServerPlayer player)
-    {
-        if (!this.isEnabled()) return false;
+		UUID uuid = player.getUUID();
 
-//        System.out.printf("register [%s]\n", player.getName().getString());
-        boolean registered = false;
-        MinecraftServer server = player.createCommandSourceStack().getServer();
-        UUID uuid = player.getUUID();
+		if (!this.registeredPlayers.contains(uuid))
+		{
+			MinecraftServer server = player.createCommandSourceStack().getServer();
+			int tickCounter = server.getTickCount();
+			final int maxPacketSize = tags.getIntOrDefault("max_receive_s2c", PacketSplitter.DEFAULT_MAX_RECEIVE_SIZE_S2C);
+			CompoundData nbt = new CompoundData();
 
-        if (!this.hasPermission(player))
-        {
-            // No Permission
-            Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
-            return registered;
-        }
+			this.registeredPlayers.add(uuid);
+			this.playerPositons.put(uuid, new PlayerDimensionPosition(player));
+			this.maxPacketSize.put(uuid, maxPacketSize);
+			nbt.combine(this.metadata);
 
-        if (!this.registeredPlayers.containsKey(uuid))
-        {
-            this.registeredPlayers.put(uuid, new PlayerDimensionPosition(player));
-            int tickCounter = server.getTickCount();
-            ServerGamePacketListenerImpl handler = player.connection;
+			Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().tryCollapseToString());
+			if (player.connection != null)
+			{
+				HANDLER.sendPlayPayload(player.connection, new ServuxStructuresPacket.Payload(ServuxStructuresPacket.MetadataReply(nbt)));
+			}
+			else
+			{
+				HANDLER.sendPlayPayload(player, new ServuxStructuresPacket.Payload(ServuxStructuresPacket.MetadataReply(nbt)));
+			}
 
-            if (handler != null)
-            {
-                CompoundTag nbt = new CompoundTag();
-                nbt.merge(this.metadata);
+			this.initialSyncStructuresToPlayerWithinRange(player, server.getPlayerList().getViewDistance() + 2, tickCounter);
+		}
+	}
 
-                Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().tryCollapseToString());
-                HANDLER.sendPlayPayload(handler, new ServuxStructuresPacket.Payload(new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_METADATA, nbt)));
-                this.initialSyncStructuresToPlayerWithinRange(player, player.createCommandSourceStack().getServer().getPlayerList().getViewDistance()+2, tickCounter);
-            }
+	@Override
+	public void unregister(ServerPlayer player, CompoundData tags)
+	{
+		if (this.isEnabled() || tags == null)
+		{
+			Servux.debugLog("structure_bounding_boxes: Unregistered player {}", player.getName().tryCollapseToString());
+		}
 
-            registered = true;
-        }
+		UUID uuid = player.getUUID();
 
-        return registered;
-    }
+		HANDLER.resetFailures(this.getNetworkChannel(), player);
+		this.registeredPlayers.remove(uuid);
+		this.timeouts.remove(uuid);
+		this.maxPacketSize.remove(uuid);
+		this.playerPositons.remove(uuid);
+	}
 
-    public boolean unregister(ServerPlayer player)
-    {
-//        System.out.printf("unregister [%s]\n", player.getName().getString());
-        HANDLER.resetFailures(this.getNetworkChannel(), player);
+	@Override
+	public void onPacketFailure(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
+		this.setPlayerInvalid(player);
+		this.registeredPlayers.remove(uuid);
+		this.playerPositons.remove(uuid);
+		this.timeouts.remove(uuid);
+		this.maxPacketSize.remove(uuid);
+	}
 
-        return this.registeredPlayers.remove(player.getUUID()) != null;
-    }
+	@Override
+	public void removePlayer(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
+		this.removeInvalidPlayer(player);
+		this.registeredPlayers.remove(uuid);
+		this.playerPositons.remove(uuid);
+		this.timeouts.remove(uuid);
+		this.maxPacketSize.remove(uuid);
+	}
 
-    protected void initialSyncStructuresToPlayerWithinRange(ServerPlayer player, int chunkRadius, int tickCounter)
-    {
-        UUID uuid = player.getUUID();
-        ChunkPos center = player.getLastSectionPos().chunk();
-        Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.level(), center, chunkRadius);
+	private void setPlayerInvalid(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
 
-        this.timeouts.remove(uuid);
-        this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
+		if (!this.invalidPlayers.contains(uuid))
+		{
+			this.invalidPlayers.add(uuid);
+		}
+	}
+
+	private boolean isPlayerInvalid(ServerPlayer player)
+	{
+		return this.invalidPlayers.contains(player.getUUID());
+	}
+
+	private void removeInvalidPlayer(ServerPlayer player)
+	{
+		this.invalidPlayers.remove(player.getUUID());
+	}
+
+	protected void initialSyncStructuresToPlayerWithinRange(ServerPlayer player, int chunkRadius, int tickCounter)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled())
+		{
+			return;
+		}
+
+		UUID uuid = player.getUUID();
+		ChunkPos center = player.getLastSectionPos().chunk();
+		Map<Structure, LongSet> references = this.getStructureReferencesWithinRange(player.level(), center, chunkRadius);
+
+		this.timeouts.remove(uuid);
+		this.playerPositons.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
 
 //        System.out.printf("initialSyncStructuresToPlayerWithinRange: references: %d\n", references.size());
-        this.sendStructures(player, references, tickCounter);
-    }
+		this.sendStructures(player, references, tickCounter);
+	}
 
-    protected void addChunkTimeoutIfHasReferences(final UUID uuid, LevelChunk chunk, final int tickCounter)
-    {
-        final ChunkPos pos = chunk.getPos();
+	protected void addChunkTimeoutIfHasReferences(final UUID uuid, LevelChunk chunk, final int tickCounter)
+	{
+		final ChunkPos pos = chunk.getPos();
 
-        if (this.chunkHasStructureReferences(pos.x(), pos.z(), chunk.getLevel()))
-        {
-            final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
+		if (this.chunkHasStructureReferences(pos.x(), pos.z(), chunk.getLevel()))
+		{
+			final Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
 //            System.out.printf("addChunkTimeoutIfHasReferences: %s\n", pos);
-            // Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
-            map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout.getValue()));
-        }
-    }
+			// Set the timeout so it's already expired and will cause the chunk to be sent on the next update tick
+			map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter - timeout.getValue()));
+		}
+	}
 
-    protected void checkForDimensionChange(ServerPlayer player)
-    {
-        UUID uuid = player.getUUID();
-        PlayerDimensionPosition playerPos = this.registeredPlayers.get(uuid);
+	protected void checkForDimensionChange(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
+		PlayerDimensionPosition playerPos = this.playerPositons.get(uuid);
 
-        if (playerPos == null || playerPos.dimensionChanged(player))
-        {
-            this.timeouts.remove(uuid);
-            this.registeredPlayers.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
-        }
-    }
+		if (playerPos == null || playerPos.dimensionChanged(player))
+		{
+			this.timeouts.remove(uuid);
+			this.playerPositons.computeIfAbsent(uuid, (u) -> new PlayerDimensionPosition(player)).setPosition(player);
+		}
+	}
 
-    protected void addOrRefreshTimeouts(final UUID uuid,
-                                        final Map<Structure, LongSet> references,
-                                        final int tickCounter)
-    {
+	protected void addOrRefreshTimeouts(final UUID uuid,
+	                                    final Map<Structure, LongSet> references,
+	                                    final int tickCounter)
+	{
 //        System.out.printf("addOrRefreshTimeouts: references: %d\n", references.size());
-        Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
+		Map<ChunkPos, Timeout> map = this.timeouts.computeIfAbsent(uuid, (u) -> new HashMap<>());
 
-        for (LongSet chunks : references.values())
-        {
-            for (Long chunkPosLong : chunks)
-            {
-                final ChunkPos pos = ChunkPos.unpack(chunkPosLong);
-                map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter)).setLastSync(tickCounter);
-            }
-        }
-    }
+		for (LongSet chunks : references.values())
+		{
+			for (Long chunkPosLong : chunks)
+			{
+				final ChunkPos pos = ChunkPos.unpack(chunkPosLong);
+				map.computeIfAbsent(pos, (p) -> new Timeout(tickCounter)).setLastSync(tickCounter);
+			}
+		}
+	}
 
-    protected void refreshTrackedChunks(ServerPlayer player, int tickCounter)
-    {
-        UUID uuid = player.getUUID();
-        Map<ChunkPos, Timeout> map = this.timeouts.get(uuid);
+	protected void refreshTrackedChunks(ServerPlayer player, int tickCounter)
+	{
+		UUID uuid = player.getUUID();
+		Map<ChunkPos, Timeout> map = this.timeouts.get(uuid);
 
-        if (map != null)
-        {
+		if (map != null)
+		{
 //            System.out.printf("refreshTrackedChunks: timeouts: %d\n", map.size());
-            this.sendAndRefreshExpiredStructures(player, map, tickCounter);
-        }
-    }
+			this.sendAndRefreshExpiredStructures(player, map, tickCounter);
+		}
+	}
 
-    protected boolean isOutOfRange(ChunkPos pos, ChunkPos center)
-    {
-        int chunkRadius = this.retainDistance;
+	protected boolean isOutOfRange(ChunkPos pos, ChunkPos center)
+	{
+		int chunkRadius = this.retainDistance;
 
-        return Math.abs(pos.x() - center.x()) > chunkRadius ||
-               Math.abs(pos.z() - center.z()) > chunkRadius;
-    }
+		return  Math.abs(pos.x() - center.x()) > chunkRadius ||
+				Math.abs(pos.z() - center.z()) > chunkRadius;
+	}
 
-    protected void sendAndRefreshExpiredStructures(ServerPlayer player, Map<ChunkPos, Timeout> map, int tickCounter)
-    {
-        Set<ChunkPos> positionsToUpdate = new HashSet<>();
+	protected void sendAndRefreshExpiredStructures(ServerPlayer player, Map<ChunkPos, Timeout> map, int tickCounter)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled())
+		{
+			return;
+		}
 
-        for (Map.Entry<ChunkPos, Timeout> entry : map.entrySet())
-        {
-            Timeout timeout = entry.getValue();
+		Set<ChunkPos> positionsToUpdate = new HashSet<>();
 
-            if (timeout.needsUpdate(tickCounter, this.timeout.getValue()))
-            {
-                positionsToUpdate.add(entry.getKey());
-            }
-        }
+		for (Map.Entry<ChunkPos, Timeout> entry : map.entrySet())
+		{
+			Timeout timeout = entry.getValue();
 
-        if (!positionsToUpdate.isEmpty())
-        {
-            ServerLevel world = player.level();
-            ChunkPos center = player.getLastSectionPos().chunk();
-            Map<Structure, LongSet> references = new HashMap<>();
+			if (timeout.needsUpdate(tickCounter, this.timeout.getValue()))
+			{
+				positionsToUpdate.add(entry.getKey());
+			}
+		}
 
-            for (ChunkPos pos : positionsToUpdate)
-            {
-                if (this.isOutOfRange(pos, center))
-                {
-                    map.remove(pos);
-                }
-                else
-                {
-                    this.getStructureReferencesFromChunk(pos.x(), pos.z(), world, references);
+		if (!positionsToUpdate.isEmpty())
+		{
+			ServerLevel world = player.level();
+			ChunkPos center = player.getLastSectionPos().chunk();
+			Map<Structure, LongSet> references = new HashMap<>();
 
-                    Timeout timeout = map.get(pos);
+			for (ChunkPos pos : positionsToUpdate)
+			{
+				if (this.isOutOfRange(pos, center))
+				{
+					map.remove(pos);
+				}
+				else
+				{
+					this.getStructureReferencesFromChunk(pos.x(), pos.z(), world, references);
 
-                    if (timeout != null)
-                    {
-                        timeout.setLastSync(tickCounter);
-                    }
-                }
-            }
+					Timeout timeout = map.get(pos);
+
+					if (timeout != null)
+					{
+						timeout.setLastSync(tickCounter);
+					}
+				}
+			}
 
 //            System.out.printf("sendAndRefreshExpiredStructures: positionsToUpdate: %d -> references: %d, to: %d\n", positionsToUpdate.size(), references.size(), this.timeout.getValue());
 
-            if (!references.isEmpty())
-            {
-                this.sendStructures(player, references, tickCounter);
-            }
-        }
-    }
+			if (!references.isEmpty())
+			{
+				this.sendStructures(player, references, tickCounter);
+			}
+		}
+	}
 
-    protected void getStructureReferencesFromChunk(int chunkX, int chunkZ, Level world, Map<Structure, LongSet> references)
-    {
-        if (!world.hasChunk(chunkX, chunkZ))
-        {
-            return;
-        }
+	protected void getStructureReferencesFromChunk(int chunkX, int chunkZ, Level world, Map<Structure, LongSet> references)
+	{
+		if (!world.hasChunk(chunkX, chunkZ)) { return; }
+		ChunkAccess chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
-        ChunkAccess chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
+		if (chunk == null) { return; }
 
-        if (chunk == null)
-        {
-            return;
-        }
+		for (Map.Entry<Structure, LongSet> entry : chunk.getAllReferences().entrySet())
+		{
+			Structure feature = entry.getKey();
+			LongSet startChunks = entry.getValue();
 
-        for (Map.Entry<Structure, LongSet> entry : chunk.getAllReferences().entrySet())
-        {
-            Structure feature = entry.getKey();
-            LongSet startChunks = entry.getValue();
+			if (!startChunks.isEmpty())
+			{
+				references.merge(feature, startChunks, (oldSet, entrySet) ->
+				{
+					LongOpenHashSet newSet = new LongOpenHashSet(oldSet);
+					newSet.addAll(entrySet);
+					return newSet;
+				});
+			}
+		}
+	}
 
-            if (!startChunks.isEmpty())
-            {
-                references.merge(feature, startChunks, (oldSet, entrySet) -> {
-                    LongOpenHashSet newSet = new LongOpenHashSet(oldSet);
-                    newSet.addAll(entrySet);
-                    return newSet;
-                });
-            }
-        }
-    }
+	protected boolean chunkHasStructureReferences(int chunkX, int chunkZ, Level world)
+	{
+		if (!world.hasChunk(chunkX, chunkZ)) { return false; }
 
-    protected boolean chunkHasStructureReferences(int chunkX, int chunkZ, Level world)
-    {
-        if (!world.hasChunk(chunkX, chunkZ))
-        {
-            return false;
-        }
+		ChunkAccess chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
 
-        ChunkAccess chunk = world.getChunk(chunkX, chunkZ, ChunkStatus.STRUCTURE_REFERENCES, false);
+		if (chunk == null) { return false; }
 
-        if (chunk == null)
-        {
-            return false;
-        }
+		for (Map.Entry<Structure, LongSet> entry : chunk.getAllReferences().entrySet())
+		{
+			if (!entry.getValue().isEmpty()) { return true; }
+		}
 
-        for (Map.Entry<Structure, LongSet> entry : chunk.getAllReferences().entrySet())
-        {
-            if (!entry.getValue().isEmpty())
-            {
-                return true;
-            }
-        }
+		return false;
+	}
 
-        return false;
-    }
+	protected Map<ChunkPos, StructureStart> getStructureStartsFromReferences(ServerLevel world, Map<Structure, LongSet> references)
+	{
+		Map<ChunkPos, StructureStart> starts = new HashMap<>();
 
-    protected Map<ChunkPos, StructureStart> getStructureStartsFromReferences(ServerLevel world, Map<Structure, LongSet> references)
-    {
-        Map<ChunkPos, StructureStart> starts = new HashMap<>();
+		for (Map.Entry<Structure, LongSet> entry : references.entrySet())
+		{
+			Structure structure = entry.getKey();
+			LongSet startChunks = entry.getValue();
+			LongIterator iter = startChunks.iterator();
 
-        for (Map.Entry<Structure, LongSet> entry : references.entrySet())
-        {
-            Structure structure = entry.getKey();
-            LongSet startChunks = entry.getValue();
-            LongIterator iter = startChunks.iterator();
+			while (iter.hasNext())
+			{
+				ChunkPos pos = ChunkPos.unpack(iter.nextLong());
 
-            while (iter.hasNext())
-            {
-                ChunkPos pos = ChunkPos.unpack(iter.nextLong());
+				if (!world.hasChunk(pos.x(), pos.z()))
+				{
+					continue;
+				}
 
-                if (!world.hasChunk(pos.x(), pos.z()))
-                {
-                    continue;
-                }
+				ChunkAccess chunk = world.getChunk(pos.x(), pos.z(), ChunkStatus.STRUCTURE_REFERENCES, false);
 
-                ChunkAccess chunk = world.getChunk(pos.x(), pos.z(), ChunkStatus.STRUCTURE_REFERENCES, false);
+				if (chunk == null)
+				{
+					continue;
+				}
 
-                if (chunk == null)
-                {
-                    continue;
-                }
+				StructureStart start = chunk.getStartForStructure(structure);
 
-                StructureStart start = chunk.getStartForStructure(structure);
-
-                if (start != null)
-                {
-                    starts.put(pos, start);
-                }
-            }
-        }
+				if (start != null)
+				{
+					starts.put(pos, start);
+				}
+			}
+		}
 
 //        System.out.printf("getStructureStartsFromReferences: references: %d -> starts: %d\n", references.size(), starts.size());
-        return starts;
-    }
+		return starts;
+	}
 
-    protected Map<Structure, LongSet> getStructureReferencesWithinRange(ServerLevel world, ChunkPos center, int chunkRadius)
-    {
-        Map<Structure, LongSet> references = new HashMap<>();
+	protected Map<Structure, LongSet> getStructureReferencesWithinRange(ServerLevel world, ChunkPos center, int chunkRadius)
+	{
+		Map<Structure, LongSet> references = new HashMap<>();
 
-        for (int cx = center.x() - chunkRadius; cx <= center.x() + chunkRadius; ++cx)
-        {
-            for (int cz = center.z() - chunkRadius; cz <= center.z() + chunkRadius; ++cz)
-            {
-                this.getStructureReferencesFromChunk(cx, cz, world, references);
-            }
-        }
+		for (int cx = center.x() - chunkRadius; cx <= center.x() + chunkRadius; ++cx)
+		{
+			for (int cz = center.z() - chunkRadius; cz <= center.z() + chunkRadius; ++cz)
+			{
+				this.getStructureReferencesFromChunk(cx, cz, world, references);
+			}
+		}
 
-        // System.out.printf("getStructureReferencesWithinRange: references: %d\n", references.size());
-        return references;
-    }
+		// System.out.printf("getStructureReferencesWithinRange: references: %d\n", references.size());
+		return references;
+	}
 
-    protected void sendStructures(ServerPlayer player,
-                                  Map<Structure, LongSet> references,
-                                  int tickCounter)
-    {
-        ServerLevel world = player.level();
-        Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
+	protected void sendStructures(ServerPlayer player,
+	                              Map<Structure, LongSet> references,
+	                              int tickCounter)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled()) { return; }
 
-        if (!starts.isEmpty())
-        {
-            this.addOrRefreshTimeouts(player.getUUID(), references, tickCounter);
+		if (!this.hasPermission(player))
+		{
+			Servux.debugLog("structure_bounding_boxes: Denying sendStructures to player {}, Insufficient Permissions.", player.getName().getString());
+			return;
+		}
 
-            ListTag structureList = this.getStructureList(starts, world);
+		ServerLevel world = player.level();
+		UUID uuid = player.getUUID();
+		Map<ChunkPos, StructureStart> starts = this.getStructureStartsFromReferences(world, references);
+
+		if (!starts.isEmpty())
+		{
+			this.addOrRefreshTimeouts(uuid, references, tickCounter);
+
+			ListData structureList = this.getStructureList(starts, world);
 //            System.out.printf("sendStructures: starts: %d -> structureList: %d. refs: %s\n", starts.size(), structureList.size(), references.keySet());
 
-            if (this.registeredPlayers.containsKey(player.getUUID()))
-            {
-                CompoundTag nbt = new CompoundTag();
-                nbt.put("Structures", structureList.copy());
-                HANDLER.encodeStructuresPacket(player, new ServuxStructuresPacket(ServuxStructuresPacket.Type.PACKET_S2C_STRUCTURE_DATA_START, nbt));
-            }
-        }
-    }
+			if (this.isPlayerRegistered(player) && this.playerPositons.containsKey(uuid))
+			{
+				CompoundData nbt = new CompoundData();
+				final int maxSize = this.maxPacketSize.getOrDefault(uuid, PacketSplitter.DEFAULT_MAX_RECEIVE_SIZE_C2S);
+				final int padding = 4096;
 
-    protected ListTag getStructureList(Map<ChunkPos, StructureStart> structures, ServerLevel world)
-    {
-        ListTag list = new ListTag();
-        StructurePieceSerializationContext ctx = StructurePieceSerializationContext.fromLevel(world);
+				if ((structureList.sizeInBytes() + padding) <= maxSize)
+				{
+					nbt.put("Structures", structureList.copy());
+					HANDLER.encodeServerData(player, ServuxStructuresPacket.StructuresS2CStart(nbt));
+				}
+				else
+				{
+					// This won't happen too often ...  But just to be safe?
+					ListData sendList = new ListData();
+					final int total = structureList.size();
 
-        for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
-        {
-            StructureStart start = entry.getValue();
+					for (int i = 0; i < total; i++)
+					{
+						CompoundData entry = structureList.getCompoundAt(i);
+						if (entry.isEmpty()) { continue; }
+						int currentSize = sendList.sizeInBytes() + padding;
+
+						// Check size
+						if (!sendList.isEmpty() && (currentSize + entry.sizeInBytes()) >= maxSize)
+						{
+							// Release.
+							nbt.put("Structures", sendList.copy());
+							HANDLER.encodeServerData(player, ServuxStructuresPacket.StructuresS2CStart(nbt));
+							sendList.clear();
+							nbt.remove("Structures");
+						}
+
+						sendList.add(entry.copy());
+					}
+
+					if (!sendList.isEmpty())
+					{
+						// Release.
+						nbt.put("Structures", sendList.copy());
+						HANDLER.encodeServerData(player, ServuxStructuresPacket.StructuresS2CStart(nbt));
+					}
+				}
+			}
+		}
+	}
+
+	protected ListData getStructureList(Map<ChunkPos, StructureStart> structures, ServerLevel world)
+	{
+		ListData list = new ListData();
+		StructurePieceSerializationContext ctx = StructurePieceSerializationContext.fromLevel(world);
+
+		for (Map.Entry<ChunkPos, StructureStart> entry : structures.entrySet())
+		{
+			StructureStart start = entry.getValue();
 			Structure structure = start.getStructure();
-			if (structure == null) continue;          // When using C2ME, this could return NULL ...
-            Identifier structureType = BuiltInRegistries.STRUCTURE_TYPE.getKey(structure.type());
-            boolean expandBox = structure.terrainAdaptation() != TerrainAdjustment.NONE;
+			if (structure == null)
+			{
+				continue;          // When using C2ME, this could return NULL ...
+			}
+			Identifier structureType = BuiltInRegistries.STRUCTURE_TYPE.getKey(structure.type());
+			boolean expandBox = structure.terrainAdaptation() != TerrainAdjustment.NONE;
 
-            if (structureType != null &&
-                this.shouldSendStructure(structureType))
-            {
-                ChunkPos pos = entry.getKey();
-                CompoundTag nbt = start.createTag(ctx, pos);
+			if (structureType != null && this.shouldSendStructure(structureType))
+			{
+				ChunkPos pos = entry.getKey();
+				CompoundData nbt = DataConverterNbt.fromVanillaCompound(start.createTag(ctx, pos));
 
-                // Should expand BB by 12
-                // This is Needed for things like Pillager Outposts
-                nbt.putBoolean("ExpandBox", expandBox);
-                list.add(nbt);
-            }
+				// Should expand BB by 12
+				// This is Needed for things like Pillager Outposts
+				nbt.putBoolean("ExpandBox", expandBox);
+				list.add(nbt);
+			}
 //            else
 //            {
 //                System.out.print("getStructureList: type = NULL\n");
 //            }
-        }
+		}
 
-        return list;
-    }
+		return list;
+	}
 
-    protected boolean shouldSendStructure(Identifier identifier)
-    {
+	protected boolean shouldSendStructure(Identifier identifier)
+	{
 //        System.out.printf("shouldSendStructure: [%s]\n", identifier.toString());
 
-        if (this.structureWhitelistEnabled.getValue())
-        {
-            return this.structureWhitelist.getValue().contains(identifier.toString());
-        }
-        if (this.structureBlacklistEnabled.getValue())
-        {
-            return !this.structureBlacklist.getValue().contains(identifier.toString());
-        }
+		if (this.structureWhitelistEnabled.getValue())
+		{
+			return this.structureWhitelist.getValue().contains(identifier.toString());
+		}
+		if (this.structureBlacklistEnabled.getValue())
+		{
+			return !this.structureBlacklist.getValue().contains(identifier.toString());
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public boolean hasPermission(ServerPlayer player)
-    {
-        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
-    }
-
-    @Override
-    public void onTickEndPre()
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void onTickEndPost()
-    {
-        // NO-OP
-    }
+	@Override
+	public boolean hasPermission(ServerPlayer player)
+	{
+		return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
+	}
 }

@@ -2,15 +2,17 @@ package fi.dy.masa.servux.util.data;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import net.minecraft.util.StringRepresentable;
 import com.google.common.collect.ImmutableList;
 import org.jetbrains.annotations.NotNull;
+
+import net.minecraft.util.StringRepresentable;
 
 public enum FileType implements StringRepresentable
 {
     INVALID,
     UNKNOWN,
     JSON,
+    TEXT,
     LITEMATICA_SCHEMATIC,
     SCHEMATICA_SCHEMATIC,
     SPONGE_SCHEMATIC,
@@ -41,6 +43,10 @@ public enum FileType implements StringRepresentable
             {
                 return JSON;
             }
+            else if (fileName.endsWith(".txt"))
+            {
+                return TEXT;
+            }
 
             return UNKNOWN;
     }
@@ -61,13 +67,14 @@ public enum FileType implements StringRepresentable
     {
         return switch (type)
         {
-            case LITEMATICA_SCHEMATIC -> ".litematic";
-            case SCHEMATICA_SCHEMATIC -> ".schematic";
-            case SPONGE_SCHEMATIC -> ".schem";
-            case VANILLA_STRUCTURE -> ".nbt";
-            case JSON -> ".json";
-            case INVALID -> ".invalid";
-            case UNKNOWN -> ".unknown";
+            case LITEMATICA_SCHEMATIC   -> ".litematic";
+            case SCHEMATICA_SCHEMATIC   -> ".schematic";
+            case SPONGE_SCHEMATIC       -> ".schem";
+            case VANILLA_STRUCTURE      -> ".nbt";
+            case JSON                   -> ".json";
+            case TEXT                   -> ".txt";
+            case INVALID                -> ".invalid";
+            case UNKNOWN                -> ".unknown";
         };
     }
 
@@ -80,6 +87,7 @@ public enum FileType implements StringRepresentable
             case SPONGE_SCHEMATIC       -> "sponge";
             case VANILLA_STRUCTURE      -> "vanilla_nbt";
             case JSON                   -> "JSON";
+            case TEXT                   -> "TEXT";
             case INVALID                -> "invalid";
             case UNKNOWN                -> "unknown";
         };

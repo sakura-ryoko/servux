@@ -3,23 +3,22 @@ package fi.dy.masa.servux.dataproviders;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.ApiStatus;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.servux.Reference;
@@ -28,6 +27,10 @@ import fi.dy.masa.servux.network.IPluginServerPlayHandler;
 import fi.dy.masa.servux.network.ServerPlayHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
+import fi.dy.masa.servux.scheduler.TaskContext;
+import fi.dy.masa.servux.scheduler.TaskScheduler;
+import fi.dy.masa.servux.scheduler.tasks.TaskPasteSchematicPerChunkBase;
+import fi.dy.masa.servux.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
@@ -38,402 +41,546 @@ import fi.dy.masa.servux.util.PasteLayerBehavior;
 import fi.dy.masa.servux.util.PermissionsUtil;
 import fi.dy.masa.servux.util.ReplaceBehavior;
 import fi.dy.masa.servux.util.StringUtils;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.ListData;
+import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
+import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
 import fi.dy.masa.servux.util.game.EntityUtils;
-import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class LitematicsDataProvider extends DataProviderBase
 {
-    public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
+	public static final LitematicsDataProvider INSTANCE = new LitematicsDataProvider();
 	private final static ServuxLitematicaHandler<ServuxLitematicaPacket.Payload> HANDLER = ServuxLitematicaHandler.getInstance();
-	private final CompoundTag metadata = new CompoundTag();
+	private final CompoundData metadata = new CompoundData();
 	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
-    private final ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", 0, 4, 0);
-    public ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
-    public ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
-    public ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
-    private final List<IServuxSetting<?>> settings = List.of(this.permissionLevel, this.pastePermissionLevel, this.fixRaiLRotations, this.fixStairMirror, this.fixChestMirror);
+	private final ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", 0, 4, 0);
+	private final ServuxBoolSetting playerTaskFeedback = new ServuxBoolSetting(this, "player_task_feedback", false);
+	public final ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
+	public final ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
+	public final ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
+	private final List<IServuxSetting<?>> settings = List.of(
+			this.permissionLevel,
+			this.pastePermissionLevel,
+			this.playerTaskFeedback,
+			this.fixRaiLRotations,
+			this.fixStairMirror,
+			this.fixChestMirror
+	);
 
-    private final List<UUID> registeredPlayers = new ArrayList<>();
-    private final List<UUID> invalidPlayers = new ArrayList<>();
-    private final SchematicBufferManager bufferManager = new SchematicBufferManager();
-    private final Path transmitDir;
+	private final List<UUID> registeredPlayers = new ArrayList<>();
+	private final List<UUID> invalidPlayers = new ArrayList<>();
+	private final SchematicBufferManager bufferManager = new SchematicBufferManager();
+	private final Path transmitDir;
 
-    protected LitematicsDataProvider()
-    {
-        super("litematic_data",
-                ServuxLitematicaHandler.CHANNEL_ID,
-                ServuxLitematicaPacket.PROTOCOL_VERSION,
-                0, Reference.MOD_ID+ ".provider.litematic_data",
-                "Litematics Data provider.");
+	protected LitematicsDataProvider()
+	{
+		super("litematic_data",
+		      ServuxLitematicaHandler.CHANNEL_ID,
+		      ServuxLitematicaPacket.PROTOCOL_VERSION,
+		      0, Reference.MOD_ID + ".provider.litematic_data",
+		      "Litematics Data provider.");
 
-        this.metadata.putString("name", this.getName());
-        this.metadata.putString("id", this.getNetworkChannel().toString());
-        this.metadata.putInt("version", this.getProtocolVersion());
-        this.metadata.putString("servux", Reference.MOD_STRING);
-        this.transmitDir = this.getTransmitDir();
-    }
+		this.metadata.putString("name", this.getName());
+		this.metadata.putString("id", this.getNetworkChannel().toString());
+		this.metadata.putInt("version", this.getProtocolVersion());
+		this.metadata.putString("servux", Reference.MOD_STRING);
 
-    @Override
-    public List<IServuxSetting<?>> getSettings()
-    {
-        return settings;
-    }
+		// Litematic-Transmit Dir
+		this.transmitDir = this.getTransmitDir();
+	}
 
-    @Override
-    public void registerHandler()
-    {
-        ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
+	@Override
+	public List<IServuxSetting<?>> getSettings()
+	{
+		return settings;
+	}
 
-        if (!this.isRegistered())
-        {
-            HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
-            this.setRegistered(true);
-        }
+	@Override
+	public void registerHandler()
+	{
+		ServerPlayHandler.getInstance().registerServerPlayHandler(HANDLER);
 
-        HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
-    }
+		if (!this.isRegistered())
+		{
+			HANDLER.registerPlayPayload(ServuxLitematicaPacket.Payload.ID, ServuxLitematicaPacket.Payload.CODEC, IPluginServerPlayHandler.BOTH_SERVER);
+			this.setRegistered(true);
+		}
 
-    @Override
-    public void unregisterHandler()
-    {
-        HANDLER.unregisterPlayReceiver();
-        ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
-    }
+		HANDLER.registerPlayReceiver(ServuxLitematicaPacket.Payload.ID, HANDLER::receivePlayPayload);
+	}
 
-    @Override
-    public IPluginServerPlayHandler<?> getPacketHandler()
-    {
-        return HANDLER;
-    }
+	@Override
+	public void unregisterHandler()
+	{
+		HANDLER.unregisterPlayReceiver();
+		ServerPlayHandler.getInstance().unregisterServerPlayHandler(HANDLER);
+	}
 
-    public SchematicBufferManager getBufferManager()
-    {
-        return this.bufferManager;
-    }
+	@Override
+	public IPluginServerPlayHandler<?> getPacketHandler()
+	{
+		return HANDLER;
+	}
 
-    public Path getTransmitDir()
-    {
-        Path dir = this.transmitDir != null ? this.transmitDir : Reference.DEFAULT_RUN_DIR.resolve("schematics").normalize();
+	public SchematicBufferManager getBufferManager()
+	{
+		return this.bufferManager;
+	}
 
-        if (!Files.exists(dir) || !Files.isDirectory(dir))
-        {
-            try
-            {
-                if (Files.exists(dir))
-                {
-                    Files.delete(dir);
-                }
+	public Path getTransmitDir()
+	{
+		Path dir = this.transmitDir != null ? this.transmitDir : Reference.DEFAULT_RUN_DIR.resolve("schematics").normalize();
 
-                Files.createDirectory(dir);
-                Servux.LOGGER.warn("getTransmitDir(): Created schematic transmit directory '{}'", dir.toAbsolutePath().toString());
-            }
-            catch (IOException err)
-            {
-                Servux.LOGGER.error("getTransmitDir(): Fatal exception creating schematic transmit dir '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
-                throw new RuntimeException(err);
-            }
-        }
+		if (!Files.exists(dir) || !Files.isDirectory(dir))
+		{
+			try
+			{
+				if (Files.exists(dir))
+				{
+					Files.delete(dir);
+				}
 
-        if (!Files.isWritable(dir))
-        {
-            Servux.LOGGER.error("Schematic transmit directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
-        }
+				Files.createDirectory(dir);
+				Servux.LOGGER.warn("getTransmitDir(): Created schematic transmit directory '{}'", dir.toAbsolutePath().toString());
+			}
+			catch (IOException err)
+			{
+				Servux.LOGGER.error("getTransmitDir(): Fatal exception creating schematic transmit dir '{}'; {}", dir.toAbsolutePath().toString(), err.getLocalizedMessage());
+				throw new RuntimeException(err);
+			}
+		}
 
-        Servux.debugLog("getTransmitDir(): Schematic transmit directory debug '{}'", dir.toAbsolutePath().toString());
+		if (!Files.isWritable(dir))
+		{
+			Servux.LOGGER.error("Schematic transmit directory '{}'; is not writeable.", dir.toAbsolutePath().toString());
+		}
 
-        return dir;
-    }
+		Servux.debugLog("getTransmitDir(): Schematic transmit directory debug '{}'", dir.toAbsolutePath().toString());
 
-    @Override
-    public boolean isPlayerRegistered(ServerPlayer player)
-    {
-        return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
-    }
+		return dir;
+	}
 
-    public void registerPlayer(ServerPlayer player)
-    {
-        if (!this.isEnabled()) return;
+	@Override
+	public boolean isPlayerRegistered(ServerPlayer player)
+	{
+		return this.registeredPlayers.contains(player.getUUID()) && !this.isPlayerInvalid(player);
+	}
 
-        if (!this.hasPermission(player))
-        {
-            // No Permission
-            Servux.debugLog("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
-            return;
-        }
+	@Override
+	public void register(ServerPlayer player, CompoundData tags)
+	{
+		if (!this.isEnabled()) { return; }
+		UUID uuid = player.getUUID();
 
-        Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().tryCollapseToString());
+		if (tags == null || tags.getIntOrDefault("version", -1) < this.getProtocolVersion())
+		{
+			Servux.LOGGER.warn("litematic_data: Denying access for player {}, Insufficient Protocol Version; This Server Requires: Version {}", player.getName().tryCollapseToString(), this.getProtocolVersion());
+			player.sendSystemMessage(StringUtils.translate("servux.general.error.protocol_version_too_low", this.getName()));
+			HANDLER.tickFailures(player);
+			return;
+		}
 
-        this.registeredPlayers.add(player.getUUID());
+		if (!this.hasPermission(player))
+		{
+			// No Permission
+			Servux.debugLog("litematic_data: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
+			return;
+		}
 
-        // Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
-        if (player.connection != null)
-        {
-            HANDLER.sendPlayPayload(player.connection, new ServuxLitematicaPacket.Payload(ServuxLitematicaPacket.MetadataResponse(this.metadata)));
-        }
-        else
-        {
-            HANDLER.sendPlayPayload(player, new ServuxLitematicaPacket.Payload(ServuxLitematicaPacket.MetadataResponse(this.metadata)));
-        }
-    }
+		CompoundData nbt = new CompoundData();
+		nbt.combine(this.metadata);
 
-    public void onPacketFailure(ServerPlayer player)
-    {
-        this.setPlayerInvalid(player);
-        this.registeredPlayers.remove(player.getUUID());
-    }
+		Servux.debugLog("litematic_data: sendMetadata to player {}", player.getName().tryCollapseToString());
+		this.registeredPlayers.add(uuid);
 
-    public void removePlayer(ServerPlayer player)
-    {
-        this.removeInvalidPlayer(player);
-        this.registeredPlayers.remove(player.getUUID());
-    }
+		// Sends Metadata handshake, it doesn't succeed the first time, so using networkHandler
+		if (player.connection != null)
+		{
+			HANDLER.sendPlayPayload(player.connection, new ServuxLitematicaPacket.Payload(ServuxLitematicaPacket.MetadataResponse(nbt)));
+		}
+		else
+		{
+			HANDLER.sendPlayPayload(player, new ServuxLitematicaPacket.Payload(ServuxLitematicaPacket.MetadataResponse(nbt)));
+		}
+	}
 
-    private void setPlayerInvalid(ServerPlayer player)
-    {
-        if (!this.invalidPlayers.contains(player.getUUID()))
-        {
-            this.invalidPlayers.add(player.getUUID());
-        }
-    }
+	@Override
+	public void unregister(ServerPlayer player, @Nullable CompoundData tags)
+	{
+		if (this.isEnabled())
+		{
+			Servux.debugLog("litematic_data: Unregistered player {}", player.getName().tryCollapseToString());
+		}
 
-    private boolean isPlayerInvalid(ServerPlayer player)
-    {
-        return this.invalidPlayers.contains(player.getUUID());
-    }
+		UUID uuid = player.getUUID();
 
-    private void removeInvalidPlayer(ServerPlayer player)
-    {
-        this.invalidPlayers.remove(player.getUUID());
-    }
+		HANDLER.resetFailures(this.getNetworkChannel(), player);
+		this.getBufferManager().removePlayer(player);
+		this.registeredPlayers.remove(uuid);
+	}
 
-    public void onBlockEntityRequest(ServerPlayer player, BlockPos pos)
-    {
-        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
-        {
-            return;
-        }
+	@Override
+	public void onPacketFailure(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
+		this.setPlayerInvalid(player);
+		this.registeredPlayers.remove(uuid);
+	}
 
-        //Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
+	@Override
+	public void removePlayer(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
+		this.removeInvalidPlayer(player);
+		this.registeredPlayers.remove(uuid);
+	}
 
-        BlockEntity be = player.level().getBlockEntity(pos);
-        CompoundTag nbt = be != null ? be.saveWithFullMetadata(player.registryAccess()) : new CompoundTag();
-        HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleBlockResponse(pos, nbt));
-    }
+	private void setPlayerInvalid(ServerPlayer player)
+	{
+		UUID uuid = player.getUUID();
 
-    public void onEntityRequest(ServerPlayer player, int entityId)
-    {
-        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
-        {
-            return;
-        }
+		if (!this.invalidPlayers.contains(uuid))
+		{
+			this.invalidPlayers.add(uuid);
+		}
+	}
 
-        //Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
-        Entity entity = player.level().getEntity(entityId);
+	private boolean isPlayerInvalid(ServerPlayer player)
+	{
+		return this.invalidPlayers.contains(player.getUUID());
+	}
 
-        if (entity != null)
-        {
-            NbtView view = NbtView.getWriter(player.level().registryAccess());
-            Identifier id = EntityType.getKey(entity.getType());
+	private void removeInvalidPlayer(ServerPlayer player)
+	{
+		this.invalidPlayers.remove(player.getUUID());
+	}
 
-            entity.saveWithoutId(view.getWriter());
-            CompoundTag nbt = view.readNbt();
+	@ApiStatus.Experimental
+	public void onTaskRequest(ServerPlayer player, CompoundData tags)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled() || tags == null || tags.isEmpty())
+		{
+			return;
+		}
 
-            if (nbt != null && id != null)
-            {
-                nbt.putString("id", id.toString());
-                HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
-            }
-        }
-    }
+		if (!this.hasPermission(player))
+		{
+			Servux.debugLog("litematic_data: Denying onTaskRequest from player {}, Insufficient Permissions.", player.getName().getString());
+			return;
+		}
 
-    public void onBulkEntityRequest(ServerPlayer player, ChunkPos chunkPos, CompoundTag req)
-    {
-        if (!this.hasPermission(player) || !this.isPlayerRegistered(player) || !this.isEnabled())
-        {
-            Servux.LOGGER.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
-            return;
-        }
-        if (req == null || req.isEmpty())
-        {
-//            Servux.LOGGER.warn("litematic_data: Litematic onBulkEntityRequest from player {}, request is empty.", player.getName().getString());
-            return;
-        }
+		// TODO (For things like Delete, Fill, etc)
+	}
 
-        ServerLevel world = player.level();
-        LevelChunk chunk = world != null ? world.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()) : null;
+	@ApiStatus.Experimental
+	public void onTaskCancel(ServerPlayer player, CompoundData tags)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled() || tags == null || tags.isEmpty())
+		{
+			return;
+		}
 
-        if (chunk == null)
-        {
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.chunk_not_loaded", chunkPos.toString()));
-            return;
-        }
+		if (!this.hasPermission(player))
+		{
+			Servux.debugLog("litematic_data: Denying onTaskCancel from player {}, Insufficient Permissions.", player.getName().getString());
+			return;
+		}
 
-        // TODO --> Split out the task this way (I should have done this under 0.3.0),
-        //  So we need to check if the "Task" is not included for now... (Wait for the updates to bake in)
-        if ((req.contains("Task") && req.getStringOr("Task", "").equals("BulkEntityRequest")) ||
-            !req.contains("Task"))
-        {
-            Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos {} to player {}", chunkPos.toString(), player.getName().tryCollapseToString());
+		// TODO (For things like Delete, Fill, etc)
+	}
 
-            long timeStart = System.currentTimeMillis();
-            ListTag tileList = new ListTag();
-            ListTag entityList = new ListTag();
-            int minY = req.getIntOr("minY", -64);
-            int maxY = req.getIntOr("maxY", 319);
-            BlockPos pos1 = new BlockPos(chunkPos.getMinBlockX(), minY, chunkPos.getMinBlockZ());
-            BlockPos pos2 = new BlockPos(chunkPos.getMaxBlockX(), maxY, chunkPos.getMaxBlockZ());
-            net.minecraft.world.phys.AABB bb = PositionUtils.createEnclosingAABB(pos1, pos2);
-            Set<BlockPos> teSet = chunk.getBlockEntitiesPos();
-            List<Entity> entities = world.getEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
+	public void onBlockEntityRequest(ServerPlayer player, BlockPos pos, @Nullable CompoundData tags)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled())
+		{
+			return;
+		}
 
-            for (BlockPos tePos : teSet)
-            {
-                if ((tePos.getX() < chunkPos.getMinBlockX() || tePos.getX() > chunkPos.getMaxBlockX()) ||
-                    (tePos.getZ() < chunkPos.getMinBlockZ() || tePos.getZ() > chunkPos.getMaxBlockZ()) ||
-                    (tePos.getY() < minY || tePos.getY() > maxY))
-                {
-                    continue;
-                }
+		if (!this.hasPermission(player))
+		{
+			Servux.debugLog("litematic_data: Denying onBlockEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
+			return;
+		}
 
-                BlockEntity be = world.getBlockEntity(tePos);
-                CompoundTag beTag = be != null ? be.saveWithFullMetadata(player.registryAccess()) : new CompoundTag();
-                tileList.add(beTag);
-            }
+		//Servux.logger.warn("LitematicsDataProvider#onBlockEntityRequest(): from player {}", player.getName().getLiteralString());
+		BlockEntity be = player.level().getBlockEntity(pos);
 
-            for (Entity entity : entities)
-            {
-                NbtView view = NbtView.getWriter(player.level().registryAccess());
-                Identifier id = EntityType.getKey(entity.getType());
+		if (be != null)
+		{
+			CompoundData nbt = DataConverterNbt.fromVanillaCompound(be.saveWithFullMetadata(player.registryAccess()));
+			HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleBlockResponse(pos, nbt));
+		}
+	}
 
-                entity.saveWithoutId(view.getWriter());
-                CompoundTag entTag = view.readNbt();
+	public void onEntityRequest(ServerPlayer player, int entityId, @Nullable CompoundData tags)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled())
+		{
+			return;
+		}
 
-                if (entTag != null && id != null)
-                {
-                    Vec3 posVec = new Vec3(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
-                    entTag.putString("id", id.toString());
+		if (!this.hasPermission(player))
+		{
+			Servux.debugLog("litematic_data: Denying onEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
+			return;
+		}
 
-                    NbtUtils.writeEntityPositionToTag(posVec, entTag);
-                    entTag.putInt("entityId", entity.getId());
-                    entityList.add(entTag);
-                }
-            }
+		//Servux.logger.warn("LitematicsDataProvider#onEntityRequest(): from player {} // entityId [{}]", player.getName().getLiteralString(), entityId);
+		Entity entity = player.level().getEntity(entityId);
 
-            CompoundTag output = new CompoundTag();
-            output.putString("Task", "BulkEntityReply");
-            output.put("TileEntities", tileList);
-            output.put("Entities", entityList);
-            output.putInt("chunkX", chunkPos.x());
-            output.putInt("chunkZ", chunkPos.z());
-            long timeElapsed = System.currentTimeMillis() - timeStart;
+		if (entity != null)
+		{
+			NbtView view = NbtView.getWriter(player.level().registryAccess());
+			Identifier id = EntityType.getKey(entity.getType());
 
-            HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
-            player.sendSystemMessage(
-                    StringUtils.translate("servux.litematics.feedback.bulk_request.acknowledge",
-                                          world.dimension().identifier().toString(), chunkPos.toString(),
-                                          tileList.size(), entityList.size(),
-                                          timeElapsed), false
-            );
-        }
-    }
+			entity.saveWithoutId(view.getWriter());
+			CompoundData nbt = view.readData();
 
-    public void handleClientPasteRequest(ServerPlayer player, int transactionId, CompoundTag tags)
-    {
-        if (!this.isPlayerRegistered(player) || !this.isEnabled())
-        {
-            return;
-        }
+			if (nbt != null && id != null)
+			{
+				if (entity.getType() == EntityTypes.PLAYER)
+				{
+					if (!EntitiesDataProvider.INSTANCE.hasPlayerInventoryPermission(player))
+					{
+						nbt.remove("Inventory");
+						nbt.put("Inventory", new ListData());
+					}
+					if (!EntitiesDataProvider.INSTANCE.hasPlayerEnderItemsPermission(player))
+					{
+						nbt.remove("EnderItems");
+						nbt.put("EnderItems", new ListData());
+					}
+				}
 
-        if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
-        {
-            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().tryCollapseToString());
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
-            return;
-        }
-        if (!player.isCreative())
-        {
-            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().tryCollapseToString());
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.creative_required"));
-            return;
-        }
+				nbt.putString("id", id.toString());
+				HANDLER.encodeServerData(player, ServuxLitematicaPacket.SimpleEntityResponse(entityId, nbt));
+			}
+		}
+	}
 
-        if (tags.getStringOr("Task", "").equals("LitematicaPaste"))
-        {
-            Servux.debugLog("litematic_data: Servux Paste request from player {}", player.getName().tryCollapseToString());
+	public void onBulkEntityRequest(ServerPlayer player, ChunkPos chunkPos, CompoundData req)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled() || req == null || req.isEmpty())
+		{
+			return;
+		}
 
-            long timeStart = System.currentTimeMillis();
-            SchematicPlacement placement = SchematicPlacement.createFromNbt(tags);
-            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getStringOr("ReplaceMode", ReplaceBehavior.NONE.name()));
-            PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getStringOr("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
-            LayerRange layerRange = tags.read("RenderLayerRange", LayerRange.CODEC).orElse(null);
-            placement.pasteTo(player.level(), replaceMode, layerBehavior, layerRange);
-            long timeElapsed = System.currentTimeMillis() - timeStart;
-            //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
-        }
-    }
+		if (!this.hasPermission(player))
+		{
+			Servux.LOGGER.warn("litematic_data: Denying Litematic onBulkEntityRequest from player {}, Insufficient Permissions.", player.getName().getString());
+			player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.insufficent"));
+			return;
+		}
 
-    public void handleClientPasteRequestPair(ServerPlayer player, int transactionId, Pair<LitematicaSchematic, CompoundTag> schemPair)
-    {
-        if (!this.isPlayerRegistered(player) || !this.isEnabled())
-        {
-            return;
-        }
+		UUID uuid = player.getUUID();
+		ServerLevel world = player.level();
+		LevelChunk chunk = world != null ? world.getChunkSource().getChunkNow(chunkPos.x(), chunkPos.z()) : null;
 
-        if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
-        {
-            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().tryCollapseToString());
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
-            return;
-        }
-        if (!player.isCreative())
-        {
-            Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().tryCollapseToString());
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.error.creative_required"));
-            return;
-        }
+		if (chunk == null)
+		{
+			if (this.shouldSendPlayerTaskFeedback())
+			{
+				player.sendSystemMessage(StringUtils.translate("servux.litematics.error.bulk_request.chunk_not_loaded", chunkPos.toString()));
+			}
 
-        if (schemPair.getLeft() != null)
-        {
-            Servux.debugLog("litematic_data: Servux Paste (Pair) request from player {}", player.getName().tryCollapseToString());
+			return;
+		}
 
-            long timeStart = System.currentTimeMillis();
-            CompoundTag tags = schemPair.getRight();
-            SchematicPlacement placement = SchematicPlacement.createFromNbt(schemPair.getLeft(), tags);
-            ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getStringOr("ReplaceMode", ReplaceBehavior.NONE.name()));
-            PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getStringOr("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
-            LayerRange layerRange = tags.read("RenderLayerRange", LayerRange.CODEC).orElse(null);
-            placement.pasteTo(player.level(), replaceMode, layerBehavior, layerRange);
-            long timeElapsed = System.currentTimeMillis() - timeStart;
-            //player.sendMessage(Text.of("Pasted §b"+placement.getName()+"§r to world §d"+player.getServerWorld().getRegistryKey().getValue().toString()+"§r in §a"+timeElapsed+"§rms."), false);
-            player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
-        }
-    }
+		if ((req.contains("Task", Constants.NBT.TAG_STRING) &&
+			req.getStringOrDefault("Task", "").equals("BulkEntityRequest")))
+		{
+			Servux.debugLog("litematic_data: Sending Bulk NBT Data for ChunkPos {} to player {}", chunkPos.toString(), player.getName().tryCollapseToString());
+			final long timeStart = System.currentTimeMillis();
+			ListData tileList = new ListData();
+			ListData entityList = new ListData();
+			final int minY = req.getIntOrDefault("minY", world.getMinY());
+			final int maxY = req.getIntOrDefault("maxY", world.getMaxY());
+			final BlockPos pos1 = new BlockPos(chunkPos.getMinBlockX(), minY, chunkPos.getMinBlockZ());
+			final BlockPos pos2 = new BlockPos(chunkPos.getMaxBlockX(), maxY, chunkPos.getMaxBlockZ());
+			AABB bb = PositionUtils.createEnclosingAABB(pos1, pos2);
+			Set<BlockPos> teSet = chunk.getBlockEntitiesPos();
+			List<Entity> entities = world.getEntities((Entity) null, bb, EntityUtils.NOT_PLAYER);
 
-    @Override
-    public boolean hasPermission(ServerPlayer player)
-    {
-        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
-    }
+			for (BlockPos tePos : teSet)
+			{
+				if ((tePos.getX() < chunkPos.getMinBlockX() || tePos.getX() > chunkPos.getMaxBlockX()) ||
+					(tePos.getZ() < chunkPos.getMinBlockZ() || tePos.getZ() > chunkPos.getMaxBlockZ()) ||
+					(tePos.getY() < minY || tePos.getY() > maxY))
+				{
+					continue;
+				}
+
+				BlockEntity be = world.getBlockEntity(tePos);
+
+				if (be != null)
+				{
+					CompoundData beTag = DataConverterNbt.fromVanillaCompound(be.saveWithFullMetadata(player.registryAccess()));
+					tileList.add(beTag);
+				}
+			}
+
+			for (Entity entity : entities)
+			{
+				NbtView view = NbtView.getWriter(player.level().registryAccess());
+				Identifier id = EntityType.getKey(entity.getType());
+
+				entity.saveWithoutId(view.getWriter());
+				CompoundData entTag = view.readData();
+
+				if (entTag != null && id != null)
+				{
+					Vec3 posVec = new Vec3(entity.getX() - pos1.getX(), entity.getY() - pos1.getY(), entity.getZ() - pos1.getZ());
+					entTag.putString("id", id.toString());
+
+//					NbtUtils.writeEntityPositionToTag(posVec, entTag);
+					DataTypeUtils.writeVec3dToListTag(entTag, posVec);
+					entTag.putInt("entityId", entity.getId());
+					entityList.add(entTag);
+				}
+			}
+
+			CompoundData output = new CompoundData();
+
+			output.putString("Task", "BulkEntityReply");
+			output.put("TileEntities", tileList.copy());
+			output.put("Entities", entityList.copy());
+			output.putInt("chunkX", chunkPos.x());
+			output.putInt("chunkZ", chunkPos.z());
+
+			HANDLER.encodeServerData(player, ServuxLitematicaPacket.ResponseS2CStart(output));
+
+			if (this.shouldSendPlayerTaskFeedback())
+			{
+				final long timeElapsed = System.currentTimeMillis() - timeStart;
+				player.sendSystemMessage(
+						StringUtils.translate("servux.litematics.feedback.bulk_request.acknowledge",
+						                      world.dimension().identifier().toString(), chunkPos.toString(),
+						                      tileList.size(), entityList.size(),
+						                      timeElapsed), false
+				);
+			}
+		}
+	}
+
+	public void handleClientPasteRequest(ServerPlayer player, CompoundData tags)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled() || tags == null || tags.isEmpty())
+		{
+			return;
+		}
+
+		if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
+		{
+			Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().tryCollapseToString());
+			player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
+			return;
+		}
+		if (!player.isCreative())
+		{
+			Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().tryCollapseToString());
+			player.sendSystemMessage(StringUtils.translate("servux.litematics.error.creative_required"));
+			return;
+		}
+
+		if (tags.getStringOrDefault("Task", "").equals("LitematicaPaste"))
+		{
+			Servux.debugLog("litematic_data: Servux Paste request from player {}", player.getName().tryCollapseToString());
+			final long timeStart = System.currentTimeMillis();
+			SchematicPlacement placement = SchematicPlacement.createFromData(tags);
+			ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getStringOrDefault("ReplaceMode", ReplaceBehavior.NONE.name()));
+			PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getStringOrDefault("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
+			LayerRange layerRange = tags.getCodec("RenderLayerRange", LayerRange.CODEC).orElse(null);
+			ServerLevel level = player.level();
+
+			// New Task Scheduler Paste
+			TaskContext ctx = new TaskContext(level.getServer(), level, player, placement.getName(), timeStart);
+			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior);
+			TaskScheduler.getInstance().scheduleTask(task, 1);
+//				placement.pasteTo(level, replaceMode, layerBehavior, layerRange);
+
+			if (this.shouldSendPlayerTaskFeedback())
+			{
+				final long timeElapsed = System.currentTimeMillis() - timeStart;
+				player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
+			}
+		}
+	}
+
+	public void handleClientPasteRequestPair(ServerPlayer player, Pair<LitematicaSchematic, CompoundData> schemPair)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled() ||
+			schemPair == null || schemPair.getLeft() == null ||
+			schemPair.getRight() == null || schemPair.getRight().isEmpty())
+		{
+			return;
+		}
+
+		if (!this.hasPermission(player) || !this.hasPermissionsForPaste(player))
+		{
+			Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Insufficient Permissions.", player.getName().tryCollapseToString());
+			player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_paste"));
+			return;
+		}
+		if (!player.isCreative())
+		{
+			Servux.debugLog("litematic_data: Denying Litematic Paste for player {}, Player is not in Creative Mode.", player.getName().tryCollapseToString());
+			player.sendSystemMessage(StringUtils.translate("servux.litematics.error.creative_required"));
+			return;
+		}
+
+		CompoundData tags = schemPair.getRight();
+
+		if (schemPair.getLeft() != null)
+		{
+			Servux.debugLog("litematic_data: Servux Paste (Pair) request from player {}", player.getName().tryCollapseToString());
+			final long timeStart = System.currentTimeMillis();
+			SchematicPlacement placement = SchematicPlacement.createFromData(schemPair.getLeft(), tags);
+			ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getStringOrDefault("ReplaceMode", ReplaceBehavior.NONE.name()));
+			PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getStringOrDefault("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
+			LayerRange layerRange = tags.getCodec("RenderLayerRange", LayerRange.CODEC).orElse(null);
+			ServerLevel level = player.level();
+
+			// New Task Scheduler Paste
+			TaskContext ctx = new TaskContext(level.getServer(), level, player, placement.getName(), timeStart);
+			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior);
+			TaskScheduler.getInstance().scheduleTask(task, 1);
+//			placement.pasteTo(level, replaceMode, layerBehavior, layerRange);
+
+			if (this.shouldSendPlayerTaskFeedback())
+			{
+				final long timeElapsed = System.currentTimeMillis() - timeStart;
+				player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
+			}
+		}
+		else
+		{
+			// LitematicaSchematic == null could also be sus ?
+			Servux.LOGGER.warn("handleClientPasteRequestPair: Error; Litematic provided by '{}' was null.", player.getName().tryCollapseToString());
+
+			if (this.shouldSendPlayerTaskFeedback())
+			{
+				player.sendSystemMessage(StringUtils.translate("servux.litematics.error.pasting"), false);
+			}
+		}
+	}
+
+	@Override
+	public boolean hasPermission(ServerPlayer player)
+	{
+		return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
+	}
 
 	public boolean hasPermissionsForPaste(ServerPlayer player)
 	{
 		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
 	}
 
-    @Override
-    public void onTickEndPre()
-    {
-        // NO-OP
-    }
-
-    @Override
-    public void onTickEndPost()
-    {
-        // NO-OP
-    }
+	public boolean shouldSendPlayerTaskFeedback()
+	{
+		return this.playerTaskFeedback.getValue();
+	}
 }

@@ -8,8 +8,7 @@ import java.util.Optional;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.util.SizeTracker;
 
-public class ByteData extends BaseData
-        implements NumberData
+public class ByteData extends BaseData implements NumberData
 {
     public static final String TAG_NAME = "TAG_Byte";
 
@@ -43,6 +42,12 @@ public class ByteData extends BaseData
     public boolean isEmpty()
     {
         return false;
+    }
+
+    @Override
+    public int sizeInBytes()
+    {
+        return Byte.BYTES;
     }
 
     @Override

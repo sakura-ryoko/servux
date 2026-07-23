@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.profiling.ProfilerFiller;
+
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.settings.IServuxSetting;

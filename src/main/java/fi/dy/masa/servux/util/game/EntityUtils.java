@@ -3,13 +3,12 @@ package fi.dy.masa.servux.util.game;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
@@ -18,12 +17,16 @@ import net.minecraft.world.phys.AABB;
 
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
+import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.ListData;
 import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class EntityUtils
 {
     public static final Predicate<Entity> NOT_PLAYER = entity -> (entity instanceof Player) == false;
+    private static final ThreadLocalRandom RAND = ThreadLocalRandom.current();
 
     public static boolean isCreativeMode(Player player)
     {
@@ -82,7 +85,7 @@ public class EntityUtils
     }
 
     @Nullable
-    private static Entity createEntityFromNBTSingle(CompoundTag nbt, Level world)
+    private static Entity createEntityFromDataSingle(CompoundData nbt, Level world)
     {
         try
         {
@@ -92,7 +95,21 @@ public class EntityUtils
             if (optional.isPresent())
             {
                 Entity entity = optional.get();
-                entity.setUUID(UUID.randomUUID());
+
+                if (!nbt.containsLenient("UUID"))
+                {
+                    entity.setUUID(UUID.randomUUID());
+                }
+
+                if (nbt.contains("LastEntityID", Constants.NBT.TAG_INT))
+                {
+                    entity.setId(nbt.getIntOrDefault("LastEntityID", -1));
+                }
+                else
+                {
+                    entity.setId(RAND.nextInt(50000, Integer.MAX_VALUE));
+                }
+
                 return entity;
             }
         }
@@ -108,9 +125,9 @@ public class EntityUtils
      * @return ()
      */
     @Nullable
-    public static Entity createEntityAndPassengersFromNBT(CompoundTag nbt, Level world)
+    public static Entity createEntityAndPassengersFromData(CompoundData nbt, Level world)
     {
-        Entity entity = createEntityFromNBTSingle(nbt, world);
+        Entity entity = createEntityFromDataSingle(nbt, world);
 
         if (entity == null)
         {
@@ -118,13 +135,13 @@ public class EntityUtils
         }
         else
         {
-            if (nbt.contains("Passengers"))
+            if (nbt.containsList("Passengers", Constants.NBT.TAG_COMPOUND))
             {
-                ListTag taglist = nbt.getListOrEmpty("Passengers");
+                ListData taglist = nbt.getList("Passengers");
 
                 for (int i = 0; i < taglist.size(); ++i)
                 {
-                    Entity passenger = createEntityAndPassengersFromNBT(taglist.getCompoundOrEmpty(i), world);
+                    Entity passenger = createEntityAndPassengersFromData(taglist.getCompoundAt(i), world);
 
                     if (passenger != null)
                     {

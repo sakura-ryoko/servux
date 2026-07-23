@@ -12,12 +12,15 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.storage.*;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.mixin.nbt.IMixinTagValueInput;
 import fi.dy.masa.servux.mixin.nbt.IMixinTagValueOutput;
+import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 
 /**
  * This is a wrapper to the new "ReadView / WriteView" that Mojang made; and provides a seamless way to extract an NbtCompound to / from it.
@@ -42,6 +45,14 @@ public class NbtView
     {
         NbtView wrapper = new NbtView();
         wrapper.reader = TagValueInput.create(log, registry, nbt);
+        wrapper.writer = null;
+        return wrapper;
+    }
+
+    public static NbtView getReader(CompoundData data, @Nonnull RegistryAccess registry)
+    {
+        NbtView wrapper = new NbtView();
+        wrapper.reader = TagValueInput.create(log, registry, DataConverterNbt.toVanillaCompound(data));
         wrapper.writer = null;
         return wrapper;
     }
@@ -118,6 +129,22 @@ public class NbtView
     }
 
     /**
+     * Return whatever NbtCompound that this Reader/Writer contains; but as a CompoundData
+     * @return ()
+     */
+    public @Nullable CompoundData readData()
+    {
+        CompoundTag nbt = this.readNbt();
+
+        if (nbt != null)
+        {
+            return DataConverterNbt.fromVanillaCompound(nbt);
+        }
+
+        return null;
+    }
+
+    /**
      * Copy an NbtCompound into a Writer instance.  NOTE; that a Reader instance is Read-Only.
      * @param nbtIn ()
      * @return ()
@@ -132,10 +159,31 @@ public class NbtView
 
         for (String key : nbtIn.keySet())
         {
-            Objects.requireNonNull(this.readNbt()).put(key, nbtIn.get(key));
+            Tag entry = nbtIn.get(key);
+
+            if (entry != null)
+            {
+                Objects.requireNonNull(this.readNbt()).put(key, entry);
+            }
         }
 
         return this;
+    }
+
+    /**
+     * Copy an CompoundData into a Writer instance.  NOTE; that a Reader instance is Read-Only.
+     * @param dataIn ()
+     * @return ()
+     */
+    public @Nullable NbtView writeData(@Nonnull CompoundData dataIn)
+    {
+        if (this.isReader())
+        {
+            LOGGER.error("writeData(): Called from a Reader Context");
+            return null;
+        }
+
+        return this.writeNbt(DataConverterNbt.toVanillaCompound(dataIn));
     }
 
     /**
