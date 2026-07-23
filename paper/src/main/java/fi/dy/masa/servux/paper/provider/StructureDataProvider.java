@@ -431,7 +431,7 @@ public class StructureDataProvider
         return ((CraftWorld) world).getHandle();
     }
 
-    private static int currentTick()
+    public static int currentTick()
     {
         return level(Bukkit.getWorlds().get(0)).getServer().getTickCount();
     }
