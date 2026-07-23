@@ -38,6 +38,12 @@ tasks.withType(JavaCompile).configureEach {
 java {
 	sourceCompatibility = JavaVersion.VERSION_25
 	targetCompatibility = JavaVersion.VERSION_25
+
+	// Pin the toolchain to Java 25 so Gradle locates/provisions the correct JDK
+	// regardless of the shell's JAVA_HOME. This matches Minecraft 26.1+ requirements.
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
 }
 
 processResources {
