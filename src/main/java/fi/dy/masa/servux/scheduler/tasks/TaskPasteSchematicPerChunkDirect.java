@@ -10,7 +10,6 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.ChunkPos;
 
 import fi.dy.masa.servux.scheduler.TaskContext;
-import fi.dy.masa.servux.scheduler.TaskFeedbackListener;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.util.PasteLayerBehavior;
 import fi.dy.masa.servux.util.ReplaceBehavior;
@@ -21,22 +20,23 @@ import fi.dy.masa.servux.util.position.LayerRange;
 public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunkBase
 {
 	private final ArrayListMultimap<ChunkPos, SchematicPlacement> placementsPerChunk = ArrayListMultimap.create();
-	private final TaskFeedbackListener listener;
 
 	public TaskPasteSchematicPerChunkDirect(TaskContext context,
-	                                        Collection<SchematicPlacement> placements, LayerRange range,
-	                                        ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior)
+	                                        final Collection<SchematicPlacement> placements,
+	                                        final LayerRange layerRange,
+	                                        final ReplaceBehavior replaceBehavior,
+	                                        final PasteLayerBehavior layerBehavior,
+	                                        final boolean changedBlockOnly,
+	                                        final boolean ignoreBlocks,
+	                                        final boolean ignoreEntities)
 	{
-		super(context, placements, range, replaceBehavior, layerBehavior);
-
-		this.listener = new TaskFeedbackListener();
-		this.setCompletionListener(this.listener);
+		super(context, placements, layerRange, replaceBehavior, layerBehavior, changedBlockOnly, ignoreBlocks, ignoreEntities);
 	}
 
 	@Override
 	public boolean canExecute()
 	{
-		return super.canExecute() && this.context.world() != null;
+		return super.canExecute() && this.context.level() != null;
 	}
 
 	@Override
@@ -50,6 +50,12 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
 	@Override
 	public boolean execute(ProfilerFiller profiler)
 	{
+		// Nothing to do
+		if (this.ignoreBlocks && this.ignoreEntities)
+		{
+			return true;
+		}
+
 		profiler.push("per_chunk_paste");
 
 		MinecraftServer server = this.context.server();
@@ -89,7 +95,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
 			return true;
 		}
 
-//		this.updateInfoHudLines();
+		this.updateInfoHudLines();
 
 		profiler.pop();
 		return false;
@@ -105,7 +111,7 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
 
 		for (SchematicPlacement placement : placements)
 		{
-			if (SchematicPlacingUtils.placeToWorldWithinChunk(this.context.world(), pos, placement, this.replaceBehavior, this.layerBehavior, this.layerRange, false))
+			if (SchematicPlacingUtils.placeToWorldWithinChunk(this.context.level(), pos, placement, this.replaceBehavior, this.layerBehavior, this.layerRange, false))
 			{
 				this.placementsPerChunk.remove(pos, placement);
 			}
@@ -119,11 +125,11 @@ public class TaskPasteSchematicPerChunkDirect extends TaskPasteSchematicPerChunk
 	{
 		if (this.finished)
 		{
-			this.listener.addFeedback(StringUtils.translate("servux.scheduler.task.paste.successful"));
+			this.context.listener().addFeedback(StringUtils.translate("servux.scheduler.task.paste.successful"));
 		}
 		else
 		{
-			this.listener.addFeedback(StringUtils.translate("servux.scheduler.task.paste.failed"));
+			this.context.listener().addFeedback(StringUtils.translate("servux.scheduler.task.paste.failed"));
 		}
 
 //		InfoHud.getInstance().removeInfoHudRenderer(this, false);

@@ -13,7 +13,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 
 import fi.dy.masa.servux.scheduler.TaskContext;
-import fi.dy.masa.servux.scheduler.TaskFeedbackListener;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.selection.AreaSelection;
 import fi.dy.masa.servux.schematic.selection.Box;
@@ -31,7 +30,6 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 	@Nullable private final String fileName;
 	private final LitematicaSchematic.SchematicSaveInfo info;
 	private final boolean overrideFile;
-	private final TaskFeedbackListener listener;
 
 	public TaskSaveSchematic(TaskContext context, LitematicaSchematic schematic, AreaSelection area, LitematicaSchematic.SchematicSaveInfo info)
 	{
@@ -49,22 +47,20 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 		this.subRegions = area.getAllSubRegions();
 		this.info = info;
 		this.overrideFile = overrideFile;
-		this.listener = new TaskFeedbackListener();
 
-		this.setCompletionListener(this.listener);
 		this.addPerChunkBoxes(area.getAllSubRegionBoxes());
 	}
 
 	@Override
 	protected boolean canProcessChunk(ChunkPos pos)
 	{
-		return this.areSurroundingChunksLoaded(pos, this.context.world(), 0);
+		return this.areSurroundingChunksLoaded(pos, this.context.level(), 0);
 	}
 
 	@Override
 	protected boolean processChunk(ChunkPos pos)
 	{
-		Level world = this.context.world();
+		Level world = this.context.level();
 		ImmutableMap<@NotNull String, @NotNull IntBoundingBox> volumes = PositionUtils.getBoxesWithinChunk(pos.x(), pos.z(), this.subRegions);
 		this.schematic.takeBlocksFromWorldWithinChunk(world, volumes, this.subRegions, this.info);
 
@@ -81,7 +77,8 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 	{
 		if (this.finished)
 		{
-			long time = System.currentTimeMillis();
+			final long time = System.currentTimeMillis();
+
 			this.schematic.getMetadata().setTimeCreated(time);
 			this.schematic.getMetadata().setTimeModified(time);
 			this.schematic.getMetadata().setTotalBlocks(this.schematic.getTotalBlocksReadFromWorld());
@@ -90,19 +87,19 @@ public class TaskSaveSchematic extends TaskProcessChunkBase
 			{
 				if (this.schematic.writeToFile(this.dir, this.fileName, this.overrideFile))
 				{
-					this.listener.addFeedback(StringUtils.translate("servux.scheduler.task.save.successful", this.fileName));
+					this.context.listener().addFeedback(StringUtils.translate("servux.scheduler.task.save.successful", this.fileName));
 				}
 				else
 				{
-					this.listener.addFeedback(StringUtils.translate("servux.scheduler.task.save.failed", this.fileName));
+					this.context.listener().addFeedback(StringUtils.translate("servux.scheduler.task.save.failed", this.fileName));
 				}
 			}
 		}
 		else
 		{
-			this.listener.addFeedback(StringUtils.translate("servux.scheduler.task.save.interrupted"));
+			this.context.listener().addFeedback(StringUtils.translate("servux.scheduler.task.save.interrupted"));
 		}
 
-		this.notifyListener();
+		super.onStop();
 	}
 }

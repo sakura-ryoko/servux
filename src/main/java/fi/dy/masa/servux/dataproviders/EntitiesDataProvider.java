@@ -177,6 +177,7 @@ public class EntitiesDataProvider extends DataProviderBase
 		UUID uuid = player.getUUID();
 		this.removeInvalidPlayer(player);
 		this.registeredPlayers.remove(uuid);
+		HANDLER.resetFailures(this.getNetworkChannel(), player);
 	}
 
     private void setPlayerInvalid(ServerPlayer player)

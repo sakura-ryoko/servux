@@ -7,6 +7,7 @@ import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -15,6 +16,7 @@ import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
 import fi.dy.masa.servux.util.data.tag.BaseData;
 import fi.dy.masa.servux.util.data.tag.CompoundData;
+import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.servux.util.data.tag.util.DataByteBufUtils;
 
 public class ServuxTweaksPacket implements IServerPayloadData
@@ -185,6 +187,28 @@ public class ServuxTweaksPacket implements IServerPayloadData
 		return this.nbt;
 	}
 
+	@Deprecated
+	private static CompoundData fromVanilla(CompoundTag nbt)
+	{
+		if (nbt != null && !nbt.isEmpty())
+		{
+			return DataConverterNbt.fromVanillaCompound(nbt);
+		}
+
+		return new CompoundData();
+	}
+
+	@Deprecated
+	private CompoundTag toVanilla()
+	{
+		if (this.nbt != null && !this.nbt.isEmpty())
+		{
+			return DataConverterNbt.toVanillaCompound(this.nbt);
+		}
+
+		return new CompoundTag();
+	}
+
 	public FriendlyByteBuf getBuffer()
 	{
 		return this.buffer;
@@ -269,7 +293,20 @@ public class ServuxTweaksPacket implements IServerPayloadData
 					Servux.LOGGER.error("ServuxTweaksPacket#toPacket: error writing buffer data to packet: [{}]", e.getLocalizedMessage());
 				}
 			}
-			case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA, PACKET_C2S_UNREGISTER_REPLY ->
+			case PACKET_C2S_METADATA_REQUEST, PACKET_S2C_METADATA ->
+			{
+				// Write NBT
+				try
+				{
+                    output.writeNbt(this.toVanilla());
+//					DataByteBufUtils.toByteBuf(output, this.nbt, "");
+				}
+				catch (Exception e)
+				{
+					Servux.LOGGER.error("ServuxTweaksPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+				}
+			}
+			case PACKET_C2S_UNREGISTER_REPLY ->
 			{
 				// Write NBT
 				try
@@ -279,7 +316,7 @@ public class ServuxTweaksPacket implements IServerPayloadData
 				}
 				catch (Exception e)
 				{
-					Servux.LOGGER.error("ServuxTweaksPacket#toPacket: error writing NBT to packet: [{}]", e.getLocalizedMessage());
+					Servux.LOGGER.error("ServuxTweaksPacket#toPacket: error writing Data to packet: [{}]", e.getLocalizedMessage());
 				}
 			}
 			default -> Servux.LOGGER.error("ServuxTweaksPacket#toPacket: Unknown packet type!");
@@ -387,12 +424,12 @@ public class ServuxTweaksPacket implements IServerPayloadData
 				// Read Nbt
 				try
 				{
-					Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
-//                    return ServuxTweaksPacket.MetadataRequest(input.readNbt());
-					if (opt.isPresent())
-					{
-						return ServuxTweaksPacket.MetadataRequest((CompoundData) opt.get());
-					}
+//					Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
+                    return ServuxTweaksPacket.MetadataRequest(fromVanilla(input.readNbt()));
+//					if (opt.isPresent())
+//					{
+//						return ServuxTweaksPacket.MetadataRequest((CompoundData) opt.get());
+//					}
 				}
 				catch (Exception e)
 				{
@@ -404,12 +441,12 @@ public class ServuxTweaksPacket implements IServerPayloadData
 				// Read Nbt
 				try
 				{
-					Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
-//                    return ServuxTweaksPacket.MetadataResponse(input.readNbt());
-					if (opt.isPresent())
-					{
-						return ServuxTweaksPacket.MetadataResponse((CompoundData) opt.get());
-					}
+//					Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
+                    return ServuxTweaksPacket.MetadataResponse(fromVanilla(input.readNbt()));
+//					if (opt.isPresent())
+//					{
+//						return ServuxTweaksPacket.MetadataResponse((CompoundData) opt.get());
+//					}
 				}
 				catch (Exception e)
 				{

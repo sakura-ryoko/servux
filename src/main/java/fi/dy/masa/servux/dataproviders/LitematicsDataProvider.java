@@ -17,6 +17,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -29,10 +30,13 @@ import fi.dy.masa.servux.network.packet.ServuxLitematicaHandler;
 import fi.dy.masa.servux.network.packet.ServuxLitematicaPacket;
 import fi.dy.masa.servux.scheduler.TaskContext;
 import fi.dy.masa.servux.scheduler.TaskScheduler;
+import fi.dy.masa.servux.scheduler.tasks.TaskDeleteArea;
+import fi.dy.masa.servux.scheduler.tasks.TaskFillArea;
 import fi.dy.masa.servux.scheduler.tasks.TaskPasteSchematicPerChunkBase;
 import fi.dy.masa.servux.scheduler.tasks.TaskPasteSchematicPerChunkDirect;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
+import fi.dy.masa.servux.schematic.selection.Box;
 import fi.dy.masa.servux.schematic.transmit.SchematicBufferManager;
 import fi.dy.masa.servux.settings.IServuxSetting;
 import fi.dy.masa.servux.settings.ServuxBoolSetting;
@@ -42,9 +46,11 @@ import fi.dy.masa.servux.util.PermissionsUtil;
 import fi.dy.masa.servux.util.ReplaceBehavior;
 import fi.dy.masa.servux.util.StringUtils;
 import fi.dy.masa.servux.util.data.Constants;
+import fi.dy.masa.servux.util.data.tag.BaseData;
 import fi.dy.masa.servux.util.data.tag.CompoundData;
 import fi.dy.masa.servux.util.data.tag.ListData;
 import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
+import fi.dy.masa.servux.util.data.tag.util.DataOps;
 import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
 import fi.dy.masa.servux.util.game.EntityUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
@@ -237,6 +243,7 @@ public class LitematicsDataProvider extends DataProviderBase
 		UUID uuid = player.getUUID();
 		this.removeInvalidPlayer(player);
 		this.registeredPlayers.remove(uuid);
+		HANDLER.resetFailures(this.getNetworkChannel(), player);
 	}
 
 	private void setPlayerInvalid(ServerPlayer player)
@@ -270,10 +277,144 @@ public class LitematicsDataProvider extends DataProviderBase
 		if (!this.hasPermission(player))
 		{
 			Servux.debugLog("litematic_data: Denying onTaskRequest from player {}, Insufficient Permissions.", player.getName().getString());
+			player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_tasks"));
+
 			return;
 		}
 
-		// TODO (For things like Delete, Fill, etc)
+		final String taskType = tags.getStringOrDefault("Task", "");
+		final long timeStart = System.currentTimeMillis();
+		ServerLevel level = player.level();
+
+		switch (taskType)
+		{
+			case "Fill" ->
+			{
+				ListData list = tags.getListOrDefault("Boxes", Constants.NBT.TAG_COMPOUND, new ListData());
+				List<Box> boxes = new ArrayList<>();
+
+				for (int i = 0; i < list.size(); i++)
+				{
+					BaseData entry = list.get(i);
+
+					if (entry != null && !entry.isEmpty())
+					{
+						Box.CODEC.parse(DataOps.INSTANCE, entry).resultOrPartial().ifPresent(boxes::add);
+					}
+				}
+
+				BlockState fillState = tags.getCodec("FillState", BlockState.CODEC).orElse(null);
+
+				if (fillState == null)
+				{
+					if (this.shouldSendPlayerTaskFeedback())
+					{
+						player.sendSystemMessage(StringUtils.translate("servux.litematics.task.fill_area.no_fill_state"));
+					}
+
+					return;
+				}
+
+				if (boxes.isEmpty())
+				{
+					if (this.shouldSendPlayerTaskFeedback())
+					{
+						player.sendSystemMessage(StringUtils.translate("servux.litematics.task.fill_area.no_boxes"));
+					}
+
+					return;
+				}
+
+				final BlockState replaceState = tags.getCodec("ReplaceState", BlockState.CODEC).orElse(null);
+				final boolean removeEntities = tags.getBooleanOrDefault("RemoveEntities", false);
+				TaskContext ctx = new TaskContext(level.getServer(), level, player, "Fill", timeStart);
+				TaskFillArea task = new TaskFillArea(ctx, boxes, fillState, replaceState, removeEntities);
+				TaskScheduler.getInstance().scheduleTask(task, 1);
+			}
+			case "Delete" ->
+			{
+				ListData list = tags.getListOrDefault("Boxes", Constants.NBT.TAG_COMPOUND, new ListData());
+				List<Box> boxes = new ArrayList<>();
+
+				for (int i = 0; i < list.size(); i++)
+				{
+					BaseData entry = list.get(i);
+
+					if (entry != null && !entry.isEmpty())
+					{
+						Box.CODEC.parse(DataOps.INSTANCE, entry).resultOrPartial().ifPresent(boxes::add);
+					}
+				}
+
+				if (boxes.isEmpty())
+				{
+					if (this.shouldSendPlayerTaskFeedback())
+					{
+						player.sendSystemMessage(StringUtils.translate("servux.litematics.task.fill_area.no_boxes"));
+					}
+
+					return;
+				}
+
+				final boolean removeEntities = tags.getBooleanOrDefault("RemoveEntities", false);
+				TaskContext ctx = new TaskContext(level.getServer(), level, player, "Delete", timeStart);
+				TaskDeleteArea task = new TaskDeleteArea(ctx, boxes, removeEntities);
+				TaskScheduler.getInstance().scheduleTask(task, 1);
+			}
+			// TODO (Ensure Safe Transmit)
+//			case "Save" ->
+//			{
+//				AreaSelection selection = tags.getCodec("AreaSelection", AreaSelection.CODEC).orElse(null);
+//				final boolean visibleOnly = tags.getBooleanOrDefault("VisibleOnly", false);
+//				final boolean ignoreEntities = tags.getBooleanOrDefault("IgnoreEntities", false);
+//
+//				if (selection == null)
+//				{
+//					if (this.shouldSendPlayerTaskFeedback())
+//					{
+//						player.sendSystemMessage(StringUtils.translate("servux.litematics.task.save.no_area_selection"));
+//					}
+//
+//					return;
+//				}
+//
+//				final String fileName = UUID.randomUUID().toString() + ".litematic";
+//				final LitematicaSchematic.SchematicSaveInfo info = new LitematicaSchematic.SchematicSaveInfo(visibleOnly, ignoreEntities);
+//				LitematicaSchematic schematic = LitematicaSchematic.createEmptySchematic(selection, player.getName().getString());
+//
+//				Runnable whenDone = () ->
+//				{
+//				};
+//
+//				TaskContext ctx = new TaskContext(level.getServer(), level, player, "Save", timeStart, whenDone);
+//				TaskSaveSchematic task = new TaskSaveSchematic(ctx, this.transmitDir, fileName, schematic, selection, info, false);
+//				TaskScheduler.getInstance().scheduleTask(task, 1);
+//			}
+			default ->
+			{
+				if (this.shouldSendPlayerTaskFeedback())
+				{
+					player.sendSystemMessage(StringUtils.translate("servux.litematics.task.invalid"));
+				}
+			}
+		}
+	}
+
+	public void onTaskStatusSync(ServerPlayer player, CompoundData tags)
+	{
+		if (!this.isPlayerRegistered(player) || !this.isEnabled() ||
+			tags == null || tags.isEmpty())
+		{
+			return;
+		}
+
+		if (!this.hasPermission(player))
+		{
+			Servux.debugLog("litematic_data: Denying onTaskStatusSync to player {}, Insufficient Permissions.", player.getName().getString());
+			return;
+		}
+
+		HANDLER.encodeServerData(player, ServuxLitematicaPacket.TaskStatusSync(tags));
 	}
 
 	@ApiStatus.Experimental
@@ -494,19 +635,22 @@ public class LitematicsDataProvider extends DataProviderBase
 			ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getStringOrDefault("ReplaceMode", ReplaceBehavior.NONE.name()));
 			PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getStringOrDefault("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
 			LayerRange layerRange = tags.getCodec("RenderLayerRange", LayerRange.CODEC).orElse(null);
+			final boolean changedBlocksOnly = tags.getBooleanOrDefault("ChangedBlocksOnly", false);
+			final boolean ignoreBlocks = tags.getBooleanOrDefault("IgnoreBlocks", false);
+			final boolean ignoreEntities = tags.getBooleanOrDefault("IgnoreEntities", false);
 			ServerLevel level = player.level();
 
 			// New Task Scheduler Paste
 			TaskContext ctx = new TaskContext(level.getServer(), level, player, placement.getName(), timeStart);
-			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior);
+			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior, changedBlocksOnly, ignoreBlocks, ignoreEntities);
 			TaskScheduler.getInstance().scheduleTask(task, 1);
 //				placement.pasteTo(level, replaceMode, layerBehavior, layerRange);
 
-			if (this.shouldSendPlayerTaskFeedback())
-			{
-				final long timeElapsed = System.currentTimeMillis() - timeStart;
-				player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
-			}
+//			if (this.shouldSendPlayerTaskFeedback())
+//			{
+//				final long timeElapsed = System.currentTimeMillis() - timeStart;
+//				player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
+//			}
 		}
 	}
 
@@ -542,19 +686,22 @@ public class LitematicsDataProvider extends DataProviderBase
 			ReplaceBehavior replaceMode = ReplaceBehavior.fromStringStatic(tags.getStringOrDefault("ReplaceMode", ReplaceBehavior.NONE.name()));
 			PasteLayerBehavior layerBehavior = PasteLayerBehavior.fromStringStatic(tags.getStringOrDefault("PasteLayerBehavior", PasteLayerBehavior.ALL.name()));
 			LayerRange layerRange = tags.getCodec("RenderLayerRange", LayerRange.CODEC).orElse(null);
+			final boolean changedBlocksOnly = tags.getBooleanOrDefault("ChangedBlocksOnly", false);
+			final boolean ignoreBlocks = tags.getBooleanOrDefault("IgnoreBlocks", false);
+			final boolean ignoreEntities = tags.getBooleanOrDefault("IgnoreEntities", false);
 			ServerLevel level = player.level();
 
 			// New Task Scheduler Paste
 			TaskContext ctx = new TaskContext(level.getServer(), level, player, placement.getName(), timeStart);
-			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior);
+			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior, changedBlocksOnly, ignoreBlocks, ignoreEntities);
 			TaskScheduler.getInstance().scheduleTask(task, 1);
 //			placement.pasteTo(level, replaceMode, layerBehavior, layerRange);
 
-			if (this.shouldSendPlayerTaskFeedback())
-			{
-				final long timeElapsed = System.currentTimeMillis() - timeStart;
-				player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
-			}
+//			if (this.shouldSendPlayerTaskFeedback())
+//			{
+//				final long timeElapsed = System.currentTimeMillis() - timeStart;
+//				player.sendSystemMessage(StringUtils.translate("servux.litematics.success.pasted", placement.getName(), player.level().dimension().identifier().toString(), timeElapsed), false);
+//			}
 		}
 		else
 		{

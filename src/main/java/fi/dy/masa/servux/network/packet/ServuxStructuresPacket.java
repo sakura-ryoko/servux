@@ -1,20 +1,19 @@
 package fi.dy.masa.servux.network.packet;
 
-import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.network.IServerPayloadData;
-import fi.dy.masa.servux.util.data.tag.BaseData;
 import fi.dy.masa.servux.util.data.tag.CompoundData;
-import fi.dy.masa.servux.util.data.tag.util.DataByteBufUtils;
+import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 
 public class ServuxStructuresPacket implements IServerPayloadData
 {
@@ -122,6 +121,28 @@ public class ServuxStructuresPacket implements IServerPayloadData
 		return this.nbt;
 	}
 
+	@Deprecated
+	private static CompoundData fromVanilla(CompoundTag nbt)
+	{
+		if (nbt != null && !nbt.isEmpty())
+		{
+			return DataConverterNbt.fromVanillaCompound(nbt);
+		}
+
+		return new CompoundData();
+	}
+
+	@Deprecated
+	private CompoundTag toVanilla()
+	{
+		if (this.nbt != null && !this.nbt.isEmpty())
+		{
+			return DataConverterNbt.toVanillaCompound(this.nbt);
+		}
+
+		return new CompoundTag();
+	}
+
 	public FriendlyByteBuf getBuffer()
 	{
 		return this.buffer;
@@ -160,8 +181,8 @@ public class ServuxStructuresPacket implements IServerPayloadData
 				// Write NBT
 				try
 				{
-//                    output.writeNbt(this.nbt);
-					DataByteBufUtils.toByteBuf(output, this.nbt, "");
+                    output.writeNbt(this.toVanilla());
+//					DataByteBufUtils.toByteBuf(output, this.nbt, "");
 				}
 				catch (Exception e)
 				{
@@ -203,12 +224,12 @@ public class ServuxStructuresPacket implements IServerPayloadData
 				{
 					try
 					{
-						Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
-
-						if (opt.isPresent())
-						{
-							return ServuxStructuresPacket.MetadataReply((CompoundData) opt.get());
-						}
+//						Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
+						return ServuxStructuresPacket.MetadataReply(fromVanilla(input.readNbt()));
+//						if (opt.isPresent())
+//						{
+//							return ServuxStructuresPacket.MetadataReply((CompoundData) opt.get());
+//						}
 					}
 					catch (Exception e)
 					{
@@ -219,12 +240,12 @@ public class ServuxStructuresPacket implements IServerPayloadData
 				{
 					try
 					{
-						Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
-
-						if (opt.isPresent())
-						{
-							return ServuxStructuresPacket.StructuresRegister((CompoundData) opt.get());
-						}
+//						Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
+						return ServuxStructuresPacket.StructuresRegister(fromVanilla(input.readNbt()));
+//						if (opt.isPresent())
+//						{
+//							return ServuxStructuresPacket.StructuresRegister((CompoundData) opt.get());
+//						}
 					}
 					catch (Exception e)
 					{
@@ -235,12 +256,12 @@ public class ServuxStructuresPacket implements IServerPayloadData
 				{
 					try
 					{
-						Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
-
-						if (opt.isPresent())
-						{
-							return ServuxStructuresPacket.StructuresUnregister((CompoundData) opt.get());
-						}
+//						Optional<BaseData> opt = DataByteBufUtils.fromByteBuf(input);
+						return ServuxStructuresPacket.StructuresUnregister(fromVanilla(input.readNbt()));
+//						if (opt.isPresent())
+//						{
+//							return ServuxStructuresPacket.StructuresUnregister((CompoundData) opt.get());
+//						}
 					}
 					catch (Exception e)
 					{
@@ -274,12 +295,13 @@ public class ServuxStructuresPacket implements IServerPayloadData
 		{
 			this.nbt = new CompoundData();
 		}
-		if (this.buffer != null && this.buffer.readableBytes() > 0)
-		{
-			this.buffer.clear();
-			this.buffer = new FriendlyByteBuf(Unpooled.buffer());
-		}
+//		if (this.buffer != null && this.buffer.readableBytes() > 0)
+//		{
+//			this.buffer.clear();
+//			this.buffer = new FriendlyByteBuf(Unpooled.buffer());
+//		}
 
+		this.clearPacket();
 		this.packetType = null;
 	}
 

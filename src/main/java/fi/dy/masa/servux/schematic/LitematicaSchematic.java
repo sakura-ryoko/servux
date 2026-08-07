@@ -243,6 +243,54 @@ public class LitematicaSchematic
 		return schematic;
 	}
 
+	/**
+	 * Creates an empty schematic with all the maps and lists and containers already created.
+	 * This is intended to be used for the chunk-wise schematic creation.
+	 *
+	 * @param area
+	 * @param author
+	 * @return
+	 */
+	public static LitematicaSchematic createEmptySchematic(AreaSelection area, String author)
+	{
+		List<Box> boxes = PositionUtils.getValidBoxes(area);
+
+		if (boxes.isEmpty())
+		{
+//			InfoUtils.showGuiOrInGameMessage(MessageType.ERROR, StringUtils.translate("litematica.error.schematic.create.no_selections"));
+			return null;
+		}
+
+		LitematicaSchematic schematic = new LitematicaSchematic((Path) null);
+		schematic.setSubRegionPositions(boxes, area.getEffectiveOrigin());
+		schematic.setSubRegionSizes(boxes);
+		schematic.metadata.setAuthor(author);
+		schematic.metadata.setName(area.getName());
+		schematic.metadata.setRegionCount(boxes.size());
+		schematic.metadata.setTotalVolume(PositionUtils.getTotalVolume(boxes));
+		schematic.metadata.setEnclosingSize(PositionUtils.getEnclosingAreaSize(boxes));
+		schematic.metadata.setSchematicVersion(SCHEMATIC_VERSION);
+		schematic.metadata.setMinecraftDataVersion(MINECRAFT_DATA_VERSION);
+		schematic.metadata.setFileType(FileType.LITEMATICA_SCHEMATIC);
+
+		for (Box box : boxes)
+		{
+			String regionName = box.getName();
+			BlockPos size = box.getSize();
+			final int sizeX = Math.abs(size.getX());
+			final int sizeY = Math.abs(size.getY());
+			final int sizeZ = Math.abs(size.getZ());
+			LitematicaBlockStateContainer container = new LitematicaBlockStateContainer(sizeX, sizeY, sizeZ);
+			schematic.blockContainers.put(regionName, container);
+			schematic.tileEntities.put(regionName, new HashMap<>());
+			schematic.entities.put(regionName, new ArrayList<>());
+			schematic.pendingBlockTicks.put(regionName, new HashMap<>());
+			schematic.pendingFluidTicks.put(regionName, new HashMap<>());
+		}
+
+		return schematic;
+	}
+
 	public boolean placeToWorld(Level world, SchematicPlacement schematicPlacement, boolean notifyNeighbors)
 	{
 		return this.placeToWorld(world, schematicPlacement, notifyNeighbors, false);

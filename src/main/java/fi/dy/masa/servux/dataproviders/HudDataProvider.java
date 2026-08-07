@@ -479,13 +479,16 @@ public class HudDataProvider extends DataProviderBase
 		this.removeInvalidPlayer(player);
 		this.registeredPlayers.remove(uuid);
 		this.loggerPlayers.remove(uuid);
+		HANDLER.resetFailures(this.getNetworkChannel(), player);
 	}
 
 	private void setPlayerInvalid(ServerPlayer player)
 	{
-		if (!this.invalidPlayers.contains(player.getUUID()))
+		UUID uuid = player.getUUID();
+
+		if (!this.invalidPlayers.contains(uuid))
 		{
-			this.invalidPlayers.add(player.getUUID());
+			this.invalidPlayers.add(uuid);
 		}
 	}
 

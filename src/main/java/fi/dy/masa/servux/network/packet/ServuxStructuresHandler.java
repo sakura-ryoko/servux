@@ -86,7 +86,8 @@ public abstract class ServuxStructuresHandler<T extends CustomPacketPayload> imp
 				// Only NBT type packets are received from MiniHUD, not using PacketSplitter
 				case PACKET_C2S_STRUCTURES_REGISTER ->
 				{
-					Servux.debugLog("decodeStructuresPacket(): received Structures Register from player {}", player.getName().tryCollapseToString());
+					Servux.debugLog("ServuxStructuresHandler#decodeServerData(): received Structures Register from player {}", player.getName().tryCollapseToString());
+
 					if (StructureDataProvider.INSTANCE.isPlayerRegistered(player))
 					{
 						StructureDataProvider.INSTANCE.unregister(player, packet.getCompound());
@@ -94,14 +95,13 @@ public abstract class ServuxStructuresHandler<T extends CustomPacketPayload> imp
 
 					StructureDataProvider.INSTANCE.register(player, packet.getCompound());
 				}
-				// Keep handler here for now, but send it to the HudDataProvider
 				case PACKET_C2S_STRUCTURES_UNREGISTER ->
 				{
-					Servux.debugLog("decodeStructuresPacket(): received Structures Un-Register from player {}", player.getName().tryCollapseToString());
+					Servux.debugLog("ServuxStructuresHandler#decodeServerData(): received Structures Un-Register from player {}", player.getName().tryCollapseToString());
 					StructureDataProvider.INSTANCE.unregister(player, packet.getCompound());
 				}
 				default ->
-						Servux.LOGGER.warn("decodeStructuresPacket(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().tryCollapseToString(), packet.getTotalSize());
+						Servux.LOGGER.warn("ServuxStructuresHandler#decodeServerData(): Invalid packetType '{}' from player: {}, of size in bytes: {}.", packet.getPacketType(), player.getName().tryCollapseToString(), packet.getTotalSize());
 			}
 		}
 	}
@@ -195,6 +195,8 @@ public abstract class ServuxStructuresHandler<T extends CustomPacketPayload> imp
 			}
 
 			StructureDataProvider.INSTANCE.onPacketFailure(player);
+			// For this one, we'll need to reset the failures after they are unregistered...  Because you know ... design
+			this.resetFailures(CHANNEL_ID, player);
 		}
 		else
 		{

@@ -137,9 +137,10 @@ public class StructureDataProvider extends DataProviderBase
 
 			PlayerList playerList = server.getPlayerList();
 			List<ServerPlayer> players = playerList.getPlayers();
+//			final long now = System.currentTimeMillis();
+
 			this.retainDistance = playerList.getViewDistance() + 2;
 			//this.lastTick = tickCounter;
-
 			profiler.popPush(this.getName() + "_players");
 
 			for (ServerPlayer player : players)
@@ -196,6 +197,7 @@ public class StructureDataProvider extends DataProviderBase
 	public void register(ServerPlayer player, CompoundData tags)
 	{
 		if (!this.isEnabled()) { return; }
+		UUID uuid = player.getUUID();
 
 		if (tags == null || tags.getIntOrDefault("version", -1) < this.getProtocolVersion())
 		{
@@ -209,42 +211,38 @@ public class StructureDataProvider extends DataProviderBase
 		{
 			// No Permission
 			Servux.debugLog("structure_bounding_boxes: Denying access for player {}, Insufficient Permissions", player.getName().tryCollapseToString());
-			player.sendSystemMessage(StringUtils.translate("servux.general.error.protocol_version_too_low", this.getName()));
 			return;
 		}
 
-		UUID uuid = player.getUUID();
+		this.removeInvalidPlayer(player);
 
-		if (!this.registeredPlayers.contains(uuid))
+		MinecraftServer server = player.createCommandSourceStack().getServer();
+		int tickCounter = server.getTickCount();
+		final int maxPacketSize = tags.getIntOrDefault("max_receive_s2c", PacketSplitter.DEFAULT_MAX_RECEIVE_SIZE_S2C);
+		CompoundData nbt = new CompoundData();
+
+		this.registeredPlayers.add(uuid);
+		this.playerPositons.put(uuid, new PlayerDimensionPosition(player));
+		this.maxPacketSize.put(uuid, maxPacketSize);
+		nbt.combine(this.metadata);
+
+		Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().tryCollapseToString());
+		if (player.connection != null)
 		{
-			MinecraftServer server = player.createCommandSourceStack().getServer();
-			int tickCounter = server.getTickCount();
-			final int maxPacketSize = tags.getIntOrDefault("max_receive_s2c", PacketSplitter.DEFAULT_MAX_RECEIVE_SIZE_S2C);
-			CompoundData nbt = new CompoundData();
-
-			this.registeredPlayers.add(uuid);
-			this.playerPositons.put(uuid, new PlayerDimensionPosition(player));
-			this.maxPacketSize.put(uuid, maxPacketSize);
-			nbt.combine(this.metadata);
-
-			Servux.debugLog("structure_bounding_boxes: sending Metadata to player {}", player.getName().tryCollapseToString());
-			if (player.connection != null)
-			{
-				HANDLER.sendPlayPayload(player.connection, new ServuxStructuresPacket.Payload(ServuxStructuresPacket.MetadataReply(nbt)));
-			}
-			else
-			{
-				HANDLER.sendPlayPayload(player, new ServuxStructuresPacket.Payload(ServuxStructuresPacket.MetadataReply(nbt)));
-			}
-
-			this.initialSyncStructuresToPlayerWithinRange(player, server.getPlayerList().getViewDistance() + 2, tickCounter);
+			HANDLER.sendPlayPayload(player.connection, new ServuxStructuresPacket.Payload(ServuxStructuresPacket.MetadataReply(nbt)));
 		}
+		else
+		{
+			HANDLER.sendPlayPayload(player, new ServuxStructuresPacket.Payload(ServuxStructuresPacket.MetadataReply(nbt)));
+		}
+
+		this.initialSyncStructuresToPlayerWithinRange(player, server.getPlayerList().getViewDistance() + 2, tickCounter);
 	}
 
 	@Override
 	public void unregister(ServerPlayer player, CompoundData tags)
 	{
-		if (this.isEnabled() || tags == null)
+		if (this.isEnabled())
 		{
 			Servux.debugLog("structure_bounding_boxes: Unregistered player {}", player.getName().tryCollapseToString());
 		}
@@ -278,6 +276,7 @@ public class StructureDataProvider extends DataProviderBase
 		this.playerPositons.remove(uuid);
 		this.timeouts.remove(uuid);
 		this.maxPacketSize.remove(uuid);
+		HANDLER.resetFailures(this.getNetworkChannel(), player);
 	}
 
 	private void setPlayerInvalid(ServerPlayer player)
@@ -302,7 +301,7 @@ public class StructureDataProvider extends DataProviderBase
 
 	protected void initialSyncStructuresToPlayerWithinRange(ServerPlayer player, int chunkRadius, int tickCounter)
 	{
-		if (!this.isPlayerRegistered(player) || !this.isEnabled())
+		if (!this.isEnabled() || !this.isPlayerRegistered(player))
 		{
 			return;
 		}
@@ -334,6 +333,11 @@ public class StructureDataProvider extends DataProviderBase
 
 	protected void checkForDimensionChange(ServerPlayer player)
 	{
+		if (!this.isEnabled() || !this.isPlayerRegistered(player))
+		{
+			return;
+		}
+
 		UUID uuid = player.getUUID();
 		PlayerDimensionPosition playerPos = this.playerPositons.get(uuid);
 
@@ -383,7 +387,7 @@ public class StructureDataProvider extends DataProviderBase
 
 	protected void sendAndRefreshExpiredStructures(ServerPlayer player, Map<ChunkPos, Timeout> map, int tickCounter)
 	{
-		if (!this.isPlayerRegistered(player) || !this.isEnabled())
+		if (!this.isEnabled() || !this.isPlayerRegistered(player))
 		{
 			return;
 		}
@@ -533,7 +537,10 @@ public class StructureDataProvider extends DataProviderBase
 	                              Map<Structure, LongSet> references,
 	                              int tickCounter)
 	{
-		if (!this.isPlayerRegistered(player) || !this.isEnabled()) { return; }
+		if (!this.isEnabled() || !this.isPlayerRegistered(player))
+		{
+			return;
+		}
 
 		if (!this.hasPermission(player))
 		{
