@@ -129,7 +129,7 @@
     "servux.litematics.error.creative_required": "§cServux: Litematic粘贴操作需要创造模式。§r",
     "servux.litematics.error.insufficent_for_paste": "§cServux: Litematic粘贴操作权限不足。§r",
     "servux.litematics.error.insufficent_for_tasks": "§cServux：执行 Litematic 任务操作的权限不足。§r",
-    "servux.litematics.error.pasting": "Servux：§c加载 Litematic 时出错；无法粘贴。§r",
+    "servux.litematics.error.pasting": "§cServux：加载 Litematic 时出错；无法粘贴。§r",
     "servux.litematics.error.schematic_load.cant_read_file": "无法读取原理图文件「%s」（文件不存在或权限问题）",
     "servux.litematics.error.schematic_load.no_schematic_version_information": "原理图未包含版本信息，无法安全加载！",
     "servux.litematics.error.schematic_load.unsupported_schematic_version": "不支持或未来版本原理图格式（版本 %d）",

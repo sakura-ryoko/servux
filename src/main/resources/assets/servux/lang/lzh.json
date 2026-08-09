@@ -129,7 +129,7 @@
     "servux.litematics.error.creative_required": "§cServux: Creative Mode is required for the Litematic paste operation.§r",
     "servux.litematics.error.insufficent_for_paste": "§cServux: Insufficient Permissions for the Litematic paste operation.§r",
     "servux.litematics.error.insufficent_for_tasks": "§cServux: Insufficient Permissions for Litematic task operations.§r",
-    "servux.litematics.error.pasting": "Servux: §cError loading Litematic; unable to paste.§r",
+    "servux.litematics.error.pasting": "§cServux: Error loading Litematic; unable to paste.§r",
     "servux.litematics.error.schematic_load.cant_read_file": "弗能閲是蜃圖案「%s」（未存抑權不達）",
     "servux.litematics.error.schematic_load.no_schematic_version_information": "The schematic doesn't have version information, and can't be safely loaded!",
     "servux.litematics.error.schematic_load.unsupported_schematic_version": "Unsupported or future schematic version '%d'",
