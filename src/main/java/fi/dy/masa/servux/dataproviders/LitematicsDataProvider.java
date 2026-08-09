@@ -285,6 +285,7 @@ public class LitematicsDataProvider extends DataProviderBase
 		final String taskType = tags.getStringOrDefault("Task", "");
 		final long timeStart = System.currentTimeMillis();
 		ServerLevel level = player.level();
+		Servux.debugLog("litematic_data: Received TaskRequest from player {} of type: [{}]", player.getName().getString(), taskType);
 
 		switch (taskType)
 		{
@@ -327,9 +328,10 @@ public class LitematicsDataProvider extends DataProviderBase
 
 				final BlockState replaceState = tags.getCodec("ReplaceState", BlockState.CODEC).orElse(null);
 				final boolean removeEntities = tags.getBooleanOrDefault("RemoveEntities", false);
+				final int interval = tags.getIntOrDefault("Interval", 1);
 				TaskContext ctx = new TaskContext(level.getServer(), level, player, "Fill", timeStart);
 				TaskFillArea task = new TaskFillArea(ctx, boxes, fillState, replaceState, removeEntities);
-				TaskScheduler.getInstance().scheduleTask(task, 1);
+				TaskScheduler.getInstance().scheduleTask(task, interval);
 			}
 			case "Delete" ->
 			{
@@ -357,9 +359,10 @@ public class LitematicsDataProvider extends DataProviderBase
 				}
 
 				final boolean removeEntities = tags.getBooleanOrDefault("RemoveEntities", false);
+				final int interval = tags.getIntOrDefault("Interval", 1);
 				TaskContext ctx = new TaskContext(level.getServer(), level, player, "Delete", timeStart);
 				TaskDeleteArea task = new TaskDeleteArea(ctx, boxes, removeEntities);
-				TaskScheduler.getInstance().scheduleTask(task, 1);
+				TaskScheduler.getInstance().scheduleTask(task, interval);
 			}
 			// TODO (Ensure Safe Transmit)
 //			case "Save" ->
@@ -638,12 +641,13 @@ public class LitematicsDataProvider extends DataProviderBase
 			final boolean changedBlocksOnly = tags.getBooleanOrDefault("ChangedBlocksOnly", false);
 			final boolean ignoreBlocks = tags.getBooleanOrDefault("IgnoreBlocks", false);
 			final boolean ignoreEntities = tags.getBooleanOrDefault("IgnoreEntities", false);
+			final int interval = tags.getIntOrDefault("Interval", 1);
 			ServerLevel level = player.level();
 
 			// New Task Scheduler Paste
 			TaskContext ctx = new TaskContext(level.getServer(), level, player, placement.getName(), timeStart);
 			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior, changedBlocksOnly, ignoreBlocks, ignoreEntities);
-			TaskScheduler.getInstance().scheduleTask(task, 1);
+			TaskScheduler.getInstance().scheduleTask(task, interval);
 //				placement.pasteTo(level, replaceMode, layerBehavior, layerRange);
 
 //			if (this.shouldSendPlayerTaskFeedback())
@@ -689,12 +693,13 @@ public class LitematicsDataProvider extends DataProviderBase
 			final boolean changedBlocksOnly = tags.getBooleanOrDefault("ChangedBlocksOnly", false);
 			final boolean ignoreBlocks = tags.getBooleanOrDefault("IgnoreBlocks", false);
 			final boolean ignoreEntities = tags.getBooleanOrDefault("IgnoreEntities", false);
+			final int interval = tags.getIntOrDefault("Interval", 1);
 			ServerLevel level = player.level();
 
 			// New Task Scheduler Paste
 			TaskContext ctx = new TaskContext(level.getServer(), level, player, placement.getName(), timeStart);
 			TaskPasteSchematicPerChunkBase task = new TaskPasteSchematicPerChunkDirect(ctx, Collections.singletonList(placement), layerRange, replaceMode, layerBehavior, changedBlocksOnly, ignoreBlocks, ignoreEntities);
-			TaskScheduler.getInstance().scheduleTask(task, 1);
+			TaskScheduler.getInstance().scheduleTask(task, interval);
 //			placement.pasteTo(level, replaceMode, layerBehavior, layerRange);
 
 //			if (this.shouldSendPlayerTaskFeedback())

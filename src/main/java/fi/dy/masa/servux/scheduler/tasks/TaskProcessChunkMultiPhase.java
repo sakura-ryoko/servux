@@ -2,9 +2,7 @@ package fi.dy.masa.servux.scheduler.tasks;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Queue;
 import javax.annotation.Nullable;
-import com.google.common.collect.Queues;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.ParseResults;
@@ -36,9 +34,9 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 	protected long taskStartTimeForCurrentTick;
 	protected boolean shouldEnableFeedback;
 
-	protected final Queue<String> queuedCommands = Queues.newArrayDeque();
+//	protected final Queue<String> queuedCommands = Queues.newArrayDeque();
 	protected Runnable initTask = this::initPhaseStartProbe;
-	protected Runnable probeTask = this::probePhase;
+//	protected Runnable probeTask = this::probePhase;
 	protected Runnable waitForChunkTask = this::fetchNextChunk;
 	protected Runnable processBoxBlocksTask;
 	protected Runnable processBoxEntitiesTask;
@@ -46,7 +44,7 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 	public enum TaskPhase
 	{
 		INIT,
-		GAME_RULE_PROBE,
+//		GAME_RULE_PROBE,
 		WAIT_FOR_CHUNKS,
 		PROCESS_BOX_BLOCKS,
 		PROCESS_BOX_ENTITIES,
@@ -70,12 +68,12 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 			this.initTask.run();
 		}
 
-		if (this.phase == TaskPhase.GAME_RULE_PROBE)
-		{
-			this.probeTask.run();
-			profiler.pop();
-			return false;
-		}
+//		if (this.phase == TaskPhase.GAME_RULE_PROBE)
+//		{
+//			this.probeTask.run();
+//			profiler.pop();
+//			return false;
+//		}
 
 		if (this.currentChunkPos != null && this.canProcessChunk(this.currentChunkPos) == false)
 		{
@@ -135,7 +133,9 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 	{
 		this.checkCommandFeedbackGameRuleState(this.context.server());
 		this.gameRuleProbeTimeout = Util.getNanos() + this.maxGameRuleProbeTime;
-		this.phase = TaskPhase.GAME_RULE_PROBE;
+//		this.phase = TaskPhase.GAME_RULE_PROBE;
+		this.shouldEnableFeedback = false;
+		this.phase = TaskPhase.WAIT_FOR_CHUNKS;
 	}
 
 	protected void probePhase()
@@ -262,19 +262,19 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 		return dispatch.parse(cmd, this.context.player().createCommandSourceStack());
 	}
 
-	protected void sendQueuedCommands()
-	{
-		while (this.sentCommandsThisTick < this.maxCommandsPerTick &&
-				this.queuedCommands.isEmpty() == false)
-		{
-			this.sendCommand(this.queuedCommands.poll());
-		}
-
-		if (this.queuedCommands.isEmpty())
-		{
-			this.finishProcessingChunk(this.currentChunkPos);
-		}
-	}
+//	protected void sendQueuedCommands()
+//	{
+//		while (this.sentCommandsThisTick < this.maxCommandsPerTick &&
+//				this.queuedCommands.isEmpty() == false)
+//		{
+//			this.sendCommand(this.queuedCommands.poll());
+//		}
+//
+//		if (this.queuedCommands.isEmpty())
+//		{
+//			this.finishProcessingChunk(this.currentChunkPos);
+//		}
+//	}
 
 	protected void sendTaskEndCommands()
 	{

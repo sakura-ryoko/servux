@@ -23,7 +23,6 @@ public abstract class TaskBase implements ITask
 {
 	protected final TaskContext context;
 	protected final InfoHudSync infoHudSync;
-	protected String name = "";
 	private TaskTimer timer = new TaskTimer(1);
 	@Nullable private ITaskCompletionListener completionListener;
 	protected boolean finished;
@@ -44,7 +43,7 @@ public abstract class TaskBase implements ITask
 	@Override
 	public String getDisplayName()
 	{
-		return this.name;
+		return this.context.name();
 	}
 
 	@Override

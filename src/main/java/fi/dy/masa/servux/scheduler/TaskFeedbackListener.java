@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.network.chat.Component;
 
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.util.StringUtils;
 
 public class TaskFeedbackListener implements ITaskCompletionListener
@@ -42,11 +43,18 @@ public class TaskFeedbackListener implements ITaskCompletionListener
 	{
 		if (this.hasFeedback())
 		{
-			this.displayFeedback(context);
+			if (LitematicsDataProvider.INSTANCE.shouldSendPlayerTaskFeedback())
+			{
+				this.displayFeedback(context);
+			}
+
 			this.clearFeedback();
 		}
 
-		context.player().sendSystemMessage(StringUtils.translate("servux.scheduler.feedback.completed", context.name(), (System.currentTimeMillis() - context.startTime())), false);
+		if (LitematicsDataProvider.INSTANCE.shouldSendPlayerTaskFeedback())
+		{
+			context.player().sendSystemMessage(StringUtils.translate("servux.scheduler.feedback.completed", context.name(), (System.currentTimeMillis() - context.startTime())), false);
+		}
 	}
 
 	@Override
@@ -54,10 +62,17 @@ public class TaskFeedbackListener implements ITaskCompletionListener
 	{
 		if (this.hasFeedback())
 		{
-			this.displayFeedback(context);
+			if (LitematicsDataProvider.INSTANCE.shouldSendPlayerTaskFeedback())
+			{
+				this.displayFeedback(context);
+			}
+
 			this.clearFeedback();
 		}
 
-		context.player().sendSystemMessage(StringUtils.translate("servux.scheduler.feedback.aborted", context.name(), (System.currentTimeMillis() - context.startTime())), false);
+		if (LitematicsDataProvider.INSTANCE.shouldSendPlayerTaskFeedback())
+		{
+			context.player().sendSystemMessage(StringUtils.translate("servux.scheduler.feedback.aborted", context.name(), (System.currentTimeMillis() - context.startTime())), false);
+		}
 	}
 }

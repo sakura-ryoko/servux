@@ -69,6 +69,7 @@ import fi.dy.masa.servux.util.data.tag.util.DataFileUtils;
 import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
 import fi.dy.masa.servux.util.game.BlockUtils;
 import fi.dy.masa.servux.util.game.EntityUtils;
+import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.IntBoundingBox;
 import fi.dy.masa.servux.util.position.PositionUtils;
@@ -1597,11 +1598,11 @@ public class LitematicaSchematic
 	{
 		// v2 Sponge Schematic
 		if (tag.contains("Width") &&
-				tag.contains("Height") &&
-				tag.contains("Length") &&
-				tag.contains("Version") &&
-				tag.contains("Palette") &&
-				tag.contains("BlockData"))
+			tag.contains("Height") &&
+			tag.contains("Length") &&
+			tag.contains("Version") &&
+			tag.contains("Palette") &&
+			tag.contains("BlockData"))
 		{
 			return isSizeValid(readSizeFromTagSponge(tag));
 		}
@@ -1612,12 +1613,12 @@ public class LitematicaSchematic
 	public static boolean isValidSpongeSchematic(CompoundData tag)
 	{
 		// v2 Sponge Schematic
-		if (tag.contains("Width", Constants.NBT.TAG_INT) &&
-				tag.contains("Height", Constants.NBT.TAG_INT) &&
-				tag.contains("Length", Constants.NBT.TAG_INT) &&
-				tag.contains("Version", Constants.NBT.TAG_INT) &&
-				tag.containsLenient("Palette") &&
-				tag.containsLenient("BlockData"))
+		if (tag.contains("Width", Constants.NBT.TAG_SHORT) &&
+			tag.contains("Height", Constants.NBT.TAG_SHORT) &&
+			tag.contains("Length", Constants.NBT.TAG_SHORT) &&
+			tag.contains("Version", Constants.NBT.TAG_INT) &&
+			tag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
+			tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
 		{
 			return isSizeValid(readSizeFromTagSponge(tag));
 		}
@@ -1634,12 +1635,12 @@ public class LitematicaSchematic
 			CompoundTag nbtV3 = tag.getCompoundOrEmpty("Schematic");
 
 			if (nbtV3.contains("Width") &&
-					nbtV3.contains("Height") &&
-					nbtV3.contains("Length") &&
-					nbtV3.contains("Version") &&
-					nbtV3.getIntOr("Version", -1) >= 3 &&
-					nbtV3.contains("Blocks") &&
-					nbtV3.contains("DataVersion"))
+				nbtV3.contains("Height") &&
+				nbtV3.contains("Length") &&
+				nbtV3.contains("Version") &&
+				nbtV3.getIntOr("Version", -1) >= 3 &&
+				nbtV3.contains("Blocks") &&
+				nbtV3.contains("DataVersion"))
 			{
 				return isSizeValid(readSizeFromTagSponge(nbtV3));
 			}
@@ -1655,13 +1656,13 @@ public class LitematicaSchematic
 		{
 			CompoundData nbtV3 = tag.getCompound("Schematic");
 
-			if (nbtV3.contains("Width", Constants.NBT.TAG_INT) &&
-					nbtV3.contains("Height", Constants.NBT.TAG_INT) &&
-					nbtV3.contains("Length", Constants.NBT.TAG_INT) &&
-					nbtV3.contains("Version", Constants.NBT.TAG_INT) &&
-					nbtV3.getIntOrDefault("Version", -1) >= 3 &&
-					nbtV3.containsLenient("Blocks") &&
-					nbtV3.contains("DataVersion", Constants.NBT.TAG_INT))
+			if (nbtV3.contains("Width", Constants.NBT.TAG_SHORT) &&
+				nbtV3.contains("Height", Constants.NBT.TAG_SHORT) &&
+				nbtV3.contains("Length", Constants.NBT.TAG_SHORT) &&
+				nbtV3.contains("Version", Constants.NBT.TAG_INT) &&
+				nbtV3.getIntOrDefault("Version", -1) >= 3 &&
+				nbtV3.contains("Blocks", Constants.NBT.TAG_COMPOUND) &&
+				nbtV3.contains("DataVersion", Constants.NBT.TAG_INT))
 			{
 				return isSizeValid(readSizeFromTagSponge(nbtV3));
 			}
@@ -1744,7 +1745,7 @@ public class LitematicaSchematic
 			blocksTag = tag.getCompound("Blocks");
 
 			if (blocksTag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
-					blocksTag.contains("Data", Constants.NBT.TAG_BYTE_ARRAY))
+				blocksTag.contains("Data", Constants.NBT.TAG_BYTE_ARRAY))
 			{
 				paletteTag = blocksTag.getCompound("Palette");
 				blockData = blocksTag.getByteArrayOrDefault("Data", new byte[0]);
@@ -1758,7 +1759,7 @@ public class LitematicaSchematic
 		else
 		{
 			if (tag.contains("Palette", Constants.NBT.TAG_COMPOUND) &&
-					tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
+				tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
 			{
 				paletteTag = tag.getCompound("Palette");
 				blockData = tag.getByteArrayOrDefault("BlockData", new byte[0]);
@@ -2005,18 +2006,17 @@ public class LitematicaSchematic
 //        Vec3i size = readSizeFromTagImpl(tag);
 		Vec3i size = DataTypeUtils.readBlockPosFromListTag(tag, "size");
 
-		if ((tag.containsList("palette", Constants.NBT.TAG_COMPOUND) ||
-				tag.containsList("palettes", Constants.NBT.TAG_COMPOUND)) &&
-				tag.containsList("blocks", Constants.NBT.TAG_COMPOUND) &&
-				isSizeValid(size))
+		if ((tag.containsList("palette", Constants.NBT.TAG_COMPOUND) || tag.containsList("palettes", Constants.NBT.TAG_COMPOUND)) &&
+			tag.containsList("blocks", Constants.NBT.TAG_COMPOUND) &&
+			isSizeValid(size))
 		{
 			ListData paletteTag;
 
-			if (tag.contains("palette", Constants.NBT.TAG_COMPOUND))
+			if (tag.containsList("palette", Constants.NBT.TAG_COMPOUND))
 			{
 				paletteTag = tag.getList("palette");
 			}
-			else if (tag.contains("palettes", Constants.NBT.TAG_COMPOUND))
+			else if (tag.containsList("palettes", Constants.NBT.TAG_COMPOUND))
 			{
 				ListData palettes = tag.getList("palettes");
 				final int pSize = palettes.size();
@@ -2594,7 +2594,7 @@ public class LitematicaSchematic
 		return this.readFromFile(this.schematicType);
 	}
 
-	private boolean readFromFile(FileType schematicType)
+	private boolean readFromFile(FileType type)
 	{
 		try
 		{
@@ -2603,17 +2603,17 @@ public class LitematicaSchematic
 
 			if (nbt != null)
 			{
-				if (schematicType == FileType.SPONGE_SCHEMATIC)
+				if (type == FileType.SPONGE_SCHEMATIC)
 				{
 					String name = FileUtils.getNameWithoutExtension(this.schematicFile.getFileName().toString()) + " (Converted Sponge)";
 					return this.readFromSpongeSchematic(name, nbt);
 				}
-				else if (schematicType == FileType.VANILLA_STRUCTURE)
+				else if (type == FileType.VANILLA_STRUCTURE)
 				{
 					String name = FileUtils.getNameWithoutExtension(this.schematicFile.getFileName().toString()) + " (Converted Structure)";
 					return this.readFromVanillaStructure(name, nbt);
 				}
-				else if (schematicType == FileType.LITEMATICA_SCHEMATIC)
+				else if (type == FileType.LITEMATICA_SCHEMATIC)
 				{
 					return this.readFromData(nbt, true);
 				}
@@ -2630,7 +2630,19 @@ public class LitematicaSchematic
 	@Deprecated(forRemoval = true)
 	public static CompoundTag readNbtFromFile(Path file)
 	{
-		return DataConverterNbt.toVanillaCompound(readDataFromFile(file));
+		if (file == null)
+		{
+			//error("servux.litematics.error.schematic_read_from_file_failed.no_file");
+			return null;
+		}
+
+		if (Files.exists(file) == false || Files.isReadable(file) == false)
+		{
+			//error("servux.litematics.error.schematic_read_from_file_failed.cant_read", file.toAbsolutePath());
+			return null;
+		}
+
+        return NbtUtils.readNbtFromFile(file);
 	}
 
 	public static CompoundData readDataFromFile(Path file)
