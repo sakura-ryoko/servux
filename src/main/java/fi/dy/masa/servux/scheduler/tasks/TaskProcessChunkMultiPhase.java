@@ -124,6 +124,14 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 		{
 			this.updateInfoHudLines();
 		}
+		else
+		{
+			if (this.initialInfoSync)
+			{
+				this.updateInfoHudLines();
+				this.initialInfoSync = false;
+			}
+		}
 
 		profiler.pop();
 		return false;

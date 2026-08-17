@@ -361,8 +361,8 @@ public class PositionUtils
         Z
     }
 
-    public static final BlockPosComparator BLOCK_POS_COMPARATOR = new BlockPosComparator();
-    public static final ChunkPosComparator CHUNK_POS_COMPARATOR = new ChunkPosComparator();
+//    public static final BlockPosComparator BLOCK_POS_COMPARATOR = new BlockPosComparator();
+//    public static final ChunkPosComparator CHUNK_POS_COMPARATOR = new ChunkPosComparator();
 
     public static final Direction.Axis[] AXES_ALL = new Direction.Axis[] { Direction.Axis.X, Direction.Axis.Y, Direction.Axis.Z };
     public static final Direction[] ADJACENT_SIDES_ZY = new Direction[] { Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH };
