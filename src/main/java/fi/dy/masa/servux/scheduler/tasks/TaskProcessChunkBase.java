@@ -21,12 +21,12 @@ public abstract class TaskProcessChunkBase extends TaskBase
 {
 	protected final ArrayListMultimap<ChunkPos, IntBoundingBox> boxesInChunks = ArrayListMultimap.create();
 	protected final ArrayList<ChunkPos> pendingChunks = new ArrayList<>();
-	protected PositionUtils.ChunkPosComparator comparator = new PositionUtils.ChunkPosComparator();
+	protected boolean initialInfoSync = true;
 
 	protected TaskProcessChunkBase(TaskContext context)
 	{
 		super(context);
-		this.comparator.setClosestFirst(true);
+		this.chunkPosComparator.setClosestFirst(true);
 	}
 
 	@Override
@@ -78,6 +78,14 @@ public abstract class TaskProcessChunkBase extends TaskBase
 		if (processed > 0)
 		{
 			this.updateInfoHudLinesPendingChunks(this.pendingChunks);
+		}
+		else
+		{
+			if (this.initialInfoSync)
+			{
+				this.updateInfoHudLinesPendingChunks(this.pendingChunks);
+				this.initialInfoSync = false;
+			}
 		}
 
 		this.finished = this.pendingChunks.isEmpty();
@@ -206,7 +214,7 @@ public abstract class TaskProcessChunkBase extends TaskBase
 	{
 		if (this.pendingChunks.size() > 0)
 		{
-			this.pendingChunks.sort(this.comparator);
+			this.pendingChunks.sort(this.chunkPosComparator);
 			this.onChunkListSorted();
 		}
 	}
