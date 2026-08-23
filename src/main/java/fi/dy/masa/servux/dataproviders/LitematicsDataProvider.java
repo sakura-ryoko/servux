@@ -63,6 +63,7 @@ public class LitematicsDataProvider extends DataProviderBase
 	private final CompoundData metadata = new CompoundData();
 	private final ServuxIntSetting permissionLevel = new ServuxIntSetting(this, "permission_level", 0, 4, 0);
 	private final ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", 0, 4, 0);
+	private final ServuxIntSetting taskPermissionLevel = new ServuxIntSetting(this, "permission_level_tasks", 0, 4, 0);
 	private final ServuxBoolSetting playerTaskFeedback = new ServuxBoolSetting(this, "player_task_feedback", false);
 	public final ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
 	public final ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
@@ -70,6 +71,7 @@ public class LitematicsDataProvider extends DataProviderBase
 	private final List<IServuxSetting<?>> settings = List.of(
 			this.permissionLevel,
 			this.pastePermissionLevel,
+			this.taskPermissionLevel,
 			this.playerTaskFeedback,
 			this.fixRaiLRotations,
 			this.fixStairMirror,
@@ -290,6 +292,21 @@ public class LitematicsDataProvider extends DataProviderBase
 		{
 			case "Fill" ->
 			{
+				if (!this.hasPermissionsForTask(player, "fill"))
+				{
+					Servux.debugLog("litematic_data: Denying onTaskRequest from player {}, Insufficient Permissions for Fill Task.", player.getName().getString());
+					player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_tasks"));
+
+					return;
+				}
+
+				if (!player.isCreative())
+				{
+					Servux.debugLog("litematic_data: Denying Litematic Task Request for player {}, Player is not in Creative Mode.", player.getName().tryCollapseToString());
+					player.sendSystemMessage(StringUtils.translate("servux.litematics.error.creative_required_for_task"));
+					return;
+				}
+
 				ListData list = tags.getListOrDefault("Boxes", Constants.NBT.TAG_COMPOUND, new ListData());
 				List<Box> boxes = new ArrayList<>();
 
@@ -334,6 +351,21 @@ public class LitematicsDataProvider extends DataProviderBase
 			}
 			case "Delete" ->
 			{
+				if (!this.hasPermissionsForTask(player, "delete"))
+				{
+					Servux.debugLog("litematic_data: Denying onTaskRequest from player {}, Insufficient Permissions for Delete Task", player.getName().getString());
+					player.sendSystemMessage(StringUtils.translate("servux.litematics.error.insufficent_for_tasks"));
+
+					return;
+				}
+
+				if (!player.isCreative())
+				{
+					Servux.debugLog("litematic_data: Denying Litematic Task Request for player {}, Player is not in Creative Mode.", player.getName().tryCollapseToString());
+					player.sendSystemMessage(StringUtils.translate("servux.litematics.error.creative_required_for_task"));
+					return;
+				}
+
 				ListData list = tags.getListOrDefault("Boxes", Constants.NBT.TAG_COMPOUND, new ListData());
 				List<Box> boxes = new ArrayList<>();
 
@@ -728,6 +760,11 @@ public class LitematicsDataProvider extends DataProviderBase
 	public boolean hasPermissionsForPaste(ServerPlayer player)
 	{
 		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
+	}
+
+	public boolean hasPermissionsForTask(ServerPlayer player, String task)
+	{
+		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode + ".task." + task, this.taskPermissionLevel.getValue());
 	}
 
 	public boolean shouldSendPlayerTaskFeedback()
