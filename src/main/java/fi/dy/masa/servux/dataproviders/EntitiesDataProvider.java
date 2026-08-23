@@ -248,7 +248,7 @@ public class EntitiesDataProvider extends DataProviderBase
 
 			if (nbt != null && id != null)
 			{
-				if (entity.getType() == EntityType.PLAYER)
+				if (entity.getType() == EntityType.PLAYER && !entity.getUUID().equals(player.getUUID()))
 				{
 					if (!this.hasPlayerInventoryPermission(player))
 					{
