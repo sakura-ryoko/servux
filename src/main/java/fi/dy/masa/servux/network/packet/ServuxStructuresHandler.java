@@ -189,7 +189,7 @@ public abstract class ServuxStructuresHandler<T extends CustomPacketPayload> imp
 		}
 		else if (this.failures.get(uuid) > this.maxFailures())
 		{
-			if (Reference.DEV_DEBUG)
+			if (Reference.DEBUG_MODE)
 			{
 				Servux.LOGGER.info("Unregistering Structure Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().tryCollapseToString(), this.maxFailures());
 			}

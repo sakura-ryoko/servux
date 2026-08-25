@@ -170,7 +170,7 @@ public abstract class ServuxEntitiesHandler<T extends CustomPacketPayload> imple
 		}
 		else if (this.failures.get(uuid) > this.maxFailures())
 		{
-			if (Reference.DEV_DEBUG)
+			if (Reference.DEBUG_MODE)
 			{
 				Servux.LOGGER.info("Unregistering Entity Data Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().tryCollapseToString(), this.maxFailures());
 			}
