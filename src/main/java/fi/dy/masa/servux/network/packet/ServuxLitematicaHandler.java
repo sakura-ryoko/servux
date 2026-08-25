@@ -130,7 +130,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> imp
 						readingSessionKey = this.readingSessionKeys.get(uuid);
 					}
 
-					if (Reference.DEV_DEBUG)
+					if (Reference.DEBUG_MODE)
 					{
 						Servux.LOGGER.info("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Packet Slice of size {} (in bytes) // reading session key [{}]", packet.getTotalSize(), readingSessionKey);
 					}
@@ -140,7 +140,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> imp
 
 						if (fullPacket != null)
 						{
-							if (Reference.DEV_DEBUG)
+							if (Reference.DEBUG_MODE)
 							{
 								Servux.LOGGER.info("ServuxLitematicaHandler#decodeServerData(): received Litematic Data Full Packet of size {} (in bytes) // reading session key [{}]", fullPacket.readableBytes(), readingSessionKey);
 							}
@@ -285,7 +285,7 @@ public abstract class ServuxLitematicaHandler<T extends CustomPacketPayload> imp
 		}
 		else if (this.failures.get(uuid) > this.maxFailures())
 		{
-			if (Reference.DEV_DEBUG)
+			if (Reference.DEBUG_MODE)
 			{
 				Servux.LOGGER.info("ServuxLitematicaHandler#tickFailures(): Unregistering Litematic Client {} after {} failures (Litematica not installed perhaps)", player.getName().tryCollapseToString(), this.maxFailures());
 			}

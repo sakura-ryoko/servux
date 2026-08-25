@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.util.SizeTracker;
+import fi.dy.masa.servux.util.data.tag.util.SizeTrackerException;
 
 public class ByteData extends BaseData implements NumberData
 {
@@ -57,14 +58,15 @@ public class ByteData extends BaseData implements NumberData
     }
 
     @Override
-    public void write(DataOutput output) throws IOException
+    public void write(DataOutput output) throws IOException, SizeTrackerException
     {
         output.writeByte(this.value);
     }
 
-    public static ByteData read(DataInput input, int depth, SizeTracker sizeTracker) throws IOException
+    public static ByteData read(DataInput input, int depth, SizeTracker sizeTracker)
+            throws IOException, SizeTrackerException
     {
-        sizeTracker.increment(1);
+        sizeTracker.increment(Byte.BYTES);
         return new ByteData(input.readByte());
     }
 

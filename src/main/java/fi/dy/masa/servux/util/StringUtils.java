@@ -5,13 +5,16 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+
 import fi.dy.masa.servux.dataproviders.ServuxConfigProvider;
 
 public class StringUtils
 {
     public static String getModVersionString(String modId)
     {
-        for (net.fabricmc.loader.api.ModContainer container : net.fabricmc.loader.api.FabricLoader.getInstance().getAllMods())
+        for (ModContainer container : FabricLoader.getInstance().getAllMods())
         {
             if (container.getMetadata().getId().equals(modId))
             {

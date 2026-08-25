@@ -2,8 +2,10 @@ package fi.dy.masa.servux.dataproviders;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -37,6 +39,8 @@ public class DataProviderManager
     {
         return this.providersImmutable;
     }
+    protected final static String CONFIG_FILE = "servux.json";
+    protected Path rootDir = null;
     protected Path configDir = null;
     protected RegistryAccess.Frozen immutable = RegistryAccess.EMPTY;
 
@@ -54,7 +58,7 @@ public class DataProviderManager
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
 
-            if (Reference.DEV_DEBUG)
+            if (Reference.DEBUG_MODE)
             {
                 System.out.printf("registerDataProvider: %s\n", provider);
             }
@@ -75,7 +79,7 @@ public class DataProviderManager
     {
         boolean wasEnabled = provider.isEnabled();
 
-        if (Reference.DEV_DEBUG)
+        if (Reference.DEBUG_MODE)
         {
             System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
         }
@@ -132,6 +136,14 @@ public class DataProviderManager
         {
             provider.unregisterHandler();
         }
+    }
+
+    public void onCaptureRootDir(@Nonnull Path settingsFile)
+    {
+	    this.rootDir = Objects.requireNonNullElseGet(
+                settingsFile.toAbsolutePath().getParent(),
+                () -> Paths.get(".").toAbsolutePath()
+        ).normalize();
     }
 
     public void onCaptureImmutable(@Nonnull RegistryAccess.Frozen immutable)
@@ -282,14 +294,29 @@ public class DataProviderManager
         JsonUtils.writeJsonToFileAsPath(root, this.getConfigFile());
     }
 
-    protected Path getConfigFile()
+    public Path getRootDir()
+    {
+        if (this.rootDir == null)
+        {
+            this.rootDir = Paths.get(".").toAbsolutePath().normalize();
+        }
+
+        return this.rootDir;
+    }
+
+    public Path getConfigDir()
     {
         if (this.configDir == null)
         {
-            this.configDir = Reference.DEFAULT_CONFIG_DIR;
+            this.configDir = this.getRootDir().resolve("config").normalize();
         }
 
-        if (!Files.exists(this.configDir))
+        if (Reference.DEBUG_MODE)
+        {
+            System.out.printf("getConfigFile results - root: '%s', config: '%s'\n", this.rootDir.toAbsolutePath().toString(), this.configDir.toAbsolutePath().toString());
+        }
+
+        if (!Files.isDirectory(this.configDir))
         {
             try
             {
@@ -301,6 +328,11 @@ public class DataProviderManager
             }
         }
 
-        return this.configDir.resolve("servux.json");
+        return this.configDir;
+    }
+
+    public Path getConfigFile()
+    {
+        return this.getConfigDir().resolve(CONFIG_FILE);
     }
 }
