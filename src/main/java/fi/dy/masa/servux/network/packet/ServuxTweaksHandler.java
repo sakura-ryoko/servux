@@ -188,7 +188,7 @@ public abstract class ServuxTweaksHandler<T extends CustomPacketPayload> impleme
 		}
 		else if (this.failures.get(uuid) > this.maxFailures())
 		{
-			if (Reference.DEV_DEBUG)
+			if (Reference.DEBUG_MODE)
 			{
 				Servux.LOGGER.info("Unregistering Tweaks Client {} after {} failures (Tweakeroo not installed perhaps)", player.getName().tryCollapseToString(), this.maxFailures());
 			}

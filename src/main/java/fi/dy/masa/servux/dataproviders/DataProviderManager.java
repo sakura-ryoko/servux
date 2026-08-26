@@ -58,7 +58,7 @@ public class DataProviderManager
             this.providers.put(name, provider);
             this.providersImmutable = ImmutableList.copyOf(this.providers.values());
 
-            if (Reference.DEV_DEBUG)
+            if (Reference.DEBUG_MODE)
             {
                 System.out.printf("registerDataProvider: %s\n", provider);
             }
@@ -79,7 +79,7 @@ public class DataProviderManager
     {
         boolean wasEnabled = provider.isEnabled();
 
-        if (Reference.DEV_DEBUG)
+        if (Reference.DEBUG_MODE)
         {
             System.out.printf("setProviderEnabled: %s (%s)\n", enabled, provider);
         }
@@ -294,31 +294,24 @@ public class DataProviderManager
         JsonUtils.writeJsonToFile(root, this.getConfigFile());
     }
 
-    protected Path getRootDir()
+    public Path getRootDir()
     {
+        if (this.rootDir == null)
+        {
+            this.rootDir = Paths.get(".").toAbsolutePath().normalize();
+        }
+
         return this.rootDir;
     }
 
-    protected Path getConfigDir()
+    public Path getConfigDir()
     {
         if (this.configDir == null)
         {
-            if (this.rootDir != null)
-            {
-                this.configDir = this.rootDir.resolve("config").normalize();
-            }
-            else
-            {
-                this.configDir = Reference.DEFAULT_CONFIG_DIR.toAbsolutePath().normalize();
-            }
+            this.configDir = this.getRootDir().resolve("config").normalize();
         }
 
-        if (this.rootDir == null)
-        {
-            this.rootDir = this.configDir.getParent().normalize();
-        }
-
-        if (Reference.DEV_DEBUG)
+        if (Reference.DEBUG_MODE)
         {
             System.out.printf("getConfigFile results - root: '%s', config: '%s'\n", this.rootDir.toAbsolutePath().toString(), this.configDir.toAbsolutePath().toString());
         }
@@ -338,7 +331,7 @@ public class DataProviderManager
         return this.configDir;
     }
 
-    protected Path getConfigFile()
+    public Path getConfigFile()
     {
         return this.getConfigDir().resolve(CONFIG_FILE);
     }

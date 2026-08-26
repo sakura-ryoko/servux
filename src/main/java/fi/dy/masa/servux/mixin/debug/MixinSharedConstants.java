@@ -20,9 +20,6 @@ public abstract class MixinSharedConstants
     @Inject(method = "<clinit>", at = @At("TAIL"))
     private static void servux_enableServerDevelopmentMode(CallbackInfo ci)
     {
-        if (Reference.DEV_DEBUG)
-        {
-            IS_RUNNING_IN_IDE = true;
-        }
+        IS_RUNNING_IN_IDE = Reference.RUNNING_IN_IDE || Reference.LOCAL_DEBUG || Reference.EXPERIMENTAL_MODE;
     }
 }
