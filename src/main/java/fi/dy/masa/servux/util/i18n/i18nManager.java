@@ -126,7 +126,7 @@ public class i18nManager
 
 		this.buildLanguageOptions();
 
-		if (Reference.DEV_DEBUG)
+		if (Reference.DEBUG_MODE)
 		{
 			Servux.LOGGER.info("i18nOptionManager#readKeys({}): keys read from assets folder: {}", this.getModId(), this.keys.toString());
 		}

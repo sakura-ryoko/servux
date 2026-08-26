@@ -13,7 +13,7 @@ public class AnsiLogger implements IAnsiLogger
 
     public AnsiLogger(Class<?> clazz)
     {
-        this(clazz, Reference.DEV_DEBUG, Reference.ANSI_MODE);
+        this(clazz, Reference.DEBUG_MODE, Reference.ANSI_MODE);
     }
 
     public AnsiLogger(Class<?> clazz, boolean debug)

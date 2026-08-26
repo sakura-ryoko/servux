@@ -813,7 +813,7 @@ public class JsonUtils
         {
             try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8))
             {
-                if (Reference.DEV_DEBUG)
+                if (Reference.DEBUG_MODE)
                 {
                     Servux.debugLog("parseJsonFile: '{}'", file.toAbsolutePath().toString());
                 }

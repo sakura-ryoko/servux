@@ -13,17 +13,18 @@ import javax.annotation.Nullable;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.DataProviderManager;
 
 public class FileUtils
 {
     public static Path getConfigDirectory()
     {
-        return Reference.DEFAULT_CONFIG_DIR;
+        return DataProviderManager.INSTANCE.getConfigDir();
     }
 
     public static Path getMinecraftDirectory()
     {
-        return Reference.DEFAULT_RUN_DIR;
+        return DataProviderManager.INSTANCE.getRootDir();
     }
 
     public static Path getRootDirectory()
@@ -64,7 +65,7 @@ public class FileUtils
             return false;
         }
 
-        if (Reference.DEV_DEBUG)
+        if (Reference.DEBUG_MODE)
         {
             Servux.debugLog("createDirectoriesIfMissing: '{}'", dir.toAbsolutePath().toString());
         }
@@ -101,7 +102,7 @@ public class FileUtils
                 Files.move(srcFile, dstFile);
             }
 
-            if (Reference.DEV_DEBUG)
+            if (Reference.DEBUG_MODE)
             {
                 Servux.debugLog("move: '{}' -> '{}'", srcFile.toAbsolutePath().toString(), dstFile.toAbsolutePath().toString());
             }
@@ -163,7 +164,7 @@ public class FileUtils
             dataWriter.accept(writer);
             writer.close();
 
-            if (Reference.DEV_DEBUG)
+            if (Reference.DEBUG_MODE)
             {
                 Servux.debugLog("writeDataToExactFile: '{}'", file.toAbsolutePath().toString());
             }

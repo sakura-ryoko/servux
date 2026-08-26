@@ -190,7 +190,7 @@ public abstract class ServuxHudHandler<T extends CustomPacketPayload> implements
 		}
 		else if (this.failures.get(uuid) > this.maxFailures())
 		{
-			if (Reference.DEV_DEBUG)
+			if (Reference.DEBUG_MODE)
 			{
 				Servux.LOGGER.info("Unregistering Tweaks Client {} after {} failures (MiniHUD not installed perhaps)", player.getName().tryCollapseToString(), this.maxFailures());
 			}

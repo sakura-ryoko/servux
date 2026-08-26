@@ -141,7 +141,7 @@ public class LitematicsDataProvider extends DataProviderBase
 
 	public Path getTransmitDir()
 	{
-		Path dir = this.transmitDir != null ? this.transmitDir : Reference.DEFAULT_RUN_DIR.resolve("schematics").normalize();
+		Path dir = this.transmitDir != null ? this.transmitDir : DataProviderManager.INSTANCE.getRootDir().resolve("schematics").normalize();
 
 		if (!Files.exists(dir) || !Files.isDirectory(dir))
 		{
