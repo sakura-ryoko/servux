@@ -28,7 +28,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Leashable;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.decoration.BlockAttachedEntity;
 import net.minecraft.world.entity.decoration.HangingEntity;
+import net.minecraft.world.entity.decoration.LeashFenceKnotEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
@@ -67,6 +71,7 @@ import fi.dy.masa.servux.util.data.tag.LongArrayData;
 import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.servux.util.data.tag.util.DataFileUtils;
 import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
+import fi.dy.masa.servux.util.nbt.NbtKeys;
 import fi.dy.masa.servux.util.nbt.NbtUtils;
 import fi.dy.masa.servux.util.nbt.NbtView;
 import fi.dy.masa.servux.util.position.PositionUtils;
@@ -372,8 +377,8 @@ public class LitematicaSchematic
 		Mirror mirrorSub = placement.getMirror();
 
 		if (mirrorSub != Mirror.NONE &&
-				(schematicPlacement.getRotation() == Rotation.CLOCKWISE_90 ||
-						schematicPlacement.getRotation() == Rotation.COUNTERCLOCKWISE_90))
+			(schematicPlacement.getRotation() == Rotation.CLOCKWISE_90 ||
+			 schematicPlacement.getRotation() == Rotation.COUNTERCLOCKWISE_90))
 		{
 			mirrorSub = mirrorSub == Mirror.FRONT_BACK ? Mirror.LEFT_RIGHT : Mirror.FRONT_BACK;
 		}
@@ -422,7 +427,7 @@ public class LitematicaSchematic
 					BlockState stateOld = world.getBlockState(pos);
 
 					if ((replace == ReplaceBehavior.NONE && stateOld.isAir() == false) ||
-							(replace == ReplaceBehavior.WITH_NON_AIR && state.isAir()))
+						(replace == ReplaceBehavior.WITH_NON_AIR && state.isAir()))
 					{
 						continue;
 					}
@@ -556,8 +561,8 @@ public class LitematicaSchematic
 		Mirror mirrorSub = placement.getMirror();
 
 		if (mirrorSub != Mirror.NONE &&
-				(schematicPlacement.getRotation() == Rotation.CLOCKWISE_90 ||
-						schematicPlacement.getRotation() == Rotation.COUNTERCLOCKWISE_90))
+			(schematicPlacement.getRotation() == Rotation.CLOCKWISE_90 ||
+			 schematicPlacement.getRotation() == Rotation.COUNTERCLOCKWISE_90))
 		{
 			mirrorSub = mirrorSub == Mirror.FRONT_BACK ? Mirror.LEFT_RIGHT : Mirror.FRONT_BACK;
 		}
@@ -574,6 +579,55 @@ public class LitematicaSchematic
 				double x = pos.x + offX;
 				double y = pos.y + offY;
 				double z = pos.z + offZ;
+
+				CompoundData tag = info.nbt().copy();
+
+				if (entity instanceof BlockAttachedEntity ba)
+				{
+					ba.setPos(x, y, z);
+					tag.putCodec(NbtKeys.ATTACHED_BLOCK_POS, BlockPos.CODEC, ba.getPos());
+				}
+				else
+				{
+					entity.setPos(x, y, z);
+				}
+
+				if (entity instanceof Leashable l)
+				{
+					BlockPos lp = tag.getCodec(NbtKeys.LEASH, BlockPos.CODEC).orElse(null);
+
+					if (lp != null && !lp.equals(BlockPos.ZERO))
+					{
+						final int adjX = lp.getX() + offX;
+						final int adjY = lp.getY() + offY;
+						final int adjZ = lp.getZ() + offZ;
+						BlockPos nlp = new BlockPos(adjX, adjY, adjZ);
+
+						tag.putCodec(NbtKeys.LEASH, BlockPos.CODEC, nlp);
+						NbtView view = NbtView.getReader(tag, world.registryAccess());
+						l.readLeashData(view.getReader());
+					}
+				}
+
+				if (entity instanceof Mob m)
+				{
+					BlockPos hp = tag.getCodec(NbtKeys.HOME_POS, BlockPos.CODEC).orElse(null);
+
+					if (hp != null && !hp.equals(BlockPos.ZERO))
+					{
+						final int hr = tag.getIntOrDefault(NbtKeys.HOME_RADIUS, -1);
+						final int adjX = hp.getX() + offX;
+						final int adjY = hp.getY() + offY;
+						final int adjZ = hp.getZ() + offZ;
+
+						if (hr > 0)
+						{
+							BlockPos nhp = new BlockPos(adjX, adjY, adjZ);
+							tag.putCodec(NbtKeys.HOME_POS, BlockPos.CODEC, nhp);
+							m.setHomeTo(nhp, hr);
+						}
+					}
+				}
 
 				SchematicPlacingUtils.rotateEntity(entity, x, y, z, rotationCombined, mirrorMain, mirrorSub);
 				EntityUtils.spawnEntityAndPassengersInWorld(entity, world);
@@ -603,6 +657,51 @@ public class LitematicaSchematic
 					Vec3 posVec = new Vec3(entity.getX() - regionPosAbs.getX(), entity.getY() - regionPosAbs.getY(), entity.getZ() - regionPosAbs.getZ());
 
 					tag.putString("id", id.toString());
+
+					// Annoying special case for any hanging/decoration entities, to avoid the console
+					// warning about invalid hanging position when loading the entity from NBT
+					if (entity instanceof HangingEntity decorationEntity)
+					{
+						BlockPos p = decorationEntity.blockPosition();
+						tag.putInt("TileX", p.getX() - regionPosAbs.getX());
+						tag.putInt("TileY", p.getY() - regionPosAbs.getY());
+						tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
+					}
+
+					// Fix block_pos position
+					if (entity instanceof BlockAttachedEntity bae)
+					{
+						BlockPos p = bae.getPos();
+						BlockPos pAdj = new BlockPos(p.getX() - regionPosAbs.getX(), p.getY() - regionPosAbs.getY(), p.getZ() - regionPosAbs.getZ());
+
+						tag.putCodec(NbtKeys.ATTACHED_BLOCK_POS, BlockPos.CODEC, pAdj);
+					}
+
+					// Fix leash position
+					if (entity instanceof Leashable le)
+					{
+						Leashable.LeashData ld = le.getLeashData();
+
+						if (ld.leashHolder instanceof LeashFenceKnotEntity knot)
+						{
+							BlockPos kp = knot.getPos();
+							BlockPos adjKp = new BlockPos(kp.getX() - regionPosAbs.getX(), kp.getY() - regionPosAbs.getY(), kp.getZ() - regionPosAbs.getZ());
+							tag.putCodec(NbtKeys.LEASH, BlockPos.CODEC, adjKp);
+						}
+					}
+
+					// Fix home_pos position
+					if (entity instanceof Mob m)
+					{
+						BlockPos hp = m.getHomePosition();
+
+						if (m.hasHome() && !hp.equals(BlockPos.ZERO))
+						{
+							BlockPos adjHp = new BlockPos(hp.getX() - regionPosAbs.getX(), hp.getY() - regionPosAbs.getY(), hp.getZ() - regionPosAbs.getZ());
+							tag.putCodec(NbtKeys.HOME_POS, BlockPos.CODEC, adjHp);
+						}
+					}
+
 //                    NbtUtils.putVec3dCodec(tag, posVec, "Pos");
 					DataTypeUtils.putVec3dCodec(tag, posVec, "Pos");
 					list.add(new EntityInfo(posVec, tag));
@@ -665,8 +764,42 @@ public class LitematicaSchematic
 								tag.putInt("TileZ", p.getZ() - regionPosAbs.getZ());
 							}
 
+							// Fix block_pos position
+							if (entity instanceof BlockAttachedEntity bae)
+							{
+								BlockPos p = bae.getPos();
+								BlockPos pAdj = new BlockPos(p.getX() - regionPosAbs.getX(), p.getY() - regionPosAbs.getY(), p.getZ() - regionPosAbs.getZ());
+
+								tag.putCodec(NbtKeys.ATTACHED_BLOCK_POS, BlockPos.CODEC, pAdj);
+							}
+
+							// Fix leash position
+							if (entity instanceof Leashable le)
+							{
+								Leashable.LeashData ld = le.getLeashData();
+
+								if (ld.leashHolder instanceof LeashFenceKnotEntity knot)
+								{
+									BlockPos kp = knot.getPos();
+									BlockPos adjKp = new BlockPos(kp.getX() - regionPosAbs.getX(), kp.getY() - regionPosAbs.getY(), kp.getZ() - regionPosAbs.getZ());
+									tag.putCodec(NbtKeys.LEASH, BlockPos.CODEC, adjKp);
+								}
+							}
+
+							// Fix home_pos position
+							if (entity instanceof Mob m)
+							{
+								BlockPos hp = m.getHomePosition();
+
+								if (m.hasHome() && !hp.equals(BlockPos.ZERO))
+								{
+									BlockPos adjHp = new BlockPos(hp.getX() - regionPosAbs.getX(), hp.getY() - regionPosAbs.getY(), hp.getZ() - regionPosAbs.getZ());
+									tag.putCodec(NbtKeys.HOME_POS, BlockPos.CODEC, adjHp);
+								}
+							}
+
 //                        NbtUtils.putVec3dCodec(tag, posVec, "Pos");
-							DataTypeUtils.putVec3dCodec(tag, posVec, "Pos");
+							DataTypeUtils.putVec3dCodec(tag, posVec, NbtKeys.POS);
 							list.add(new EntityInfo(posVec, tag));
 							existingEntities.add(uuid);
 						}
