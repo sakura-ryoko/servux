@@ -62,6 +62,8 @@
     "servux.config.hud_data.update_interval.name": "迭更間歇",
     "servux.config.hud_data.weather_permission_level.comment": "Permissions Required for sharing the weather data",
     "servux.config.hud_data.weather_permission_level.name": "天象權術",
+    "servux.config.litematic_data.deduplicate_schematic_entities.comment": "Enable entity De-Duplication based on an entity ID and/or UUID",
+    "servux.config.litematic_data.deduplicate_schematic_entities.name": "De-Duplicate Schematic Entities",
     "servux.config.litematic_data.fix_chest_mirror.comment": "啟/禁 箱鏡像之繕。",
     "servux.config.litematic_data.fix_chest_mirror.name": "繕箱之境象",
     "servux.config.litematic_data.fix_rail_rotations.comment": "啟/禁 軌旋半周之謬。",
