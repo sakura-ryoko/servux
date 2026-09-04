@@ -69,6 +69,7 @@ public class LitematicsDataProvider extends DataProviderBase
 	public final ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
 	public final ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
 	public final ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
+	public final ServuxBoolSetting deDuplicateSchematicEntities = new ServuxBoolSetting(this, "deduplicate_schematic_entities", false);
 	private final List<IServuxSetting<?>> settings = List.of(
 			this.permissionLevel,
 			this.pastePermissionLevel,
@@ -76,7 +77,8 @@ public class LitematicsDataProvider extends DataProviderBase
 			this.playerTaskFeedback,
 			this.fixRaiLRotations,
 			this.fixStairMirror,
-			this.fixChestMirror
+			this.fixChestMirror,
+			this.deDuplicateSchematicEntities
 	);
 
 	private final List<UUID> registeredPlayers = new ArrayList<>();
@@ -771,5 +773,10 @@ public class LitematicsDataProvider extends DataProviderBase
 	public boolean shouldSendPlayerTaskFeedback()
 	{
 		return this.playerTaskFeedback.getValue();
+	}
+
+	public boolean shouldDeDuplicateEntities()
+	{
+		return this.deDuplicateSchematicEntities.getValue();
 	}
 }

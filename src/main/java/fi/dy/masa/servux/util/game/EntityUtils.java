@@ -15,6 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
+import fi.dy.masa.servux.Servux;
+import fi.dy.masa.servux.dataproviders.LitematicsDataProvider;
 import fi.dy.masa.servux.schematic.placement.SchematicPlacement;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement;
 import fi.dy.masa.servux.util.data.Constants;
@@ -156,7 +158,41 @@ public class EntityUtils
 
     public static void spawnEntityAndPassengersInWorld(Entity entity, Level world)
     {
-        if (world.addFreshEntity(entity) && entity.isVehicle())
+        boolean result;
+
+        Entity other = world.getEntity(entity.getId());
+
+        if (!LitematicsDataProvider.INSTANCE.shouldDeDuplicateEntities())
+        {
+            if (other != null)
+            {
+                // We don't like needing to use Random();
+                // but I guess there's no other logical method for this.
+                entity.setId(RAND.nextInt(entity.getId() * 4, Integer.MAX_VALUE));
+            }
+
+            other = world.getEntity(entity.getUUID());
+
+            if (other != null)
+            {
+                entity.setUUID(UUID.randomUUID());
+            }
+        }
+
+        try
+        {
+            result = world.addFreshEntity(entity);
+        }
+        catch (Exception e)
+        {
+            Servux.LOGGER.error("EntityUtils#spawnEntityAndPassengersInWorld(): Exception; id({}): [{}/{}]; {}",
+                                entity.getId(), entity.getStringUUID(),
+                                entity.getType().getDescription().getString(),
+                                e.getLocalizedMessage());
+            result = false;
+        }
+
+        if (result && entity.isVehicle())
         {
             for (Entity passenger : entity.getPassengers())
             {

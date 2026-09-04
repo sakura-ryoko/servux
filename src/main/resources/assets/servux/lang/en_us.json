@@ -62,6 +62,8 @@
     "servux.config.hud_data.update_interval.name": "Update Interval",
     "servux.config.hud_data.weather_permission_level.comment": "Permissions Required for sharing the weather data",
     "servux.config.hud_data.weather_permission_level.name": "Weather Permissions",
+    "servux.config.litematic_data.deduplicate_schematic_entities.comment": "Enable entity De-Duplication based on an entity ID and/or UUID",
+    "servux.config.litematic_data.deduplicate_schematic_entities.name": "De-Duplicate Schematic Entities",
     "servux.config.litematic_data.fix_chest_mirror.comment": "Enable / Disable the fixing of Chest Mirroring when Chests are Mirrored.",
     "servux.config.litematic_data.fix_chest_mirror.name": "Fix Chest Mirroring",
     "servux.config.litematic_data.fix_rail_rotations.comment": "Enable / Disable the fixing of Rail Rotations when Rails are rotated 180 degrees.",
