@@ -7,7 +7,6 @@ import org.jetbrains.annotations.NotNull;
 
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -16,14 +15,10 @@ import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.schematic.LitematicaSchematic;
 import fi.dy.masa.servux.schematic.placement.SubRegionPlacement.RequiredEnabled;
 import fi.dy.masa.servux.schematic.selection.Box;
-import fi.dy.masa.servux.util.PasteLayerBehavior;
-import fi.dy.masa.servux.util.ReplaceBehavior;
-import fi.dy.masa.servux.util.SchematicPlacingUtils;
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.CompoundData;
 import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
 import fi.dy.masa.servux.util.position.IntBoundingBox;
-import fi.dy.masa.servux.util.position.LayerRange;
 import fi.dy.masa.servux.util.position.PositionUtils;
 
 public class SchematicPlacement
@@ -684,25 +679,5 @@ public class SchematicPlacement
         }
 
         return null;
-    }
-
-    /**
-     * @deprecated This was too direct ... Use Task Scheduler, PLEASE!
-     */
-    @Deprecated(forRemoval = true)
-    private void pasteTo(ServerLevel serverWorld, ReplaceBehavior replaceBehavior, PasteLayerBehavior layerBehavior, @Nullable LayerRange layerRange)
-    {
-        Box bb = this.getEnclosingBox();
-
-        if (bb != null)
-        {
-            bb.toVanilla().intersectingChunks().forEach(chunkPos ->
-                                                                SchematicPlacingUtils.placeToWorldWithinChunk(serverWorld, chunkPos,
-                                                                                                              this,
-                                                                                                              replaceBehavior,
-                                                                                                              layerBehavior,
-                                                                                                              layerRange, false)
-            );
-        }
     }
 }

@@ -11,13 +11,11 @@ import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
-import net.minecraft.nbt.CompoundTag;
 
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.FileType;
 import fi.dy.masa.servux.util.data.Schema;
 import fi.dy.masa.servux.util.data.tag.CompoundData;
-import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 import fi.dy.masa.servux.util.data.tag.util.DataTypeUtils;
 
 public class SchematicMetadata
@@ -135,7 +133,7 @@ public class SchematicMetadata
 
     public BlockPos getEnclosingSizeAsBlockPos()
     {
-        return new BlockPos(this.enclosingSize);
+        return new BlockPos(this.enclosingSize.getX(), this.enclosingSize.getY(), this.enclosingSize.getZ());
     }
 
     public long getTimeCreated()
@@ -334,12 +332,6 @@ public class SchematicMetadata
         }
     }
 
-    @Deprecated(forRemoval = true)
-    public CompoundTag writeToNBT()
-    {
-        return DataConverterNbt.toVanillaCompound(this.writeData());
-    }
-
     public CompoundData writeData()
     {
         CompoundData nbt = new CompoundData();
@@ -396,12 +388,6 @@ public class SchematicMetadata
         return nbt;
     }
 
-    @Deprecated(forRemoval = true)
-    public void readFromNBT(CompoundTag nbt)
-    {
-        this.readData(DataConverterNbt.fromVanillaCompound(nbt));
-    }
-
     public void readData(CompoundData nbt)
     {
         this.name = nbt.getStringOrDefault("Name", "?");
@@ -440,13 +426,6 @@ public class SchematicMetadata
         {
             this.thumbnailPixelData = null;
         }
-    }
-
-    @Deprecated(forRemoval = true)
-    @VisibleForTesting
-    public CompoundTag writeToNbtExtra()
-    {
-        return DataConverterNbt.toVanillaCompound(this.writeDataExtra());
     }
 
     /**

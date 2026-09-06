@@ -76,12 +76,6 @@ public class LitematicaBlockStatePaletteHashMap implements ILitematicaBlockState
     }
 
     @Override
-    public Codec<LitematicaBlockStatePaletteHashMap> codec()
-    {
-        return CODEC;
-    }
-
-    @Override
     public void setResizer(ILitematicaBlockStatePaletteResizer resizer)
     {
         this.paletteResizer = resizer;

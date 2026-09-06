@@ -50,8 +50,6 @@ public interface IServuxSetting<T>
     default Component shortDisplayName()
     {
         return prettyName().copy().withStyle(style ->
-                                                  //style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, comment().copy()
-                                                  //.append(Text.literal("\n(%s)".formatted(qualifiedName())).formatted(Formatting.DARK_GRAY))))
                                                   style.withHoverEvent(new HoverEvent.ShowText(comment().copy()
                                                                                                         .append(Component.literal("\n(%s)".formatted(qualifiedName()))
                                                                                                                     .withStyle(ChatFormatting.DARK_GRAY))))

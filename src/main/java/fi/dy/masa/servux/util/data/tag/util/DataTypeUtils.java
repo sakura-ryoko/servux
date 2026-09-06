@@ -27,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
 
 import fi.dy.masa.servux.util.data.Constants;
 import fi.dy.masa.servux.util.data.tag.*;
+import fi.dy.masa.servux.util.game.BlockUtils;
 import fi.dy.masa.servux.util.nbt.NbtKeys;
 
 public class DataTypeUtils
@@ -558,7 +559,9 @@ public class DataTypeUtils
 	{
 		Codec<ResourceKey<Block>> CODEC = ResourceKey.codec(Registries.BLOCK);
 		HolderGetter<Block> lookup = registry.lookupOrThrow(Registries.BLOCK);
-		Optional<? extends Holder<Block>> opt = data.getCodec("Name", CODEC).flatMap(lookup::get);
+		Optional<? extends Holder<Block>> opt = data.containsLenient(BlockUtils.VANILLA_BLOCK_STATE_NAME)
+		                                        ? data.getCodec(BlockUtils.VANILLA_BLOCK_STATE_NAME, CODEC).flatMap(lookup::get)
+		                                        : data.getCodec(BlockUtils.BLOCK_STATE_NAME, CODEC).flatMap(lookup::get);
 
 		if (opt.isEmpty())
 		{
@@ -567,7 +570,9 @@ public class DataTypeUtils
 
 		Block block = opt.get().value();
 		BlockState state = block.defaultBlockState();
-		CompoundData props = data.getCompoundOrDefault("Properties", new CompoundData());
+		CompoundData props = data.containsLenient(BlockUtils.VANILLA_BLOCK_STATE_PROPERTIES)
+		                     ? data.getCompoundOrDefault(BlockUtils.VANILLA_BLOCK_STATE_PROPERTIES, new CompoundData())
+		                     : data.getCompoundOrDefault(BlockUtils.BLOCK_STATE_PROPERTIES, new CompoundData());
 
 		if (!props.isEmpty())
 		{
@@ -599,7 +604,7 @@ public class DataTypeUtils
 	public static CompoundData writeBlockStateToTag(@Nonnull final BlockState state)
 	{
 		CompoundData data = new CompoundData();
-		data.putString("Name", BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+		data.putString(BlockUtils.BLOCK_STATE_NAME, BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
 		writeStatePropertiesToTag(data, state);
 		return data;
 	}
@@ -607,7 +612,7 @@ public class DataTypeUtils
 	public static CompoundData writeFluidStateToTag(@Nonnull final FluidState state)
 	{
 		CompoundData data = new CompoundData();
-		data.putString("Name", BuiltInRegistries.FLUID.getKey(state.getType()).toString());
+		data.putString(BlockUtils.BLOCK_STATE_NAME, BuiltInRegistries.FLUID.getKey(state.getType()).toString());
 		writeStatePropertiesToTag(data, state);
 		return data;
 	}
@@ -625,7 +630,7 @@ public class DataTypeUtils
 					}
 			);
 
-			data.put("Properties", props);
+			data.put(BlockUtils.BLOCK_STATE_PROPERTIES, props);
 		}
 
 		return data;

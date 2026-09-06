@@ -45,8 +45,7 @@ public abstract class MixinMob extends LivingEntity
 	                        target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"))
 	private <T> T servux$fixAllayGathering4(GameRules instance, GameRule<T> gameRule, Operation<T> original)
 	{
-		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
-				this.isAllay)
+		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() && this.isAllay)
 		{
 			return (T) (Object) true;
 		}

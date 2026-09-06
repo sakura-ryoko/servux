@@ -140,7 +140,8 @@ public class SchematicPlacingUtils
         BlockPos regionPos = placement.getPos();
 
         // These are the untransformed relative positions
-        BlockPos posEndRel = (new BlockPos(PositionUtils.getRelativeEndPositionFromAreaSize(regionSize))).offset(regionPos);
+        BlockPos posSize = PositionUtils.getRelativeEndPositionFromAreaSize(regionSize);
+        BlockPos posEndRel = (new BlockPos(posSize.getX(), posSize.getY(), posSize.getZ())).offset(regionPos);
         BlockPos posMinRel = PositionUtils.getMinCorner(regionPos, posEndRel);
 
         // The transformed sub-region origin position

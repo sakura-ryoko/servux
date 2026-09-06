@@ -667,7 +667,7 @@ public class HudDataProvider extends DataProviderBase
 		Servux.debugLog("hud_data: received RecipeManager request from {}", player.getName().tryCollapseToString());
 		recipes.forEach((recipeEntry ->
 		{
-			DataResult<BaseData> dr = Recipe.CODEC.encodeStart(DataOps.INSTANCE, recipeEntry.value());
+			DataResult<BaseData> dr = Recipe.DIRECT_CODEC.encodeStart(DataOps.INSTANCE, recipeEntry.value());
 
 			if (dr.result().isPresent())
 			{

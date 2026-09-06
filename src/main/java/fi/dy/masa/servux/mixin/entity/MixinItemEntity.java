@@ -32,10 +32,10 @@ public abstract class MixinItemEntity extends Entity
 	}
 
 	@Inject(method = "hurtServer", at = @At("HEAD"))
-	private void servux$fixAllayGathering5(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir)
+	private void servux$fixAllayGathering5(ServerLevel level, DamageSource source, float damage, CallbackInfoReturnable<Boolean> cir)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
-				source.getEntity() instanceof Allay)
+			source.getEntity() instanceof Allay)
 		{
 			this.isAllay = true;
 		}
@@ -48,7 +48,7 @@ public abstract class MixinItemEntity extends Entity
 	private <T> T servux$fixAllayGathering6(GameRules instance, GameRule<T> gameRule, Operation<T> original)
 	{
 		if (EntitiesDataProvider.INSTANCE.hasFixAllayGathering() &&
-				this.isAllay && gameRule.gameRuleType() == GameRuleType.BOOL)        // Ensure BOOL type
+			this.isAllay && gameRule.gameRuleType() == GameRuleType.BOOL)        // Ensure BOOL type
 		{
 			return (T) (Object) true;
 		}

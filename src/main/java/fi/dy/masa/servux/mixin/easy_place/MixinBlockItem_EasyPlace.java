@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin.item;
+package fi.dy.masa.servux.mixin.easy_place;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

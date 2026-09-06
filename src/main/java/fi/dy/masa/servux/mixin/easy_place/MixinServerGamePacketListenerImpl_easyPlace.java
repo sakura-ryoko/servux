@@ -1,4 +1,4 @@
-package fi.dy.masa.servux.mixin.network;
+package fi.dy.masa.servux.mixin.easy_place;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -18,7 +18,7 @@ public class MixinServerGamePacketListenerImpl_easyPlace
     @WrapOperation(method = "handleUseItemOn", require = 0,
                    at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/world/phys/Vec3;subtract(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;"))
-    private Vec3 servux$removeHitPosCheck(Vec3 instance, Vec3 vec3, Operation<Vec3> original)
+    private Vec3 servux$removeHitPosCheck(Vec3 instance, Vec3 vec, Operation<Vec3> original)
     {
         return Vec3.ZERO;
     }

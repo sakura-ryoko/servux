@@ -2,10 +2,10 @@ package fi.dy.masa.servux.schematic.container;
 
 import java.util.Arrays;
 import java.util.stream.LongStream;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
@@ -13,7 +13,6 @@ import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -21,7 +20,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import fi.dy.masa.servux.util.data.tag.ListData;
-import fi.dy.masa.servux.util.data.tag.converter.DataConverterNbt;
 
 public class LitematicaBlockStateContainer implements ILitematicaBlockStatePaletteResizer
 {
@@ -251,12 +249,6 @@ public class LitematicaBlockStateContainer implements ILitematicaBlockStatePalet
     public ILitematicaBlockStatePalette getPalette()
     {
         return this.palette;
-    }
-
-    @Deprecated(forRemoval = true)
-    public static LitematicaBlockStateContainer createFrom(ListTag palette, long[] blockStates, BlockPos size)
-    {
-        return createFrom(DataConverterNbt.fromVanillaList(palette), blockStates, size);
     }
 
     public static LitematicaBlockStateContainer createFrom(ListData palette, long[] blockStates, BlockPos size)

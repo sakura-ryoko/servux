@@ -1192,12 +1192,6 @@ public class LitematicaSchematic
 		return this.pendingFluidTicks.get(regionName);
 	}
 
-	@Deprecated(forRemoval = true)
-	public CompoundTag writeToNBT()
-	{
-		return DataConverterNbt.toVanillaCompound(this.writeToData());
-	}
-
 	public CompoundData writeToData()
 	{
 		CompoundData nbt = new CompoundData();
@@ -1209,12 +1203,6 @@ public class LitematicaSchematic
 		nbt.put("Regions", this.writeSubRegionsToData());
 
 		return nbt;
-	}
-
-	@Deprecated(forRemoval = true)
-	private CompoundTag writeSubRegionsToNBT()
-	{
-		return DataConverterNbt.toVanillaCompound(this.writeSubRegionsToData());
 	}
 
 	private CompoundData writeSubRegionsToData()
@@ -1268,12 +1256,6 @@ public class LitematicaSchematic
 		return wrapper;
 	}
 
-	@Deprecated(forRemoval = true)
-	private ListTag writeEntitiesToNBT(List<EntityInfo> entityList)
-	{
-		return DataConverterNbt.toVanillaList(this.writeEntitiesToData(entityList));
-	}
-
 	private ListData writeEntitiesToData(List<EntityInfo> entityList)
 	{
 		ListData tagList = new ListData();
@@ -1287,12 +1269,6 @@ public class LitematicaSchematic
 		}
 
 		return tagList;
-	}
-
-	@Deprecated(forRemoval = true)
-	private <T> ListTag writePendingTicksToNBT(Map<BlockPos, ScheduledTick<T>> tickMap, Registry<T> registry, String tagName)
-	{
-		return DataConverterNbt.toVanillaList(this.writePendingTicksToData(tickMap, registry, tagName));
 	}
 
 	private <T> ListData writePendingTicksToData(Map<BlockPos, ScheduledTick<T>> tickMap, Registry<T> registry, String tagName)
@@ -1326,19 +1302,6 @@ public class LitematicaSchematic
 		return tagList;
 	}
 
-	@Deprecated(forRemoval = true)
-	private ListTag writeTileEntitiesToNBT(Map<BlockPos, CompoundTag> tileMap)
-	{
-		ListTag tagList = new ListTag();
-
-		if (tileMap.isEmpty() == false)
-		{
-			tagList.addAll(tileMap.values());
-		}
-
-		return tagList;
-	}
-
 	private ListData writeTileEntitiesToData(Map<BlockPos, CompoundData> tileMap)
 	{
 		ListData tagList = new ListData();
@@ -1352,84 +1315,6 @@ public class LitematicaSchematic
 		}
 
 		return tagList;
-	}
-
-	@Deprecated(forRemoval = true)
-	@ApiStatus.Experimental
-	public void sendTransmitFile(CompoundData nbtIn, final long sessionKey, ServerPlayer player)
-	{
-		Path file = this.getFile();
-		CompoundData output = new CompoundData();
-		final int bufferSize = SchematicBuffer.BUFFER_SIZE;
-		long totalBytes;
-		int totalSlices;
-
-		try
-		{
-			totalBytes = Files.size(file);
-			totalSlices = (int) ((totalBytes + bufferSize - 1) / bufferSize);
-		}
-		catch (IOException e)
-		{
-			Servux.LOGGER.error("sendTransmitFile: Unable to read file size; {}", e.getLocalizedMessage());
-			return;
-		}
-
-		output.putString("Task", "Litematic-TransmitStart");
-		output.putCodec("FileType", FileType.CODEC, this.schematicType);
-		output.putLong("SliceKey", sessionKey);
-		output.putInt("TotalSlices", totalSlices);
-		output.putLong("TotalSize", totalBytes);
-
-		if (!nbtIn.isEmpty())
-		{
-			output.put("PlacementData", nbtIn);
-		}
-
-		ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
-
-		// File Stream
-		output.putLong("SliceKey", sessionKey);
-		byte[] buffer = new byte[bufferSize];
-		int currentSlice = 0;
-
-		try (InputStream is = Files.newInputStream(file))
-		{
-			int bytesRead = 0;
-			output.putString("Task", "Litematic-TransmitData");
-
-			while ((bytesRead = is.read(buffer, 0, bufferSize)) != -1)
-			{
-				output.remove("Slice");
-				output.remove("Size");
-				output.remove("Data");
-				output.putInt("Slice", totalSlices);
-				output.putInt("Size", bytesRead);
-
-				byte[] correctedData = new byte[bytesRead];
-				System.arraycopy(buffer, 0, correctedData, 0, bytesRead);
-				output.putByteArray("Data", correctedData);
-				ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
-				currentSlice++;
-			}
-		}
-		catch (Exception err)
-		{
-			output = new CompoundData();
-			output.putLong("SliceKey", sessionKey);
-			output.putString("Task", "Litematic-TransmitCancel");
-			ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
-			Servux.LOGGER.error("sliceForServux: Exception reading file; {}", err.getLocalizedMessage());
-			return;
-		}
-
-		// End Slice
-		output.remove("Slice");
-		output.remove("Size");
-		output.remove("Data");
-
-		output.putString("Task", "Litematic-TransmitEnd");
-		ServuxLitematicaHandler.getInstance().encodeServerData(player, ServuxLitematicaPacket.ResponseC2SStart(output));
 	}
 
 	@Deprecated(forRemoval = true)
@@ -1503,12 +1388,6 @@ public class LitematicaSchematic
 		return null;
 	}
 
-	@Deprecated(forRemoval = true)
-	private boolean readFromNBT(CompoundTag nbt, boolean enableFixers) throws CommandSyntaxException
-	{
-		return this.readFromData(DataConverterNbt.fromVanillaCompound(nbt), enableFixers);
-	}
-
 	private boolean readFromData(CompoundData nbt, boolean enableFixers) throws CommandSyntaxException
 	{
 		this.blockContainers.clear();
@@ -1570,12 +1449,6 @@ public class LitematicaSchematic
 	private void error(String s) throws CommandSyntaxException
 	{
 		throw new SimpleCommandExceptionType(Component.translatable(s)).create();
-	}
-
-	@Deprecated(forRemoval = true)
-	private void readSubRegionsFromNBT(CompoundTag tag, int version, int minecraftDataVersion, boolean enableFixers)
-	{
-		this.readSubRegionsFromData(DataConverterNbt.fromVanillaCompound(tag), version, minecraftDataVersion, enableFixers);
 	}
 
 	private void readSubRegionsFromData(CompoundData tag, int version, int minecraftDataVersion, boolean enableFixers)
@@ -1669,46 +1542,6 @@ public class LitematicaSchematic
 		return size != null && size.getX() > 0 && size.getY() > 0 && size.getZ() > 0;
 	}
 
-	@Deprecated(forRemoval = true)
-	@Nullable
-	private static Vec3i readSizeFromTagImpl(CompoundTag tag)
-	{
-		if (tag.contains("size"))
-		{
-			ListTag tagList = tag.getListOrEmpty("size");
-
-			if (tagList.size() == 3)
-			{
-				return new Vec3i(tagList.getIntOr(0, 0), tagList.getIntOr(1, 0), tagList.getIntOr(2, 0));
-			}
-		}
-
-		return null;
-	}
-
-	@Deprecated(forRemoval = true)
-	@Nullable
-	public static BlockPos readBlockPosFromNbtList(CompoundTag tag, String tagName)
-	{
-		if (tag.contains(tagName))
-		{
-			ListTag tagList = tag.getListOrEmpty(tagName);
-
-			if (tagList.size() == 3)
-			{
-				return new BlockPos(tagList.getIntOr(0, 0), tagList.getIntOr(1, 0), tagList.getIntOr(2, 0));
-			}
-		}
-
-		return null;
-	}
-
-	@Deprecated(forRemoval = true)
-	protected boolean readPaletteFromLitematicaFormatTag(ListTag tagList, ILitematicaBlockStatePalette palette)
-	{
-		return this.readPaletteFromLitematicaFormatTag(DataConverterNbt.fromVanillaList(tagList), palette);
-	}
-
 	protected boolean readPaletteFromLitematicaFormatTag(ListData tagList, ILitematicaBlockStatePalette palette)
 	{
 		final int size = tagList.size();
@@ -1726,23 +1559,6 @@ public class LitematicaSchematic
 		return palette.setMapping(list);
 	}
 
-	@Deprecated(forRemoval = true)
-	public static boolean isValidSpongeSchematic(CompoundTag tag)
-	{
-		// v2 Sponge Schematic
-		if (tag.contains("Width") &&
-			tag.contains("Height") &&
-			tag.contains("Length") &&
-			tag.contains("Version") &&
-			tag.contains("Palette") &&
-			tag.contains("BlockData"))
-		{
-			return isSizeValid(readSizeFromTagSponge(tag));
-		}
-
-		return false;
-	}
-
 	public static boolean isValidSpongeSchematic(CompoundData tag)
 	{
 		// v2 Sponge Schematic
@@ -1754,29 +1570,6 @@ public class LitematicaSchematic
 			tag.contains("BlockData", Constants.NBT.TAG_BYTE_ARRAY))
 		{
 			return isSizeValid(readSizeFromTagSponge(tag));
-		}
-
-		return false;
-	}
-
-	@Deprecated(forRemoval = true)
-	public static boolean isValidSpongeSchematicv3(CompoundTag tag)
-	{
-		// v3 Sponge Schematic
-		if (tag.contains("Schematic"))
-		{
-			CompoundTag nbtV3 = tag.getCompoundOrEmpty("Schematic");
-
-			if (nbtV3.contains("Width") &&
-				nbtV3.contains("Height") &&
-				nbtV3.contains("Length") &&
-				nbtV3.contains("Version") &&
-				nbtV3.getIntOr("Version", -1) >= 3 &&
-				nbtV3.contains("Blocks") &&
-				nbtV3.contains("DataVersion"))
-			{
-				return isSizeValid(readSizeFromTagSponge(nbtV3));
-			}
 		}
 
 		return false;
@@ -1804,21 +1597,9 @@ public class LitematicaSchematic
 		return false;
 	}
 
-	@Deprecated(forRemoval = true)
-	public static Vec3i readSizeFromTagSponge(CompoundTag tag)
-	{
-		return new Vec3i(tag.getIntOr("Width", 0), tag.getIntOr("Height", 0), tag.getIntOr("Length", 0));
-	}
-
 	public static Vec3i readSizeFromTagSponge(CompoundData tag)
 	{
 		return new Vec3i(tag.getIntOrDefault("Width", 0), tag.getIntOrDefault("Height", 0), tag.getIntOrDefault("Length", 0));
-	}
-
-	@Deprecated(forRemoval = true)
-	protected boolean readSpongePaletteFromTag(CompoundTag tag, ILitematicaBlockStatePalette palette, int minecraftDataVersion)
-	{
-		return this.readSpongePaletteFromData(DataConverterNbt.fromVanillaCompound(tag), palette, minecraftDataVersion);
 	}
 
 	protected boolean readSpongePaletteFromData(CompoundData tag, ILitematicaBlockStatePalette palette, int minecraftDataVersion)
@@ -1858,12 +1639,6 @@ public class LitematicaSchematic
 		}
 
 		return palette.setMapping(list);
-	}
-
-	@Deprecated(forRemoval = true)
-	protected boolean readSpongeBlocksFromTag(CompoundTag tag, String schematicName, Vec3i size, int minecraftDataVersion, int spongeVersion)
-	{
-		return this.readSpongeBlocksFromData(DataConverterNbt.fromVanillaCompound(tag), schematicName, size, minecraftDataVersion, spongeVersion);
 	}
 
 	protected boolean readSpongeBlocksFromData(CompoundData tag, String schematicName, Vec3i size, int minecraftDataVersion, int spongeVersion)
@@ -1937,21 +1712,6 @@ public class LitematicaSchematic
 		return true;
 	}
 
-	@Deprecated(forRemoval = true)
-	protected Map<BlockPos, CompoundTag> readSpongeBlockEntitiesFromTag(CompoundTag tag, int spongeVersion)
-	{
-		Map<BlockPos, CompoundData> beMap = this.readSpongeBlockEntitiesFromData(DataConverterNbt.fromVanillaCompound(tag), spongeVersion);
-		Map<BlockPos, CompoundTag> otherMap = new HashMap<>();
-
-		beMap.forEach(
-				(blockPos, blockTag) ->
-				{
-					otherMap.put(blockPos, DataConverterNbt.toVanillaCompound(blockTag));
-				});
-
-		return otherMap;
-	}
-
 	protected Map<BlockPos, CompoundData> readSpongeBlockEntitiesFromData(CompoundData tag, int spongeVersion)
 	{
 		Map<BlockPos, CompoundData> blockEntities = new HashMap<>();
@@ -1999,12 +1759,6 @@ public class LitematicaSchematic
 		return blockEntities;
 	}
 
-	@Deprecated(forRemoval = true)
-	protected List<EntityInfo> readSpongeEntitiesFromTag(CompoundTag tag, Vec3i offset, int spongeVersion)
-	{
-		return this.readSpongeEntitiesFromData(DataConverterNbt.fromVanillaCompound(tag), offset, spongeVersion);
-	}
-
 	protected List<EntityInfo> readSpongeEntitiesFromData(CompoundData tag, Vec3i offset, int spongeVersion)
 	{
 		List<EntityInfo> entities = new ArrayList<>();
@@ -2043,12 +1797,6 @@ public class LitematicaSchematic
 		}
 
 		return entities;
-	}
-
-	@Deprecated(forRemoval = true)
-	public boolean readFromSpongeSchematic(String name, CompoundTag tag)
-	{
-		return this.readFromSpongeSchematic(name, DataConverterNbt.fromVanillaCompound(tag));
 	}
 
 	public boolean readFromSpongeSchematic(String name, CompoundData tag)
@@ -2115,7 +1863,7 @@ public class LitematicaSchematic
 		}
 
 		this.subRegionPositions.put(name, BlockPos.ZERO);
-		this.subRegionSizes.put(name, new BlockPos(size));
+		this.subRegionSizes.put(name, new BlockPos(size.getX(), size.getY(), size.getZ()));
 		this.metadata.setRegionCount(1);
 		this.metadata.setTotalVolume(size.getX() * size.getY() * size.getZ());
 		this.metadata.setEnclosingSize(size);
@@ -2126,12 +1874,6 @@ public class LitematicaSchematic
 		this.metadata.setFileType(FileType.SPONGE_SCHEMATIC);
 
 		return true;
-	}
-
-	@Deprecated(forRemoval = true)
-	public boolean readFromVanillaStructure(String name, CompoundTag tag)
-	{
-		return this.readFromVanillaStructure(name, DataConverterNbt.fromVanillaCompound(tag));
 	}
 
 	public boolean readFromVanillaStructure(String name, CompoundData tag)
@@ -2234,7 +1976,7 @@ public class LitematicaSchematic
 			}
 
 			this.subRegionPositions.put(name, BlockPos.ZERO);
-			this.subRegionSizes.put(name, new BlockPos(size));
+			this.subRegionSizes.put(name, new BlockPos(size.getX(), size.getY(), size.getZ()));
 			this.metadata.setName(name);
 			this.metadata.setRegionCount(1);
 			this.metadata.setTotalVolume(size.getX() * size.getY() * size.getZ());
@@ -2316,12 +2058,6 @@ public class LitematicaSchematic
 		return false;
 	}
 
-	@Deprecated(forRemoval = true)
-	protected List<EntityInfo> readEntitiesFromVanillaStructure(CompoundTag tag, int minecraftDataVersion)
-	{
-		return this.readEntitiesFromVanillaStructure(DataConverterNbt.fromVanillaCompound(tag), minecraftDataVersion);
-	}
-
 	protected List<EntityInfo> readEntitiesFromVanillaStructure(CompoundData tag, int minecraftDataVersion)
 	{
 		List<EntityInfo> entities = new ArrayList<>();
@@ -2347,32 +2083,9 @@ public class LitematicaSchematic
 		return entities;
 	}
 
-	@Deprecated(forRemoval = true)
-	@Nullable
-	public static Vec3 readVec3dFromNbtList(@Nullable CompoundTag tag, String tagName)
-	{
-		if (tag != null && tag.contains(tagName))
-		{
-			ListTag tagList = tag.getListOrEmpty(tagName);
-
-			if (tagList.getId() == Constants.NBT.TAG_DOUBLE && tagList.size() == 3)
-			{
-				return new Vec3(tagList.getDoubleOr(0, 0d), tagList.getDoubleOr(1, 0d), tagList.getDoubleOr(2, 0d));
-			}
-		}
-
-		return null;
-	}
-
 	private void postProcessContainerIfNeeded(ListData palette, LitematicaBlockStateContainer container, @Nullable Map<BlockPos, CompoundData> tiles)
 	{
 		List<BlockState> states = getStatesFromPaletteData(palette);
-	}
-
-	@Deprecated(forRemoval = true)
-	public static List<BlockState> getStatesFromPaletteTag(ListTag palette)
-	{
-		return getStatesFromPaletteData(DataConverterNbt.fromVanillaList(palette));
 	}
 
 	public static List<BlockState> getStatesFromPaletteData(ListData palette)
@@ -2425,7 +2138,7 @@ public class LitematicaSchematic
 
 			for (BlockPos key : oldTE.keySet())
 			{
-				newTE.put(key, SchematicConversionMaps.updateBlockEntity(SchematicConversionMaps.checkForIdTag(oldTE.get(key)), minecraftDataVersion));
+				newTE.put(key, SchematicConversionMaps.updateBlockEntity(SchematicConversionMaps.checkForIdTag(oldTE.get(key), minecraftDataVersion), minecraftDataVersion));
 			}
 
 			return newTE;
@@ -2473,12 +2186,6 @@ public class LitematicaSchematic
 		return oldEntitiesList;
 	}
 
-	@Deprecated(forRemoval = true)
-	private List<EntityInfo> readEntitiesFromNBT(ListTag tagList)
-	{
-		return this.readEntitiesFromData(DataConverterNbt.fromVanillaList(tagList));
-	}
-
 	private List<EntityInfo> readEntitiesFromData(ListData tagList)
 	{
 		List<EntityInfo> entityList = new ArrayList<>();
@@ -2501,20 +2208,6 @@ public class LitematicaSchematic
 		return entityList;
 	}
 
-	@Deprecated(forRemoval = true)
-	private Map<BlockPos, CompoundTag> readTileEntitiesFromNBT(ListTag tagList)
-	{
-		Map<BlockPos, CompoundTag> otherMap = new HashMap<>();
-		Map<BlockPos, CompoundData> tileMap = this.readTileEntitiesFromData(DataConverterNbt.fromVanillaList(tagList));
-
-		tileMap.forEach((pos, tag) ->
-		                {
-			                otherMap.put(pos, DataConverterNbt.toVanillaCompound(tag));
-		                });
-
-		return otherMap;
-	}
-
 	private Map<BlockPos, CompoundData> readTileEntitiesFromData(ListData tagList)
 	{
 		Map<BlockPos, CompoundData> tileMap = new HashMap<>();
@@ -2533,13 +2226,6 @@ public class LitematicaSchematic
 		}
 
 		return tileMap;
-	}
-
-	@Deprecated(forRemoval = true)
-	private <T> Map<BlockPos, ScheduledTick<T>> readPendingTicksFromNBT(ListTag tagList, Registry<T> registry,
-	                                                                    String tagName, T emptyValue)
-	{
-		return this.readPendingTicksFromData(DataConverterNbt.fromVanillaList(tagList), registry, tagName, emptyValue);
 	}
 
 	private <T> Map<BlockPos, ScheduledTick<T>> readPendingTicksFromData(ListData tagList, Registry<T> registry,
@@ -2601,12 +2287,6 @@ public class LitematicaSchematic
 		return tickMap;
 	}
 
-	@Deprecated(forRemoval = true)
-	private List<EntityInfo> readEntitiesFromNBT_v1(ListTag tagList)
-	{
-		return this.readEntitiesFromData(DataConverterNbt.fromVanillaList(tagList));
-	}
-
 	private List<EntityInfo> readEntitiesFromData_v1(ListData tagList)
 	{
 		List<EntityInfo> entityList = new ArrayList<>();
@@ -2629,21 +2309,6 @@ public class LitematicaSchematic
 		}
 
 		return entityList;
-	}
-
-	@Deprecated(forRemoval = true)
-	private Map<BlockPos, CompoundTag> readTileEntitiesFromNBT_v1(ListTag tagList)
-	{
-		Map<BlockPos, CompoundTag> otherMap = new HashMap<>();
-		Map<BlockPos, CompoundData> tileMap = this.readTileEntitiesFromData_v1(DataConverterNbt.fromVanillaList(tagList));
-
-		tileMap.forEach(
-				(pos, tag) ->
-				{
-					otherMap.put(pos, DataConverterNbt.toVanillaCompound(tag));
-				});
-
-		return otherMap;
 	}
 
 	private Map<BlockPos, CompoundData> readTileEntitiesFromData_v1(ListData tagList)
@@ -2758,24 +2423,6 @@ public class LitematicaSchematic
 		}
 
 		return false;
-	}
-
-	@Deprecated(forRemoval = true)
-	public static CompoundTag readNbtFromFile(Path file)
-	{
-		if (file == null)
-		{
-			//error("servux.litematics.error.schematic_read_from_file_failed.no_file");
-			return null;
-		}
-
-		if (Files.exists(file) == false || Files.isReadable(file) == false)
-		{
-			//error("servux.litematics.error.schematic_read_from_file_failed.cant_read", file.toAbsolutePath());
-			return null;
-		}
-
-        return NbtUtils.readNbtFromFile(file);
 	}
 
 	public static CompoundData readDataFromFile(Path file)

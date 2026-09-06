@@ -32,7 +32,6 @@ public class StringUtils
 
     public static String translateAsString(String translationKey, Object... args)
     {
-//        return i18nLang.getInstance().translateAsString(translationKey, args);
         if (ServuxConfigProvider.LANG != null)
         {
             return ServuxConfigProvider.LANG.translate(translationKey, args);
@@ -48,7 +47,6 @@ public class StringUtils
      */
     public static MutableComponent translate(String translationKey, Object... args)
     {
-//        return i18nLang.getInstance().translate(translationKey, args);
         if (ServuxConfigProvider.LANG != null)
         {
             return ServuxConfigProvider.LANG.translateAsText(translationKey, args);

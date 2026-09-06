@@ -20,9 +20,9 @@ public class MixinCommands
     @Inject(method = "<init>", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/server/commands/WhitelistCommand;register(Lcom/mojang/brigadier/CommandDispatcher;)V",
             shift = At.Shift.AFTER))
-    private void servux_injectCommands(Commands.CommandSelection environment,
-                                       CommandBuildContext registryAccess, CallbackInfo ci)
+    private void servux_injectCommands(Commands.CommandSelection commandSelection,
+                                       CommandBuildContext context, CallbackInfo ci)
     {
-        ((CommandProvider) CommandProvider.getInstance()).registerCommands(this.dispatcher, registryAccess, environment);
+        ((CommandProvider) CommandProvider.getInstance()).registerCommands(this.dispatcher, context, commandSelection);
     }
 }
