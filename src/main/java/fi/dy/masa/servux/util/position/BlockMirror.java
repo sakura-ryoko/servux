@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import io.netty.buffer.ByteBuf;
 import org.jetbrains.annotations.NotNull;
 
+import net.minecraft.core.Direction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ByIdMap;

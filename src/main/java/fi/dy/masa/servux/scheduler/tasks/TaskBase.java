@@ -153,9 +153,9 @@ public abstract class TaskBase implements ITask
 			List<ChunkPos> list = new ArrayList<>(pendingChunks);
 			InfoHudSyncChunks infoHud = new InfoHudSyncChunks();
 
-			chunkPosComparator.setReferencePosition(BlockPos.containing(this.context.player().position()));
-			chunkPosComparator.setClosestFirst(true);
-			list.sort(chunkPosComparator);
+			this.chunkPosComparator.setReferencePosition(BlockPos.containing(this.context.player().position()));
+			this.chunkPosComparator.setClosestFirst(true);
+			list.sort(this.chunkPosComparator);
 
 //			final String pre = ChatFormatting.WHITE.toString() + ChatFormatting.BOLD.toString();
 //			final String title = StringUtils.translateAsString("servux.scheduler.hud_sync.title.remaining_chunks", this.getDisplayName(), pendingChunks.size());

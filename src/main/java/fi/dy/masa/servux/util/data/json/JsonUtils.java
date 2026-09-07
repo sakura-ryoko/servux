@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -18,12 +15,22 @@ import com.google.gson.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.StateHolder;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.material.FluidState;
 
 import fi.dy.masa.servux.Reference;
 import fi.dy.masa.servux.Servux;
 import fi.dy.masa.servux.util.FileUtils;
 import fi.dy.masa.servux.util.data.BooleanConsumer;
 import fi.dy.masa.servux.util.data.FloatConsumer;
+import fi.dy.masa.servux.util.game.BlockUtils;
 import fi.dy.masa.servux.util.position.BlockMirror;
 import fi.dy.masa.servux.util.position.BlockRotation;
 import fi.dy.masa.servux.util.position.Vec3d;
@@ -257,6 +264,147 @@ public class JsonUtils
         }
 
         return defaultValue;
+    }
+
+    public static BlockState getBlockStateOrDefault(JsonObject obj, String name, @Nullable BlockState defaultValue)
+    {
+        if (obj.has(name) && obj.get(name).isJsonObject())
+        {
+            defaultValue = defaultValue != null ? defaultValue : Blocks.AIR.defaultBlockState();
+
+            try
+            {
+                JsonObject o = obj.getAsJsonObject(name);
+
+                if (o != null && o.isJsonObject())
+                {
+                    return getAsBlockState(o, defaultValue).orElse(defaultValue);
+                }
+            }
+            catch (Exception ignore) {}
+        }
+
+        return defaultValue;
+    }
+
+    public static Optional<BlockState> getAsBlockState(JsonElement ele, @Nullable BlockState defaultValue)
+    {
+        defaultValue = defaultValue != null ? defaultValue : Blocks.AIR.defaultBlockState();
+
+        try
+        {
+            if (ele.isJsonObject())
+            {
+                JsonObject o = ele.getAsJsonObject();
+
+                if (o == null || o.isEmpty())
+                {
+                    return Optional.of(defaultValue);
+                }
+
+                final String objName = hasString(o, BlockUtils.BLOCK_STATE_NAME)
+                                       ? getStringOrDefault(o, BlockUtils.BLOCK_STATE_NAME, "")
+                                       : hasString(o, BlockUtils.VANILLA_BLOCK_STATE_NAME)
+                                         ? getStringOrDefault(o, BlockUtils.VANILLA_BLOCK_STATE_NAME, "")
+                                         : "";
+
+                if (objName == null || objName.isEmpty())
+                {
+                    return Optional.of(defaultValue);
+                }
+
+                Identifier id = Identifier.tryParse(objName);
+
+                if (id != null)
+                {
+                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(id);
+
+                    if (opt.isEmpty())
+                    {
+                        return Optional.of(Blocks.AIR.defaultBlockState());
+                    }
+
+                    Block block = opt.get();
+                    BlockState state = block.defaultBlockState();
+
+                    JsonObject p = hasObject(o, BlockUtils.BLOCK_STATE_PROPERTIES)
+                                   ? o.getAsJsonObject(BlockUtils.BLOCK_STATE_PROPERTIES)
+                                   : hasObject(o, BlockUtils.VANILLA_BLOCK_STATE_PROPERTIES)
+                                     ? o.getAsJsonObject(BlockUtils.VANILLA_BLOCK_STATE_PROPERTIES)
+                                     : new JsonObject();
+
+                    if (p != null && !p.isEmpty())
+                    {
+                        StateDefinition<Block, BlockState> def = block.getStateDefinition();
+                        Map<String, JsonElement> map = p.asMap();
+
+                        for (String key : map.keySet())
+                        {
+                            Property<?> prop = def.getProperty(key);
+
+                            if (prop != null)
+                            {
+                                state = setValueEach(state, map.get(key), prop);
+                            }
+                        }
+                    }
+
+                    return Optional.of(state);
+                }
+            }
+        }
+        catch (Exception ignored) {}
+
+        return Optional.of(defaultValue);
+    }
+
+    public static <STATE extends StateHolder<?, STATE>, PROP extends Comparable<PROP>> STATE setValueEach(STATE state,
+                                                                                                          JsonElement ele,
+                                                                                                          Property<PROP> prop)
+    {
+        Optional<PROP> opt = Optional.ofNullable(ele.getAsString()).flatMap(prop::getValue);
+        return opt.map(value -> state.setValue(prop, value)).orElse(state);
+    }
+
+    public static void addBlockState(JsonObject obj, String name, @Nonnull final BlockState state)
+    {
+        obj.add(name, getBlockStateAsObject(state));
+    }
+
+    public static void addFluidState(JsonObject obj, String name, @Nonnull final FluidState state)
+    {
+        obj.add(name, getFluidStateAsObject(state));
+    }
+
+    public static JsonObject getBlockStateAsObject(@Nonnull final BlockState state)
+    {
+        JsonObject o = new JsonObject();
+        o.addProperty(BlockUtils.BLOCK_STATE_NAME, BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString());
+        addStateProperties(o, state);
+        return o;
+    }
+
+    public static JsonObject getFluidStateAsObject(@Nonnull final FluidState state)
+    {
+        JsonObject o = new JsonObject();
+        o.addProperty(BlockUtils.BLOCK_STATE_NAME, BuiltInRegistries.FLUID.getKey(state.getType()).toString());
+        addStateProperties(o, state);
+        return o;
+    }
+
+    public static void addStateProperties(JsonObject obj, @Nonnull final StateHolder<?, ?> state)
+    {
+        if (!state.isSingletonState())
+        {
+            JsonObject o = new JsonObject();
+
+            state.getValues().forEach(
+                    v ->
+                            o.addProperty(v.property().getName(), v.valueName())
+            );
+
+            obj.add(BlockUtils.BLOCK_STATE_PROPERTIES, o);
+        }
     }
 
     public static void getBooleanIfExists(JsonObject obj, String name, BooleanConsumer consumer)

@@ -23,6 +23,12 @@ import fi.dy.masa.servux.schematic.conversion.SchematicConversionMaps;
 
 public class BlockUtils
 {
+    // 26.3+ uses "id" and "properties"
+    public static final String BLOCK_STATE_NAME = "Name";
+    public static final String BLOCK_STATE_PROPERTIES = "Properties";
+    public static final String VANILLA_BLOCK_STATE_NAME = "id";
+    public static final String VANILLA_BLOCK_STATE_PROPERTIES = "properties";
+
     private static final Splitter COMMA_SPLITTER = Splitter.on(',');
     private static final Splitter EQUAL_SPLITTER = Splitter.on('=').limit(2);
 
