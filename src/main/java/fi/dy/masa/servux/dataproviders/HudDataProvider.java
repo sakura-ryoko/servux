@@ -77,7 +77,7 @@ public class HudDataProvider extends DataProviderBase
 		super("hud_data",
 		      ServuxHudHandler.CHANNEL_ID,
 		      ServuxHudPacket.PROTOCOL_VERSION,
-		      0, Reference.MOD_ID + ".provider.hud_data",
+		      0, Reference.MOD_ID + ":hud_data",
 		      "MiniHUD Meta Data provider for various Server-Side information");
 
 		this.metadata.putString("name", this.getName());
@@ -811,28 +811,28 @@ public class HudDataProvider extends DataProviderBase
 
 	public boolean hasPermissionsForWeather(ServerPlayer player)
 	{
-		return PermissionsUtil.check(player, this.permNode + ".weather", this.weatherPermissionLevel.getValue());
+		return PermissionsUtil.check(player, this.permNode+".weather", this.weatherPermissionLevel.getValue());
 	}
 
 	public boolean hasPermissionsForSeed(ServerPlayer player)
 	{
-		return PermissionsUtil.check(player, this.permNode + ".seed", this.seedPermissionLevel.getValue());
+		return PermissionsUtil.check(player, this.permNode+".seed", this.seedPermissionLevel.getValue());
 	}
 
 	public boolean hasPermissionsForLoggers(ServerPlayer player)
 	{
-		return PermissionsUtil.check(player, this.permNode + ".logger", this.loggerPermissionLevel.getValue());
+		return PermissionsUtil.check(player, this.permNode+".logger", this.loggerPermissionLevel.getValue());
 	}
 
 	public boolean hasPermissionsForLogger(ServerPlayer player, String type)
 	{
-		return PermissionsUtil.check(player, this.permNode + ".logger." + type, this.loggerPermissionLevel.getValue());
+		return PermissionsUtil.check(player, this.permNode+".logger." + type, this.loggerPermissionLevel.getValue());
 	}
 
 	@Override
 	public boolean hasPermission(ServerPlayer player)
 	{
-		return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
+		return PermissionsUtil.check(player, this.permNode+".data_provider", this.permissionLevel.getValue());
 	}
 
 	public static class BoolCallback implements IServuxSettingCallback<Boolean>

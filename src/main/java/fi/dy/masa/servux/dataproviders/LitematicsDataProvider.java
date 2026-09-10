@@ -91,7 +91,7 @@ public class LitematicsDataProvider extends DataProviderBase
 		super("litematic_data",
 		      ServuxLitematicaHandler.CHANNEL_ID,
 		      ServuxLitematicaPacket.PROTOCOL_VERSION,
-		      0, Reference.MOD_ID + ".provider.litematic_data",
+		      0, Reference.MOD_ID + ":litematic_data",
 		      "Litematics Data provider.");
 
 		this.metadata.putString("name", this.getName());
@@ -757,17 +757,17 @@ public class LitematicsDataProvider extends DataProviderBase
 	@Override
 	public boolean hasPermission(ServerPlayer player)
 	{
-		return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
+		return PermissionsUtil.check(player, this.permNode+".data_provider", this.permissionLevel.getValue());
 	}
 
 	public boolean hasPermissionsForPaste(ServerPlayer player)
 	{
-		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode + ".paste", this.pastePermissionLevel.getValue());
+		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode+".paste", this.pastePermissionLevel.getValue());
 	}
 
 	public boolean hasPermissionsForTask(ServerPlayer player, String task)
 	{
-		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode + ".task." + task, this.taskPermissionLevel.getValue());
+		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode+".task." + task, this.taskPermissionLevel.getValue());
 	}
 
 	public boolean shouldSendPlayerTaskFeedback()

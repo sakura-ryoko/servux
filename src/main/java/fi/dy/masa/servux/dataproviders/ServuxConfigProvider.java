@@ -67,7 +67,7 @@ public class ServuxConfigProvider extends DataProviderBase
     {
         super("servux_main",
                 Identifier.fromNamespaceAndPath("servux", "main"),
-                1, 0, Reference.MOD_ID+".main",
+                1, 0, Reference.MOD_ID+":main",
                 "The Servux Main configuration data provider");
     }
 
@@ -123,7 +123,7 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return PermissionsUtil.check(player, Reference.MOD_ID+".main.admin", this.adminPermissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode+".admin", this.adminPermissionLevel.getValue());
     }
 
     @Override
@@ -157,7 +157,7 @@ public class ServuxConfigProvider extends DataProviderBase
             return false;
         }
 
-        return PermissionsUtil.check(player, Reference.MOD_ID+".main.easy_place", this.easyPlacePermissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode+".easy_place", this.easyPlacePermissionLevel.getValue());
     }
 
     public boolean isEasyPlaceValidatorEnabled()

@@ -60,7 +60,7 @@ public class EntitiesDataProvider extends DataProviderBase
         super("entity_data",
                 ServuxEntitiesHandler.CHANNEL_ID,
                 ServuxEntitiesPacket.PROTOCOL_VERSION,
-                0, Reference.MOD_ID+ ".provider.entity_data",
+                0, Reference.MOD_ID+ ":entity_data",
                 "Entity Data provider for Client Side mods.");
 
         this.metadata.putString("name", this.getName());
@@ -344,6 +344,6 @@ public class EntitiesDataProvider extends DataProviderBase
 	@Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode+".data_provider", this.permissionLevel.getValue());
     }
 }

@@ -65,7 +65,7 @@ public class TweaksDataProvider extends DataProviderBase
         super("tweaks_data",
                 ServuxTweaksHandler.CHANNEL_ID,
                 ServuxTweaksPacket.PROTOCOL_VERSION,
-                0, Reference.MOD_ID+ ".provider.tweaks_data",
+                0, Reference.MOD_ID+ ":tweaks_data",
                 "Tweaks Data provider for Client Side mods.");
 
         this.metadata.putString("name", this.getName());
@@ -399,7 +399,7 @@ public class TweaksDataProvider extends DataProviderBase
 	@Override
     public boolean hasPermission(ServerPlayer player)
     {
-        return PermissionsUtil.check(player, this.permNode, this.permissionLevel.getValue());
+        return PermissionsUtil.check(player, this.permNode+".data_provider", this.permissionLevel.getValue());
     }
 
     // Callbacks marks the config as dirty so that we can broadcast the config changes

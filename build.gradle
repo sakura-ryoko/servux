@@ -8,16 +8,16 @@ repositories {
 	maven { url = 'https://maven.fallenbreath.me/releases'
 		content {includeGroupAndSubgroups("me.fallenbreath")}
 	}
-	maven { url = 'https://oss.sonatype.org/content/repositories/snapshots'
-		content { includeGroupAndSubgroups("me.lucko") }
-	}
-	maven { url = 'https://maven.nucleoid.xyz/'
-		content { includeGroupAndSubgroups("me.lucko") }
-	}
-	maven { url = 'https://maven.sakuraryoko.com'
-		content { includeGroupAndSubgroups("me.lucko") }
-//		content {includeGroupAndSubgroups("com.sakuraryoko") }
-	}
+//	maven { url = 'https://oss.sonatype.org/content/repositories/snapshots'
+//		content { includeGroupAndSubgroups("me.lucko") }
+//	}
+//	maven { url = 'https://maven.nucleoid.xyz/'
+//		content { includeGroupAndSubgroups("me.lucko") }
+//	}
+//	maven { url = 'https://maven.sakuraryoko.com'
+//		content { includeGroupAndSubgroups("me.lucko") }
+////		content {includeGroupAndSubgroups("com.sakuraryoko") }
+//	}
     maven { url = 'https://jitpack.io'
 		content { includeGroupAndSubgroups('com.github') }
 	}
@@ -32,9 +32,10 @@ dependencies {
 	//modCompile "net.fabricmc.fabric-api:fabric-api:" + project.fabric_version
 	include(implementation(fabricApi.module("fabric-api-base", project.fabric_api_version)))
 	include(implementation(fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)))
+	include(implementation(fabricApi.module("fabric-permission-api-v1", project.fabric_api_version)))
 
 	// Lucko Permissions API
-	implementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
+//	implementation include("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}")
 //	runtimeOnly 'me.fallenbreath:mixin-auditor:0.2.0-u'
 }
 

@@ -13,4 +13,8 @@ public interface IServerCommand
     void register(CommandDispatcher<CommandSourceStack> dispatcher,
                   CommandBuildContext registryAccess,
                   Commands.CommandSelection environment);
+
+    String name();
+
+    String node();
 }
