@@ -33,6 +33,7 @@
 
 	"depends": {
 		"minecraft": ">=26.3 <26.4",
-		"fabric-networking-api-v1": "*"
+		"fabric-networking-api-v1": "*",
+		"fabric-permission-api-v1": "*"
 	}
 }
