@@ -14,6 +14,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
@@ -243,7 +244,7 @@ public class SchematicPlacingUtils
                         !ignoreInventories && mirrorMain != Mirror.NONE &&
                         !(state.getValue(ChestBlock.TYPE) == ChestType.SINGLE) &&
                         LitematicsDataProvider.INSTANCE.isEnabled() &&
-                        LitematicsDataProvider.INSTANCE.fixChestMirror.getValue())
+                        LitematicsDataProvider.INSTANCE.shouldFixChestMirror())
                     {
                         Direction facing = state.getValue(ChestBlock.FACING);
                         Direction.Axis axis = facing.getAxis();
@@ -254,6 +255,16 @@ public class SchematicPlacingUtils
                             Direction facingAdj = type == ChestType.LEFT ? facing.getCounterClockWise(Direction.Axis.Y) : facing.getClockWise(Direction.Axis.Y);
                             BlockPos posAdj = origPos.relative(facingAdj);
                             teNBT = blockEntityMap.getOrDefault(posAdj, teNBT).copy();
+                        }
+                    }
+
+                    if (state.is(BlockTags.LEAVES) &&
+                        LitematicsDataProvider.INSTANCE.isEnabled() &&
+                        LitematicsDataProvider.INSTANCE.shouldPasteAlwaysPersistent())
+                    {
+                        if (state.getValue(LeavesBlock.PERSISTENT) == false)
+                        {
+                            state.setValue(LeavesBlock.PERSISTENT, true);
                         }
                     }
 

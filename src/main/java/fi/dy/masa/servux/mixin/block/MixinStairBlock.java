@@ -29,7 +29,7 @@ public abstract class MixinStairBlock extends Block
     private void servux_fixStairsMirror(BlockState state, Mirror mirror, CallbackInfoReturnable<BlockState> cir)
     {
         if (LitematicsDataProvider.INSTANCE.isEnabled() &&
-            LitematicsDataProvider.INSTANCE.fixStairMirror.getValue())
+            LitematicsDataProvider.INSTANCE.shouldFixStairsMirror())
         {
             Direction direction = state.getValue(FACING);
             StairsShape stairShape = state.getValue(SHAPE);

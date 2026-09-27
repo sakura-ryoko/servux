@@ -22,7 +22,7 @@ public abstract class MixinRailBlocks extends BaseRailBlock
     private void servux_fixRailRotation(BlockState state, Rotation rot, CallbackInfoReturnable<BlockState> cir)
     {
         if (LitematicsDataProvider.INSTANCE.isEnabled() &&
-            LitematicsDataProvider.INSTANCE.fixRaiLRotations.getValue() &&
+            LitematicsDataProvider.INSTANCE.shouldFixRailRotations() &&
             rot == Rotation.CLOCKWISE_180)
         {
             RailShape shape = null;

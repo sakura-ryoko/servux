@@ -66,10 +66,11 @@ public class LitematicsDataProvider extends DataProviderBase
 	private final ServuxIntSetting pastePermissionLevel = new ServuxIntSetting(this, "permission_level_paste", 0, 4, 0);
 	private final ServuxIntSetting taskPermissionLevel = new ServuxIntSetting(this, "permission_level_tasks", 0, 4, 0);
 	private final ServuxBoolSetting playerTaskFeedback = new ServuxBoolSetting(this, "player_task_feedback", false);
-	public final ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
-	public final ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
-	public final ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
-	public final ServuxBoolSetting deDuplicateSchematicEntities = new ServuxBoolSetting(this, "deduplicate_schematic_entities", false);
+	private final ServuxBoolSetting fixRaiLRotations = new ServuxBoolSetting(this, "fix_rail_rotations", true);
+	private final ServuxBoolSetting fixStairMirror = new ServuxBoolSetting(this, "fix_stairs_mirror", true);
+	private final ServuxBoolSetting fixChestMirror = new ServuxBoolSetting(this, "fix_chest_mirror", true);
+	private final ServuxBoolSetting deDuplicateSchematicEntities = new ServuxBoolSetting(this, "deduplicate_schematic_entities", false);
+	private final ServuxBoolSetting pasteAlwaysUsePersistent = new ServuxBoolSetting(this, "paste_always_use_persistent", false);
 	private final List<IServuxSetting<?>> settings = List.of(
 			this.permissionLevel,
 			this.pastePermissionLevel,
@@ -78,7 +79,8 @@ public class LitematicsDataProvider extends DataProviderBase
 			this.fixRaiLRotations,
 			this.fixStairMirror,
 			this.fixChestMirror,
-			this.deDuplicateSchematicEntities
+			this.deDuplicateSchematicEntities,
+			this.pasteAlwaysUsePersistent
 	);
 
 	private final List<UUID> registeredPlayers = new ArrayList<>();
@@ -770,6 +772,21 @@ public class LitematicsDataProvider extends DataProviderBase
 		return this.hasPermission(player) && PermissionsUtil.check(player, this.permNode+".task." + task, this.taskPermissionLevel.getValue());
 	}
 
+	public boolean shouldFixChestMirror()
+	{
+		return this.fixChestMirror.getValue();
+	}
+
+	public boolean shouldFixRailRotations()
+	{
+		return this.fixRaiLRotations.getValue();
+	}
+
+	public boolean shouldFixStairsMirror()
+	{
+		return this.fixStairMirror.getValue();
+	}
+
 	public boolean shouldSendPlayerTaskFeedback()
 	{
 		return this.playerTaskFeedback.getValue();
@@ -778,5 +795,10 @@ public class LitematicsDataProvider extends DataProviderBase
 	public boolean shouldDeDuplicateEntities()
 	{
 		return this.deDuplicateSchematicEntities.getValue();
+	}
+
+	public boolean shouldPasteAlwaysPersistent()
+	{
+		return this.pasteAlwaysUsePersistent.getValue();
 	}
 }

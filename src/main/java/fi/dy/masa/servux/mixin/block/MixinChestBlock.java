@@ -21,7 +21,7 @@ public class MixinChestBlock
         ChestType type = state.getValue(ChestBlock.TYPE);
 
         if (LitematicsDataProvider.INSTANCE.isEnabled() &&
-            LitematicsDataProvider.INSTANCE.fixChestMirror.getValue()
+            LitematicsDataProvider.INSTANCE.shouldFixChestMirror()
             && type != ChestType.SINGLE)
         {
             state = BlockUtils.fixMirrorDoubleChest(state, mirror, type);
