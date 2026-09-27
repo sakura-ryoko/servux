@@ -70,6 +70,8 @@
     "servux.config.litematic_data.fix_rail_rotations.name": "繕旋軌",
     "servux.config.litematic_data.fix_stairs_mirror.comment": "啟/禁 階鏡像之繕。",
     "servux.config.litematic_data.fix_stairs_mirror.name": "繕階梯鏡象",
+    "servux.config.litematic_data.paste_always_use_persistent.comment": "Enable / Disable the pasting of leaves as Persistent.\nThis is to disable the natural decay of leaves.",
+    "servux.config.litematic_data.paste_always_use_persistent.name": "Paste Always Use Persistent",
     "servux.config.litematic_data.permission_level.comment": "The permission level required for the Litematics data provider",
     "servux.config.litematic_data.permission_level.name": "權術之階",
     "servux.config.litematic_data.permission_level_paste.comment": "The permission level required for the Litematics paste operation",
