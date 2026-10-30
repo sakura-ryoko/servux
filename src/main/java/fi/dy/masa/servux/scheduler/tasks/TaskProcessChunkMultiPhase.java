@@ -142,7 +142,6 @@ public abstract class TaskProcessChunkMultiPhase extends TaskProcessChunkBase
 		this.checkCommandFeedbackGameRuleState(this.context.server());
 		this.gameRuleProbeTimeout = Util.getNanos() + this.maxGameRuleProbeTime;
 //		this.phase = TaskPhase.GAME_RULE_PROBE;
-		this.shouldEnableFeedback = false;
 		this.phase = TaskPhase.WAIT_FOR_CHUNKS;
 	}
 
